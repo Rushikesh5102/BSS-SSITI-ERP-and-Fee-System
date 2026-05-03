@@ -1,0 +1,264 @@
+// Prisma Schema for Sai ITI Fee Management System
+// All monetary values are stored in smallest currency unit (paise for INR)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ─── Branch ───────────────────────────────────────────────────────────────────
+
+model Branch {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users        User[]
+  students     Student[]
+  feeStructures FeeStructure[]
+
+  @@map("branches")
+}
+
+// ─── User (Staff) ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("TEACHER")
+  isActive     Boolean  @default(true)
+  branchId     String?  @map("branch_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  branch          Branch?      @relation(fields: [branchId], references: [id])
+  payments        Payment[]    @relation("RecordedBy")
+  approvedPayments Payment[]   @relation("ApprovedBy")
+  receipts        Receipt[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+// ─── Parent ───────────────────────────────────────────────────────────────────
+
+model Parent {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  students Student[]
+
+  @@map("parents")
+}
+
+// ─── Student ──────────────────────────────────────────────────────────────────
+
+model Student {
+  id          String   @id @default(uuid())
+  studentId   String   @unique @map("student_id") // e.g. SAI-2024-001
+  name        String
+  class       String
+  section     String?
+  rollNumber  String?  @map("roll_number")
+  dateOfBirth DateTime? @map("date_of_birth")
+  gender      String?
+  address     String?
+  photo       String?  // URL to student photo
+  isActive    Boolean  @default(true)
+  branchId    String   @map("branch_id")
+  parentId    String?  @map("parent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  branch      Branch      @relation(fields: [branchId], references: [id])
+  parent      Parent?     @relation(fields: [parentId], references: [id])
+  studentFees StudentFee[]
+
+  @@map("students")
+}
+
+// ─── Fee Category ─────────────────────────────────────────────────────────────
+
+model FeeCategory {
+  id          String   @id @default(uuid())
+  name        String   // e.g. Tuition, Transport, Hostel, Exam, Miscellaneous
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  feeStructureItems FeeStructureItem[]
+
+  @@map("fee_categories")
+}
+
+// ─── Fee Structure ────────────────────────────────────────────────────────────
+
+model FeeStructure {
+  id           String   @id @default(uuid())
+  name         String   // e.g. "Class 10 - 2024-25"
+  academicYear String   @map("academic_year") // e.g. "2024-25"
+  class        String?
+  section      String?
+  totalAmount  Int      @map("total_amount") // in paise
+  isActive     Boolean  @default(true)
+  branchId     String   @map("branch_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  branch      Branch             @relation(fields: [branchId], references: [id])
+  items       FeeStructureItem[]
+  studentFees StudentFee[]
+
+  @@map("fee_structures")
+}
+
+// ─── Fee Structure Item ───────────────────────────────────────────────────────
+
+model FeeStructureItem {
+  id             String   @id @default(uuid())
+  feeStructureId String   @map("fee_structure_id")
+  feeCategoryId  String   @map("fee_category_id")
+  amount         Int      // in paise
+  dueDate        DateTime? @map("due_date")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Cascade)
+  feeCategory  FeeCategory  @relation(fields: [feeCategoryId], references: [id])
+
+  @@map("fee_structure_items")
+}
+
+// ─── Student Fee (Assignment) ─────────────────────────────────────────────────
+
+model StudentFee {
+  id             String   @id @default(uuid())
+  studentId      String   @map("student_id")
+  feeStructureId String   @map("fee_structure_id")
+  totalAmount    Int      @map("total_amount")  // in paise (copied from structure)
+  paidAmount     Int      @default(0) @map("paid_amount")  // in paise
+  dueDate        DateTime? @map("due_date")
+  academicYear   String   @map("academic_year")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  student      Student      @relation(fields: [studentId], references: [id])
+  feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id])
+  payments     Payment[]
+
+  // Derived: pendingAmount = totalAmount - paidAmount
+  @@unique([studentId, feeStructureId, academicYear])
+  @@map("student_fees")
+}
+
+// ─── Payment ──────────────────────────────────────────────────────────────────
+
+model Payment {
+  id               String        @id @default(uuid())
+  studentFeeId     String        @map("student_fee_id")
+  amount           Int           // in paise
+  mode             String
+  status           String @default("PENDING")
+  transactionRef   String?       @map("transaction_ref") // cheque no, UTR, Razorpay order id, etc.
+  paymentGatewayId String?       @map("payment_gateway_id") // Razorpay/Stripe payment id
+  chequeDate       DateTime?     @map("cheque_date")
+  bankName         String?       @map("bank_name")
+  remarks          String?
+  recordedById     String        @map("recorded_by_id")
+  approvedById     String?       @map("approved_by_id")
+  approvedAt       DateTime?     @map("approved_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  studentFee StudentFee @relation(fields: [studentFeeId], references: [id])
+  recordedBy User       @relation("RecordedBy", fields: [recordedById], references: [id])
+  approvedBy User?      @relation("ApprovedBy", fields: [approvedById], references: [id])
+  receipt    Receipt?
+
+  @@map("payments")
+}
+
+// ─── Receipt ──────────────────────────────────────────────────────────────────
+
+model Receipt {
+  id            String   @id @default(uuid())
+  receiptNumber String   @unique @map("receipt_number") // UUID-based unique number
+  paymentId     String   @unique @map("payment_id")
+  pdfUrl        String?  @map("pdf_url")    // path or URL to generated PDF
+  generatedById String   @map("generated_by_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  payment     Payment @relation(fields: [paymentId], references: [id])
+  generatedBy User    @relation(fields: [generatedById], references: [id])
+
+  @@map("receipts")
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id          String              @id @default(uuid())
+  channel     String
+  recipient   String              // phone/email/user_id
+  subject     String?             // for email
+  message     String
+  status      String  @default("PENDING")
+  sentAt      DateTime?           @map("sent_at")
+  error       String?             // error message if failed
+  triggeredBy String?             @map("triggered_by") // user_id
+  createdById String?             @map("created_by_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  createdBy User? @relation(fields: [createdById], references: [id])
+
+  @@map("notifications")
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String      @map("user_id")
+  action     String
+  entityType String      @map("entity_type") // e.g. "Payment", "Receipt"
+  entityId   String      @map("entity_id")
+  metadata   String?       // additional context (JSON)
+  ipAddress  String?     @map("ip_address")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}

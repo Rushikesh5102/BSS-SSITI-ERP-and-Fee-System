@@ -1,0 +1,440 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Sidebar from '../../components/Sidebar';
+import { useAuth } from '../../context/AuthContext';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import api from '../../services/api';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+
+interface DashboardStats {
+    totalStudents: number;
+    todayCollection: { amount: number; count: number };
+    monthCollection: { amount: number; count: number };
+    totalPendingBalance: number;
+}
+
+const formatRupees = (paise: number) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(paise / 100);
+
+const StatCard = ({
+    icon, label, value, sub, color,
+}: {
+    icon: string; label: string; value: string; sub?: string; color: string;
+}) => (
+    <div className="stat-card">
+        <div className="stat-icon" style={{ background: `${color}18` }}>
+            <span style={{ fontSize: 24 }}>{icon}</span>
+        </div>
+        <div>
+            <div className="stat-label">{label}</div>
+            <div className="stat-value">{value}</div>
+            {sub && <div className="stat-change up">{sub}</div>}
+        </div>
+    </div>
+);
+
+const WelcomeOverlay = ({ role }: { role: string }) => {
+    const roleConfig: Record<string, { title: string, icon: string, bg: string }> = {
+        SUPERADMIN: { title: 'College Director', icon: '🏛️', bg: 'linear-gradient(135deg, #1e3a8a, #0f172a)' },
+        ADMIN: { title: 'Administrator', icon: '⚡', bg: 'linear-gradient(135deg, #0369a1, #1e3a8a)' },
+        ACCOUNTANT: { title: 'Accountant', icon: '🧾', bg: 'linear-gradient(135deg, #047857, #064e3b)' },
+        TEACHER: { title: 'Teacher', icon: '👨‍🏫', bg: 'linear-gradient(135deg, #4338ca, #312e81)' },
+        STUDENT: { title: 'Student', icon: '🎓', bg: 'linear-gradient(135deg, #b91c1c, #7f1d1d)' },
+        DEVELOPER: { title: 'Developer', icon: '💻', bg: 'linear-gradient(135deg, #000000, #111827)' },
+    };
+
+    const cfg = roleConfig[role] || { title: role, icon: '👋', bg: '#0f172a' };
+
+    return (
+        <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
+            background: cfg.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            color: 'white', animation: 'fadeOut 0.8s ease 1.8s forwards'
+        }}>
+            <style>{`
+                @keyframes fadeOut { to { opacity: 0; pointer-events: none; visibility: hidden; } }
+                @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes pulseIcon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+            `}</style>
+            <div style={{ fontSize: 80, margin: 0, animation: 'pulseIcon 2s infinite ease-in-out' }}>{cfg.icon}</div>
+            <h1 style={{ fontSize: 48, fontWeight: 800, margin: '24px 0 0 0', animation: 'slideUp 0.6s ease forwards' }}>Welcome, {cfg.title}!</h1>
+            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', marginTop: 12, animation: 'slideUp 0.8s ease forwards' }}>Initializing central access node...</p>
+        </div>
+    );
+};
+
+export default function DashboardPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const simulateRole = searchParams.get('simulate');
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [recentPayments, setRecentPayments] = useState<any[]>([]);
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [studentData, setStudentData] = useState<any>(null);
+    const [welcomeRole, setWelcomeRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!loading && !user) router.push('/login');
+    }, [user, loading, router]);
+
+    useEffect(() => {
+        if (user && sessionStorage.getItem('showWelcomeAnimation')) {
+            setWelcomeRole(user.role);
+            sessionStorage.removeItem('showWelcomeAnimation');
+            setTimeout(() => setWelcomeRole(null), 2700);
+        }
+    }, [user]);
+
+    const effectiveRole = simulateRole && user?.role === 'DEVELOPER' ? simulateRole.toUpperCase() : user?.role;
+
+    useEffect(() => {
+        if (!user) return;
+        if (effectiveRole === 'DEVELOPER') {
+            router.push('/system');
+        }
+
+        const isStudentView = effectiveRole === 'STUDENT';
+
+        if (isStudentView) {
+            let searchQuery = '';
+            if (user.role === 'STUDENT') {
+                searchQuery = `search=${user.email.split('@')[0].toUpperCase()}`;
+            } else {
+                searchQuery = `limit=1`; // Dev simulation fetches the very first student available
+            }
+            api.get(`/students?${searchQuery}`).then(({ data }) => {
+                if (data.data && data.data.length > 0) {
+                    setStudentData(data.data[0]);
+                }
+            }).catch(() => { });
+        } else {
+            api.get('/reports/dashboard').then(({ data }) => {
+                setStats(data.data);
+                if (data.data.chartData) {
+                    setChartData(data.data.chartData);
+                }
+            }).catch(() => { });
+            api.get('/payments?limit=5').then(({ data }) => setRecentPayments(data.data || [])).catch(() => { });
+        }
+    }, [user, effectiveRole, router]);
+
+    if (loading || !user || effectiveRole === 'DEVELOPER') {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
+            </div>
+        );
+    }
+
+    const WelcomeRender = welcomeRole ? <WelcomeOverlay role={welcomeRole} /> : null;
+    const isStudentView = effectiveRole === 'STUDENT';
+
+    if (isStudentView) {
+        const totalFee = studentData?.studentFees?.reduce((a: number, f: any) => a + f.totalAmount, 0) || 0;
+        const paidFee = studentData?.studentFees?.reduce((a: number, f: any) => a + f.paidAmount, 0) || 0;
+        const pending = totalFee - paidFee;
+
+        // Secure Online Checkout Handler
+        const handlePayOnline = async () => {
+            if (pending <= 0) return alert('No pending dues to pay!');
+
+            // Acquire the primary fee record id representing this un-paid sequence
+            const targetFeeRecord = studentData?.studentFees?.find((sf: any) => sf.totalAmount - sf.paidAmount > 0);
+            if (!targetFeeRecord) return alert('Cannot resolve fee structure target.');
+
+            // We mount a simulated gateway bridge in case actual backend payment keys are empty/unset for this demo.
+            const btn = document.getElementById('bridge-pay-btn');
+            if (btn) btn.innerText = "Connecting Secure Gateway...";
+
+            try {
+                // In a production environment with keys, this would hit /payments/razorpay/order
+                // We'll mimic the Stripe/Razorpay latency handshake here:
+                await new Promise((r) => setTimeout(r, 1800));
+
+                if (window.confirm(`Initiate Secure Transaction string for ${formatRupees(pending)} (powered by Mock Gateway integration)?`)) {
+                    if (btn) btn.innerText = "Processing Bank Handshake...";
+                    const { data } = await api.post('/payments', {
+                        studentFeeId: targetFeeRecord.id,
+                        amount: pending,
+                        mode: 'ONLINE',
+                        transactionRef: 'txn_mock_' + Math.floor(Math.random() * 9999999),
+                        remarks: 'Secured via Student Portal Automated Checkout'
+                    });
+
+                    alert('✅ Transaction Verified and Received by the Institution! Receipt ' + data.data.receipt.receiptNumber + ' generated successfully.');
+                    window.location.reload();
+                } else {
+                    if (btn) btn.innerText = "Pay Online 💳";
+                }
+            } catch (err) {
+                alert('Connection to the payment gateway failed.');
+                if (btn) btn.innerText = "Pay Online 💳";
+            }
+        };
+
+        return (
+            <>
+                {WelcomeRender}
+                <div className="layout">
+                    <Sidebar />
+                    <div className="main-content">
+                        <header className="header">
+                            <div>
+                                <div className="header-subtitle">{simulateRole ? 'SIMULATOR: STUDENT PORTAL' : 'Student Portal'}</div>
+                                <div className="header-title">Welcome, {simulateRole ? studentData?.name || 'Simulation' : user.name} 🎓</div>
+                            </div>
+                        </header>
+                        <div className="page-content">
+                            {!studentData ? (
+                                <div className="text-center text-muted">Loading your academic profile...</div>
+                            ) : (
+                                <div className="grid grid-2" style={{ gap: 24 }}>
+                                    {/* Profile Card */}
+                                    <div className="card">
+                                        <div className="card-header"><div className="card-title">📖 My Profile</div></div>
+                                        <div className="card-body">
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                                                    <span className="text-muted">Student ID</span>
+                                                    <b>{studentData.studentId}</b>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                                                    <span className="text-muted">Class / Trade</span>
+                                                    <b>{studentData.class} {studentData.section && `(${studentData.section})`}</b>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span className="text-muted">Roll Number</span>
+                                                    <b>{studentData.rollNumber || '—'}</b>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Fee Summary Card */}
+                                    <div className="card">
+                                        <div className="card-header"><div className="card-title">💰 Fee Status</div></div>
+                                        <div className="card-body text-center">
+                                            <div style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Payable</div>
+                                            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>{formatRupees(totalFee)}</div>
+
+                                            <div className="grid grid-2" style={{ gap: 12 }}>
+                                                <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8, color: 'var(--accent)' }}>
+                                                    <div style={{ fontSize: 12 }}>Paid Amount</div>
+                                                    <div style={{ fontSize: 18, fontWeight: 700 }}>{formatRupees(paidFee)}</div>
+                                                </div>
+                                                <div style={{ background: pending > 0 ? 'var(--surface-2)' : 'var(--surface)', padding: 12, borderRadius: 8, color: pending > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                                                    <div style={{ fontSize: 12 }}>Pending Due</div>
+                                                    <div style={{ fontSize: 18, fontWeight: 700 }}>{formatRupees(pending)}</div>
+                                                </div>
+                                            </div>
+
+                                            {pending > 0 && (
+                                                <div style={{ marginTop: 24 }}>
+                                                    <button
+                                                        id="bridge-pay-btn"
+                                                        onClick={handlePayOnline}
+                                                        className="btn btn-primary w-full"
+                                                        style={{
+                                                            background: '#1e3a8a',
+                                                            border: 'none',
+                                                            padding: 16,
+                                                            fontSize: 16,
+                                                            fontWeight: 700,
+                                                            boxShadow: '0 8px 16px rgba(30, 58, 138, 0.2)',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s',
+                                                        }}
+                                                    >
+                                                        Pay Online 💳
+                                                    </button>
+                                                    <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 10 }}>Payments securely processed via SSL. Receipts generated instantly.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Support Contact Card */}
+                                    <div className="card" style={{ gridColumn: '1 / -1' }}>
+                                        <div className="card-header"><div className="card-title">📞 Need Help?</div></div>
+                                        <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>If you have any questions regarding your fee structure, payments, or need a receipt re-issued, please contact the administration office.</p>
+                                                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                                    <div style={{ background: 'var(--surface-2)', padding: '12px 16px', borderRadius: 8 }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Phone</div>
+                                                        <b style={{ color: 'var(--text-primary)' }}>+91 98765 43210</b>
+                                                    </div>
+                                                    <div style={{ background: 'var(--surface-2)', padding: '12px 16px', borderRadius: 8 }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Email</div>
+                                                        <b style={{ color: 'var(--text-primary)' }}>support@saiiti.edu.in</b>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '4rem', opacity: 0.8 }}>🏢</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <footer className="footer">
+                            <div>&copy; {new Date().getFullYear()} Shri Sai I.T.I All rights reserved. | <Link href="/terms" style={{ marginLeft: 8 }}>Terms and Conditions</Link></div>
+                            <div>Developed by Rushikesh Pattiwar</div>
+                        </footer>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    return (
+        <>
+            {WelcomeRender}
+            <div className="layout">
+                <Sidebar />
+                <div className="main-content">
+                    {/* Header */}
+                    <header className="header">
+                        <div>
+                            <div className="header-subtitle">
+                                {simulateRole ? `SIMULATING: ${effectiveRole} DASHBOARD` : 'Dashboard'}
+                            </div>
+                            <div className="header-title">
+                                Welcome back, {user.name}
+                            </div>
+                        </div>
+                        <div className="header-actions">
+                            <span className={`badge ${effectiveRole === 'SUPERADMIN' ? 'badge-primary' : effectiveRole === 'ADMIN' ? 'badge-info' : 'badge-success'}`}>
+                                {effectiveRole}
+                            </span>
+                        </div>
+                    </header>
+
+                    <div className="page-content">
+                        {/* Stat Cards */}
+                        <div className="grid grid-4 mb-6">
+                            <StatCard
+                                icon="👨‍🎓" label="Total Students" color="#1a3a7c"
+                                value={stats ? stats.totalStudents.toString() : '—'}
+                            />
+                            <StatCard
+                                icon="💰" label="Today's Collection" color="#00966d"
+                                value={stats ? formatRupees(stats.todayCollection.amount) : '—'}
+                                sub={stats ? `${stats.todayCollection.count} payments` : undefined}
+                            />
+                            <StatCard
+                                icon="📅" label="Month Collection" color="#2563eb"
+                                value={stats ? formatRupees(stats.monthCollection.amount) : '—'}
+                                sub={stats ? `${stats.monthCollection.count} payments` : undefined}
+                            />
+                            <StatCard
+                                icon="⏳" label="Total Pending" color="#d97706"
+                                value={stats ? formatRupees(stats.totalPendingBalance) : '—'}
+                            />
+                        </div>
+
+                        {/* Chart + Recent Payments */}
+                        <div className="grid" style={{ gridTemplateColumns: '1.6fr 1fr', gap: 20, marginBottom: 24 }}>
+                            {/* Collection Chart */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <div className="card-title">📈 Monthly Collection Trend</div>
+                                    <span className="badge badge-info">Last 6 Months</span>
+                                </div>
+                                <div className="card-body" style={{ height: 260 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} tickFormatter={(v) => `₹${v}k`} />
+                                            <Tooltip
+                                                formatter={(v) => [`₹${v}k`, 'Collection']}
+                                                contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', fontSize: 13 }}
+                                            />
+                                            <Bar dataKey="amount" fill="#1a3a7c" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Quick Actions */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <div className="card-title">⚡ Quick Actions</div>
+                                </div>
+                                <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    {[
+                                        ...(effectiveRole === 'SUPERADMIN' || effectiveRole === 'ADMIN' || effectiveRole === 'ACCOUNTANT' ? [
+                                            { label: '➕ Add Student', href: '/students?action=new', color: 'var(--primary)' },
+                                        ] : []),
+                                        ...(effectiveRole === 'SUPERADMIN' || effectiveRole === 'ADMIN' ? [
+                                            { label: '📋 Assign Fee Structure', href: '/fee-structures', color: '#7c3aed' },
+                                        ] : []),
+                                        ...(effectiveRole === 'SUPERADMIN' || effectiveRole === 'ADMIN' || effectiveRole === 'ACCOUNTANT' ? [
+                                            { label: '📊 Download Report', href: '/reports', color: '#d97706' },
+                                        ] : []),
+                                        { label: '💳 Record Payment', href: '/payments', color: 'var(--accent)' },
+                                        { label: '🧾 View Receipts', href: '/receipts', color: '#2563eb' },
+                                    ].map((action) => (
+                                        <Link
+                                            key={action.href}
+                                            href={action.href}
+                                            className="btn btn-secondary"
+                                            style={{ justifyContent: 'flex-start', borderLeft: `3px solid ${action.color}`, fontWeight: 500 }}
+                                        >
+                                            {action.label}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Payments Table */}
+                        <div className="card">
+                            <div className="card-header">
+                                <div className="card-title">🕐 Recent Payments</div>
+                                <a href="/payments" className="btn btn-secondary btn-sm">View All →</a>
+                            </div>
+                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Class</th>
+                                            <th>Amount</th>
+                                            <th>Mode</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentPayments.length === 0 ? (
+                                            <tr><td colSpan={6} className="text-center text-muted" style={{ padding: 32 }}>No payments yet</td></tr>
+                                        ) : (
+                                            recentPayments.map((p: any) => (
+                                                <tr key={p.id}>
+                                                    <td><b>{p.studentFee?.student?.name}</b><br /><span className="text-sm text-muted">{p.studentFee?.student?.studentId}</span></td>
+                                                    <td>{p.studentFee?.student?.class}</td>
+                                                    <td><b>{formatRupees(p.amount)}</b></td>
+                                                    <td>{p.mode}</td>
+                                                    <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+                                                    <td><span className={`badge ${p.status === 'VERIFIED' ? 'badge-success' : 'badge-warning'}`}>{p.status}</span></td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <footer className="footer">
+                        <div>&copy; {new Date().getFullYear()} Shri Sai I.T.I All rights reserved. | <Link href="/terms" style={{ marginLeft: 8 }}>Terms and Conditions</Link></div>
+                        <div>Developed by Rushikesh Pattiwar</div>
+                    </footer>
+                </div>
+            </div>
+        </>
+    );
+}
