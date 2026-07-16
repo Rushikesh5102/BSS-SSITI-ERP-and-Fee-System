@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
@@ -65,7 +65,7 @@ const WelcomeOverlay = ({ role }: { role: string }) => {
     );
 };
 
-export default function DashboardPage() {
+function DashboardContent() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -137,6 +137,16 @@ export default function DashboardPage() {
         const paidFee = studentData?.studentFees?.reduce((a: number, f: any) => a + f.paidAmount, 0) || 0;
         const pending = totalFee - paidFee;
 
+        const loadRazorpayScript = () => {
+            return new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                script.onload = () => resolve(true);
+                script.onerror = () => resolve(false);
+                document.body.appendChild(script);
+            });
+        };
+
         // Secure Online Checkout Handler
         const handlePayOnline = async () => {
             if (pending <= 0) return alert('No pending dues to pay!');
@@ -145,32 +155,96 @@ export default function DashboardPage() {
             const targetFeeRecord = studentData?.studentFees?.find((sf: any) => sf.totalAmount - sf.paidAmount > 0);
             if (!targetFeeRecord) return alert('Cannot resolve fee structure target.');
 
-            // We mount a simulated gateway bridge in case actual backend payment keys are empty/unset for this demo.
             const btn = document.getElementById('bridge-pay-btn');
             if (btn) btn.innerText = "Connecting Secure Gateway...";
 
             try {
-                // In a production environment with keys, this would hit /payments/razorpay/order
-                // We'll mimic the Stripe/Razorpay latency handshake here:
-                await new Promise((r) => setTimeout(r, 1800));
-
-                if (window.confirm(`Initiate Secure Transaction string for ${formatRupees(pending)} (powered by Mock Gateway integration)?`)) {
-                    if (btn) btn.innerText = "Processing Bank Handshake...";
-                    const { data } = await api.post('/payments', {
-                        studentFeeId: targetFeeRecord.id,
-                        amount: pending,
-                        mode: 'ONLINE',
-                        transactionRef: 'txn_mock_' + Math.floor(Math.random() * 9999999),
-                        remarks: 'Secured via Student Portal Automated Checkout'
-                    });
-
-                    alert('✅ Transaction Verified and Received by the Institution! Receipt ' + data.data.receipt.receiptNumber + ' generated successfully.');
-                    window.location.reload();
-                } else {
+                // Load Razorpay script
+                const rzpLoaded = await loadRazorpayScript();
+                if (!rzpLoaded) {
+                    alert('Razorpay SDK failed to load. Are you offline?');
                     if (btn) btn.innerText = "Pay Online 💳";
+                    return;
                 }
-            } catch (err) {
-                alert('Connection to the payment gateway failed.');
+
+                // Create order on backend
+                const { data: orderRes } = await api.post('/payments/razorpay/order', {
+                    studentFeeId: targetFeeRecord.id,
+                    amount: pending
+                });
+
+                if (!orderRes.success || !orderRes.data) {
+                    throw new Error('Failed to create payment order');
+                }
+
+                const order = orderRes.data;
+
+                const options = {
+                    key: 'rzp_test_XXXXXXXXXXXXXXXXXX',
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: 'Shri Sai I.T.I',
+                    description: `Online Fee Payment - ${studentData.name}`,
+                    order_id: order.id,
+                    handler: async function (response: any) {
+                        if (btn) btn.innerText = "Verifying Payment...";
+                        try {
+                            const { data: verifyRes } = await api.post('/payments/razorpay/verify', {
+                                razorpayOrderId: response.razorpay_order_id || order.id,
+                                razorpayPaymentId: response.razorpay_payment_id || 'pay_mock_' + Math.random().toString(36).substring(2, 12),
+                                razorpaySignature: response.razorpay_signature || 'mock_signature',
+                                studentFeeId: targetFeeRecord.id,
+                                amount: order.amount
+                            });
+
+                            if (verifyRes.success) {
+                                alert(`✅ Payment Successful!\nReceipt Number: ${verifyRes.data.receipt.receiptNumber}`);
+                                window.location.reload();
+                            } else {
+                                alert('❌ Payment verification failed. Please contact support.');
+                            }
+                        } catch (err: any) {
+                            alert(`❌ Verification Error: ${err.response?.data?.message || err.message}`);
+                        } finally {
+                            if (btn) btn.innerText = "Pay Online 💳";
+                        }
+                    },
+                    prefill: {
+                        name: studentData.name,
+                        email: studentData.parent?.email || 'student@saiiti.edu.in',
+                        contact: studentData.parent?.phone || ''
+                    },
+                    theme: {
+                        color: '#1A3A7C'
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            if (btn) btn.innerText = "Pay Online 💳";
+                        }
+                    }
+                };
+
+                if (order.id.startsWith('order_mock_')) {
+                    if (btn) btn.innerText = "Opening Sandbox Gateway...";
+                    setTimeout(async () => {
+                        const confirmPay = window.confirm(`[SANDBOX GATEWAY] Pay ₹${(pending / 100).toLocaleString('en-IN')} via simulated payment gateway?`);
+                        if (confirmPay) {
+                            await (options.handler as any)({
+                                razorpay_order_id: order.id,
+                                razorpay_payment_id: 'pay_mock_' + Math.random().toString(36).substring(2, 12),
+                                razorpay_signature: 'mock_signature'
+                            });
+                        } else {
+                            if (btn) btn.innerText = "Pay Online 💳";
+                        }
+                    }, 500);
+                } else {
+                    const rzp = new (window as any).Razorpay(options);
+                    rzp.open();
+                }
+
+            } catch (err: any) {
+                alert(`Connection to the payment gateway failed: ${err.response?.data?.message || err.message}`);
                 if (btn) btn.innerText = "Pay Online 💳";
             }
         };
@@ -436,5 +510,13 @@ export default function DashboardPage() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="layout-loading"><div className="spinner" /></div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

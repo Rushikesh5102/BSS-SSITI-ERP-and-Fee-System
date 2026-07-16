@@ -24,7 +24,7 @@ export const createAuditLog = async (
                 action,
                 entityType,
                 entityId,
-                metadata: metadata ?? {},
+                metadata: metadata ? JSON.stringify(metadata) : null,
                 ipAddress,
             },
         });

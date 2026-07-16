@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
     { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
     { href: '/reports', label: 'Reports', icon: '📈', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
     { href: '/settings', label: 'Settings', icon: '⚙️', roles: ['SUPERADMIN', 'ADMIN', 'DEVELOPER'] },
+    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['SUPERADMIN', 'ADMIN', 'DEVELOPER'] },
 ];
 
 const roleLabels: Record<string, string> = {

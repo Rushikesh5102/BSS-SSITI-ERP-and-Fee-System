@@ -4,7 +4,8 @@ export enum Role {
     ACCOUNTANT = 'ACCOUNTANT',
     TEACHER = 'TEACHER',
     STUDENT = 'STUDENT',
-    PARENT = 'PARENT'
+    PARENT = 'PARENT',
+    DEVELOPER = 'DEVELOPER'
 }
 
 export enum PaymentMode {

@@ -2,6 +2,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { config } from '../config';
 import { logger } from '../utils/logger';
+import { PaymentProvider } from './payment-provider.interface';
 
 // Initialize Razorpay client
 const razorpay = new Razorpay({
@@ -9,21 +10,33 @@ const razorpay = new Razorpay({
     key_secret: config.razorpay.keySecret,
 });
 
-export const razorpayService = {
+export const razorpayService: PaymentProvider & {
+    verifyPaymentSignature(razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string): boolean;
+    verifyWebhookSignature(body: string, signature: string): boolean;
+    fetchPayment(paymentId: string): Promise<any>;
+    refundPayment(paymentId: string, amountInPaise?: number): Promise<any>;
+} = {
     /**
      * Create a Razorpay order for a fee payment
      * @param amountInPaise - e.g. 500000 = ₹5,000
      * @param receiptId     - Unique receipt reference (your internal ID)
      */
-    async createOrder(amountInPaise: number, receiptId: string, notes?: Record<string, string>) {
+    async createOrder(amountInPaise: number, receiptId: string, metadata?: Record<string, string>) {
         const order = await razorpay.orders.create({
             amount: amountInPaise,
             currency: 'INR',
             receipt: receiptId,
-            notes: notes || {},
+            notes: metadata || {},
         });
         logger.info('Razorpay order created', { orderId: order.id, amount: amountInPaise });
         return order;
+    },
+
+    /**
+     * Conforms to PaymentProvider interface
+     */
+    verifySignature(orderId: string, paymentId: string, signature: string): boolean {
+        return this.verifyPaymentSignature(orderId, paymentId, signature);
     },
 
     /**
@@ -60,6 +73,13 @@ export const razorpayService = {
      */
     async fetchPayment(paymentId: string) {
         return razorpay.payments.fetch(paymentId);
+    },
+
+    /**
+     * Conforms to PaymentProvider interface
+     */
+    async refund(transactionId: string, amountInPaise?: number) {
+        return this.refundPayment(transactionId, amountInPaise);
     },
 
     /**

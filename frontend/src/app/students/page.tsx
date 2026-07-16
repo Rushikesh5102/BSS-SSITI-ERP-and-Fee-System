@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
-export default function StudentsPage() {
+function StudentsContent() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -241,6 +241,14 @@ export default function StudentsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function StudentsPage() {
+    return (
+        <Suspense fallback={<div className="layout-loading"><div className="spinner" /></div>}>
+            <StudentsContent />
+        </Suspense>
     );
 }
 

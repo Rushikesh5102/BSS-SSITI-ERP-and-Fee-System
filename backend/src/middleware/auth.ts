@@ -66,9 +66,21 @@ export const authenticate = async (
         req.user = {
             id: user.id,
             email: user.email,
-            role: user.role,
+            role: user.role as Role,
             branchId: user.branchId,
         };
+
+        // Check for Global Lockdown
+        if (req.user.role !== Role.DEVELOPER) {
+            const lockdown = await prisma.systemConfig.findUnique({ where: { key: 'LOCKDOWN_MODE' } });
+            if (lockdown && lockdown.value === 'true') {
+                res.status(503).json({ 
+                    success: false, 
+                    message: 'System is currently under emergency maintenance/lockdown. Please contact the administrator.' 
+                });
+                return;
+            }
+        }
 
         next();
     } catch (error) {
@@ -90,7 +102,7 @@ export const authorize = (...roles: Role[]) => {
             res.status(401).json({ success: false, message: 'Not authenticated' });
             return;
         }
-        if (!roles.includes(req.user.role)) {
+        if (!roles.includes(req.user.role) && req.user.role !== Role.DEVELOPER) {
             res.status(403).json({
                 success: false,
                 message: `Access denied. Required roles: ${roles.join(', ')}`,

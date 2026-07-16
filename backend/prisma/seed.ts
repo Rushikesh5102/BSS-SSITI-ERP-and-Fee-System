@@ -79,6 +79,35 @@ async function main() {
     });
     console.log(`✅ Teacher: teacher@saiiti.edu.in / Teacher@123`);
 
+    // Create Developer / System Health User
+    const developer = await prisma.user.upsert({
+        where: { email: 'pattiwarrushikesh5102@gmail.com' },
+        update: { role: Role.DEVELOPER },
+        create: {
+            name: 'Rushikesh Pattiwar',
+            email: 'pattiwarrushikesh5102@gmail.com',
+            passwordHash: await bcrypt.hash('Rushikesh@5102', 12),
+            role: Role.DEVELOPER,
+            branchId: branch.id,
+        },
+    });
+    console.log(`✅ Developer: ${developer.email} / Rushikesh@5102`);
+
+    // Create System Automated User for webhook executions
+    const systemUser = await prisma.user.upsert({
+        where: { email: 'system@saiiti.edu.in' },
+        update: { role: Role.SUPERADMIN },
+        create: {
+            id: '00000000-0000-0000-0000-000000000000',
+            name: 'System Automated',
+            email: 'system@saiiti.edu.in',
+            passwordHash: await bcrypt.hash('System@123', 12),
+            role: Role.SUPERADMIN,
+            branchId: branch.id,
+        },
+    });
+    console.log(`✅ System Automated User seeded: ${systemUser.email}`);
+
     // Seed fee categories
     const categories = [
         { name: 'Tuition Fee', description: 'Monthly tuition charges' },
@@ -137,7 +166,7 @@ async function main() {
     });
 
     // Sample student
-    await prisma.student.upsert({
+    const student = await prisma.student.upsert({
         where: { studentId: 'SAI-2024-001' },
         update: {},
         create: {
@@ -152,6 +181,20 @@ async function main() {
         },
     });
     console.log(`✅ Sample student: SAI-2024-001`);
+
+    // Create Sample Student User Account
+    await prisma.user.upsert({
+        where: { email: 'sai-2024-001@student.saiiti.edu.in' },
+        update: {},
+        create: {
+            name: 'Rahul Sharma',
+            email: 'sai-2024-001@student.saiiti.edu.in',
+            passwordHash: await bcrypt.hash('SAI-2024-001', 12),
+            role: 'STUDENT',
+            branchId: branch.id,
+        },
+    });
+    console.log(`✅ Sample Student User: sai-2024-001@student.saiiti.edu.in / SAI-2024-001`);
 
     console.log('\n🎉 Seeding complete!');
     console.log('─────────────────────────────────────────');

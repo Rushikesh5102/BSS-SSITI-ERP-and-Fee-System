@@ -1,9 +1,10 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
+import { config } from '../config';
 
 import { AuditAction, PaymentStatus } from '../types/enums';
 
@@ -153,6 +154,20 @@ export const paymentsController = {
      */
     createRazorpayOrder: asyncHandler(async (req: Request, res: Response) => {
         const { studentFeeId, amount } = req.body;
+
+        // If keys are dummy, return a mock order object for frontend sandbox testing
+        if (!config.razorpay.keyId || config.razorpay.keyId.includes('XXXX') || config.razorpay.keyId === 'your_key_id') {
+            const mockOrder = {
+                id: 'order_mock_' + Math.random().toString(36).substring(2, 15),
+                amount: amount,
+                currency: 'INR',
+                receipt: studentFeeId,
+                notes: { studentFeeId },
+                isMock: true
+            };
+            return res.json({ success: true, data: mockOrder });
+        }
+
         const order = await razorpayService.createOrder(amount, studentFeeId, { studentFeeId });
         res.json({ success: true, data: order });
     }),
@@ -161,8 +176,20 @@ export const paymentsController = {
      * POST /payments/razorpay/verify
      * Verify Razorpay payment and record in DB
      */
-    verifyRazorpayPayment: asyncHandler(async (req: Request, res: Response) => {
+    verifyRazorpayPayment: asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const { razorpayOrderId, razorpayPaymentId, razorpaySignature, studentFeeId, amount } = req.body;
+
+        // If it is a mock order verification
+        if (razorpayOrderId && razorpayOrderId.startsWith('order_mock_')) {
+            req.body = {
+                studentFeeId,
+                amount,
+                mode: 'ONLINE',
+                transactionRef: razorpayPaymentId || 'txn_mock_' + Math.floor(Math.random() * 9999999),
+                status: PaymentStatus.VERIFIED,
+            };
+            return paymentsController.recordPayment(req, res, next);
+        }
 
         const isValid = razorpayService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
         if (!isValid) throw new AppError(400, 'Invalid payment signature');
@@ -177,7 +204,7 @@ export const paymentsController = {
         };
 
         // Delegate to recordPayment
-        return paymentsController.recordPayment(req, res);
+        return paymentsController.recordPayment(req, res, next);
     }),
 
     /**

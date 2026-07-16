@@ -12,6 +12,9 @@ router.use(authenticate);
 // GET /users - List staff
 router.get('/', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.list);
 
+// GET /users/stats - Get role counts
+router.get('/stats', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.stats);
+
 // GET /users/:id - Get staff member
 router.get('/:id', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.getById);
 

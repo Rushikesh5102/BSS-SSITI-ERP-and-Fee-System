@@ -182,6 +182,16 @@ export default function LoginPage() {
 
                         <button 
                             type="button"
+                            onClick={() => quickLogin('sai-2024-001@student.saiiti.edu.in', 'SAI-2024-001')}
+                            className="btn btn-secondary w-full"
+                            disabled={loading}
+                            style={{ justifyContent: 'center' }}
+                        >
+                            🎓 Login as Student
+                        </button>
+
+                        <button 
+                            type="button"
                             onClick={() => quickLogin('pattiwarrushikesh5102@gmail.com', 'Rushikesh@5102')}
                             className="btn btn-primary w-full"
                             disabled={loading}

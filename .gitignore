@@ -7,3 +7,6 @@ uploads/
 logs/
 .DS_Store
 *.tsbuildinfo
+.next/
+out/
+build/

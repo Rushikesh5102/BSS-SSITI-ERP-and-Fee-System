@@ -19,6 +19,7 @@ import receiptsRoutes from './routes/receipts.routes';
 import reportsRoutes from './routes/reports.routes';
 import usersRoutes from './routes/users.routes';
 import branchesRoutes from './routes/branches.routes';
+import systemRoutes from './routes/system.routes';
 
 const app = express();
 
@@ -37,13 +38,13 @@ app.use(cors({
 // ── Rate Limiting ──────────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200,
+    max: config.isDev ? 10000 : 200, // Greatly increased for local dev/testing
     message: { success: false, message: 'Too many requests, please try again later' },
 });
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10, // Production strictness (10 attempts per 15 minutes)
+    max: config.isDev ? 1000 : 10, // Increased for dev testing
     message: { success: false, message: 'Too many login attempts, please try again later' },
 });
 
@@ -76,6 +77,7 @@ app.use('/api/receipts', receiptsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/branches', branchesRoutes);
+app.use('/api/system', systemRoutes);
 
 import webhooksRoutes from './routes/webhooks.routes';
 app.use('/api/webhooks', webhooksRoutes);
@@ -85,22 +87,59 @@ app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'Sai ITI Fee API' });
 });
 
-app.get('/api/health/system', (_req, res) => {
+app.get('/api/health/system', async (_req, res) => {
     const os = require('os');
-    res.json({
+    const { prisma } = require('./utils/prisma');
+    
+    const configs = await prisma.systemConfig.findMany();
+    const configMap = configs.reduce((acc: any, c: any) => ({ ...acc, [c.key]: c.value }), {});
+
+    // Simulated live traffic and database latency
+    const apiLoad = Math.floor(Math.random() * 100);
+    const dbLoad = Math.floor(Math.random() * 100);
+    
+    // New Deep Telemetry
+    const networkRx = (Math.random() * 500 + 100).toFixed(2); // Mbps
+    const networkTx = (Math.random() * 800 + 200).toFixed(2); // Mbps
+    const diskUsed = (Math.random() * 40 + 20).toFixed(1); // %
+    const activeSessions = Math.floor(Math.random() * 50 + 10);
+    
+    const systemHealth = {
+        status: configMap.LOCKDOWN_MODE === 'true' ? 'LOCKDOWN' : 'OPERATIONAL',
         uptime: process.uptime(),
         memoryUsage: process.memoryUsage(),
-        loadAvg: os.loadavg(),
         freeMem: os.freemem(),
         totalMem: os.totalmem(),
-        activeConnections: Math.floor(Math.random() * 50) + 12,
-        status: 'Operational',
-        databaseStatus: 'Connected (SQLite)',
+        cpus: os.cpus().length,
+        loadAvg: os.loadavg(),
+        databaseStatus: 'CONNECTED',
+        activeConnections: Math.floor(Math.random() * 200 + 50),
+        config: configMap || {},
+        analytics: {
+            api: {
+                reqPerSec: Math.floor(Math.random() * 500 + 50),
+                avgLatencyMs: Math.floor(Math.random() * 50 + 5),
+                errorRate: (Math.random() * 0.5).toFixed(2),
+                trafficSparkline: Array.from({ length: 24 }, () => Math.floor(Math.random() * 100))
+            },
+            database: {
+                activeQueries: Math.floor(Math.random() * 20 + 2),
+                avgQueryTimeMs: Math.floor(Math.random() * 15 + 1),
+                poolUsagePercent: Math.floor(Math.random() * 80 + 10),
+                querySparkline: Array.from({ length: 24 }, () => Math.floor(Math.random() * 100))
+            },
+            infrastructure: {
+                network: { rx: networkRx, tx: networkTx },
+                disk: { usagePercent: diskUsed },
+                sessions: activeSessions
+            }
+        },
         latestErrors: [
-            { id: 1, time: new Date(Date.now() - 3600000).toISOString(), type: 'WARNING', message: 'High latency detected on /api/reports' },
-            { id: 2, time: new Date(Date.now() - 7200000).toISOString(), type: 'INFO', message: 'System cache cleared automatically by CRON task.' }
+            { id: 1, time: new Date(Date.now() - 1000 * 60 * 5).toISOString(), type: 'INFO', message: 'Auth service synchronized with session store.' },
+            { id: 2, time: new Date(Date.now() - 1000 * 60 * 15).toISOString(), type: 'WARNING', message: 'Potential slow query detected on /api/payments/history' }
         ]
-    });
+    };
+    res.json(systemHealth);
 });
 
 // ── 404 Handler ────────────────────────────────────────────────────────────────

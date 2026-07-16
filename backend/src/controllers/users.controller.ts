@@ -12,10 +12,10 @@ export const usersController = {
      * GET /users - List all staff users (filtered by branch for non-superadmin)
      */
     list: asyncHandler(async (req: Request, res: Response) => {
-        const { role, branchId: queryBranch } = req.query;
+        const { role, branchId: queryBranch, includeInactive } = req.query;
 
         const where: any = {
-            isActive: true,
+            ...(includeInactive === 'true' ? {} : { isActive: true }),
             ...(req.user?.role !== 'SUPERADMIN' && req.user?.branchId
                 ? { branchId: req.user.branchId }
                 : {}),
@@ -34,6 +34,32 @@ export const usersController = {
         });
 
         res.json({ success: true, data: users });
+    }),
+
+    /**
+     * GET /users/stats - Get user counts grouped by role
+     */
+    stats: asyncHandler(async (req: Request, res: Response) => {
+        const counts = await prisma.user.groupBy({
+            by: ['role'],
+            _count: {
+                id: true,
+            },
+        });
+
+        const statsMap = counts.reduce((acc: any, c) => {
+            acc[c.role] = c._count.id;
+            return acc;
+        }, {
+            SUPERADMIN: 0,
+            ADMIN: 0,
+            ACCOUNTANT: 0,
+            TEACHER: 0,
+            STUDENT: 0,
+            DEVELOPER: 0
+        });
+
+        res.json({ success: true, data: statsMap });
     }),
 
     /**

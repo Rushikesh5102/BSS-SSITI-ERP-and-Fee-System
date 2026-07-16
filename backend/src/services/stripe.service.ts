@@ -1,13 +1,45 @@
 import Stripe from 'stripe';
 import { config } from '../config';
 import { logger } from '../utils/logger';
+import { PaymentProvider } from './payment-provider.interface';
 
 // Initialize Stripe client
 const stripe = new Stripe(config.stripe.secretKey, {
     apiVersion: '2023-10-16',
 });
 
-export const stripeService = {
+export const stripeService: PaymentProvider & {
+    createPaymentIntent(amountInPaise: number, metadata?: Record<string, string>): Promise<{ clientSecret: string | null; paymentIntentId: string }>;
+    retrievePaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent>;
+    constructWebhookEvent(payload: Buffer, signature: string): Stripe.Event;
+    refundPayment(paymentIntentId: string, amountInPaise?: number): Promise<Stripe.Refund>;
+} = {
+    /**
+     * Conforms to PaymentProvider interface.
+     * For Stripe, we map order creation to creating a PaymentIntent.
+     */
+    async createOrder(amountInPaise: number, receiptId: string, metadata?: Record<string, string>) {
+        const result = await this.createPaymentIntent(amountInPaise, {
+            ...metadata,
+            receiptId,
+        });
+        return {
+            id: result.paymentIntentId,
+            clientSecret: result.clientSecret,
+            amount: amountInPaise,
+            currency: 'INR',
+        };
+    },
+
+    /**
+     * Conforms to PaymentProvider interface.
+     * Signature verification for Stripe is verified at the webhook level.
+     */
+    verifySignature(_orderId: string, _paymentId: string, _signature: string): boolean {
+        logger.warn('Stripe: Client-side signature verification is not used; validation is webhook-driven.');
+        return false;
+    },
+
     /**
      * Create a Stripe PaymentIntent for a fee payment
      * Frontend uses the clientSecret to complete payment with Stripe.js
@@ -55,11 +87,18 @@ export const stripeService = {
     },
 
     /**
+     * Conforms to PaymentProvider interface.
+     */
+    async refund(transactionId: string, amountInPaise?: number) {
+        return this.refundPayment(transactionId, amountInPaise);
+    },
+
+    /**
      * Process a refund for a PaymentIntent
      */
-    async refundPayment(paymentIntentId: string, amountInPaise?: number) {
+    async refundPayment(paymentId: string, amountInPaise?: number) {
         return stripe.refunds.create({
-            payment_intent: paymentIntentId,
+            payment_intent: paymentId,
             amount: amountInPaise,
         });
     },
