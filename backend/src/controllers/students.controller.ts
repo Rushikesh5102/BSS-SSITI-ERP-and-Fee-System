@@ -47,8 +47,8 @@ export const studentsController = {
                     parent: { select: { name: true, phone: true, email: true } },
                     branch: { select: { name: true } },
                     studentFees: {
-                        select: { totalAmount: true, paidAmount: true },
-                    },
+              select: { id: true, totalAmount: true, paidAmount: true },
+            },
                 },
             }),
             prisma.student.count({ where }),
