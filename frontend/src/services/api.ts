@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Base API URL from Vercel environment settings
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 // Axios instance with base URL and default headers
