@@ -4,10 +4,10 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 import { PaymentProvider } from './payment-provider.interface';
 
-// Initialize Razorpay client
+// Initialize Razorpay client (with placeholder fallbacks to prevent startup crash if keys are missing)
 const razorpay = new Razorpay({
-    key_id: config.razorpay.keyId,
-    key_secret: config.razorpay.keySecret,
+    key_id: config.razorpay.keyId || 'rzp_test_placeholder',
+    key_secret: config.razorpay.keySecret || 'placeholder_secret',
 });
 
 export const razorpayService: PaymentProvider & {
