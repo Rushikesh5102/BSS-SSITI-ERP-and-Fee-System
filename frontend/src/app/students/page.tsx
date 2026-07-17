@@ -283,13 +283,10 @@ function StudentsContent() {
                                         <label className="form-label">Class/Trade <span className="required">*</span></label>
                                         <input className="form-control" required value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} placeholder="e.g. Electrician" />
                                     </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Section</label>
-                                        <input className="form-control" value={form.section} onChange={(e) => setForm(f => ({ ...f, section: e.target.value }))} placeholder="A, B, C" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Roll Number</label>
-                                        <input className="form-control" value={form.rollNumber} onChange={(e) => setForm(f => ({ ...f, rollNumber: e.target.value }))} placeholder="01" />
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 13, color: 'var(--primary)' }}>
+                                            ℹ️ <b>Auto-Generated Credentials:</b> Roll Number and Student ID will be generated automatically in sequence (e.g. Roll 01 ➔ SITI-2026-E01) to prevent human errors.
+                                        </div>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label">Student Email (Optional)</label>

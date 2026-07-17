@@ -90,6 +90,8 @@ function DashboardContent() {
 
     const effectiveRole = simulateRole && user?.role === 'DEVELOPER' ? simulateRole.toUpperCase() : user?.role;
 
+    const [storageStats, setStorageStats] = useState<any>(null);
+
     useEffect(() => {
         if (!user) return;
         if (effectiveRole === 'DEVELOPER') {
@@ -118,6 +120,7 @@ function DashboardContent() {
                 }
             }).catch(() => { });
             api.get('/payments?limit=5').then(({ data }) => setRecentPayments(data.data || [])).catch(() => { });
+            api.get('/reports/storage-stats').then(({ data }) => setStorageStats(data.data)).catch(() => { });
         }
     }, [user, effectiveRole, router]);
 
@@ -546,6 +549,35 @@ function DashboardContent() {
                                 </table>
                             </div>
                         </div>
+
+                        {/* System Storage & Quota Visual Card */}
+                        {storageStats && (
+                            <div className="card mb-6">
+                                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div className="card-title">⚡ Supabase Database & System Storage Quota</div>
+                                    <span className="badge badge-info">{storageStats.totalUsedPercent}% Used</span>
+                                </div>
+                                <div className="card-body">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
+                                        <span><b>Real Live PostgreSQL Usage:</b> {storageStats.dbUsedMb} MB / {storageStats.dbLimitMb} MB</span>
+                                        <span className="text-muted">Supabase Free Tier (500 MB)</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 12, background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${Math.max(2, storageStats.totalUsedPercent)}%`,
+                                            height: '100%',
+                                            background: storageStats.totalUsedPercent > 80 ? 'var(--danger)' : 'var(--primary)',
+                                            transition: 'width 0.4s ease',
+                                        }} />
+                                    </div>
+                                    {storageStats.totalUsedPercent > 80 && (
+                                        <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 8 }}>
+                                            ⚠️ Warning: System storage has reached {storageStats.totalUsedPercent}%. Contact Developer to purge old audit logs.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <footer className="footer">
                         <div>&copy; {new Date().getFullYear()} Shri Sai I.T.I All rights reserved. | <Link href="/terms" style={{ marginLeft: 8 }}>Terms and Conditions</Link></div>

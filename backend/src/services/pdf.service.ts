@@ -180,7 +180,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         x: 40, y: 10, font: regularFont, size: 7, color: rgb(0.7, 0.7, 0.8),
     });
 
-    const pdfBytes = await doc.save();
+    const pdfBytes = await doc.save({ useObjectStreams: true });
     return Buffer.from(pdfBytes);
 };
 
@@ -281,6 +281,6 @@ export const generateReportPdf = async (
         y -= 20;
     });
 
-    const pdfBytes = await doc.save();
+    const pdfBytes = await doc.save({ useObjectStreams: true });
     return Buffer.from(pdfBytes);
 };

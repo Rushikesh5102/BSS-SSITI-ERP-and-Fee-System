@@ -70,10 +70,14 @@ export const studentsController = {
      */
     create: asyncHandler(async (req: Request, res: Response) => {
         const { parent, ...studentData } = req.body;
+        const tradeClass = studentData.class || 'Electrician';
 
-        // Auto-generate student ID in SITI-YEAR-E01 format
-        const count = await prisma.student.count();
-        const studentId = studentData.studentId || generateStudentId(studentData.class || 'Electrician', studentData.rollNumber || (count + 1));
+        // Auto-generate sequential roll number per trade to prevent human error
+        const countInTrade = await prisma.student.count({
+            where: { class: tradeClass }
+        });
+        const autoRollNumber = String(countInTrade + 1).padStart(2, '0');
+        const studentId = studentData.studentId || generateStudentId(tradeClass, autoRollNumber);
 
         // Create or find parent
         let parentId: string | undefined;
@@ -90,6 +94,8 @@ export const studentsController = {
         const student = await prisma.student.create({
             data: {
                 ...studentData,
+                class: tradeClass,
+                rollNumber: studentData.rollNumber || autoRollNumber,
                 studentId,
                 email: studentData.email || undefined,
                 branchId: studentData.branchId || req.user!.branchId,

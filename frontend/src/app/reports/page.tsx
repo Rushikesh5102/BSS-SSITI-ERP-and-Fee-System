@@ -125,13 +125,13 @@ export default function ReportsPage() {
                 <div className="page-content">
                     {/* Tabs */}
                     <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-                        {(['monthly', 'yearly', 'pending', 'storage'] as const).map((tab) => (
+                        {(['monthly', 'yearly', 'pending', ...(user.role === 'DEVELOPER' ? ['storage'] : [])] as const).map((tab) => (
                             <button key={tab} className={`btn ${activeTab === tab ? 'btn-primary' : 'btn-secondary'}`}
-                                onClick={() => setActiveTab(tab)}>
+                                onClick={() => setActiveTab(tab as any)}>
                                 {tab === 'monthly' && '📅 Monthly Collection'}
                                 {tab === 'yearly' && '📊 Annual / Yearly Collection'}
                                 {tab === 'pending' && '⏳ Outstanding Fees'}
-                                {tab === 'storage' && '⚡ Storage & Free Quota Clear'}
+                                {tab === 'storage' && '⚡ Storage & Free Quota Clear (Dev)'}
                             </button>
                         ))}
                     </div>

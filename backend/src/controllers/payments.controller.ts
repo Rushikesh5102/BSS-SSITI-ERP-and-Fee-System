@@ -122,6 +122,48 @@ export const paymentsController = {
     }),
 
     /**
+     * POST /payments/:id/refund - Process refund for a payment (Admin/SuperAdmin/Developer)
+     */
+    refund: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const { refundAmount, reason } = req.body;
+
+        const payment = await prisma.payment.findUnique({
+            where: { id },
+            include: { studentFee: true, receipt: true },
+        });
+
+        if (!payment) throw new AppError(404, 'Payment record not found');
+        if (payment.status === 'REFUNDED') throw new AppError(400, 'Payment has already been refunded');
+
+        const amountToRefund = refundAmount ? Math.round(Number(refundAmount)) : payment.amount;
+
+        const [updatedPayment] = await prisma.$transaction([
+            prisma.payment.update({
+                where: { id },
+                data: {
+                    status: 'REFUNDED',
+                    remarks: `Refunded ₹${(amountToRefund / 100).toFixed(2)}. Reason: ${reason || 'Admin Approved Refund'}`,
+                },
+            }),
+            prisma.studentFee.update({
+                where: { id: payment.studentFeeId },
+                data: {
+                    paidAmount: { decrement: amountToRefund },
+                },
+            }),
+        ]);
+
+        await createAuditLog(req.user!.id, AuditAction.PAYMENT_FAILED, 'Payment', payment.id, {
+            action: 'refund',
+            refundAmount: amountToRefund,
+            reason,
+        }, req.ip);
+
+        res.json({ success: true, message: 'Payment refunded successfully', data: updatedPayment });
+    }),
+
+    /**
      * GET /payments - List payments (with filters)
      */
     list: asyncHandler(async (req: Request, res: Response) => {

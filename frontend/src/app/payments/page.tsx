@@ -379,23 +379,19 @@ export default function PaymentsPage() {
                                     <input className="form-control" required value={quickAddForm.name}
                                         onChange={(e) => setQuickAddForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Amit Patil" />
                                 </div>
-                                <div className="grid grid-2 mb-3">
-                                    <div className="form-group">
-                                        <label className="form-label">Trade / Course <span className="required">*</span></label>
-                                        <select className="form-control" value={quickAddForm.class}
-                                            onChange={(e) => setQuickAddForm(f => ({ ...f, class: e.target.value }))}>
-                                            <option>Electrician</option>
-                                            <option>Fitter</option>
-                                            <option>Welder</option>
-                                            <option>Mechanic</option>
-                                            <option>COPA</option>
-                                        </select>
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Roll Number</label>
-                                        <input className="form-control" value={quickAddForm.rollNumber}
-                                            onChange={(e) => setQuickAddForm(f => ({ ...f, rollNumber: e.target.value }))} placeholder="e.g. 02" />
-                                    </div>
+                                <div className="form-group mb-3">
+                                    <label className="form-label">Trade / Course <span className="required">*</span></label>
+                                    <select className="form-control" value={quickAddForm.class}
+                                        onChange={(e) => setQuickAddForm(f => ({ ...f, class: e.target.value }))}>
+                                        <option>Electrician</option>
+                                        <option>Fitter</option>
+                                        <option>Welder</option>
+                                        <option>Mechanic</option>
+                                        <option>COPA</option>
+                                    </select>
+                                </div>
+                                <div className="form-group mb-3" style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 12, color: 'var(--primary)' }}>
+                                    ℹ️ <b>Auto-Assigned:</b> Roll Number and Student ID are generated automatically per trade (e.g. SITI-2026-E01).
                                 </div>
                                 <div className="form-group mb-3">
                                     <label className="form-label">Parent / Guardian Name</label>

@@ -24,4 +24,7 @@ router.post('/razorpay/verify', authorize(Role.SUPERADMIN, Role.ADMIN, Role.ACCO
 // POST /payments/stripe/intent - Create Stripe Payment Intent
 router.post('/stripe/intent', authorize(Role.SUPERADMIN, Role.ADMIN, Role.ACCOUNTANT, Role.STUDENT, Role.PARENT), paymentsController.createStripeIntent);
 
+// POST /payments/:id/refund - Process money refund (Admin and Developer only)
+router.post('/:id/refund', authorize(Role.SUPERADMIN, Role.ADMIN, Role.DEVELOPER), paymentsController.refund);
+
 export default router;

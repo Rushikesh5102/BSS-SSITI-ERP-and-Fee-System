@@ -99,14 +99,38 @@ export default function ReceiptsPage() {
                                             <td>{new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                                             <td>{r.generatedBy?.name}</td>
                                             <td>
-                                                <a
-                                                    href={`${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="btn btn-accent btn-sm"
-                                                >
-                                                    📄 PDF
-                                                </a>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    <a
+                                                        href={`${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="btn btn-accent btn-sm"
+                                                    >
+                                                        📄 PDF
+                                                    </a>
+                                                    {['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role) && r.payment?.status !== 'REFUNDED' && (
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            style={{ padding: '4px 8px', fontSize: 11 }}
+                                                            onClick={async () => {
+                                                                const reason = prompt('Reason for fee refund:');
+                                                                if (!reason) return;
+                                                                try {
+                                                                    await api.post(`/payments/${r.paymentId}/refund`, { reason });
+                                                                    alert('✅ Fee refunded successfully!');
+                                                                    fetchReceipts();
+                                                                } catch (err: any) {
+                                                                    alert(`❌ ${err.response?.data?.message || 'Refund failed'}`);
+                                                                }
+                                                            }}
+                                                        >
+                                                            💸 Refund
+                                                        </button>
+                                                    )}
+                                                    {r.payment?.status === 'REFUNDED' && (
+                                                        <span className="badge badge-danger">REFUNDED</span>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
