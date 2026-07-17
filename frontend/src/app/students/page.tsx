@@ -100,6 +100,25 @@ function StudentsContent() {
         }
     };
 
+    // Student History Modal State
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyStudentDetail, setHistoryStudentDetail] = useState<any>(null);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    const openHistoryModal = async (studentId: string) => {
+        setLoadingHistory(true);
+        setShowHistoryModal(true);
+        try {
+            const { data } = await api.get(`/students/${studentId}`);
+            setHistoryStudentDetail(data.data);
+        } catch (err: any) {
+            showToast(`❌ ${err.response?.data?.message || 'Failed to load student history'}`);
+            setShowHistoryModal(false);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault(); setSaving(true);
         try {
@@ -121,11 +140,17 @@ function StudentsContent() {
         } finally { setSaving(false); }
     };
 
-    const canEdit = user && ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT'].includes(user.role);
+    const canEdit = user && ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(user.role);
 
     if (loading || !user) return null;
 
     const totalPages = Math.ceil(total / 15);
+
+    const getBaseUrl = () => {
+        return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+            ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+            : 'http://localhost:4000';
+    };
 
     return (
         <div className="layout">
@@ -198,8 +223,11 @@ function StudentsContent() {
                                                     ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                 </td>
                                                 <td style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                    <button className="btn btn-secondary btn-sm" onClick={() => openHistoryModal(s.id)}>
+                                                        📜 History
+                                                    </button>
                                                     {canEdit && (
-                                                        <button className="btn btn-secondary btn-sm" onClick={() => openFeeModal(s)}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => openFeeModal(s)}>
                                                             💳 {totalFee > 0 ? 'Edit Fee' : 'Assign Fee'}
                                                         </button>
                                                     )}
@@ -364,6 +392,119 @@ function StudentsContent() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Student History & Profile Modal */}
+            {showHistoryModal && (
+                <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+                    <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">📜 Student Complete History & Profile</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowHistoryModal(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+                            {loadingHistory ? (
+                                <div className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+                            ) : historyStudentDetail ? (
+                                <div>
+                                    {/* Overview Header */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-2)', padding: 16, borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
+                                            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                                                ID: <b>{historyStudentDetail.studentId}</b> | Class: <b>{historyStudentDetail.class} {historyStudentDetail.section && `(${historyStudentDetail.section})`}</b> {historyStudentDetail.rollNumber && `| Roll: ${historyStudentDetail.rollNumber}`}
+                                            </div>
+                                        </div>
+                                        <span className="badge badge-primary">{historyStudentDetail.branch?.name || 'Main Branch'}</span>
+                                    </div>
+
+                                    {/* Parent Info */}
+                                    <div className="card mb-3" style={{ padding: 12, background: 'var(--surface)' }}>
+                                        <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 700 }}>Parent / Guardian Contact</div>
+                                        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13 }}>
+                                            <div><b>Name:</b> {historyStudentDetail.parent?.name || '—'}</div>
+                                            <div><b>Phone:</b> {historyStudentDetail.parent?.phone || '—'}</div>
+                                            <div><b>Email:</b> {historyStudentDetail.parent?.email || '—'}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Allocated Fee Summary */}
+                                    <div className="card mb-4" style={{ padding: 12 }}>
+                                        <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, fontWeight: 700 }}>Fee Allocations & Outstanding Balance</div>
+                                        {historyStudentDetail.studentFees?.length === 0 ? (
+                                            <div className="text-muted text-sm">No fee structure assigned to this student yet.</div>
+                                        ) : historyStudentDetail.studentFees.map((sf: any) => {
+                                            const due = sf.totalAmount - sf.paidAmount;
+                                            return (
+                                                <div key={sf.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                                    <div>
+                                                        <b>{sf.feeStructure?.name || 'School Fee'}</b> ({sf.academicYear})
+                                                        {sf.dueDate && <div className="text-sm text-muted">Due Date: {new Date(sf.dueDate).toLocaleDateString('en-IN')}</div>}
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div>Total: <b>₹{(sf.totalAmount / 100).toLocaleString('en-IN')}</b> | Paid: <span className="text-success">₹{(sf.paidAmount / 100).toLocaleString('en-IN')}</span></div>
+                                                        <div style={{ fontSize: 12, fontWeight: 700, color: due > 0 ? 'var(--danger)' : 'var(--accent)' }}>
+                                                            {due > 0 ? `Outstanding Balance: ₹${(due / 100).toLocaleString('en-IN')}` : '✅ Fully Paid'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Complete Payment & Receipt History */}
+                                    <div className="card" style={{ padding: 12 }}>
+                                        <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, fontWeight: 700 }}>Complete Transaction & Receipt Timeline</div>
+                                        {historyStudentDetail.studentFees?.flatMap((sf: any) => sf.payments || []).length === 0 ? (
+                                            <div className="text-muted text-sm" style={{ padding: 10 }}>No payments recorded for this student.</div>
+                                        ) : (
+                                            <div className="table-wrap" style={{ border: 'none' }}>
+                                                <table className="table" style={{ fontSize: 12 }}>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Receipt No.</th>
+                                                            <th>Date</th>
+                                                            <th>Mode</th>
+                                                            <th>Amount</th>
+                                                            <th>Ref No.</th>
+                                                            <th>Official PDF</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {historyStudentDetail.studentFees.flatMap((sf: any) => sf.payments || []).map((p: any) => (
+                                                            <tr key={p.id}>
+                                                                <td><span className="badge badge-primary">{p.receipt?.receiptNumber || 'N/A'}</span></td>
+                                                                <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+                                                                <td><span className="badge badge-info">{p.mode}</span></td>
+                                                                <td><b className="text-success">₹{(p.amount / 100).toLocaleString('en-IN')}</b></td>
+                                                                <td>{p.transactionRef || '—'}</td>
+                                                                <td>
+                                                                    {p.receipt ? (
+                                                                        <a
+                                                                            href={`${getBaseUrl()}${p.receipt.pdfUrl.startsWith('/api') ? p.receipt.pdfUrl : `/api${p.receipt.pdfUrl}`}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="btn btn-accent btn-sm"
+                                                                        >
+                                                                            📄 PDF
+                                                                        </a>
+                                                                    ) : '—'}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : null}
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={() => setShowHistoryModal(false)}>Close</button>
+                        </div>
                     </div>
                 </div>
             )}

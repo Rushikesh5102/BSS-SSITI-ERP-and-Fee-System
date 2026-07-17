@@ -203,3 +203,84 @@ function numberToWords(num: number): string {
     const intPart = Math.floor(num);
     return convert(intPart).trim();
 }
+
+/**
+ * Generate a multi-page PDF collection/summary report with college logo
+ */
+export const generateReportPdf = async (
+    title: string,
+    rows: Array<Record<string, any>>,
+    columns: Array<{ header: string; key: string }>
+): Promise<Buffer> => {
+    const doc = await PDFDocument.create();
+    const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+    const regularFont = await doc.embedFont(StandardFonts.Helvetica);
+
+    let logoImage: any = null;
+    try {
+        const logoPath = path.join(process.cwd(), 'assets', 'sai_iti_logo.png');
+        if (fs.existsSync(logoPath)) {
+            const logoBytes = fs.readFileSync(logoPath);
+            logoImage = await doc.embedPng(logoBytes);
+        }
+    } catch { }
+
+    const primary = rgb(0.12, 0.29, 0.59);
+    const black = rgb(0, 0, 0);
+    const white = rgb(1, 1, 1);
+    const gray = rgb(0.4, 0.4, 0.4);
+    const lightGray = rgb(0.95, 0.95, 0.95);
+
+    let page = doc.addPage([595.28, 841.89]);
+    let { width, height } = page.getSize();
+
+    const drawHeader = (p: any) => {
+        p.drawRectangle({ x: 0, y: height - 90, width, height: 90, color: primary });
+        let textX = 35;
+        if (logoImage) {
+            p.drawImage(logoImage, { x: 35, y: height - 80, width: 55, height: 55 });
+            textX = 100;
+        }
+        p.drawText(config.school.name, { x: textX, y: height - 40, font: boldFont, size: 18, color: white });
+        p.drawText(title, { x: textX, y: height - 60, font: regularFont, size: 12, color: rgb(0.9, 0.9, 1) });
+        p.drawText(`Generated: ${new Date().toLocaleDateString('en-IN')}`, { x: width - 170, y: height - 60, font: regularFont, size: 9, color: white });
+    };
+
+    drawHeader(page);
+
+    let y = height - 120;
+    const colWidth = (width - 70) / columns.length;
+
+    // Draw Column Headers
+    page.drawRectangle({ x: 35, y: y - 5, width: width - 70, height: 24, color: lightGray });
+    columns.forEach((col, idx) => {
+        page.drawText(col.header, { x: 40 + idx * colWidth, y: y + 2, font: boldFont, size: 9, color: black });
+    });
+
+    y -= 25;
+
+    rows.forEach((row) => {
+        if (y < 50) {
+            page = doc.addPage([595.28, 841.89]);
+            drawHeader(page);
+            y = height - 120;
+
+            page.drawRectangle({ x: 35, y: y - 5, width: width - 70, height: 24, color: lightGray });
+            columns.forEach((col, idx) => {
+                page.drawText(col.header, { x: 40 + idx * colWidth, y: y + 2, font: boldFont, size: 9, color: black });
+            });
+            y -= 25;
+        }
+
+        columns.forEach((col, idx) => {
+            const val = row[col.key] !== undefined && row[col.key] !== null ? String(row[col.key]) : '—';
+            page.drawText(val.substring(0, 20), { x: 40 + idx * colWidth, y, font: regularFont, size: 8.5, color: black });
+        });
+
+        page.drawLine({ start: { x: 35, y: y - 6 }, end: { x: width - 35, y: y - 6 }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
+        y -= 20;
+    });
+
+    const pdfBytes = await doc.save();
+    return Buffer.from(pdfBytes);
+};
