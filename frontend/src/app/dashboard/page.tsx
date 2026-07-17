@@ -180,7 +180,7 @@ function DashboardContent() {
                 const order = orderRes.data;
 
                 const options = {
-                    key: 'rzp_test_XXXXXXXXXXXXXXXXXX',
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_test_TEUu7W94JCplrN',
                     amount: order.amount,
                     currency: order.currency,
                     name: 'Shri Sai I.T.I',

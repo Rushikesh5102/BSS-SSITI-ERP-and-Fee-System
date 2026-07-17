@@ -20,6 +20,15 @@ export const formatCurrency = (paise: number): string => {
     }).format(rupees);
 };
 
+/** Format paise to Indian Rupee string with 'Rs.' prefix for PDF engines */
+export const formatCurrencyForPdf = (paise: number): string => {
+    const rupees = paiseToRupees(paise);
+    const formatted = new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+    }).format(rupees);
+    return `Rs. ${formatted}`;
+};
+
 /** Get pending balance in paise */
 export const getPendingBalance = (totalAmount: number, paidAmount: number): number =>
     totalAmount - paidAmount;

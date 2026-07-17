@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { config } from '../config';
-import { formatCurrency, paiseToRupees } from '../utils/currency';
+import { formatCurrencyForPdf, paiseToRupees } from '../utils/currency';
 
 interface ReceiptData {
     receiptNumber: string;
@@ -104,7 +104,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
     y -= 35;
     page.drawRectangle({ x: leftX, y: y - 15, width: width - 80, height: 30, color: lightGray });
     page.drawText(data.feesFor || 'School Fee', { x: leftX + 15, y: y, font: regularFont, size: 10, color: black });
-    page.drawText(formatCurrency(data.amount), {
+    page.drawText(formatCurrencyForPdf(data.amount), {
         x: width - 120,
         y: y,
         font: boldFont,
@@ -116,7 +116,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
     y -= 55;
     page.drawRectangle({ x: leftX, y: y - 15, width: width - 80, height: 40, color: accent });
     page.drawText('TOTAL AMOUNT PAID', { x: leftX + 15, y: y + 8, font: boldFont, size: 11, color: white });
-    page.drawText(formatCurrency(data.amount), {
+    page.drawText(formatCurrencyForPdf(data.amount), {
         x: width - 160,
         y: y + 8,
         font: boldFont,

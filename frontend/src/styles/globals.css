@@ -3,46 +3,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Brand Colors (Elegant Sky Blue / Indigo) */
+  /* Brand Colors (Elegant Sky Blue) */
   --primary: #0ea5e9;       /* Sky Blue */
   --primary-dark: #0284c7;  /* Deep Sky Blue */
-  --primary-light: #38bdf8; /* Soft Sky Blue */
+  --primary-light: #7dd3fc; /* Soft Sky Blue */
   --accent: #f59e0b;        /* Golden Accent */
   --accent-light: #fbbf24;  
   --danger: #ef4444;        
   --warning: #f97316;       
   --info: #0ea5e9;          
 
-  /* Neutrals (Sleek Slate/White) */
-  --bg: #f8fafc;           /* Light grey-blue slate bg */
-  --surface: #ffffff;      /* Pure white for cards */
-  --surface-2: #f1f5f9;    /* Slate-100 */
-  --border: #e2e8f0;       /* Slate-200 border */
-  --border-dark: #cbd5e1;  /* Slate-300 */
+  /* Neutrals (Darker Beige as requested) */
+  --bg: #d8c3a5;           /* Solid Dark Beige */
+  --surface: #e9dcc9;      /* Lighter Beige for cards to stand out */
+  --surface-2: #cbb493;    /* Even deeper beige for secondary elements */
+  --border: #ba9f7a;       /* Prominent Beige Border */
+  --border-dark: #9e815b;  /* Deep khaki border */
 
   /* Text */
   --text-primary: #0f172a;   /* Slate 900 */
-  --text-secondary: #475569; /* Slate 600 */
+  --text-secondary: #334155; /* Slate 700 */
   --text-muted: #64748b;     /* Slate 500 */
   --text-on-primary: #ffffff;
 
   /* Sidebar */
-  --sidebar-bg: #0f172a;     /* Professional Deep Slate */
-  --sidebar-text: #94a3b8;   /* Muted Slate Text */
-  --sidebar-hover: rgba(255,255,255,0.06);
-  --sidebar-active: #0ea5e9;
+  --sidebar-bg: #0284c7;     /* Deep Sky Blue Sidebar */
+  --sidebar-text: #f0f9ff;   /* Sky tint white */
+  --sidebar-hover: rgba(255,255,255,0.15);
+  --sidebar-active: rgba(255,255,255,0.25);
   --sidebar-width: 260px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.12), 0 4px 14px rgba(0,0,0,0.08);
 
   /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 
   /* Transitions */
   --transition: 150ms ease;
@@ -61,11 +61,11 @@ html.dark {
     --info: #38bdf8;
 
     /* Neutrals */
-    --bg: #020617;           /* Slate 950 */
-    --surface: #0f172a;      /* Slate 900 */
-    --surface-2: #1e293b;    /* Slate 800 */
-    --border: #1e293b;
-    --border-dark: #334155;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --border: #334155;
+    --border-dark: #475569;
 
     /* Text */
     --text-primary: #f8fafc;
@@ -74,15 +74,15 @@ html.dark {
     --text-on-primary: #ffffff;
 
     /* Sidebar */
-    --sidebar-bg: #030712;   /* Slate 950 */
+    --sidebar-bg: #020617;
     --sidebar-text: #94a3b8;
-    --sidebar-hover: rgba(255,255,255,0.04);
-    --sidebar-active: #38bdf8;
+    --sidebar-hover: rgba(255,255,255,0.05);
+    --sidebar-active: rgba(255,255,255,0.1);
     
     /* Shadows adjust for dark mode */
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 40px rgba(0,0,0,0.5);
 }
 
 /* ─── Reset ───────────────────────────────────────────────────────────────── */
@@ -211,33 +211,36 @@ input, select, textarea { font-family: inherit; }
 .user-badge-role { color: var(--sidebar-text); font-size: 11px; text-transform: capitalize; }
 
 /* ─── Header & Footer ─────────────────────────────────────────────────────── */
-.header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 28px;
-  height: 65px;
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 50;
+.header, .footer {
+  background: var(--sidebar-bg);
   box-shadow: var(--shadow-sm);
+  color: #ffffff;
 }
 
-.header-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-.header-subtitle { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 28px;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.header-title { font-size: 17px; font-weight: 700; color: #ffffff; }
+.header-subtitle { font-size: 12px; color: var(--sidebar-text); }
 
 .header-actions { display: flex; align-items: center; gap: 12px; }
 
 .footer {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  margin-top: auto;
   padding: 16px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  color: var(--text-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--sidebar-text);
 }
-.footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
-.footer a:hover { text-decoration: underline; }
+.footer a { color: #ffffff; text-decoration: underline; }
 
 /* ─── Cards ───────────────────────────────────────────────────────────────── */
 .card {
