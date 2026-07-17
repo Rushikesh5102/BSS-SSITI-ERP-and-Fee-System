@@ -40,7 +40,7 @@ export default function ReportsPage() {
     useEffect(() => { if (user) { if (activeTab === 'monthly') fetchMonthly(); else fetchPending(); } }, [user, activeTab, month, year]);
 
     const downloadReport = (format: 'excel' | 'csv') => {
-        const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+        const base = process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api';
         const token = localStorage.getItem('accessToken');
         const url = activeTab === 'monthly'
             ? `${base}/reports/monthly?year=${year}&month=${month}&format=${format}`
