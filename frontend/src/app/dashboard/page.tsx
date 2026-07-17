@@ -330,6 +330,50 @@ function DashboardContent() {
                                         </div>
                                     </div>
 
+                                    {/* Paid Receipts Card */}
+                                    <div className="card" style={{ gridColumn: '1 / -1' }}>
+                                        <div className="card-header"><div className="card-title">🧾 My Paid Receipts</div></div>
+                                        <div className="card-body">
+                                            {studentData.studentFees?.flatMap((sf: any) => sf.payments || []).filter((p: any) => p.receipt).length === 0 ? (
+                                                <div className="text-muted text-center" style={{ padding: 16 }}>No paid receipts generated yet.</div>
+                                            ) : (
+                                                <div className="table-wrap" style={{ border: 'none' }}>
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Receipt No</th>
+                                                                <th>Payment Mode</th>
+                                                                <th>Amount Paid</th>
+                                                                <th>Date</th>
+                                                                <th>Official PDF</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {studentData.studentFees.flatMap((sf: any) => sf.payments || []).filter((p: any) => p.receipt).map((p: any) => (
+                                                                <tr key={p.id}>
+                                                                    <td><span className="badge badge-primary">{p.receipt.receiptNumber}</span></td>
+                                                                    <td><span className="badge badge-info">{p.mode}</span></td>
+                                                                    <td><b>{formatRupees(p.amount)}</b></td>
+                                                                    <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+                                                                    <td>
+                                                                        <a
+                                                                            href={`${typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://bss-ssiti-erp-and-fee-system.onrender.com' : 'http://localhost:4000'}${p.receipt.pdfUrl}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="btn btn-accent btn-sm"
+                                                                        >
+                                                                            📄 Download PDF
+                                                                        </a>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     {/* Support Contact Card */}
                                     <div className="card" style={{ gridColumn: '1 / -1' }}>
                                         <div className="card-header"><div className="card-title">📞 Need Help?</div></div>

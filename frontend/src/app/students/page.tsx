@@ -23,6 +23,13 @@ function StudentsContent() {
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
 
+    // Fee Assignment / Update Modal State
+    const [showFeeModal, setShowFeeModal] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState<any>(null);
+    const [feeStructures, setFeeStructures] = useState<any[]>([]);
+    const [feeForm, setFeeForm] = useState({ feeStructureId: '', customAmountRupees: '', dueDate: '' });
+    const [assigningFee, setAssigningFee] = useState(false);
+
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
     useEffect(() => {
@@ -41,9 +48,57 @@ function StudentsContent() {
         finally { setFetching(false); }
     };
 
-    useEffect(() => { if (user) fetchStudents(); }, [user, page, search]);
+    const fetchFeeStructures = async () => {
+        try {
+            const { data } = await api.get('/fee-structures');
+            setFeeStructures(data.data || []);
+            if (data.data && data.data.length > 0) {
+                setFeeForm(f => ({ ...f, feeStructureId: f.feeStructureId || data.data[0].id }));
+            }
+        } catch { }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchStudents();
+            fetchFeeStructures();
+        }
+    }, [user, page, search]);
 
     const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+    const openFeeModal = (student: any) => {
+        setSelectedStudent(student);
+        const currentFee = student.studentFees && student.studentFees.length > 0 ? student.studentFees[0] : null;
+        setFeeForm({
+            feeStructureId: currentFee?.feeStructureId || (feeStructures[0]?.id || ''),
+            customAmountRupees: currentFee ? (currentFee.totalAmount / 100).toString() : '',
+            dueDate: currentFee?.dueDate ? currentFee.dueDate.split('T')[0] : '',
+        });
+        setShowFeeModal(true);
+    };
+
+    const handleAssignFee = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedStudent || !feeForm.feeStructureId) return;
+        setAssigningFee(true);
+        try {
+            const amountInPaise = feeForm.customAmountRupees ? Math.round(parseFloat(feeForm.customAmountRupees) * 100) : undefined;
+            await api.post('/fee-structures/assign', {
+                studentId: selectedStudent.id,
+                feeStructureId: feeForm.feeStructureId,
+                customTotalAmount: amountInPaise,
+                dueDate: feeForm.dueDate || undefined,
+            });
+            showToast('✅ Student fee updated successfully!');
+            setShowFeeModal(false);
+            fetchStudents();
+        } catch (err: any) {
+            showToast(`❌ ${err.response?.data?.message || 'Failed to update student fee'}`);
+        } finally {
+            setAssigningFee(false);
+        }
+    };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault(); setSaving(true);
@@ -142,8 +197,12 @@ function StudentsContent() {
                                                         </>
                                                     ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                 </td>
-                                                <td>
-                                                    <a href={`/students/${s.id}`} className="btn btn-secondary btn-sm">View →</a>
+                                                <td style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                    {canEdit && (
+                                                        <button className="btn btn-secondary btn-sm" onClick={() => openFeeModal(s)}>
+                                                            💳 {totalFee > 0 ? 'Edit Fee' : 'Assign Fee'}
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -227,6 +286,81 @@ function StudentsContent() {
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" disabled={saving}>
                                     {saving ? 'Processing...' : '✅ Complete Admission'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Assign / Update Fee Modal */}
+            {showFeeModal && selectedStudent && (
+                <div className="modal-overlay" onClick={() => setShowFeeModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">💳 Assign / Update Student Fee</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowFeeModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleAssignFee}>
+                            <div className="modal-body">
+                                <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--surface-2)', borderRadius: 'var(--radius-md)' }}>
+                                    <div><b>Student:</b> {selectedStudent.name} ({selectedStudent.studentId})</div>
+                                    <div className="text-sm text-muted">Class/Trade: {selectedStudent.class} {selectedStudent.section && `(${selectedStudent.section})`}</div>
+                                </div>
+
+                                <div className="form-group mb-3">
+                                    <label className="form-label">Select Fee Structure <span className="required">*</span></label>
+                                    <select
+                                        className="form-control"
+                                        value={feeForm.feeStructureId}
+                                        onChange={(e) => {
+                                            const id = e.target.value;
+                                            const sel = feeStructures.find(f => f.id === id);
+                                            setFeeForm(f => ({
+                                                ...f,
+                                                feeStructureId: id,
+                                                customAmountRupees: sel ? (sel.totalAmount / 100).toString() : f.customAmountRupees
+                                            }));
+                                        }}
+                                        required
+                                    >
+                                        <option value="">-- Choose Fee Structure --</option>
+                                        {feeStructures.map((fs) => (
+                                            <option key={fs.id} value={fs.id}>
+                                                {fs.name} (Academic Year: {fs.academicYear}) — ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group mb-3">
+                                    <label className="form-label">Total Fee Amount (₹ INR)</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="e.g. 25000"
+                                        value={feeForm.customAmountRupees}
+                                        onChange={(e) => setFeeForm(f => ({ ...f, customAmountRupees: e.target.value }))}
+                                    />
+                                    <small className="text-muted" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
+                                        Specify a custom fee amount or leave default from the selected fee structure.
+                                    </small>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Due Date</label>
+                                    <input
+                                        type="date"
+                                        className="form-control"
+                                        value={feeForm.dueDate}
+                                        onChange={(e) => setFeeForm(f => ({ ...f, dueDate: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowFeeModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={assigningFee}>
+                                    {assigningFee ? 'Updating...' : '💾 Save Student Fee'}
                                 </button>
                             </div>
                         </form>

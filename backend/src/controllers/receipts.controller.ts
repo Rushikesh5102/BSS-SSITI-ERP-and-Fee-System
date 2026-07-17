@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { generateReceiptPdf } from '../services/pdf.service';
 
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 
@@ -59,18 +60,61 @@ export const receiptsController = {
     }),
 
     /**
-     * GET /receipts/download/:receiptNumber - Stream PDF receipt
+     * GET /receipts/download/:receiptNumber - Stream PDF receipt (auto-regenerates if missing)
      */
     downloadPdf: asyncHandler(async (req: Request, res: Response) => {
         const { receiptNumber } = req.params;
         const pdfPath = path.join(RECEIPTS_DIR, `${receiptNumber}.pdf`);
 
-        if (!fs.existsSync(pdfPath)) {
-            throw new AppError(404, 'Receipt PDF not found');
+        let pdfBuffer: Buffer;
+
+        if (fs.existsSync(pdfPath)) {
+            pdfBuffer = fs.readFileSync(pdfPath);
+        } else {
+            const receipt = await prisma.receipt.findUnique({
+                where: { receiptNumber },
+                include: {
+                    payment: {
+                        include: {
+                            studentFee: {
+                                include: {
+                                    student: { include: { parent: true } },
+                                    feeStructure: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (!receipt) {
+                throw new AppError(404, 'Receipt not found');
+            }
+
+            const studentFee = receipt.payment.studentFee;
+            pdfBuffer = await generateReceiptPdf({
+                receiptNumber: receipt.receiptNumber,
+                studentName: studentFee.student.name,
+                studentId: studentFee.student.studentId,
+                className: studentFee.student.class,
+                parentName: studentFee.student.parent?.name,
+                parentPhone: studentFee.student.parent?.phone,
+                paymentDate: receipt.createdAt,
+                amount: receipt.payment.amount,
+                paymentMode: receipt.payment.mode,
+                transactionRef: receipt.payment.transactionRef || undefined,
+                feesFor: studentFee.feeStructure?.name || 'School Fee',
+                bankName: receipt.payment.bankName || undefined,
+                remarks: receipt.payment.remarks || undefined,
+            });
+
+            try {
+                fs.writeFileSync(pdfPath, pdfBuffer);
+            } catch { /* Ignore file write error on read-only environments */ }
         }
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename="${receiptNumber}.pdf"`);
-        fs.createReadStream(pdfPath).pipe(res);
+        res.send(pdfBuffer);
     }),
 };

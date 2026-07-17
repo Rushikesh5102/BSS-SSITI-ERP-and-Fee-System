@@ -92,7 +92,7 @@ export const paymentsController = {
             data: {
                 receiptNumber,
                 paymentId: payment.id,
-                pdfUrl: `/receipts/download/${receiptNumber}`,
+                pdfUrl: `/api/receipts/download/${receiptNumber}`,
                 generatedById: req.user!.id,
             },
         });

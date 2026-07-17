@@ -98,30 +98,79 @@ export const feeStructuresController = {
     }),
 
     /**
-     * POST /fees/assign - Assign fee structure to a student
+     * POST /fee-structures/assign - Assign or update fee structure / custom fee for a student
      */
     assignToStudent: asyncHandler(async (req: Request, res: Response) => {
-        const { studentId, feeStructureId, dueDate, academicYear } = req.body;
+        const { studentId, feeStructureId, customTotalAmount, dueDate, academicYear } = req.body;
 
         const feeStructure = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
         if (!feeStructure) throw new AppError(404, 'Fee structure not found');
 
-        const studentFee = await prisma.studentFee.create({
+        const totalAmount = customTotalAmount !== undefined ? Number(customTotalAmount) : feeStructure.totalAmount;
+        const year = academicYear || feeStructure.academicYear;
+
+        const existingFee = await prisma.studentFee.findFirst({
+            where: { studentId, feeStructureId, academicYear: year }
+        });
+
+        let studentFee;
+        if (existingFee) {
+            studentFee = await prisma.studentFee.update({
+                where: { id: existingFee.id },
+                data: {
+                    totalAmount,
+                    dueDate: dueDate ? new Date(dueDate) : existingFee.dueDate,
+                },
+                include: {
+                    student: { select: { name: true, studentId: true } },
+                    feeStructure: { select: { name: true, totalAmount: true } },
+                },
+            });
+        } else {
+            studentFee = await prisma.studentFee.create({
+                data: {
+                    studentId,
+                    feeStructureId,
+                    totalAmount,
+                    paidAmount: 0,
+                    academicYear: year,
+                    dueDate: dueDate ? new Date(dueDate) : null,
+                },
+                include: {
+                    student: { select: { name: true, studentId: true } },
+                    feeStructure: { select: { name: true, totalAmount: true } },
+                },
+            });
+        }
+
+        await createAuditLog(req.user!.id, AuditAction.FEE_ASSIGNED, 'StudentFee', studentFee.id, { studentId, feeStructureId, totalAmount }, req.ip);
+        res.status(201).json({ success: true, data: studentFee });
+    }),
+
+    /**
+     * PUT /fee-structures/student-fee/:id - Update an existing student fee record
+     */
+    updateStudentFee: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const { totalAmount, dueDate, academicYear } = req.body;
+
+        const existing = await prisma.studentFee.findUnique({ where: { id } });
+        if (!existing) throw new AppError(404, 'Student fee record not found');
+
+        const updated = await prisma.studentFee.update({
+            where: { id },
             data: {
-                studentId,
-                feeStructureId,
-                totalAmount: feeStructure.totalAmount,
-                paidAmount: 0,
-                academicYear: academicYear || feeStructure.academicYear,
-                dueDate: dueDate ? new Date(dueDate) : null,
+                ...(totalAmount !== undefined ? { totalAmount: Number(totalAmount) } : {}),
+                ...(dueDate !== undefined ? { dueDate: dueDate ? new Date(dueDate) : null } : {}),
+                ...(academicYear ? { academicYear } : {}),
             },
             include: {
                 student: { select: { name: true, studentId: true } },
-                feeStructure: { select: { name: true, totalAmount: true } },
+                feeStructure: { select: { name: true } },
             },
         });
 
-        await createAuditLog(req.user!.id, AuditAction.FEE_ASSIGNED, 'StudentFee', studentFee.id, { studentId, feeStructureId }, req.ip);
-        res.status(201).json({ success: true, data: studentFee });
+        await createAuditLog(req.user!.id, AuditAction.FEE_STRUCTURE_MODIFIED, 'StudentFee', id, { totalAmount, dueDate }, req.ip);
+        res.json({ success: true, data: updated });
     }),
 };

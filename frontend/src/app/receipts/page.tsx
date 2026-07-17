@@ -15,10 +15,6 @@ export default function ReceiptsPage() {
     const [receipts, setReceipts] = useState<any[]>([]);
     const [fetching, setFetching] = useState(false);
     const [search, setSearch] = useState('');
-    const baseApi = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-        ? 'https://bss-ssiti-erp-and-fee-system.onrender.com/api'
-        : (process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api');
-    const BASE_URL = baseApi.replace('/api', '');
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
@@ -39,6 +35,12 @@ export default function ReceiptsPage() {
         return !search || r.receiptNumber?.toLowerCase().includes(lc)
             || r.payment?.studentFee?.student?.name?.toLowerCase().includes(lc);
     });
+
+    const getBaseUrl = () => {
+        return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+            ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+            : 'http://localhost:4000';
+    };
 
     return (
         <div className="layout">
@@ -98,7 +100,7 @@ export default function ReceiptsPage() {
                                             <td>{r.generatedBy?.name}</td>
                                             <td>
                                                 <a
-                                                    href={`${BASE_URL}${r.pdfUrl}`}
+                                                    href={`${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="btn btn-accent btn-sm"
@@ -112,7 +114,8 @@ export default function ReceiptsPage() {
                             </table>
                         </div>
                     </div>
-                </div>                <footer className="footer">
+                </div>
+                <footer className="footer">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <span>&copy; 2026 Shri Sai I.T.I All rights reserved.</span>
                         <Link href="/terms" style={{ color: 'var(--primary-light)', textDecoration: 'none', fontWeight: 500, fontSize: '13px' }}>

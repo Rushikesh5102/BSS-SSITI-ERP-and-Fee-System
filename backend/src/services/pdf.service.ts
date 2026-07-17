@@ -22,6 +22,9 @@ interface ReceiptData {
  * Generate a professional PDF receipt using pdf-lib
  * Returns the PDF as a Buffer (can be saved to disk or streamed)
  */
+import fs from 'fs';
+import path from 'path';
+
 export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => {
     const doc = await PDFDocument.create();
     const page = doc.addPage([595.28, 841.89]); // A4 size
@@ -30,6 +33,16 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
     // Embed fonts
     const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
     const regularFont = await doc.embedFont(StandardFonts.Helvetica);
+
+    // Embed College Logo if available
+    let logoImage: any = null;
+    try {
+        const logoPath = path.join(process.cwd(), 'assets', 'sai_iti_logo.png');
+        if (fs.existsSync(logoPath)) {
+            const logoBytes = fs.readFileSync(logoPath);
+            logoImage = await doc.embedPng(logoBytes);
+        }
+    } catch { /* Fall back to text-only header if logo fails to load */ }
 
     const primary = rgb(0.12, 0.29, 0.59);    // Dark blue
     const accent = rgb(0.0, 0.6, 0.4);         // Green
@@ -41,19 +54,30 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
     // ── Header background ─────────────────────────────────────────────────────
     page.drawRectangle({ x: 0, y: height - 120, width, height: 120, color: primary });
 
+    let textX = 40;
+    if (logoImage) {
+        page.drawImage(logoImage, {
+            x: 40,
+            y: height - 105,
+            width: 70,
+            height: 70,
+        });
+        textX = 125;
+    }
+
     // School name
     page.drawText(config.school.name, {
-        x: 40, y: height - 55,
-        font: boldFont, size: 26, color: white,
+        x: textX, y: height - 55,
+        font: boldFont, size: 24, color: white,
     });
 
     // School details
     page.drawText(config.school.address, {
-        x: 40, y: height - 75,
+        x: textX, y: height - 75,
         font: regularFont, size: 9, color: rgb(0.8, 0.8, 0.9),
     });
     page.drawText(`Ph: ${config.school.phone}  |  Email: ${config.school.email}`, {
-        x: 40, y: height - 90,
+        x: textX, y: height - 90,
         font: regularFont, size: 9, color: rgb(0.8, 0.8, 0.9),
     });
 
