@@ -23,14 +23,6 @@ import systemRoutes from './routes/system.routes';
 
 const app = express();
 
-// Support Vercel monorepo service routing by stripping service prefixes
-app.use((req, _res, next) => {
-    if (req.url.startsWith('/api/backend')) {
-        req.url = req.url.substring('/api/backend'.length);
-    }
-    next();
-});
-
 // ── Security Middleware ────────────────────────────────────────────────────────
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow PDF serving
