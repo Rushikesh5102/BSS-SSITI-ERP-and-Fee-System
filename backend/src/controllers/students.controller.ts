@@ -28,7 +28,12 @@ export const studentsController = {
             ...(req.user?.role !== 'SUPERADMIN' && req.user?.branchId
                 ? { branchId: req.user.branchId }
                 : {}),
-            ...(search ? { name: { contains: String(search), mode: 'insensitive' } } : {}),
+            ...(search ? {
+                OR: [
+                    { name: { contains: String(search), mode: 'insensitive' } },
+                    { studentId: { contains: String(search), mode: 'insensitive' } },
+                ]
+            } : {}),
             ...(cls ? { class: String(cls) } : {}),
         };
 
