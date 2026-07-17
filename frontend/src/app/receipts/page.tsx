@@ -15,7 +15,10 @@ export default function ReceiptsPage() {
     const [receipts, setReceipts] = useState<any[]>([]);
     const [fetching, setFetching] = useState(false);
     const [search, setSearch] = useState('');
-    const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api').replace('/api', '');
+    const baseApi = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+        ? 'https://bss-ssiti-erp-and-fee-system.onrender.com/api'
+        : (process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api');
+    const BASE_URL = baseApi.replace('/api', '');
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
