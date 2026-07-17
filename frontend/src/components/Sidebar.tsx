@@ -43,9 +43,16 @@ export default function Sidebar() {
     const { user, logout } = useAuth();
     
     const [isDark, setIsDark] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
     }, []);
+
+    // Close mobile drawer when route changes
+    useEffect(() => {
+        setMobileOpen(false);
+    }, [pathname]);
 
     const toggleTheme = () => {
         if (isDark) {
@@ -73,67 +80,90 @@ export default function Sidebar() {
         .toUpperCase() || '?';
 
     return (
-        <aside className="sidebar">
-            {/* Logo */}
-            <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-                <div className="sidebar-logo">
-                    <div className="sidebar-logo-icon" style={{ background: 'transparent', border: 'none', width: '48px', height: '48px', flexShrink: 0, padding: 0 }}>
-                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div className="sidebar-logo-text">
-                        <h2 style={{ letterSpacing: '0.5px' }}>Shri Sai I.T.I</h2>
-                        <span>Fee Management</span>
-                    </div>
+        <>
+            {/* Mobile Header Bar with Hamburger Button */}
+            <div className="mobile-header">
+                <button
+                    className="hamburger-btn"
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    aria-label="Toggle Navigation Menu"
+                >
+                    ☰
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img src="/sai_iti_logo.png" alt="Logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                    <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>Shri Sai I.T.I</span>
                 </div>
-            </Link>
-
-            {/* Navigation */}
-            <div className="sidebar-section">
-                <div className="sidebar-section-label">Menu</div>
-                <nav>
-                    {visibleItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`sidebar-nav-item ${pathname.startsWith(item.href) ? 'active' : ''}`}
-                        >
-                            <span style={{ fontSize: 18 }}>{item.icon}</span>
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
             </div>
 
-            {/* User Profile + Logout */}
-            {user && (
-                <div className="sidebar-footer">
-                    <div className="user-badge">
-                        <div className="user-badge-avatar">{initials}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="user-badge-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {user.name}
-                            </div>
-                            <div className="user-badge-role">{roleLabels[user.role] || user.role}</div>
+            {/* Mobile Backdrop Overlay */}
+            {mobileOpen && (
+                <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />
+            )}
+
+            <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
+                {/* Logo */}
+                <Link href="/dashboard" style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>
+                    <div className="sidebar-logo">
+                        <div className="sidebar-logo-icon" style={{ background: 'transparent', border: 'none', width: '48px', height: '48px', flexShrink: 0, padding: 0 }}>
+                            <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                        <div className="sidebar-logo-text">
+                            <h2 style={{ letterSpacing: '0.5px' }}>Shri Sai I.T.I</h2>
+                            <span>Fee Management</span>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                        <button
-                            onClick={toggleTheme}
-                            className="btn btn-ghost w-full"
-                            style={{ color: 'var(--sidebar-text)', justifyContent: 'center', padding: '8px', fontSize: '13px' }}
-                        >
-                            {isDark ? '☀️ Light' : '🌙 Dark'}
-                        </button>
-                        <button
-                            onClick={logout}
-                            className="btn btn-ghost w-full"
-                            style={{ color: 'var(--sidebar-text)', justifyContent: 'center', padding: '8px', fontSize: '13px' }}
-                        >
-                            🚪 Sign Out
-                        </button>
-                    </div>
+                </Link>
+
+                {/* Navigation */}
+                <div className="sidebar-section">
+                    <div className="sidebar-section-label">Menu</div>
+                    <nav>
+                        {visibleItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`sidebar-nav-item ${pathname.startsWith(item.href) ? 'active' : ''}`}
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
                 </div>
-            )}
-        </aside>
+
+                {/* User Profile + Logout */}
+                {user && (
+                    <div className="sidebar-footer">
+                        <div className="user-badge">
+                            <div className="user-badge-avatar">{initials}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className="user-badge-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {user.name}
+                                </div>
+                                <div className="user-badge-role">{roleLabels[user.role] || user.role}</div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                            <button
+                                onClick={toggleTheme}
+                                className="btn btn-ghost w-full"
+                                style={{ color: 'var(--sidebar-text)', justifyContent: 'center', padding: '8px', fontSize: '13px' }}
+                            >
+                                {isDark ? '☀️ Light' : '🌙 Dark'}
+                            </button>
+                            <button
+                                onClick={logout}
+                                className="btn btn-ghost w-full"
+                                style={{ color: 'var(--sidebar-text)', justifyContent: 'center', padding: '8px', fontSize: '13px' }}
+                            >
+                                🚪 Sign Out
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </aside>
+        </>
     );
 }

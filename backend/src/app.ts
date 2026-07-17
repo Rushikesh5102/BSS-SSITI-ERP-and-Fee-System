@@ -38,13 +38,13 @@ app.use(cors({
 // ── Rate Limiting ──────────────────────────────────────────────────────────────
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: config.isDev ? 10000 : 200, // Greatly increased for local dev/testing
+    max: 10000, // Greatly increased for production & dev testing
     message: { success: false, message: 'Too many requests, please try again later' },
 });
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: config.isDev ? 1000 : 10, // Increased for dev testing
+    max: 1000, // Increased to 1000 to prevent login attempt lockouts
     message: { success: false, message: 'Too many login attempts, please try again later' },
 });
 

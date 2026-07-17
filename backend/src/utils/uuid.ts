@@ -7,9 +7,11 @@ export const generateReceiptNumber = (): string => {
     return `SAI-${year}-${uuid}`;
 };
 
-/** Generate a unique student ID given branch prefix and sequential number */
-export const generateStudentId = (sequenceNumber: number): string => {
-    const year = new Date().getFullYear();
-    const padded = String(sequenceNumber).padStart(3, '0');
-    return `SAI-${year}-${padded}`;
+/** Generate a unique student ID in SITI-YEAR-E01 format */
+export const generateStudentId = (tradeName: string = 'Electrician', rollOrSeq: string | number = 1, yearInput?: number): string => {
+    const year = yearInput || new Date().getFullYear();
+    const tradeInitial = (tradeName.trim().charAt(0) || 'E').toUpperCase();
+    const num = typeof rollOrSeq === 'number' ? rollOrSeq : parseInt(String(rollOrSeq)) || 1;
+    const paddedNum = String(num).padStart(2, '0');
+    return `SITI-${year}-${tradeInitial}${paddedNum}`;
 };

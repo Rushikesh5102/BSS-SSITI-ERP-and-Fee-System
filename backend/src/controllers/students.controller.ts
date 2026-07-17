@@ -32,6 +32,9 @@ export const studentsController = {
                 OR: [
                     { name: { contains: String(search), mode: 'insensitive' } },
                     { studentId: { contains: String(search), mode: 'insensitive' } },
+                    { rollNumber: { contains: String(search), mode: 'insensitive' } },
+                    { class: { contains: String(search), mode: 'insensitive' } },
+                    { studentFees: { some: { academicYear: { contains: String(search), mode: 'insensitive' } } } },
                 ]
             } : {}),
             ...(cls ? { class: String(cls) } : {}),
@@ -47,7 +50,7 @@ export const studentsController = {
                     parent: { select: { name: true, phone: true, email: true } },
                     branch: { select: { name: true } },
                     studentFees: {
-              select: { id: true, totalAmount: true, paidAmount: true },
+              select: { id: true, totalAmount: true, paidAmount: true, academicYear: true },
             },
                 },
             }),
@@ -68,9 +71,9 @@ export const studentsController = {
     create: asyncHandler(async (req: Request, res: Response) => {
         const { parent, ...studentData } = req.body;
 
-        // Auto-generate student ID
+        // Auto-generate student ID in SITI-YEAR-E01 format
         const count = await prisma.student.count();
-        const studentId = generateStudentId(count + 1);
+        const studentId = studentData.studentId || generateStudentId(studentData.class || 'Electrician', studentData.rollNumber || (count + 1));
 
         // Create or find parent
         let parentId: string | undefined;

@@ -173,7 +173,7 @@ function StudentsContent() {
                     <div className="card mb-4">
                         <div className="card-body" style={{ padding: '12px 16px' }}>
                             <input
-                                type="text" className="form-control" placeholder="🔍 Search by student name..."
+                                type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or year..."
                                 value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             />
                         </div>
@@ -399,7 +399,7 @@ function StudentsContent() {
             {/* Student History & Profile Modal */}
             {showHistoryModal && (
                 <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
-                    <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal" style={{ maxWidth: 900, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">📜 Student Complete History & Profile</div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowHistoryModal(false)}>✕</button>
@@ -460,35 +460,36 @@ function StudentsContent() {
                                         {historyStudentDetail.studentFees?.flatMap((sf: any) => sf.payments || []).length === 0 ? (
                                             <div className="text-muted text-sm" style={{ padding: 10 }}>No payments recorded for this student.</div>
                                         ) : (
-                                            <div className="table-wrap" style={{ border: 'none' }}>
-                                                <table className="table" style={{ fontSize: 12 }}>
+                                            <div className="table-wrap" style={{ border: 'none', overflowX: 'visible' }}>
+                                                <table className="table" style={{ fontSize: 12, width: '100%' }}>
                                                     <thead>
                                                         <tr>
-                                                            <th>Receipt No.</th>
-                                                            <th>Date</th>
-                                                            <th>Mode</th>
-                                                            <th>Amount</th>
-                                                            <th>Ref No.</th>
-                                                            <th>Official PDF</th>
+                                                            <th style={{ width: '22%' }}>Receipt No.</th>
+                                                            <th style={{ width: '12%' }}>Date</th>
+                                                            <th style={{ width: '12%' }}>Mode</th>
+                                                            <th style={{ width: '15%' }}>Amount</th>
+                                                            <th style={{ width: '24%' }}>Ref No.</th>
+                                                            <th style={{ width: '15%', textAlign: 'center' }}>Official PDF</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         {historyStudentDetail.studentFees.flatMap((sf: any) => sf.payments || []).map((p: any) => (
                                                             <tr key={p.id}>
-                                                                <td><span className="badge badge-primary">{p.receipt?.receiptNumber || 'N/A'}</span></td>
+                                                                <td><span className="badge badge-primary" style={{ fontSize: 11 }}>{p.receipt?.receiptNumber || 'N/A'}</span></td>
                                                                 <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
                                                                 <td><span className="badge badge-info">{p.mode}</span></td>
                                                                 <td><b className="text-success">₹{(p.amount / 100).toLocaleString('en-IN')}</b></td>
-                                                                <td>{p.transactionRef || '—'}</td>
-                                                                <td>
+                                                                <td style={{ wordBreak: 'break-all' }}>{p.transactionRef || '—'}</td>
+                                                                <td style={{ textAlign: 'center' }}>
                                                                     {p.receipt ? (
                                                                         <a
                                                                             href={`${getBaseUrl()}${p.receipt.pdfUrl.startsWith('/api') ? p.receipt.pdfUrl : `/api${p.receipt.pdfUrl}`}`}
                                                                             target="_blank"
                                                                             rel="noopener noreferrer"
                                                                             className="btn btn-accent btn-sm"
+                                                                            style={{ padding: '4px 10px', fontSize: 11 }}
                                                                         >
-                                                                            📄 PDF
+                                                                            📄 Download PDF
                                                                         </a>
                                                                     ) : '—'}
                                                                 </td>
