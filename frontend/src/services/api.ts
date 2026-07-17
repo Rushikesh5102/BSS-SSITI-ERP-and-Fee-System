@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Base API URL from Vercel environment settings
+// Base API URL from Vercel environment settings (triggered clean build)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api';
 
 // Axios instance with base URL and default headers
