@@ -86,20 +86,34 @@ export default function Sidebar() {
         .join('')
         .toUpperCase() || '?';
 
+    const [showProfileModal, setShowProfileModal] = useState(false);
+
     return (
         <>
-            {/* Mobile Header Bar with Hamburger Button */}
+            {/* Mobile Top Header Bar */}
             <div className="mobile-header">
-                <button
-                    className="hamburger-btn"
-                    onClick={() => setMobileOpen(!mobileOpen)}
-                    aria-label="Toggle Navigation Menu"
-                >
-                    ☰
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <img src="/sai_iti_logo.png" alt="Logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                     <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>Shri Sai I.T.I</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {user && (
+                        <div
+                            className="user-badge-avatar"
+                            style={{ cursor: 'pointer', width: 32, height: 32, fontSize: 13 }}
+                            onClick={() => setShowProfileModal(!showProfileModal)}
+                            title="Open Profile Menu"
+                        >
+                            {initials}
+                        </div>
+                    )}
+                    <button
+                        className="hamburger-btn"
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        aria-label="Toggle Navigation Menu"
+                    >
+                        ☰
+                    </button>
                 </div>
             </div>
 
@@ -140,10 +154,14 @@ export default function Sidebar() {
                     </nav>
                 </div>
 
-                {/* User Profile + Logout */}
+                {/* User Profile Badge (Click to open Profile Modal) */}
                 {user && (
                     <div className="sidebar-footer">
-                        <div className="user-badge">
+                        <div
+                            className="user-badge"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => setShowProfileModal(!showProfileModal)}
+                        >
                             <div className="user-badge-avatar">{initials}</div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div className="user-badge-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -151,26 +169,55 @@ export default function Sidebar() {
                                 </div>
                                 <div className="user-badge-role">{roleLabels[user.role] || user.role}</div>
                             </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                            <button
-                                onClick={toggleTheme}
-                                className="btn btn-ghost w-full"
-                                style={{ color: 'var(--sidebar-text)', justifyContent: 'center', padding: '8px', fontSize: '13px' }}
-                            >
-                                {isDark ? '☀️ Light' : '🌙 Dark'}
-                            </button>
-                            <button
-                                onClick={logout}
-                                className="btn btn-ghost w-full"
-                                style={{ color: 'var(--sidebar-text)', justifyContent: 'center', padding: '8px', fontSize: '13px' }}
-                            >
-                                🚪 Sign Out
-                            </button>
+                            <span style={{ fontSize: 12, opacity: 0.6 }}>⚙️</span>
                         </div>
                     </div>
                 )}
             </aside>
+
+            {/* Profile Dropdown / Modal */}
+            {showProfileModal && user && (
+                <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={() => setShowProfileModal(false)}>
+                    <div
+                        className="modal"
+                        style={{ maxWidth: 360, width: '90vw' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header" style={{ padding: '14px 16px' }}>
+                            <div className="modal-title" style={{ fontSize: 16 }}>👤 Account & Settings</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowProfileModal(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ padding: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
+                                <div className="user-badge-avatar" style={{ width: 44, height: 44, fontSize: 18 }}>{initials}</div>
+                                <div>
+                                    <div style={{ fontWeight: 700, fontSize: 15 }}>{user.name}</div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{roleLabels[user.role] || user.role}</div>
+                                    <div style={{ fontSize: 11, color: 'var(--primary)', marginTop: 2 }}>{user.email}</div>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                <button
+                                    onClick={() => { toggleTheme(); setShowProfileModal(false); }}
+                                    className="btn btn-secondary w-full"
+                                    style={{ justifyContent: 'space-between', padding: '10px 14px' }}
+                                >
+                                    <span>Theme Appearance</span>
+                                    <span>{isDark ? '☀️ Switch to Light' : '🌙 Switch to Dark'}</span>
+                                </button>
+                                <button
+                                    onClick={() => { logout(); setShowProfileModal(false); }}
+                                    className="btn btn-primary w-full"
+                                    style={{ background: 'var(--danger)', borderColor: 'var(--danger)', justifyContent: 'center', padding: '10px 14px', marginTop: 6 }}
+                                >
+                                    🚪 Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

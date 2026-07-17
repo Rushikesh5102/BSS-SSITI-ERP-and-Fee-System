@@ -470,7 +470,7 @@ function StudentsContent() {
                                                             <th style={{ width: '12%' }}>Mode</th>
                                                             <th style={{ width: '15%' }}>Amount</th>
                                                             <th style={{ width: '24%' }}>Ref No.</th>
-                                                            <th style={{ width: '15%', textAlign: 'center' }}>Official PDF</th>
+                                                            <th style={{ width: '25%', textAlign: 'center' }}>Actions / PDF</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -482,17 +482,42 @@ function StudentsContent() {
                                                                 <td><b className="text-success">₹{(p.amount / 100).toLocaleString('en-IN')}</b></td>
                                                                 <td style={{ wordBreak: 'break-all' }}>{p.transactionRef || '—'}</td>
                                                                 <td style={{ textAlign: 'center' }}>
-                                                                    {p.receipt ? (
-                                                                        <a
-                                                                            href={`${getBaseUrl()}${p.receipt.pdfUrl.startsWith('/api') ? p.receipt.pdfUrl : `/api${p.receipt.pdfUrl}`}`}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="btn btn-accent btn-sm"
-                                                                            style={{ padding: '4px 10px', fontSize: 11 }}
-                                                                        >
-                                                                            📄 Download PDF
-                                                                        </a>
-                                                                    ) : '—'}
+                                                                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                                                                        {p.receipt ? (
+                                                                            <a
+                                                                                href={`${getBaseUrl()}${p.receipt.pdfUrl.startsWith('/api') ? p.receipt.pdfUrl : `/api${p.receipt.pdfUrl}`}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="btn btn-accent btn-sm"
+                                                                                style={{ padding: '4px 8px', fontSize: 11 }}
+                                                                            >
+                                                                                📄 PDF
+                                                                            </a>
+                                                                        ) : null}
+                                                                        {['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role) && p.status !== 'REFUNDED' && (
+                                                                            <button
+                                                                                className="btn btn-danger btn-sm"
+                                                                                style={{ padding: '4px 8px', fontSize: 11 }}
+                                                                                onClick={async () => {
+                                                                                    const reason = prompt('Reason for fee refund:');
+                                                                                    if (!reason) return;
+                                                                                    try {
+                                                                                        await api.post(`/payments/${p.id}/refund`, { reason });
+                                                                                        showToast('✅ Fee refunded successfully!');
+                                                                                        openHistoryModal(historyStudentDetail.id);
+                                                                                        fetchStudents();
+                                                                                    } catch (err: any) {
+                                                                                        showToast(`❌ ${err.response?.data?.message || 'Refund failed'}`);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                💸 Refund
+                                                                            </button>
+                                                                        )}
+                                                                        {p.status === 'REFUNDED' && (
+                                                                            <span className="badge badge-danger">REFUNDED</span>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         ))}
