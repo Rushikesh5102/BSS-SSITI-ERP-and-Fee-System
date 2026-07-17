@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 
-/** Generate a unique receipt number with prefix */
+/** Generate a unique receipt number with SSITI prefix */
 export const generateReceiptNumber = (): string => {
-    const uuid = uuidv4().replace(/-/g, '').toUpperCase().slice(0, 12);
+    const uuid = uuidv4().replace(/-/g, '').toUpperCase().slice(0, 10);
     const year = new Date().getFullYear();
-    return `SAI-${year}-${uuid}`;
+    return `SSITI-${year}-${uuid}`;
 };
 
 /** Generate a unique student ID in SITI-YEAR-E01 format */

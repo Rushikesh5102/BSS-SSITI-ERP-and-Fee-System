@@ -93,6 +93,7 @@ model Student {
   rollNumber  String?  @map("roll_number")
   dateOfBirth DateTime? @map("date_of_birth")
   gender      String?
+  email       String?  @unique
   address     String?
   photo       String?  // URL to student photo
   isActive    Boolean  @default(true)

@@ -355,38 +355,52 @@ export default function ReportsPage() {
                                                     <div style={{ fontSize: 20, fontWeight: 700 }}>{storageStats.counts.auditLogs}</div>
                                                 </div>
                                             </div>
+                                            {storageStats.totalUsedPercent >= 75 && (
+                                                <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#991b1b', padding: '12px 16px', borderRadius: 8, marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                    <span style={{ fontSize: 24 }}>⚠️</span>
+                                                    <div>
+                                                        <b>Timely Storage Warning:</b> Database and file storage usage has exceeded {storageStats.totalUsedPercent}%. Please contact system Developer/Architect to purge old historical logs to prevent service interruption.
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : null}
                                 </div>
                             </div>
 
-                            {/* Purge & Clear Storage Utility */}
-                            <div className="card">
-                                <div className="card-header"><div className="card-title">🧹 Clear Historical Data for Infinite Free Storage</div></div>
-                                <div className="card-body">
-                                    <p className="text-muted" style={{ fontSize: 13, marginBottom: 16 }}>
-                                        Export your monthly/yearly Excel & PDF backups first. Then use this tool to clear old audit logs and transaction history to free up database rows and disk space permanently.
-                                    </p>
-                                    <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Purge Data For Year</label>
-                                            <select className="form-control" value={purgeYear} onChange={(e) => setPurgeYear(parseInt(e.target.value))}>
-                                                {[2024, 2025, 2026].map((y) => <option key={y} value={y}>Year {y} & Earlier</option>)}
-                                            </select>
+                            {/* Purge & Clear Storage Utility (DEVELOPER ONLY) */}
+                            {user.role === 'DEVELOPER' ? (
+                                <div className="card">
+                                    <div className="card-header"><div className="card-title">🧹 Clear Historical Data for Infinite Free Storage (Developer Tool)</div></div>
+                                    <div className="card-body">
+                                        <p className="text-muted" style={{ fontSize: 13, marginBottom: 16 }}>
+                                            Export your monthly/yearly Excel & PDF backups first. Then use this tool to clear old audit logs and transaction history to free up database rows and disk space permanently.
+                                        </p>
+                                        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                <label className="form-label">Purge Data For Year</label>
+                                                <select className="form-control" value={purgeYear} onChange={(e) => setPurgeYear(parseInt(e.target.value))}>
+                                                    {[2024, 2025, 2026].map((y) => <option key={y} value={y}>Year {y} & Earlier</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                <label className="form-label">Purge Scope</label>
+                                                <select className="form-control" value={purgeLogsOnly ? 'logs' : 'all'} onChange={(e) => setPurgeLogsOnly(e.target.value === 'logs')}>
+                                                    <option value="logs">Clear System Audit Logs Only (Safe)</option>
+                                                    <option value="all">Clear Audit Logs + Old Receipts & Payments</option>
+                                                </select>
+                                            </div>
+                                            <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handlePurgeData} disabled={purging}>
+                                                {purging ? 'Purging Storage...' : '🧹 Purge Storage & Clear Space'}
+                                            </button>
                                         </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <label className="form-label">Purge Scope</label>
-                                            <select className="form-control" value={purgeLogsOnly ? 'logs' : 'all'} onChange={(e) => setPurgeLogsOnly(e.target.value === 'logs')}>
-                                                <option value="logs">Clear System Audit Logs Only (Safe)</option>
-                                                <option value="all">Clear Audit Logs + Old Receipts & Payments</option>
-                                            </select>
-                                        </div>
-                                        <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handlePurgeData} disabled={purging}>
-                                            {purging ? 'Purging Storage...' : '🧹 Purge Storage & Clear Space'}
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="card card-body text-center text-muted" style={{ padding: 20 }}>
+                                    🔒 Storage clearing and cache purging tools are managed exclusively by the System Developer / Architect.
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

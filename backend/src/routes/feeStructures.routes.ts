@@ -15,16 +15,16 @@ router.get('/', feeStructuresController.list);
 // GET /fee-categories - All authenticated
 router.get('/categories', feeStructuresController.listCategories);
 
-// POST /fee-structures - Admin only
-router.post('/', authorize(Role.SUPERADMIN, Role.ADMIN), feeStructuresController.create);
+// POST /fee-structures - Admin and Developer
+router.post('/', authorize(Role.SUPERADMIN, Role.ADMIN, Role.DEVELOPER), feeStructuresController.create);
 
-// PUT /fee-structures/:id - Admin only
-router.put('/:id', authorize(Role.SUPERADMIN, Role.ADMIN), feeStructuresController.update);
+// PUT /fee-structures/:id - Admin and Developer
+router.put('/:id', authorize(Role.SUPERADMIN, Role.ADMIN, Role.DEVELOPER), feeStructuresController.update);
 
-// POST /fee-structures/assign - Admin and Accountant
-router.post('/assign', authorize(Role.SUPERADMIN, Role.ADMIN, Role.ACCOUNTANT), feeStructuresController.assignToStudent);
+// POST /fee-structures/assign - Admin, Accountant, Developer (Initial stage only for Accountant)
+router.post('/assign', authorize(Role.SUPERADMIN, Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER), feeStructuresController.assignToStudent);
 
-// PUT /fee-structures/student-fee/:id - Admin and Accountant
-router.put('/student-fee/:id', authorize(Role.SUPERADMIN, Role.ADMIN, Role.ACCOUNTANT), feeStructuresController.updateStudentFee);
+// PUT /fee-structures/student-fee/:id - Admin, SuperAdmin, Developer only
+router.put('/student-fee/:id', authorize(Role.SUPERADMIN, Role.ADMIN, Role.DEVELOPER), feeStructuresController.updateStudentFee);
 
 export default router;

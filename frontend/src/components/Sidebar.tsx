@@ -38,8 +38,12 @@ const roleLabels: Record<string, string> = {
     DEVELOPER: 'Developer/Architect',
 };
 
+import { useSearchParams } from 'next/navigation';
+
 export default function Sidebar() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
     const { user, logout } = useAuth();
     
     const [isDark, setIsDark] = useState(false);
@@ -66,9 +70,12 @@ export default function Sidebar() {
         }
     };
 
-    const visibleItems = navItems.filter(
-        (item) => !item.roles || (user && item.roles.includes(user.role))
-    );
+    const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
+
+    const visibleItems = navItems.filter((item) => {
+        if (item.roles?.includes('DEVELOPER') && user?.role === 'DEVELOPER') return true;
+        return effectiveRole && item.roles?.includes(effectiveRole);
+    });
 
     const initials = (user?.name || '?')
         .replace(/[^a-zA-Z\s]/g, '')

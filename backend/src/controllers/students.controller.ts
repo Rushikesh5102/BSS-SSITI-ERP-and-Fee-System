@@ -91,6 +91,7 @@ export const studentsController = {
             data: {
                 ...studentData,
                 studentId,
+                email: studentData.email || undefined,
                 branchId: studentData.branchId || req.user!.branchId,
                 parentId,
             },
@@ -99,13 +100,14 @@ export const studentsController = {
 
         // ─── Generate Student Login Account ────────────────────────────────────
         const passwordHash = await bcrypt.hash(studentId, 12); // Default password is the generated Student ID
-        const studentEmail = `${studentId.toLowerCase()}@student.saiiti.edu.in`;
+        const generatedEmail = `${studentId.toLowerCase()}@student.saiiti.edu.in`;
+        const primaryEmail = studentData.email ? studentData.email.toLowerCase().trim() : generatedEmail;
 
         // Create the user role for the student so they can log in
         await prisma.user.create({
             data: {
                 name: student.name,
-                email: studentEmail,
+                email: primaryEmail,
                 passwordHash,
                 role: 'STUDENT',
                 branchId: student.branchId,
@@ -114,7 +116,8 @@ export const studentsController = {
         
         // Return login credentials to frontend
         const loginDetails = {
-            email: studentEmail,
+            email: primaryEmail,
+            studentId,
             defaultPassword: studentId
         };
 

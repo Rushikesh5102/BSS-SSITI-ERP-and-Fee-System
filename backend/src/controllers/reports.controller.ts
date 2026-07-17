@@ -337,12 +337,13 @@ export const reportsController = {
      * GET /reports/storage-stats - Database & Disk Storage Monitoring
      */
     storageStats: asyncHandler(async (_req: Request, res: Response) => {
-        const [studentCount, paymentCount, receiptCount, auditLogCount, userCount] = await Promise.all([
+        const [studentCount, paymentCount, receiptCount, auditLogCount, userCount, dbSizeResult] = await Promise.all([
             prisma.student.count(),
             prisma.payment.count(),
             prisma.receipt.count(),
             prisma.auditLog.count(),
             prisma.user.count(),
+            prisma.$queryRaw<{ size_bytes: bigint }[]>`SELECT pg_database_size(current_database()) as size_bytes;`.catch(() => [{ size_bytes: BigInt(0) }]),
         ]);
 
         let fileUsedBytes = 0;
@@ -358,9 +359,9 @@ export const reportsController = {
             });
         }
 
-        // Estimated database storage (rough estimate ~1.5KB per total row)
-        const totalDbRows = studentCount + paymentCount + receiptCount + auditLogCount + userCount;
-        const dbUsedMb = parseFloat(((totalDbRows * 1.5) / 1024).toFixed(2));
+        // Real live database storage from Supabase PostgreSQL
+        const rawDbBytes = Number(dbSizeResult[0]?.size_bytes || 0);
+        const dbUsedMb = parseFloat((rawDbBytes / (1024 * 1024)).toFixed(2));
         const fileUsedMb = parseFloat((fileUsedBytes / (1024 * 1024)).toFixed(2));
         const dbLimitMb = 500; // Free tier Postgres limit (Supabase 500MB)
         const fileLimitMb = 1024; // Free tier disk storage (1GB)
@@ -375,6 +376,7 @@ export const reportsController = {
                 dbLimitMb,
                 fileUsedMb,
                 fileLimitMb,
+                rawDbBytes,
                 counts: {
                     students: studentCount,
                     payments: paymentCount,

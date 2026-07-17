@@ -19,7 +19,7 @@ function StudentsContent() {
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', parentName: '', parentPhone: '', parentEmail: '' });
+    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
 
@@ -123,17 +123,17 @@ function StudentsContent() {
         e.preventDefault(); setSaving(true);
         try {
             const { data } = await api.post('/students', {
-                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber,
+                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber, email: form.email,
                 parent: form.parentPhone ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
             });
             const loginDetails = data.data?.loginDetails;
             setShowModal(false);
             if (loginDetails) {
-                alert(`✅ Admission Successful!\n\nStudent Login Auto-Generated:\nEmail: ${loginDetails.email}\nPassword: ${loginDetails.defaultPassword}\n\nPlease share these credentials with the student to access the portal.`);
+                alert(`✅ Admission Successful!\n\nStudent Login Credentials:\nEmail / ID: ${loginDetails.email}\nPassword: ${loginDetails.defaultPassword}\n\nPlease share these credentials with the student to access the portal.`);
             } else {
                 showToast('✅ Student admitted successfully!');
             }
-            setForm({ name: '', class: '', section: '', rollNumber: '', parentName: '', parentPhone: '', parentEmail: '' });
+            setForm({ name: '', class: '', section: '', rollNumber: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
             fetchStudents();
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to add student'}`);
@@ -290,6 +290,10 @@ function StudentsContent() {
                                     <div className="form-group">
                                         <label className="form-label">Roll Number</label>
                                         <input className="form-control" value={form.rollNumber} onChange={(e) => setForm(f => ({ ...f, rollNumber: e.target.value }))} placeholder="01" />
+                                    </div>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label">Student Email (Optional)</label>
+                                        <input className="form-control" type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} placeholder="student@gmail.com" />
                                     </div>
                                 </div>
                                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>

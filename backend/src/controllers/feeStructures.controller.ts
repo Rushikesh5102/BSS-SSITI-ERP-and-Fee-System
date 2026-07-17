@@ -113,6 +113,10 @@ export const feeStructuresController = {
             where: { studentId, feeStructureId, academicYear: year }
         });
 
+        if (existingFee && req.user?.role === 'ACCOUNTANT') {
+            throw new AppError(403, 'Accountants cannot modify fee structures once set. Only Administrators can update set fee structures.');
+        }
+
         let studentFee;
         if (existingFee) {
             studentFee = await prisma.studentFee.update({

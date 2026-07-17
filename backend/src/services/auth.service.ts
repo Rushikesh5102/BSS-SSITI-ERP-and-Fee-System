@@ -8,15 +8,22 @@ export const authService = {
     /**
      * Validate login credentials and return tokens
      */
-    async login(email: string, password: string) {
-        // Find user by email
-        const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase().trim() },
+    async login(identifier: string, password: string) {
+        const inputStr = identifier.toLowerCase().trim();
+        
+        // Find user by email or student ID match
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: inputStr },
+                    { email: `${inputStr}@student.saiiti.edu.in` },
+                ],
+            },
             include: { branch: { select: { id: true, name: true } } },
         });
 
         if (!user || !user.isActive) {
-            throw new AppError(401, 'Invalid email or password');
+            throw new AppError(401, 'Invalid email/student ID or password');
         }
 
         // Verify password

@@ -27,7 +27,7 @@ router.get('/pending', authorize(Role.SUPERADMIN, Role.ADMIN, Role.ACCOUNTANT), 
 // GET /reports/storage-stats - Database & File Storage usage stats
 router.get('/storage-stats', authorize(Role.SUPERADMIN, Role.ADMIN, Role.DEVELOPER), reportsController.storageStats);
 
-// POST /reports/purge-old-data - Free up storage by purging old logs/receipts
-router.post('/purge-old-data', authorize(Role.SUPERADMIN, Role.ADMIN), reportsController.purgeOldData);
+// POST /reports/purge-old-data - Free up storage by purging old logs/receipts (DEVELOPER only)
+router.post('/purge-old-data', authorize(Role.DEVELOPER), reportsController.purgeOldData);
 
 export default router;
