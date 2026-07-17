@@ -4,11 +4,21 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 import { PaymentProvider } from './payment-provider.interface';
 
-// Initialize Razorpay client (with placeholder fallbacks to prevent startup crash if keys are missing)
-const razorpay = new Razorpay({
-    key_id: config.razorpay.keyId || 'rzp_test_placeholder',
-    key_secret: config.razorpay.keySecret || 'placeholder_secret',
-});
+// Lazy initialize Razorpay client
+let razorpayClient: Razorpay | null = null;
+
+function getRazorpayClient(): Razorpay {
+    if (!razorpayClient) {
+        if (!config.razorpay.keyId || !config.razorpay.keySecret) {
+            throw new Error('Razorpay API keys (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) are not configured.');
+        }
+        razorpayClient = new Razorpay({
+            key_id: config.razorpay.keyId,
+            key_secret: config.razorpay.keySecret,
+        });
+    }
+    return razorpayClient;
+}
 
 export const razorpayService: PaymentProvider & {
     verifyPaymentSignature(razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string): boolean;
@@ -22,7 +32,7 @@ export const razorpayService: PaymentProvider & {
      * @param receiptId     - Unique receipt reference (your internal ID)
      */
     async createOrder(amountInPaise: number, receiptId: string, metadata?: Record<string, string>) {
-        const order = await razorpay.orders.create({
+        const order = await getRazorpayClient().orders.create({
             amount: amountInPaise,
             currency: 'INR',
             receipt: receiptId,
@@ -72,7 +82,7 @@ export const razorpayService: PaymentProvider & {
      * Fetch payment details from Razorpay
      */
     async fetchPayment(paymentId: string) {
-        return razorpay.payments.fetch(paymentId);
+        return getRazorpayClient().payments.fetch(paymentId);
     },
 
     /**
@@ -86,7 +96,7 @@ export const razorpayService: PaymentProvider & {
      * Process refund for a payment
      */
     async refundPayment(paymentId: string, amountInPaise?: number) {
-        return razorpay.payments.refund(paymentId, {
+        return getRazorpayClient().payments.refund(paymentId, {
             amount: amountInPaise,
         });
     },
