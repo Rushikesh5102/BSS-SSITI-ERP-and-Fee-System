@@ -51,16 +51,36 @@ const WelcomeOverlay = ({ role }: { role: string }) => {
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
             background: cfg.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            color: 'white', animation: 'fadeOut 0.8s ease 1.8s forwards'
+            color: 'white', padding: '24px 16px', textAlign: 'center',
+            animation: 'fadeOut 0.8s ease 1.8s forwards'
         }}>
             <style>{`
                 @keyframes fadeOut { to { opacity: 0; pointer-events: none; visibility: hidden; } }
-                @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
                 @keyframes pulseIcon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
             `}</style>
-            <div style={{ fontSize: 80, margin: 0, animation: 'pulseIcon 2s infinite ease-in-out' }}>{cfg.icon}</div>
-            <h1 style={{ fontSize: 48, fontWeight: 800, margin: '24px 0 0 0', animation: 'slideUp 0.6s ease forwards' }}>Welcome, {cfg.title}!</h1>
-            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', marginTop: 12, animation: 'slideUp 0.8s ease forwards' }}>Initializing central access node...</p>
+            <div style={{ fontSize: 'clamp(52px, 12vw, 80px)', margin: 0, animation: 'pulseIcon 2s infinite ease-in-out' }}>{cfg.icon}</div>
+            <h1 style={{
+                fontSize: 'clamp(22px, 6vw, 44px)',
+                fontWeight: 800,
+                margin: '20px 0 0 0',
+                textAlign: 'center',
+                maxWidth: '90vw',
+                lineHeight: 1.25,
+                animation: 'slideUp 0.6s ease forwards'
+            }}>
+                Welcome, {cfg.title}!
+            </h1>
+            <p style={{
+                fontSize: 'clamp(13px, 3.5vw, 18px)',
+                color: 'rgba(255,255,255,0.75)',
+                marginTop: 10,
+                textAlign: 'center',
+                maxWidth: '90vw',
+                animation: 'slideUp 0.8s ease forwards'
+            }}>
+                Initializing central access node...
+            </p>
         </div>
     );
 };

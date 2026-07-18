@@ -93,13 +93,28 @@ export default function SystemHealthPage() {
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     background: '#020617', zIndex: 99999,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'monospace', color: '#38bdf8',
+                    fontFamily: 'monospace', color: '#38bdf8', padding: '24px 16px', textAlign: 'center',
                     animation: 'fadeOut 0.5s ease 3s forwards'
                 }}>
-                    <div style={{ animation: 'glitch 1s infinite alternate', fontSize: '3rem', fontWeight: 900, letterSpacing: '8px', textShadow: '0 0 20px #38bdf8' }}>
+                    <div style={{
+                        animation: 'glitch 1s infinite alternate',
+                        fontSize: 'clamp(1.8rem, 6vw, 3rem)',
+                        fontWeight: 900,
+                        letterSpacing: 'clamp(2px, 1.5vw, 6px)',
+                        textShadow: '0 0 20px #38bdf8',
+                        textAlign: 'center',
+                        maxWidth: '90vw',
+                        lineHeight: 1.2
+                    }}>
                         SYSTEM_ARCHITECT
                     </div>
-                    <div style={{ marginTop: 20, color: '#94a3b8', fontSize: '1.2rem', overflow: 'hidden', whiteSpace: 'nowrap', borderRight: '2px solid #38bdf8', animation: 'typing 1.5s steps(30, end), blink-caret .75s step-end infinite' }}>
+                    <div style={{
+                        marginTop: 20, color: '#94a3b8',
+                        fontSize: 'clamp(0.85rem, 3.5vw, 1.2rem)',
+                        textAlign: 'center',
+                        maxWidth: '90vw',
+                        animation: 'typing 1.5s steps(30, end), blink-caret .75s step-end infinite'
+                    }}>
                         Establishing secure diagnostic link...
                     </div>
                 </div>
@@ -111,62 +126,64 @@ export default function SystemHealthPage() {
                 {/* Floating Quick Action Bar */}
                 <div style={{
                     position: 'sticky', top: '0', zIndex: 100,
-                    background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(12px)',
+                    background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)',
                     borderBottom: '1px solid rgba(56, 189, 248, 0.2)',
-                    padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    padding: '12px 16px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#38bdf8' }}>Control Center</div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8', padding: '4px 8px', background: '#1e293b', borderRadius: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#38bdf8' }}>Control Center</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', padding: '4px 8px', background: '#1e293b', borderRadius: '4px' }}>
                             Last Sync: {lastRefresh.toLocaleTimeString()}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button className="btn btn-ghost" onClick={fetchHealth} style={{ fontSize: '13px' }}>🔄 Refresh</button>
-                        <button className="btn" onClick={() => alert('Fast Cache Clear initiated...')} style={{ fontSize: '13px', background: '#3b82f6', color: 'white' }}>⚡ Fast Clear</button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%', maxWidth: 'max-content' }}>
+                        <button className="btn btn-ghost" onClick={fetchHealth} style={{ fontSize: '12px', padding: '6px 10px' }}>🔄 Refresh</button>
+                        <button className="btn" onClick={() => alert('Fast Cache Clear initiated...')} style={{ fontSize: '12px', padding: '6px 10px', background: '#3b82f6', color: 'white' }}>⚡ Clear</button>
                         <button 
                             className="btn" 
                             onClick={handleLockdown}
                             disabled={isLockingDown}
                             style={{ 
-                                fontSize: '13px', 
+                                fontSize: '12px', 
+                                padding: '6px 10px',
                                 background: health?.config?.LOCKDOWN_MODE === 'true' ? '#ef4444' : '#64748b',
                                 color: 'white',
                                 boxShadow: health?.config?.LOCKDOWN_MODE === 'true' ? '0 0 15px rgba(239, 68, 68, 0.4)' : 'none'
                             }}
                         >
-                            {isLockingDown ? '...' : health?.config?.LOCKDOWN_MODE === 'true' ? '🔓 RELEASE LOCKDOWN' : '🔒 ENGAGE LOCKDOWN'}
+                            {isLockingDown ? '...' : health?.config?.LOCKDOWN_MODE === 'true' ? '🔓 RELEASE LOCKDOWN' : '🔒 LOCKDOWN'}
                         </button>
                     </div>
                 </div>
 
-                <div className="page-content" style={{ padding: '24px' }}>
+                <div className="page-content" style={{ padding: '16px 12px' }}>
                     {fetching && !health ? (
-                        <div style={{ padding: 100, textAlign: 'center' }}>
-                            <div className="spinner" style={{ margin: '0 auto', width: '50px', height: '50px' }} />
-                            <p style={{ marginTop: 24, color: '#94a3b8', fontSize: '18px' }}>Initializing Neural Uplink...</p>
+                        <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                            <div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px' }} />
+                            <p style={{ marginTop: 20, color: '#94a3b8', fontSize: '16px' }}>Initializing Neural Uplink...</p>
                         </div>
                     ) : health ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                             
-                            {/* Navigation Tabs - Premium Style */}
-                            <div style={{ display: 'flex', gap: '32px', borderBottom: '1px solid #1e293b' }}>
+                            {/* Navigation Tabs - Scrollable on mobile */}
+                            <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid #1e293b', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
                                 {['overview', 'infrastructure', 'controls', 'security'].map(tab => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         style={{
-                                            padding: '12px 4px',
+                                            padding: '10px 6px',
                                             background: 'none',
                                             border: 'none',
                                             color: activeTab === tab ? '#38bdf8' : '#64748b',
-                                            fontSize: '15px',
+                                            fontSize: '13.5px',
                                             fontWeight: 600,
                                             cursor: 'pointer',
                                             position: 'relative',
                                             transition: 'color 0.2s',
                                             textTransform: 'uppercase',
-                                            letterSpacing: '1px'
+                                            letterSpacing: '0.5px',
+                                            whiteSpace: 'nowrap'
                                         }}
                                     >
                                         {tab}
@@ -177,57 +194,57 @@ export default function SystemHealthPage() {
                                 ))}
                             </div>
 
-                            <div className="grid" style={{ gridTemplateColumns: 'repeat(12, 1fr)', gap: 24 }}>
+                            <div className="system-grid">
                                 
                                 {/* --- TAB: OVERVIEW --- */}
                                 {activeTab === 'overview' && (
                                     <>
                                         {/* Main Vitals Card */}
-                                        <div className="card" style={{ gridColumn: 'span 12', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', border: '1px solid #334155' }}>
-                                            <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '40px' }}>
+                                        <div className="card sys-col-12" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', border: '1px solid #334155' }}>
+                                            <div className="sys-vitals-header">
                                                 <div>
-                                                    <div style={{ fontSize: '14px', color: '#38bdf8', letterSpacing: '2px', marginBottom: '8px' }}>SYSTEM CORE STATUS</div>
-                                                    <div style={{ fontSize: '48px', fontWeight: 900, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: health.status === 'OPERATIONAL' ? '#10b981' : '#ef4444', boxShadow: `0 0 20px ${health.status === 'OPERATIONAL' ? '#10b981' : '#ef4444'}` }} />
+                                                    <div style={{ fontSize: '12px', color: '#38bdf8', letterSpacing: '1px', marginBottom: '6px' }}>SYSTEM CORE STATUS</div>
+                                                    <div style={{ fontSize: 'clamp(28px, 6vw, 44px)', fontWeight: 900, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: health.status === 'OPERATIONAL' ? '#10b981' : '#ef4444', boxShadow: `0 0 15px ${health.status === 'OPERATIONAL' ? '#10b981' : '#ef4444'}`, flexShrink: 0 }} />
                                                         {health.status}
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '48px', textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
                                                     <div>
-                                                        <div style={{ color: '#94a3b8', fontSize: '13px' }}>UPTIME</div>
-                                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f8fafc' }}>{formatUptime(health.uptime)}</div>
+                                                        <div style={{ color: '#94a3b8', fontSize: '11px' }}>UPTIME</div>
+                                                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#f8fafc' }}>{formatUptime(health.uptime)}</div>
                                                     </div>
                                                     <div>
-                                                        <div style={{ color: '#94a3b8', fontSize: '13px' }}>ACTIVE SESSIONS</div>
-                                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#38bdf8' }}>{health.analytics.infrastructure.sessions}</div>
+                                                        <div style={{ color: '#94a3b8', fontSize: '11px' }}>ACTIVE SESSIONS</div>
+                                                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#38bdf8' }}>{health.analytics.infrastructure.sessions}</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Performance Metrics */}
-                                        <div className="card" style={{ gridColumn: 'span 4', background: '#0f172a' }}>
-                                            <div className="card-body">
-                                                <div style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '12px' }}>CPU LOAD (CORES: {health.cpus})</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>{(health.loadAvg[0] * 10).toFixed(2)}%</div>
+                                        <div className="card sys-col-4" style={{ background: '#0f172a' }}>
+                                            <div className="card-body" style={{ padding: '16px' }}>
+                                                <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '8px' }}>CPU LOAD (CORES: {health.cpus})</div>
+                                                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '12px' }}>{(health.loadAvg[0] * 10).toFixed(2)}%</div>
                                                 <div style={{ width: '100%', height: '4px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' }}>
                                                     <div style={{ width: `${Math.min(100, health.loadAvg[0] * 10)}%`, height: '100%', background: '#38bdf8' }} />
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="card" style={{ gridColumn: 'span 4', background: '#0f172a' }}>
-                                            <div className="card-body">
-                                                <div style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '12px' }}>MEMORY UTILIZATION</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>{((1 - health.freeMem / health.totalMem) * 100).toFixed(2)}%</div>
+                                        <div className="card sys-col-4" style={{ background: '#0f172a' }}>
+                                            <div className="card-body" style={{ padding: '16px' }}>
+                                                <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '8px' }}>MEMORY UTILIZATION</div>
+                                                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '12px' }}>{((1 - health.freeMem / health.totalMem) * 100).toFixed(2)}%</div>
                                                 <div style={{ width: '100%', height: '4px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' }}>
                                                     <div style={{ width: `${(1 - health.freeMem / health.totalMem) * 100}%`, height: '100%', background: '#a855f7' }} />
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="card" style={{ gridColumn: 'span 4', background: '#0f172a' }}>
-                                            <div className="card-body">
-                                                <div style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '12px' }}>DISK USAGE</div>
-                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>{health.analytics.infrastructure.disk.usagePercent}%</div>
+                                        <div className="card sys-col-4" style={{ background: '#0f172a' }}>
+                                            <div className="card-body" style={{ padding: '16px' }}>
+                                                <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '8px' }}>DISK USAGE</div>
+                                                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '12px' }}>{health.analytics.infrastructure.disk.usagePercent}%</div>
                                                 <div style={{ width: '100%', height: '4px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' }}>
                                                     <div style={{ width: `${health.analytics.infrastructure.disk.usagePercent}%`, height: '100%', background: '#f59e0b' }} />
                                                 </div>
@@ -235,12 +252,12 @@ export default function SystemHealthPage() {
                                         </div>
 
                                         {/* Live API Traffic Chart */}
-                                        <div className="card" style={{ gridColumn: 'span 8', background: '#0f172a' }}>
+                                        <div className="card sys-col-8" style={{ background: '#0f172a' }}>
                                             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <div className="card-title">Live API Throughput</div>
                                                 <div style={{ fontSize: '12px', color: '#10b981' }}>{health.analytics.api.reqPerSec} req/sec</div>
                                             </div>
-                                            <div className="card-body" style={{ height: '150px', display: 'flex', alignItems: 'flex-end', gap: '4px', padding: '20px' }}>
+                                            <div className="card-body" style={{ height: '150px', display: 'flex', alignItems: 'flex-end', gap: '4px', padding: '16px' }}>
                                                 {health.analytics.api.trafficSparkline.map((v: number, i: number) => (
                                                     <div key={i} style={{ flex: 1, background: 'rgba(56, 189, 248, 0.3)', height: `${v}%`, borderTop: '2px solid #38bdf8', borderRadius: '2px 2px 0 0' }} />
                                                 ))}
@@ -248,20 +265,20 @@ export default function SystemHealthPage() {
                                         </div>
 
                                         {/* DB Latency Stats */}
-                                        <div className="card" style={{ gridColumn: 'span 4', background: '#0f172a' }}>
+                                        <div className="card sys-col-4" style={{ background: '#0f172a' }}>
                                             <div className="card-header">
                                                 <div className="card-title">Database Vitals</div>
                                             </div>
-                                            <div className="card-body">
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                            <div className="card-body" style={{ padding: '16px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
                                                     <span style={{ color: '#94a3b8' }}>Avg Query Time</span>
                                                     <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.analytics.database.avgQueryTimeMs}ms</span>
                                                 </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
                                                     <span style={{ color: '#94a3b8' }}>Active Queries</span>
                                                     <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.analytics.database.activeQueries}</span>
                                                 </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
                                                     <span style={{ color: '#94a3b8' }}>Pool Utilization</span>
                                                     <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.analytics.database.poolUsagePercent}%</span>
                                                 </div>
@@ -274,14 +291,12 @@ export default function SystemHealthPage() {
                                 {activeTab === 'infrastructure' && (
                                     <>
                                         {/* Network Node Graph Map */}
-                                        <div className="card" style={{ gridColumn: 'span 12', background: '#0f172a' }}>
+                                        <div className="card sys-col-12" style={{ background: '#0f172a' }}>
                                             <div className="card-header">
                                                 <div className="card-title">Active Infrastructure Nodes</div>
                                             </div>
-                                            <div className="card-body" style={{ padding: '40px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', position: 'relative' }}>
-                                                    <div style={{ position: 'absolute', top: '50%', left: '10%', right: '10%', height: '1px', background: 'dashed #334155', zIndex: 0 }} />
-                                                    
+                                            <div className="card-body" style={{ padding: '24px 16px' }}>
+                                                <div className="sys-nodes-wrap">
                                                     <NodeItem icon="🌐" label="Edge Gateway" status="NOMINAL" color="#10b981" />
                                                     <NodeItem icon="🔒" label="Auth Svc" status="SECURE" color="#38bdf8" />
                                                     <NodeItem icon="🗄️" label="Main DB" status="SYNCED" color="#10b981" />
@@ -292,40 +307,42 @@ export default function SystemHealthPage() {
                                         </div>
 
                                         {/* Network Throughput */}
-                                        <div className="card" style={{ gridColumn: 'span 6', background: '#0f172a' }}>
+                                        <div className="card sys-col-6" style={{ background: '#0f172a' }}>
                                             <div className="card-header"><div className="card-title">Network Inbound (Rx)</div></div>
-                                            <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
-                                                <div style={{ fontSize: '48px', fontWeight: 900, color: '#10b981' }}>{health.analytics.infrastructure.network.rx} <span style={{ fontSize: '18px' }}>Mbps</span></div>
+                                            <div className="card-body" style={{ textAlign: 'center', padding: '24px 16px' }}>
+                                                <div style={{ fontSize: 'clamp(28px, 6vw, 44px)', fontWeight: 900, color: '#10b981' }}>{health.analytics.infrastructure.network.rx} <span style={{ fontSize: '16px' }}>Mbps</span></div>
                                             </div>
                                         </div>
-                                        <div className="card" style={{ gridColumn: 'span 6', background: '#0f172a' }}>
+                                        <div className="card sys-col-6" style={{ background: '#0f172a' }}>
                                             <div className="card-header"><div className="card-title">Network Outbound (Tx)</div></div>
-                                            <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
-                                                <div style={{ fontSize: '48px', fontWeight: 900, color: '#38bdf8' }}>{health.analytics.infrastructure.network.tx} <span style={{ fontSize: '18px' }}>Mbps</span></div>
+                                            <div className="card-body" style={{ textAlign: 'center', padding: '24px 16px' }}>
+                                                <div style={{ fontSize: 'clamp(28px, 6vw, 44px)', fontWeight: 900, color: '#38bdf8' }}>{health.analytics.infrastructure.network.tx} <span style={{ fontSize: '16px' }}>Mbps</span></div>
                                             </div>
                                         </div>
 
                                         {/* Live Page Status Monitoring */}
-                                        <div className="card" style={{ gridColumn: 'span 12', background: '#0f172a' }}>
+                                        <div className="card sys-col-12" style={{ background: '#0f172a' }}>
                                             <div className="card-header"><div className="card-title">Live Route Monitoring</div></div>
                                             <div className="card-body" style={{ padding: 0 }}>
-                                                <table className="table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Route</th>
-                                                            <th>Type</th>
-                                                            <th>Status</th>
-                                                            <th>Latency</th>
-                                                            <th>Security</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <RouteRow path="/dashboard" type="SSR" status="Healthy" latency="42ms" secure="JWT+HTTPS" />
-                                                        <RouteRow path="/api/payments/create" type="API" status="Healthy" latency="112ms" secure="RBAC" />
-                                                        <RouteRow path="/api/auth/login" type="AUTH" status="Healthy" latency="28ms" secure="CSRF" />
-                                                        <RouteRow path="/students/admission" type="CSR" status="Healthy" latency="15ms" secure="JWT" />
-                                                    </tbody>
-                                                </table>
+                                                <div className="table-wrap" style={{ border: 'none' }}>
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Route</th>
+                                                                <th>Type</th>
+                                                                <th>Status</th>
+                                                                <th>Latency</th>
+                                                                <th>Security</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <RouteRow path="/dashboard" type="SSR" status="Healthy" latency="42ms" secure="JWT+HTTPS" />
+                                                            <RouteRow path="/api/payments/create" type="API" status="Healthy" latency="112ms" secure="RBAC" />
+                                                            <RouteRow path="/api/auth/login" type="AUTH" status="Healthy" latency="28ms" secure="CSRF" />
+                                                            <RouteRow path="/students/admission" type="CSR" status="Healthy" latency="15ms" secure="JWT" />
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </>
@@ -333,12 +350,12 @@ export default function SystemHealthPage() {
 
                                 {/* --- TAB: CONTROLS --- */}
                                 {activeTab === 'controls' && (
-                                    <div className="card" style={{ gridColumn: 'span 12', background: '#0f172a', border: '1px solid #ef4444' }}>
+                                    <div className="card sys-col-12" style={{ background: '#0f172a', border: '1px solid #ef4444' }}>
                                         <div className="card-header" style={{ borderBottom: '1px solid #ef4444' }}>
                                             <div className="card-title" style={{ color: '#ef4444' }}>🔴 EMERGENCY & ARCHITECT OVERRIDE</div>
                                         </div>
-                                        <div className="card-body" style={{ padding: '40px' }}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+                                        <div className="card-body" style={{ padding: '20px 16px' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
                                                 
                                                 <ControlPanel 
                                                     title="Global System Lockdown" 
@@ -368,7 +385,7 @@ export default function SystemHealthPage() {
 
                                 {/* --- TAB: SECURITY --- */}
                                 {activeTab === 'security' && (
-                                    <div style={{ gridColumn: 'span 12', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <div className="sys-col-12" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                         <div className="card" style={{ background: '#0f172a' }}>
                                             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <div className="card-title">Live Server Stream</div>
