@@ -85,6 +85,11 @@ export default function Sidebar() {
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const visibleItems = navItems.filter((item) => {
+        // If developer is simulating a specific role, strictly show ONLY items for that simulated role
+        if (user?.role === 'DEVELOPER' && simulateParam) {
+            return item.roles?.includes(effectiveRole!);
+        }
+        // Normal developer or staff view
         if (item.roles?.includes('DEVELOPER') && user?.role === 'DEVELOPER') return true;
         return effectiveRole && item.roles?.includes(effectiveRole);
     });
@@ -105,16 +110,16 @@ export default function Sidebar() {
             {/* Mobile Top Header Bar */}
             <div className="mobile-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, background: '#ffffff', borderRadius: 8, padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+                    <div style={{ width: 38, height: 38, background: '#ffffff', borderRadius: 10, padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
                         <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
-                    <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary-dark)' }}>Shri Sai I.T.I</span>
+                    <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary-dark)' }}>Shri Sai I.T.I</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {user && (
                         <div
                             className="user-badge-avatar"
-                            style={{ cursor: 'pointer', width: 32, height: 32, fontSize: 13 }}
+                            style={{ cursor: 'pointer', width: 34, height: 34, fontSize: 14 }}
                             onClick={() => setShowProfileModal(!showProfileModal)}
                             title="Open Profile Menu"
                         >
@@ -138,33 +143,58 @@ export default function Sidebar() {
 
             <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
                 {/* Logo */}
-                <Link href="/dashboard" style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>
+                <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>
                     <div className="sidebar-logo">
-                        <div style={{ width: 44, height: 44, background: '#ffffff', borderRadius: 12, padding: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', flexShrink: 0 }}>
+                        <div style={{ width: 50, height: 50, background: '#ffffff', borderRadius: 14, padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.2)', flexShrink: 0 }}>
                             <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                         <div className="sidebar-logo-text">
-                            <h2 style={{ letterSpacing: '0.5px' }}>Shri Sai I.T.I</h2>
-                            <span>Fee Management</span>
+                            <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I</h2>
+                            <span style={{ fontSize: 12 }}>Fee Management</span>
                         </div>
                     </div>
                 </Link>
 
+                {/* Developer Simulation Active Indicator */}
+                {user?.role === 'DEVELOPER' && simulateParam && (
+                    <div style={{
+                        margin: '12px 16px 4px', padding: '8px 12px',
+                        background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)',
+                        borderRadius: '10px', fontSize: '12px', color: '#38bdf8',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                    }}>
+                        <span>👁️ Viewing as <b>{simulateParam.toUpperCase()}</b></span>
+                        <Link href="/system" style={{ background: '#38bdf8', color: '#0f172a', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
+                            Exit
+                        </Link>
+                    </div>
+                )}
+
                 {/* Navigation */}
                 <div className="sidebar-section">
-                    <div className="sidebar-section-label">Menu</div>
+                    <div className="sidebar-section-label">
+                        {simulateParam ? `${simulateParam.toUpperCase()} MENU` : 'MENU'}
+                    </div>
                     <nav>
-                        {visibleItems.map((item) => (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`sidebar-nav-item ${pathname.startsWith(item.href) ? 'active' : ''}`}
-                                onClick={() => setMobileOpen(false)}
-                            >
-                                <span style={{ fontSize: 18 }}>{item.icon}</span>
-                                {item.label}
-                            </Link>
-                        ))}
+                        {visibleItems.map((item) => {
+                            // Append simulation param to links if currently simulating a role
+                            const targetHref = (simulateParam && !item.href.includes('simulate') && item.href !== '/system') 
+                                ? `${item.href}${item.href.includes('?') ? '&' : '?'}simulate=${simulateParam}` 
+                                : item.href;
+                            const isActive = pathname === item.href || (pathname + searchParams.toString()).includes(item.href);
+
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={targetHref}
+                                    className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setMobileOpen(false)}
+                                >
+                                    <span style={{ fontSize: 18 }}>{item.icon}</span>
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
                     </nav>
                 </div>
 

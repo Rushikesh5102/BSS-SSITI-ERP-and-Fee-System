@@ -311,7 +311,7 @@ function StudentsContent() {
                                                 type="file"
                                                 accept="image/*"
                                                 className="form-control"
-                                                style={{ padding: '8px 12px', fontSize: 13, height: 'auto' }}
+                                                style={{ padding: '6px 10px', fontSize: 13, height: 'auto', background: 'var(--surface-2)', border: '1px dashed var(--primary)' }}
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0];
                                                     if (file) {

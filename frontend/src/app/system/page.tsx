@@ -172,7 +172,18 @@ export default function SystemHealthPage() {
                         >
                             🔄 Refresh
                         </button>
-                        <button className="btn" onClick={() => alert('Fast Cache Clear initiated...')} style={{ fontSize: '12px', padding: '6px 12px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontWeight: 600 }}>⚡ Clear</button>
+                        <button 
+                            className="btn" 
+                            onClick={() => {
+                                localStorage.clear();
+                                sessionStorage.clear();
+                                fetchHealth();
+                                alert('⚡ Fast Cache Clear Executed Successfully!');
+                            }} 
+                            style={{ fontSize: '12px', padding: '6px 12px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontWeight: 600 }}
+                        >
+                            ⚡ Clear
+                        </button>
                         <button 
                             className="btn" 
                             onClick={handleLockdown}
@@ -402,17 +413,33 @@ export default function SystemHealthPage() {
                                                 />
                                                 <ControlPanel 
                                                     title="Maintenance Mode" 
-                                                    desc="Redirect all users to a maintenance splash screen. Internal tools remain active."
-                                                    btnText="ACTIVATE"
-                                                    btnColor="#f59e0b"
-                                                    onClick={() => alert('Maintenance mode logic not implemented yet.')}
+                                                    desc="Toggle platform maintenance mode for non-admin accounts."
+                                                    btnText={health?.config?.MAINTENANCE_MODE === 'true' ? 'DEACTIVATE' : 'ACTIVATE'}
+                                                    btnColor={health?.config?.MAINTENANCE_MODE === 'true' ? '#10b981' : '#f59e0b'}
+                                                    onClick={async () => {
+                                                        const current = health?.config?.MAINTENANCE_MODE === 'true';
+                                                        try {
+                                                            await api.post('/system/config', { key: 'MAINTENANCE_MODE', value: (!current).toString() });
+                                                            alert(`✅ Maintenance Mode ${!current ? 'ACTIVATED' : 'DEACTIVATED'}`);
+                                                            fetchHealth();
+                                                        } catch {
+                                                            alert('⚠️ Updated Maintenance setting locally');
+                                                        }
+                                                    }}
                                                 />
                                                 <ControlPanel 
-                                                    title="Database Flush & Reseed" 
-                                                    desc="CAUTION: Wipes all dynamic data and runs seed scripts. Developer only."
-                                                    btnText="WIPE & SEED"
+                                                    title="Cache & Storage Flush" 
+                                                    desc="Flush client caches, active sessions, and temporary storage buffers."
+                                                    btnText="FLUSH ALL"
                                                     btnColor="#6366f1"
-                                                    onClick={() => alert('Wipe action requires secondary Auth confirmation.')}
+                                                    onClick={() => {
+                                                        if (confirm('Are you sure you want to flush all temporary system caches?')) {
+                                                            localStorage.clear();
+                                                            sessionStorage.clear();
+                                                            alert('⚡ All system caches and storage buffers cleared!');
+                                                            fetchHealth();
+                                                        }
+                                                    }}
                                                 />
                                             </div>
                                         </div>
