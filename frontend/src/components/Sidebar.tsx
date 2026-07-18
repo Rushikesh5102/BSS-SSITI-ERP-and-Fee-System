@@ -58,6 +58,18 @@ export default function Sidebar() {
         setMobileOpen(false);
     }, [pathname]);
 
+    // Close mobile drawer & profile modal on Escape key press
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setMobileOpen(false);
+                setShowProfileModal(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const toggleTheme = () => {
         if (isDark) {
             document.documentElement.classList.remove('dark');

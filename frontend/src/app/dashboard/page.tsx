@@ -457,7 +457,7 @@ function DashboardContent() {
                         </div>
 
                         {/* Chart + Recent Payments */}
-                        <div className="grid" style={{ gridTemplateColumns: '1.6fr 1fr', gap: 20, marginBottom: 24 }}>
+                        <div className="grid-2 mb-6">
                             {/* Collection Chart */}
                             <div className="card">
                                 <div className="card-header">
