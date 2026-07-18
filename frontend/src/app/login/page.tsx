@@ -59,16 +59,27 @@ export default function LoginPage() {
         <div className="login-page">
             <button 
                 onClick={toggleTheme}
-                style={{ position: 'absolute', top: 20, right: 20, padding: '8px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '100px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', gap: 8, boxShadow: 'var(--shadow-sm)' }}
+                style={{
+                    position: 'absolute', top: 20, right: 20, padding: '8px 16px',
+                    background: 'rgba(255, 255, 255, 0.2)', backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)', color: '#ffffff',
+                    borderRadius: '100px', cursor: 'pointer', zIndex: 10,
+                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 600,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                }}
             >
                 {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
             </button>
             <div className="login-card">
                 <div className="login-logo">
-                    <div className="login-logo-icon" style={{ background: 'transparent', border: 'none', borderRadius: '0', boxShadow: 'none', width: 'auto', height: 'auto', marginBottom: '16px' }}>
-                        <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" style={{ width: '120px', height: 'auto', objectFit: 'contain' }} />
+                    <div style={{
+                        width: '70px', height: '70px', margin: '0 auto 12px',
+                        background: '#ffffff', borderRadius: '16px', padding: '8px',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
-                    <h1 style={{ letterSpacing: '0.5px' }}>Shri Sai I.T.I</h1>
+                    <h1>Shri Sai I.T.I</h1>
                     <p>Fee Management System</p>
                 </div>
 
@@ -79,17 +90,18 @@ export default function LoginPage() {
                                 background: '#fee2e2',
                                 color: '#991b1b',
                                 padding: '10px 14px',
-                                borderRadius: 8,
+                                borderRadius: 10,
                                 fontSize: 13,
                                 marginBottom: 16,
                                 border: '1px solid #fecaca',
+                                textAlign: 'left',
                             }}
                         >
                             ⚠️ {error}
                         </div>
                     )}
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ textAlign: 'left' }}>
                         <label className="form-label">
                             Email Address <span className="required">*</span>
                         </label>
@@ -104,7 +116,7 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ textAlign: 'left' }}>
                         <label className="form-label">
                             Password <span className="required">*</span>
                         </label>
@@ -123,7 +135,7 @@ export default function LoginPage() {
                         type="submit"
                         className="btn btn-primary w-full btn-lg"
                         disabled={loading}
-                        style={{ justifyContent: 'center', marginTop: 8 }}
+                        style={{ justifyContent: 'center', marginTop: 12, background: 'var(--primary-dark)', borderColor: 'var(--primary-dark)' }}
                     >
                         {loading ? (
                             <>
@@ -142,12 +154,13 @@ export default function LoginPage() {
                         marginTop: 24,
                         padding: '16px',
                         background: 'var(--surface-2)',
-                        borderRadius: 8,
+                        borderRadius: 14,
                         fontSize: 13,
                         color: 'var(--text-muted)',
+                        textAlign: 'left'
                     }}
                 >
-                    <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 12 }}>Test the Demo Instantly:</strong>
+                    <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 12, textAlign: 'center' }}>Test the Demo Instantly:</strong>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button 
@@ -195,7 +208,7 @@ export default function LoginPage() {
                             onClick={() => quickLogin('pattiwarrushikesh5102@gmail.com', 'Rushikesh@5102')}
                             className="btn btn-primary w-full"
                             disabled={loading}
-                            style={{ justifyContent: 'center', marginTop: 8 }}
+                            style={{ justifyContent: 'center', marginTop: 4, background: '#0f172a', borderColor: '#0f172a' }}
                         >
                             💻 Developer / System Health
                         </button>

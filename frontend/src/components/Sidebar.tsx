@@ -105,8 +105,10 @@ export default function Sidebar() {
             {/* Mobile Top Header Bar */}
             <div className="mobile-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <img src="/sai_iti_logo.png" alt="Logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-                    <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>Shri Sai I.T.I</span>
+                    <div style={{ width: 32, height: 32, background: '#ffffff', borderRadius: 8, padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}>
+                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
+                    <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary-dark)' }}>Shri Sai I.T.I</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {user && (
@@ -138,7 +140,7 @@ export default function Sidebar() {
                 {/* Logo */}
                 <Link href="/dashboard" style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>
                     <div className="sidebar-logo">
-                        <div className="sidebar-logo-icon" style={{ background: 'transparent', border: 'none', width: '48px', height: '48px', flexShrink: 0, padding: 0 }}>
+                        <div style={{ width: 44, height: 44, background: '#ffffff', borderRadius: 12, padding: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', flexShrink: 0 }}>
                             <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                         <div className="sidebar-logo-text">
@@ -172,7 +174,10 @@ export default function Sidebar() {
                         <div
                             className="user-badge"
                             style={{ cursor: 'pointer' }}
-                            onClick={() => setShowProfileModal(!showProfileModal)}
+                            onClick={() => {
+                                setMobileOpen(false);
+                                setShowProfileModal(!showProfileModal);
+                            }}
                         >
                             <div className="user-badge-avatar">{initials}</div>
                             <div style={{ flex: 1, minWidth: 0 }}>

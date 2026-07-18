@@ -91,31 +91,55 @@ export default function SystemHealthPage() {
             {showWelcome && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: '#020617', zIndex: 99999,
+                    background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #0284c7 100%)', zIndex: 99999,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontFamily: 'monospace', color: '#38bdf8', padding: '24px 16px', textAlign: 'center',
-                    animation: 'fadeOut 0.5s ease 3s forwards'
+                    animation: 'fadeOut 0.8s ease 2.2s forwards'
                 }}>
+                    <style>{`
+                        @keyframes fadeOut { to { opacity: 0; pointer-events: none; visibility: hidden; } }
+                        @keyframes cyberGlow { 0% { transform: scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px #38bdf8); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 30px #38bdf8); } 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 15px #38bdf8); } }
+                        @keyframes cyberBar { 0% { width: 0%; } 100% { width: 100%; } }
+                    `}</style>
                     <div style={{
-                        animation: 'glitch 1s infinite alternate',
+                        width: '80px', height: '80px', borderRadius: '20px', background: '#ffffff',
+                        padding: '10px', boxShadow: '0 0 40px rgba(56, 189, 248, 0.6)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        animation: 'cyberGlow 1.2s ease forwards', marginBottom: '16px'
+                    }}>
+                        <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
+
+                    <div style={{
+                        animation: 'cyberGlow 1.2s ease forwards',
                         fontSize: 'clamp(1.8rem, 6vw, 3rem)',
                         fontWeight: 900,
                         letterSpacing: 'clamp(2px, 1.5vw, 6px)',
-                        textShadow: '0 0 20px #38bdf8',
+                        textShadow: '0 0 25px #38bdf8',
                         textAlign: 'center',
                         maxWidth: '90vw',
-                        lineHeight: 1.2
+                        lineHeight: 1.2,
+                        color: '#f8fafc'
                     }}>
                         SYSTEM_ARCHITECT
                     </div>
                     <div style={{
-                        marginTop: 20, color: '#94a3b8',
-                        fontSize: 'clamp(0.85rem, 3.5vw, 1.2rem)',
+                        marginTop: 12, color: '#94a3b8',
+                        fontSize: 'clamp(0.85rem, 3.5vw, 1.1rem)',
                         textAlign: 'center',
                         maxWidth: '90vw',
-                        animation: 'typing 1.5s steps(30, end), blink-caret .75s step-end infinite'
                     }}>
-                        Establishing secure diagnostic link...
+                        Establishing secure neural uplink & diagnostic link...
+                    </div>
+                    <div style={{
+                        width: '220px', height: '4px', background: 'rgba(56, 189, 248, 0.2)',
+                        borderRadius: '4px', overflow: 'hidden', marginTop: '24px'
+                    }}>
+                        <div style={{
+                            height: '100%', background: '#38bdf8',
+                            borderRadius: '4px', boxShadow: '0 0 12px #38bdf8',
+                            animation: 'cyberBar 2s ease-in-out forwards'
+                        }} />
                     </div>
                 </div>
             )}
@@ -136,16 +160,28 @@ export default function SystemHealthPage() {
                             Last Sync: {lastRefresh.toLocaleTimeString()}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%', maxWidth: 'max-content' }}>
-                        <button className="btn btn-ghost" onClick={fetchHealth} style={{ fontSize: '12px', padding: '6px 10px' }}>🔄 Refresh</button>
-                        <button className="btn" onClick={() => alert('Fast Cache Clear initiated...')} style={{ fontSize: '12px', padding: '6px 10px', background: '#3b82f6', color: 'white' }}>⚡ Clear</button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%', maxWidth: 'max-content', alignItems: 'center' }}>
+                        <button
+                            className="btn"
+                            onClick={fetchHealth}
+                            style={{
+                                fontSize: '12px', padding: '6px 12px',
+                                background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8',
+                                border: '1px solid rgba(56, 189, 248, 0.4)', borderRadius: '8px', fontWeight: 600
+                            }}
+                        >
+                            🔄 Refresh
+                        </button>
+                        <button className="btn" onClick={() => alert('Fast Cache Clear initiated...')} style={{ fontSize: '12px', padding: '6px 12px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontWeight: 600 }}>⚡ Clear</button>
                         <button 
                             className="btn" 
                             onClick={handleLockdown}
                             disabled={isLockingDown}
                             style={{ 
                                 fontSize: '12px', 
-                                padding: '6px 10px',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                fontWeight: 600,
                                 background: health?.config?.LOCKDOWN_MODE === 'true' ? '#ef4444' : '#64748b',
                                 color: 'white',
                                 boxShadow: health?.config?.LOCKDOWN_MODE === 'true' ? '0 0 15px rgba(239, 68, 68, 0.4)' : 'none'

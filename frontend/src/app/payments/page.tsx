@@ -24,7 +24,7 @@ export default function PaymentsPage() {
 
     // Quick Add Student Modal State
     const [showQuickAddModal, setShowQuickAddModal] = useState(false);
-    const [quickAddForm, setQuickAddForm] = useState({ name: '', class: 'Electrician', section: 'A', rollNumber: '', parentName: '', parentPhone: '', parentEmail: '' });
+    const [quickAddForm, setQuickAddForm] = useState({ name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', parentName: '', parentPhone: '', parentEmail: '' });
     const [quickAdding, setQuickAdding] = useState(false);
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
@@ -59,8 +59,13 @@ export default function PaymentsPage() {
                 name: quickAddForm.name,
                 class: quickAddForm.class,
                 section: quickAddForm.section,
-                rollNumber: quickAddForm.rollNumber,
-                parent: quickAddForm.parentPhone ? { name: quickAddForm.parentName, phone: quickAddForm.parentPhone, email: quickAddForm.parentEmail } : undefined,
+                rollNumber: quickAddForm.rollNumber || undefined,
+                photo: quickAddForm.photo || undefined,
+                parent: quickAddForm.parentName ? {
+                    name: quickAddForm.parentName,
+                    phone: quickAddForm.parentPhone,
+                    email: quickAddForm.parentEmail,
+                } : undefined,
             });
             const newStudent = data.data;
 
@@ -77,7 +82,7 @@ export default function PaymentsPage() {
 
             showToast(`✅ Student ${newStudent.name} (${newStudent.studentId}) admitted successfully!`);
             setShowQuickAddModal(false);
-            setQuickAddForm({ name: '', class: 'Electrician', section: 'A', rollNumber: '', parentName: '', parentPhone: '', parentEmail: '' });
+            setQuickAddForm({ name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', parentName: '', parentPhone: '', parentEmail: '' });
 
             // Refresh & Select new student
             const refreshed = await api.get(`/students/${newStudent.id}`);
@@ -389,6 +394,32 @@ export default function PaymentsPage() {
                                         <option>Mechanic</option>
                                         <option>COPA</option>
                                     </select>
+                                </div>
+                                <div className="form-group mb-3">
+                                    <label className="form-label">Student Photo Upload</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        {quickAddForm.photo ? (
+                                            <img src={quickAddForm.photo} alt="Preview" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+                                        ) : (
+                                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📷</div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="form-control"
+                                            style={{ padding: '8px 12px', fontSize: 13, height: 'auto' }}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setQuickAddForm(f => ({ ...f, photo: reader.result as string }));
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="form-group mb-3" style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 12, color: 'var(--primary)' }}>
                                     ℹ️ <b>Auto-Assigned:</b> Roll Number and Student ID are generated automatically per trade (e.g. SITI-2026-E01).

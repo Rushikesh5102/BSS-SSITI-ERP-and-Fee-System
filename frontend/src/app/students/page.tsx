@@ -19,7 +19,7 @@ function StudentsContent() {
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
+    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', photo: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
 
@@ -123,8 +123,8 @@ function StudentsContent() {
         e.preventDefault(); setSaving(true);
         try {
             const { data } = await api.post('/students', {
-                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber, email: form.email,
-                parent: form.parentPhone ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
+                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber, photo: form.photo || undefined, email: form.email,
+                parent: form.parentName ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
             });
             const loginDetails = data.data?.loginDetails;
             setShowModal(false);
@@ -133,7 +133,7 @@ function StudentsContent() {
             } else {
                 showToast('✅ Student admitted successfully!');
             }
-            setForm({ name: '', class: '', section: '', rollNumber: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
+            setForm({ name: '', class: '', section: '', rollNumber: '', photo: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
             fetchStudents();
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to add student'}`);
@@ -207,8 +207,19 @@ function StudentsContent() {
                                             <tr key={s.id}>
                                                 <td><span className="badge badge-primary">{s.studentId}</span></td>
                                                 <td>
-                                                    <b>{s.name}</b>
-                                                    {s.rollNumber && <><br /><span className="text-sm text-muted">Roll: {s.rollNumber}</span></>}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                        {s.photo ? (
+                                                            <img src={s.photo} alt={s.name} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                                                        ) : (
+                                                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: 'var(--primary)' }}>
+                                                                {s.name[0]}
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <b>{s.name}</b>
+                                                            {s.rollNumber && <><br /><span className="text-sm text-muted">Roll: {s.rollNumber}</span></>}
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td>{s.class}{s.section ? ` - ${s.section}` : ''}</td>
                                                 <td>{s.parent?.name || <span className="text-muted">—</span>}</td>
@@ -286,6 +297,32 @@ function StudentsContent() {
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 13, color: 'var(--primary)' }}>
                                             ℹ️ <b>Auto-Generated Credentials:</b> Roll Number and Student ID will be generated automatically in sequence (e.g. Roll 01 ➔ SITI-2026-E01) to prevent human errors.
+                                        </div>
+                                    </div>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label">Student Photo Upload</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            {form.photo ? (
+                                                <img src={form.photo} alt="Preview" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+                                            ) : (
+                                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📷</div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="form-control"
+                                                style={{ padding: '8px 12px', fontSize: 13, height: 'auto' }}
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setForm(f => ({ ...f, photo: reader.result as string }));
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -412,10 +449,19 @@ function StudentsContent() {
                                 <div>
                                     {/* Overview Header */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-2)', padding: 16, borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
-                                        <div>
-                                            <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
-                                            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                                                ID: <b>{historyStudentDetail.studentId}</b> | Class: <b>{historyStudentDetail.class} {historyStudentDetail.section && `(${historyStudentDetail.section})`}</b> {historyStudentDetail.rollNumber && `| Roll: ${historyStudentDetail.rollNumber}`}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                            {historyStudentDetail.photo ? (
+                                                <img src={historyStudentDetail.photo} alt={historyStudentDetail.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+                                            ) : (
+                                                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
+                                                    {historyStudentDetail.name[0]}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
+                                                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                                                    ID: <b>{historyStudentDetail.studentId}</b> | Class: <b>{historyStudentDetail.class} {historyStudentDetail.section && `(${historyStudentDetail.section})`}</b> {historyStudentDetail.rollNumber && `| Roll: ${historyStudentDetail.rollNumber}`}
+                                                </div>
                                             </div>
                                         </div>
                                         <span className="badge badge-primary">{historyStudentDetail.branch?.name || 'Main Branch'}</span>
