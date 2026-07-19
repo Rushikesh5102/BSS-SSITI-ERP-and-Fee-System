@@ -142,14 +142,14 @@ export default function Sidebar() {
             )}
 
             <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
-                {/* Logo */}
-                <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>
-                    <div className="sidebar-logo">
+                {/* Logo (Home Shortcut) */}
+                <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)} title="🏠 Home / Dashboard Shortcut">
+                    <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}>
                         <div style={{ width: 50, height: 50, background: '#ffffff', borderRadius: 14, padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.2)', flexShrink: 0 }}>
                             <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                         <div className="sidebar-logo-text">
-                            <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I</h2>
+                            <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I 🏠</h2>
                             <span style={{ fontSize: 12 }}>Fee Management</span>
                         </div>
                     </div>

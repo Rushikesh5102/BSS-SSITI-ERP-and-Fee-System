@@ -69,7 +69,7 @@ export const studentsController = {
      * Create a new student with optional parent linkage
      */
     create: asyncHandler(async (req: Request, res: Response) => {
-        const { parent, ...studentData } = req.body;
+        const { parent, feeStructureId, customTotalAmount, ...studentData } = req.body;
         const tradeClass = studentData.class || 'Electrician';
 
         // Auto-generate sequential roll number per trade to prevent human error
@@ -103,6 +103,31 @@ export const studentsController = {
             },
             include: { parent: true, branch: { select: { name: true } } },
         });
+
+        // ─── Auto Assign Fee Structure if Selected During Admission ──────────────
+        if (feeStructureId) {
+            const feeStruct = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
+            if (feeStruct) {
+                const finalAmount = customTotalAmount ? Number(customTotalAmount) : feeStruct.totalAmount;
+                await prisma.studentFee.upsert({
+                    where: {
+                        studentId_feeStructureId_academicYear: {
+                            studentId: student.id,
+                            feeStructureId,
+                            academicYear: feeStruct.academicYear,
+                        }
+                    },
+                    update: { totalAmount: finalAmount },
+                    create: {
+                        studentId: student.id,
+                        feeStructureId,
+                        totalAmount: finalAmount,
+                        paidAmount: 0,
+                        academicYear: feeStruct.academicYear,
+                    }
+                });
+            }
+        }
 
         // ─── Generate Student Login Account ────────────────────────────────────
         const passwordHash = await bcrypt.hash(studentId, 12); // Default password is the generated Student ID

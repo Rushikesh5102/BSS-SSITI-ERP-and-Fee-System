@@ -96,6 +96,7 @@ model Student {
   email       String?  @unique
   address     String?
   photo       String?  // URL to student photo
+  signature   String?  // URL or Base64 to student signature
   isActive    Boolean  @default(true)
   branchId    String   @map("branch_id")
   parentId    String?  @map("parent_id")

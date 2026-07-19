@@ -61,11 +61,12 @@ export default function LoginPage() {
                 onClick={toggleTheme}
                 style={{
                     position: 'absolute', top: 20, right: 20, padding: '8px 16px',
-                    background: 'rgba(255, 255, 255, 0.2)', backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)', color: '#ffffff',
+                    background: isDark ? '#1e293b' : '#ffffff',
+                    border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
+                    color: isDark ? '#f8fafc' : '#0f172a',
                     borderRadius: '100px', cursor: 'pointer', zIndex: 10,
-                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 600,
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
                 }}
             >
                 {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}

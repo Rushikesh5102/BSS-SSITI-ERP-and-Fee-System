@@ -19,9 +19,16 @@ function StudentsContent() {
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', photo: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
+    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '', parentName: '', parentPhone: '', parentEmail: '', feeStructureId: '', customAmountRupees: '' });
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
+
+    // Image Viewer Modal State (Full-res viewing & downloading)
+    const [viewImageModal, setViewImageModal] = useState<{ url: string; title: string; filename: string } | null>(null);
+    // User Guide Modal State for Admin & Accountant
+    const [showUserGuide, setShowUserGuide] = useState(false);
+    // Storage Lifespan Breakdown Modal State
+    const [showStorageCalc, setShowStorageCalc] = useState(false);
 
     // Fee Assignment / Update Modal State
     const [showFeeModal, setShowFeeModal] = useState(false);
@@ -122,8 +129,11 @@ function StudentsContent() {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault(); setSaving(true);
         try {
+            const amountInPaise = form.customAmountRupees ? Math.round(parseFloat(form.customAmountRupees) * 100) : undefined;
             const { data } = await api.post('/students', {
-                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber, photo: form.photo || undefined, email: form.email,
+                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber,
+                photo: form.photo || undefined, signature: form.signature || undefined, email: form.email,
+                feeStructureId: form.feeStructureId || undefined, customTotalAmount: amountInPaise,
                 parent: form.parentName ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
             });
             const loginDetails = data.data?.loginDetails;
@@ -133,7 +143,7 @@ function StudentsContent() {
             } else {
                 showToast('✅ Student admitted successfully!');
             }
-            setForm({ name: '', class: '', section: '', rollNumber: '', photo: '', email: '', parentName: '', parentPhone: '', parentEmail: '' });
+            setForm({ name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '', parentName: '', parentPhone: '', parentEmail: '', feeStructureId: '', customAmountRupees: '' });
             fetchStudents();
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to add student'}`);
@@ -161,11 +171,19 @@ function StudentsContent() {
                         <div className="header-title">👨‍🎓 Student Management</div>
                         <div className="header-subtitle">{total} total students</div>
                     </div>
-                    {canEdit && (
-                        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                            ➕ New Admission
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button className="btn btn-secondary" onClick={() => setShowUserGuide(true)} style={{ fontSize: 13 }}>
+                            📖 User Guide
                         </button>
-                    )}
+                        <button className="btn btn-secondary" onClick={() => setShowStorageCalc(true)} style={{ fontSize: 13 }}>
+                            💾 Storage Estimate
+                        </button>
+                        {canEdit && (
+                            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                                ➕ New Admission
+                            </button>
+                        )}
+                    </div>
                 </header>
 
                 <div className="page-content">
@@ -209,7 +227,13 @@ function StudentsContent() {
                                                 <td>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                         {s.photo ? (
-                                                            <img src={s.photo} alt={s.name} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                                                            <img
+                                                                src={s.photo}
+                                                                alt={s.name}
+                                                                style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', cursor: 'pointer' }}
+                                                                title="Click to view & download photo"
+                                                                onClick={() => setViewImageModal({ url: s.photo, title: `${s.name} - Profile Photo`, filename: `${s.studentId}_photo.png` })}
+                                                            />
                                                         ) : (
                                                             <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: 'var(--primary)' }}>
                                                                 {s.name[0]}
@@ -294,35 +318,129 @@ function StudentsContent() {
                                         <label className="form-label">Class/Trade <span className="required">*</span></label>
                                         <input className="form-control" required value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} placeholder="e.g. Electrician" />
                                     </div>
+                                    {/* Fee Structure Assignment During Admission */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 13, color: 'var(--primary)' }}>
-                                            ℹ️ <b>Auto-Generated Credentials:</b> Roll Number and Student ID will be generated automatically in sequence (e.g. Roll 01 ➔ SITI-2026-E01) to prevent human errors.
+                                        <label className="form-label">Assign Fee Structure (Optional)</label>
+                                        <select
+                                            className="form-control"
+                                            value={form.feeStructureId}
+                                            onChange={(e) => {
+                                                const id = e.target.value;
+                                                const sel = feeStructures.find(f => f.id === id);
+                                                setForm(f => ({
+                                                    ...f,
+                                                    feeStructureId: id,
+                                                    customAmountRupees: sel ? (sel.totalAmount / 100).toString() : f.customAmountRupees
+                                                }));
+                                            }}
+                                        >
+                                            <option value="">-- No Fee Assigned At Admission --</option>
+                                            {feeStructures.map((fs) => (
+                                                <option key={fs.id} value={fs.id}>
+                                                    {fs.name} (Year: {fs.academicYear}) — ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {form.feeStructureId && (
+                                        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                            <label className="form-label">Custom Admission Fee Amount (₹ INR)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                placeholder="e.g. 25000"
+                                                value={form.customAmountRupees}
+                                                onChange={(e) => setForm(f => ({ ...f, customAmountRupees: e.target.value }))}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Drag & Drop Photo Upload */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label">Student Photo (Drag & Drop or Select)</label>
+                                        <div 
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                const file = e.dataTransfer.files?.[0];
+                                                if (file && file.type.startsWith('image/')) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => setForm(f => ({ ...f, photo: reader.result as string }));
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 12, padding: 10,
+                                                background: 'var(--surface-2)', border: '2px dashed var(--primary)', borderRadius: 10
+                                            }}
+                                        >
+                                            {form.photo ? (
+                                                <img src={form.photo} alt="Preview" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', cursor: 'pointer' }} onClick={() => setViewImageModal({ url: form.photo, title: 'Photo Preview', filename: 'photo_preview.png' })} />
+                                            ) : (
+                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📷</div>
+                                            )}
+                                            <div style={{ flex: 1 }}>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="form-control"
+                                                    style={{ padding: '6px 10px', fontSize: 13, height: 'auto', background: 'transparent', border: 'none' }}
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => setForm(f => ({ ...f, photo: reader.result as string }));
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                />
+                                                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Drag image file here or tap to select</span>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    {/* Drag & Drop Signature Upload */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <label className="form-label">Student Photo Upload</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                            {form.photo ? (
-                                                <img src={form.photo} alt="Preview" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+                                        <label className="form-label">Student Signature (Drag & Drop or Select)</label>
+                                        <div 
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                const file = e.dataTransfer.files?.[0];
+                                                if (file && file.type.startsWith('image/')) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => setForm(f => ({ ...f, signature: reader.result as string }));
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 12, padding: 10,
+                                                background: 'var(--surface-2)', border: '2px dashed #10b981', borderRadius: 10
+                                            }}
+                                        >
+                                            {form.signature ? (
+                                                <img src={form.signature} alt="Signature Preview" style={{ width: 64, height: 36, objectFit: 'contain', background: '#ffffff', borderRadius: 6, padding: 2, border: '1px solid #10b981', cursor: 'pointer' }} onClick={() => setViewImageModal({ url: form.signature, title: 'Signature Preview', filename: 'signature_preview.png' })} />
                                             ) : (
-                                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📷</div>
+                                                <div style={{ width: 48, height: 36, borderRadius: 6, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>✍️</div>
                                             )}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="form-control"
-                                                style={{ padding: '6px 10px', fontSize: 13, height: 'auto', background: 'var(--surface-2)', border: '1px dashed var(--primary)' }}
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        const reader = new FileReader();
-                                                        reader.onloadend = () => {
-                                                            setForm(f => ({ ...f, photo: reader.result as string }));
-                                                        };
-                                                        reader.readAsDataURL(file);
-                                                    }
-                                                }}
-                                            />
+                                            <div style={{ flex: 1 }}>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="form-control"
+                                                    style={{ padding: '6px 10px', fontSize: 13, height: 'auto', background: 'transparent', border: 'none' }}
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => setForm(f => ({ ...f, signature: reader.result as string }));
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                />
+                                                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Drag signature file here or tap to select</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -577,6 +695,155 @@ function StudentsContent() {
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" onClick={() => setShowHistoryModal(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Full-Res Image Viewer & Downloader Modal */}
+            {viewImageModal && (
+                <div className="modal-overlay" onClick={() => setViewImageModal(null)}>
+                    <div className="modal" style={{ maxWidth: 500, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">🖼️ {viewImageModal.title}</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setViewImageModal(null)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ padding: 20 }}>
+                            <img src={viewImageModal.url} alt={viewImageModal.title} style={{ maxWidth: '100%', maxHeight: '60vh', borderRadius: 12, border: '1px solid var(--border)', objectFit: 'contain' }} />
+                        </div>
+                        <div className="modal-footer" style={{ justifyContent: 'center' }}>
+                            <a
+                                href={viewImageModal.url}
+                                download={viewImageModal.filename}
+                                className="btn btn-primary"
+                                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            >
+                                📥 Download Image File
+                            </a>
+                            <button className="btn btn-secondary" onClick={() => setViewImageModal(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Interactive User Guide Modal */}
+            {showUserGuide && (
+                <div className="modal-overlay" onClick={() => setShowUserGuide(false)}>
+                    <div className="modal" style={{ maxWidth: 750, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">📖 Shri Sai I.T.I System User Guide</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowUserGuide(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
+                            <h3 style={{ color: 'var(--primary)', marginBottom: 8 }}>👨‍💼 Branch Admin & Accountant Operational Guide</h3>
+                            <p className="text-muted mb-4">Complete workflow instructions for managing students, fee structures, payments, receipts, and reporting.</p>
+
+                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                <h4>1. Student Admission & Automatic Credential Generation</h4>
+                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                    <li>Click <b>➕ New Admission</b> or <b>Quick Student Admission</b> on Record Payment page.</li>
+                                    <li>Fill in Student Name, Class/Trade, and optional Parent Contact.</li>
+                                    <li>Upload Student Photo & Signature via <b>Drag & Drop</b> or file select.</li>
+                                    <li>Optionally select Fee Structure to assign fees immediately during admission!</li>
+                                    <li>System auto-generates Roll Number and Student ID (e.g. <code>SITI-2026-E01</code>) to prevent human errors.</li>
+                                </ul>
+                            </div>
+
+                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                <h4>2. Recording Fee Payments & Receipts</h4>
+                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                    <li>Navigate to <b>💳 Record Payment</b>. Select student by ID, Roll No, or Name.</li>
+                                    <li>Choose payment mode (Cash, UPI, Cheque, Bank Transfer, Razorpay).</li>
+                                    <li>Instantly preview live receipt and UPI QR Code before confirming payment.</li>
+                                    <li>After recording, receipt PDF with college logo is generated automatically.</li>
+                                </ul>
+                            </div>
+
+                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                <h4>3. Photo & Signature Viewing / Downloading</h4>
+                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                    <li>Click any student photo avatar or signature image in tables, history modals, or profiles.</li>
+                                    <li>A full-screen high-res image modal opens with a single-click <b>📥 Download Image File</b> button.</li>
+                                </ul>
+                            </div>
+
+                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
+                                <h4>4. Data Backup & Storage Maintenance</h4>
+                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                    <li>Use <b>📈 Reports</b> to export monthly/yearly payment logs in Excel or PDF formats.</li>
+                                    <li>Regular backups allow storage space to stay clean and infinite!</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-primary" onClick={() => setShowUserGuide(false)}>Got It!</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Storage Lifespan Estimate Modal (Request 8) */}
+            {showStorageCalc && (
+                <div className="modal-overlay" onClick={() => setShowStorageCalc(false)}>
+                    <div className="modal" style={{ maxWidth: 650, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">💾 System Storage & Lifespan Calculation</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowStorageCalc(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
+                            <div style={{ background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: 16, borderRadius: 12, marginBottom: 16 }}>
+                                <h3 style={{ color: '#38bdf8', margin: 0 }}>📊 Estimated Database Lifespan for 250 Students / Year</h3>
+                                <p style={{ fontSize: 24, fontWeight: 900, color: '#10b981', margin: '8px 0 0 0' }}>~19 YEARS on Free Supabase Tier (500 MB)</p>
+                            </div>
+
+                            <table className="table" style={{ fontSize: 13, marginBottom: 16 }}>
+                                <thead>
+                                    <tr>
+                                        <th>Data Item per Student</th>
+                                        <th>Average Size</th>
+                                        <th>250 Students / Year Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Student Record + Parent Details</td>
+                                        <td>1.5 KB</td>
+                                        <td>375 KB</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Fee Assignments & Payments (4-6 transactions)</td>
+                                        <td>3.5 KB</td>
+                                        <td>875 KB</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Student Photo (Compressed WebP/JPEG)</td>
+                                        <td>~60 KB</td>
+                                        <td>15.0 MB</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Student Signature (Compressed WebP/PNG)</td>
+                                        <td>~40 KB</td>
+                                        <td>10.0 MB</td>
+                                    </tr>
+                                    <tr style={{ fontWeight: 800, background: 'var(--surface-2)' }}>
+                                        <td>TOTAL Yearly Consumption</td>
+                                        <td>~105 KB / student</td>
+                                        <td>~26.25 MB / year</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
+                                <b>Key Insights & Recommendations:</b>
+                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                    <li>Free Supabase PostgreSQL limit is <b>500 MB</b> (512,000 KB).</li>
+                                    <li>At 26.25 MB per year for 250 students, your storage will last <b>~19 YEARS</b> without spending a rupee!</li>
+                                    <li>If photos/signatures are hosted on Cloudinary or Supabase Storage bucket, DB usage drops to 1.2 MB/yr, giving &gt; 400 YEARS of capacity!</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-primary" onClick={() => setShowStorageCalc(false)}>Understood</button>
                         </div>
                     </div>
                 </div>
