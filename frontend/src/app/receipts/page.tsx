@@ -44,7 +44,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
             : 'http://localhost:4000';
     };
 
-    const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
+    const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
 
     return (
         <div className="layout">

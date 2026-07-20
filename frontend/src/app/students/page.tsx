@@ -378,10 +378,10 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                         <label className="form-label">Class/Trade <span className="required">*</span></label>
                                         <input className="form-control" required value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} placeholder="e.g. Electrician" />
                                     </div>
-                                    {/* Negotiated Fee Breakdown Assignment */}
+                                    {/* Fee Breakdown Assignment */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', background: 'var(--surface-2)', padding: 16, borderRadius: 12, border: '1.5px solid var(--primary-light)' }}>
                                         <div className="form-label font-bold mb-2" style={{ fontSize: 13, color: 'var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span>💰 NEGOTIATED ADMISSION FEE BREAKDOWN</span>
+                                            <span>💰 ADMISSION FEE BREAKDOWN</span>
                                             <span className="badge badge-success" style={{ fontSize: 12, padding: '4px 10px' }}>
                                                 Total Fee: ₹{(
                                                     (parseFloat(form.tuitionFee) || 0) +
@@ -392,7 +392,7 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                             </span>
                                         </div>
                                         <div className="text-xs text-muted mb-3">
-                                            Enter individual negotiated amounts assigned for Tuition, Exam, Material, and Other Dues for this student.
+                                            Enter individual amounts assigned for Tuition, Exam, Material, and Other Dues for this student.
                                         </div>
 
                                         <div className="form-group mb-3">
@@ -428,7 +428,7 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                                     }
                                                 }}
                                             >
-                                                <option value="">-- Custom Negotiated Fee (Or Select Master Template) --</option>
+                                                <option value="">-- Custom Fee Breakdown (Or Select Master Template) --</option>
                                                 {feeStructures.map((fs) => (
                                                     <option key={fs.id} value={fs.id}>
                                                         {fs.name} (AY: {fs.academicYear}) — Standard: ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
@@ -587,14 +587,14 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                     <div className="form-group">
                                         <label className="form-label">Blood Group 🩸</label>
                                         <select className="form-control" value={form.bloodGroup} onChange={(e) => setForm(f => ({ ...f, bloodGroup: e.target.value }))}>
-                                            <option value="A+">A +ve</option>
-                                            <option value="A-">A -ve</option>
-                                            <option value="B+">B +ve</option>
-                                            <option value="B-">B -ve</option>
-                                            <option value="O+">O +ve</option>
-                                            <option value="O-">O -ve</option>
-                                            <option value="AB+">AB +ve</option>
-                                            <option value="AB-">AB -ve</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
                                         </select>
                                     </div>
                                     <div className="form-group">
@@ -884,7 +884,7 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                                                                 📄 PDF
                                                                             </a>
                                                                         ) : null}
-                                                                        {['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role) && p.status !== 'REFUNDED' && (
+                                                                        {['SUPERADMIN', 'ADMIN', 'DEVELOPER', 'BRANCH_ADMIN'].includes(effectiveRole || '') && p.status !== 'REFUNDED' && (
                                                                             <button
                                                                                 className="btn btn-danger btn-sm"
                                                                                 style={{ padding: '4px 8px', fontSize: 11 }}

@@ -44,11 +44,11 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         }
     } catch { /* Fall back to text-only header if logo fails to load */ }
 
-    const primary = rgb(0.12, 0.29, 0.59);    // Dark blue
-    const accent = rgb(0.0, 0.6, 0.4);         // Green
-    const gray = rgb(0.5, 0.5, 0.5);
-    const lightGray = rgb(0.95, 0.95, 0.95);
-    const black = rgb(0, 0, 0);
+    const primary = rgb(0.07, 0.17, 0.35);    // Premium Navy Blue (#122b59)
+    const accent = rgb(0.02, 0.52, 0.78);     // Brand Sky Blue (#0284c7)
+    const gray = rgb(0.4, 0.45, 0.5);
+    const lightGray = rgb(0.96, 0.97, 0.98);
+    const black = rgb(0.06, 0.09, 0.16);      // Cool dark black/slate
     const white = rgb(1, 1, 1);
 
     // ── Header background ─────────────────────────────────────────────────────

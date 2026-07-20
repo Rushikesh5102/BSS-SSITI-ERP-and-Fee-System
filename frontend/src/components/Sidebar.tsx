@@ -25,7 +25,6 @@ const navItems: NavItem[] = [
     { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
     { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
     { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
-    { href: '/settings', label: 'Settings', icon: '⚙️', roles: ['ADMIN', 'DEVELOPER'] },
     { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'] },
 ];
 
@@ -244,20 +243,6 @@ function SidebarInner() {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <button
-                                    onClick={() => {
-                                        if (typeof window !== 'undefined' && (window as any).installPwaApp) {
-                                            (window as any).installPwaApp();
-                                        }
-                                        setShowProfileModal(false);
-                                    }}
-                                    className="btn btn-secondary w-full"
-                                    style={{ justifyContent: 'space-between', padding: '10px 14px', background: 'linear-gradient(135deg, rgba(2,132,199,0.1) 0%, rgba(3,105,161,0.15) 100%)', borderColor: 'var(--primary)' }}
-                                >
-                                    <span>📲 Install App on Device</span>
-                                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)' }}>PWA</span>
-                                </button>
-
                                 <button
                                     onClick={() => { toggleTheme(); setShowProfileModal(false); }}
                                     className="btn btn-secondary w-full"

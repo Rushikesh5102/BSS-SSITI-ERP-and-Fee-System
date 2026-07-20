@@ -140,8 +140,8 @@ export default function ReportsPage() {
                         <>
                             {/* Filters */}
                             <div className="card mb-4">
-                                <div className="card-body" style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                <div className="card-body" style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
+                                    <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 120 }}>
                                         <label className="form-label">Month</label>
                                         <select className="form-control" value={month} onChange={(e) => setMonth(parseInt(e.target.value))}>
                                             {Array.from({ length: 12 }, (_, i) => (
@@ -151,13 +151,13 @@ export default function ReportsPage() {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 100 }}>
                                         <label className="form-label">Year</label>
                                         <select className="form-control" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
                                             {[2024, 2025, 2026].map((y) => <option key={y}>{y}</option>)}
                                         </select>
                                     </div>
-                                    <button className="btn btn-primary" onClick={fetchMonthly}>🔍 Generate Report</button>
+                                    <button className="btn btn-primary" onClick={fetchMonthly} style={{ whiteSpace: 'nowrap', height: 42 }}>🔍 Generate Report</button>
                                 </div>
                             </div>
 

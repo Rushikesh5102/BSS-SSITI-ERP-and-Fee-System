@@ -66,7 +66,7 @@ export const authenticate = async (
         req.user = {
             id: user.id,
             email: user.email,
-            role: user.role as Role,
+            role: (user.role === 'SUPERADMIN' ? Role.ADMIN : user.role) as Role,
             branchId: user.branchId,
         };
 
