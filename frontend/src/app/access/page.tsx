@@ -18,7 +18,6 @@ interface UserRecord {
 }
 
 interface RoleStats {
-    SUPERADMIN: number;
     ADMIN: number;
     ACCOUNTANT: number;
     TEACHER: number;
@@ -32,7 +31,6 @@ function AccessContent() {
 
     const [users, setUsers] = useState<UserRecord[]>([]);
     const [stats, setStats] = useState<RoleStats>({
-        SUPERADMIN: 0,
         ADMIN: 0,
         ACCOUNTANT: 0,
         TEACHER: 0,
@@ -77,7 +75,6 @@ function AccessContent() {
             // Fetch role stats
             const statsRes = await api.get('/users/stats');
             setStats(statsRes.data.data || {
-                SUPERADMIN: 0,
                 ADMIN: 0,
                 ACCOUNTANT: 0,
                 TEACHER: 0,
@@ -92,7 +89,7 @@ function AccessContent() {
     };
 
     useEffect(() => {
-        if (currentUser && ['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(currentUser.role)) {
+        if (currentUser && ['ADMIN', 'DEVELOPER'].includes(currentUser.role)) {
             fetchData();
         }
     }, [currentUser]);
@@ -116,9 +113,6 @@ function AccessContent() {
     const handleToggleStatus = async (targetUser: UserRecord) => {
         if (targetUser.id === currentUser?.id) {
             return showToast('❌ You cannot deactivate your own administrative session!');
-        }
-        if (targetUser.role === 'SUPERADMIN' && currentUser?.role !== 'SUPERADMIN') {
-            return showToast('❌ Only Super Administrators can suspend SuperAdmin accounts!');
         }
 
         const newStatus = !targetUser.isActive;
@@ -218,9 +212,9 @@ function AccessContent() {
                             <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Admins ({stats.ADMIN}) | Accountants ({stats.ACCOUNTANT}) | Teachers ({stats.TEACHER})</div>
                         </div>
                         <div className="card text-white" style={{ background: 'linear-gradient(135deg, #4c1d95, #8b5cf6)', border: 'none', borderRadius: 12, padding: '20px 24px', boxShadow: 'var(--shadow-md)' }}>
-                            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>🔒 SuperAdmins & Devs</div>
-                            <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8 }}>{stats.SUPERADMIN + stats.DEVELOPER}</div>
-                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>System Controllers & Admins</div>
+                            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>🔒 System Developers</div>
+                            <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8 }}>{stats.DEVELOPER}</div>
+                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Technical Controllers</div>
                         </div>
                     </div>
 
@@ -240,7 +234,6 @@ function AccessContent() {
                                 <label className="form-label">🎭 Authority Filter</label>
                                 <select className="form-control" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                                     <option value="ALL">All Authorization Types</option>
-                                    <option value="SUPERADMIN">Super Admin</option>
                                     <option value="ADMIN">Administrator</option>
                                     <option value="ACCOUNTANT">Accountant</option>
                                     <option value="TEACHER">Teacher</option>
@@ -311,13 +304,11 @@ function AccessContent() {
                                                                 fontWeight: 600,
                                                                 fontSize: 12
                                                             }}
-                                                            disabled={u.role === 'SUPERADMIN' && currentUser.role !== 'SUPERADMIN'}
-                                                        >
+                                                         >
                                                             <option value="STUDENT">STUDENT</option>
                                                             <option value="TEACHER">TEACHER</option>
                                                             <option value="ACCOUNTANT">ACCOUNTANT</option>
                                                             <option value="ADMIN">ADMIN</option>
-                                                            <option value="SUPERADMIN">SUPERADMIN</option>
                                                             <option value="DEVELOPER">DEVELOPER</option>
                                                         </select>
                                                     )}
@@ -396,8 +387,7 @@ function AccessContent() {
                                             <option value="TEACHER">Teacher</option>
                                             <option value="ACCOUNTANT">Accountant</option>
                                             <option value="ADMIN">Administrator</option>
-                                            {(currentUser.role === 'SUPERADMIN' || currentUser.role === 'DEVELOPER') && <option value="SUPERADMIN">Super Admin</option>}
-                                            {(currentUser.role === 'SUPERADMIN' || currentUser.role === 'DEVELOPER') && <option value="DEVELOPER">Developer/Architect</option>}
+                                            {(currentUser.role === 'ADMIN' || currentUser.role === 'DEVELOPER') && <option value="DEVELOPER">Developer/Architect</option>}
                                         </select>
                                     </div>
                                 </div>

@@ -25,9 +25,7 @@ export const studentsController = {
 
         const where: any = {
             isActive: true,
-            ...(req.user?.role !== 'SUPERADMIN' && req.user?.branchId
-                ? { branchId: req.user.branchId }
-                : {}),
+            ...(req.user?.branchId ? { branchId: req.user.branchId } : {}),
             ...(search ? {
                 OR: [
                     { name: { contains: String(search), mode: 'insensitive' } },

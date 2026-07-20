@@ -8,7 +8,7 @@ interface User {
     id: string;
     name: string;
     email: string;
-    role: 'SUPERADMIN' | 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'DEVELOPER';
+    role: 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'DEVELOPER';
     branch: { id: string; name: string } | null;
 }
 

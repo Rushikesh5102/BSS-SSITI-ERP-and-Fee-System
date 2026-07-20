@@ -19,23 +19,22 @@ const navItems: NavItem[] = [
     { href: '/dashboard?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'] },
     { href: '/dashboard?simulate=student', label: 'View as Student', icon: '🕶️', roles: ['DEVELOPER'] },
 
-    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'STUDENT'] },
-    { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
-    { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['SUPERADMIN', 'ADMIN', 'DEVELOPER'] },
-    { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
-    { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
-    { href: '/reports', label: 'Reports', icon: '📈', roles: ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
-    { href: '/settings', label: 'Settings', icon: '⚙️', roles: ['SUPERADMIN', 'ADMIN', 'DEVELOPER'] },
-    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['SUPERADMIN', 'ADMIN', 'DEVELOPER'] },
+    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'STUDENT'] },
+    { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
+    { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['ADMIN', 'DEVELOPER'] },
+    { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
+    { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
+    { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
+    { href: '/settings', label: 'Settings', icon: '⚙️', roles: ['ADMIN', 'DEVELOPER'] },
+    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'] },
 ];
 
 const roleLabels: Record<string, string> = {
-    SUPERADMIN: 'Super Admin',
-    ADMIN: 'Administrator',
+    ADMIN: 'Administrator / Principal',
     ACCOUNTANT: 'Accountant',
     TEACHER: 'Teacher',
     STUDENT: 'Student',
-    DEVELOPER: 'Developer/Architect',
+    DEVELOPER: 'Developer / System Architect',
 };
 
 import { useSearchParams } from 'next/navigation';

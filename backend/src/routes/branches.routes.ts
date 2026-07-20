@@ -15,13 +15,13 @@ router.get('/', branchesController.list);
 // GET /branches/:id - Branch detail
 router.get('/:id', branchesController.getById);
 
-// POST /branches - Create branch (SuperAdmin only)
-router.post('/', authorize(Role.SUPERADMIN), branchesController.create);
+// POST /branches - Create branch
+router.post('/', authorize(Role.ADMIN), branchesController.create);
 
-// PUT /branches/:id - Update branch (SuperAdmin only)
-router.put('/:id', authorize(Role.SUPERADMIN), branchesController.update);
+// PUT /branches/:id - Update branch
+router.put('/:id', authorize(Role.ADMIN), branchesController.update);
 
-// DELETE /branches/:id - Deactivate branch (SuperAdmin only)
-router.delete('/:id', authorize(Role.SUPERADMIN), branchesController.delete);
+// DELETE /branches/:id - Deactivate branch
+router.delete('/:id', authorize(Role.ADMIN), branchesController.delete);
 
 export default router;

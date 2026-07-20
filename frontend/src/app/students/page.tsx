@@ -851,7 +851,7 @@ function StudentsContent() {
                     <div className="modal" style={{ maxWidth: 750, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">
-                                {user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' ? '🏢 Branch Admin User Guide' :
+                                {user?.role === 'ADMIN' ? '🏢 Branch Admin User Guide' :
                                  user?.role === 'ACCOUNTANT' ? '🧾 Accountant Operational Guide' :
                                  user?.role === 'STUDENT' ? '🎓 Student Portal User Guide' :
                                  '🛠️ System Architect User Guide'}
@@ -861,7 +861,7 @@ function StudentsContent() {
                         <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
                             
                             {/* BRANCH ADMIN GUIDE */}
-                            {(user?.role === 'ADMIN' || user?.role === 'SUPERADMIN') && (
+                            {user?.role === 'ADMIN' && (
                                 <>
                                     <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🏢 Branch Administrator Operational Capabilities</h3>
                                     <p className="text-muted mb-4">Complete management guide for Branch Administrators with full administrative privileges.</p>

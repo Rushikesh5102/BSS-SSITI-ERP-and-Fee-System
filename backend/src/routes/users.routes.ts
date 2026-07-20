@@ -10,24 +10,24 @@ const router = Router();
 router.use(authenticate);
 
 // GET /users - List staff
-router.get('/', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.list);
+router.get('/', authorize(Role.ADMIN), usersController.list);
 
 // GET /users/stats - Get role counts
-router.get('/stats', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.stats);
+router.get('/stats', authorize(Role.ADMIN), usersController.stats);
 
 // GET /users/:id - Get staff member
-router.get('/:id', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.getById);
+router.get('/:id', authorize(Role.ADMIN), usersController.getById);
 
 // POST /users - Create staff member
-router.post('/', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.create);
+router.post('/', authorize(Role.ADMIN), usersController.create);
 
 // PUT /users/:id - Update staff member
-router.put('/:id', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.update);
+router.put('/:id', authorize(Role.ADMIN), usersController.update);
 
 // PUT /users/:id/reset-password - Reset password
-router.put('/:id/reset-password', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.resetPassword);
+router.put('/:id/reset-password', authorize(Role.ADMIN), usersController.resetPassword);
 
 // DELETE /users/:id - Deactivate user
-router.delete('/:id', authorize(Role.SUPERADMIN, Role.ADMIN), usersController.deactivate);
+router.delete('/:id', authorize(Role.ADMIN), usersController.deactivate);
 
 export default router;

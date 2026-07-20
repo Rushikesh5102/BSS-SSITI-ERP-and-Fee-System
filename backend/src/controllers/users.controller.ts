@@ -2,23 +2,19 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
-
 import { AuditAction, Role } from '../types/enums';
-
 import { authService } from '../services/auth.service';
 
 export const usersController = {
     /**
-     * GET /users - List all staff users (filtered by branch for non-superadmin)
+     * GET /users - List all staff users
      */
     list: asyncHandler(async (req: Request, res: Response) => {
         const { role, branchId: queryBranch, includeInactive } = req.query;
 
         const where: any = {
             ...(includeInactive === 'true' ? {} : { isActive: true }),
-            ...(req.user?.role !== 'SUPERADMIN' && req.user?.branchId
-                ? { branchId: req.user.branchId }
-                : {}),
+            ...(req.user?.branchId ? { branchId: req.user.branchId } : {}),
             ...(queryBranch ? { branchId: String(queryBranch) } : {}),
             ...(role ? { role: role as Role } : {}),
         };
@@ -39,19 +35,16 @@ export const usersController = {
     /**
      * GET /users/stats - Get user counts grouped by role
      */
-    stats: asyncHandler(async (req: Request, res: Response) => {
+    stats: asyncHandler(async (_req: Request, res: Response) => {
         const counts = await prisma.user.groupBy({
             by: ['role'],
-            _count: {
-                id: true,
-            },
+            _count: { id: true },
         });
 
         const statsMap = counts.reduce((acc: any, c) => {
             acc[c.role] = c._count.id;
             return acc;
         }, {
-            SUPERADMIN: 0,
             ADMIN: 0,
             ACCOUNTANT: 0,
             TEACHER: 0,
@@ -63,7 +56,7 @@ export const usersController = {
     }),
 
     /**
-     * GET /users/:id - Get user by ID
+     * GET /users/:id - Get staff member detail
      */
     getById: asyncHandler(async (req: Request, res: Response) => {
         const user = await prisma.user.findUnique({
@@ -71,7 +64,7 @@ export const usersController = {
             select: {
                 id: true, name: true, email: true, role: true, isActive: true,
                 branch: { select: { id: true, name: true } },
-                createdAt: true, updatedAt: true,
+                createdAt: true,
             },
         });
         if (!user) throw new AppError(404, 'User not found');
@@ -80,15 +73,9 @@ export const usersController = {
 
     /**
      * POST /users - Create a new staff member
-     * SuperAdmin can create any role; Admin can only create ACCOUNTANT/TEACHER
      */
     create: asyncHandler(async (req: Request, res: Response) => {
         const { name, email, password, role, branchId } = req.body;
-
-        // Admins cannot create Admins or SuperAdmins
-        if (req.user?.role === 'ADMIN' && ['ADMIN', 'SUPERADMIN'].includes(role)) {
-            throw new AppError(403, 'Admins can only create Accountants and Teachers');
-        }
 
         const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
         if (existing) throw new AppError(409, 'A user with this email already exists');
@@ -116,12 +103,8 @@ export const usersController = {
     update: asyncHandler(async (req: Request, res: Response) => {
         const { name, email, role, branchId, isActive } = req.body;
 
-        // Prevent demoting/deleting SuperAdmin
         const target = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!target) throw new AppError(404, 'User not found');
-        if (target.role === 'SUPERADMIN' && req.user?.role !== 'SUPERADMIN') {
-            throw new AppError(403, 'Cannot modify SuperAdmin accounts');
-        }
 
         const updated = await prisma.user.update({
             where: { id: req.params.id },
@@ -161,7 +144,6 @@ export const usersController = {
     deactivate: asyncHandler(async (req: Request, res: Response) => {
         const target = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!target) throw new AppError(404, 'User not found');
-        if (target.role === 'SUPERADMIN') throw new AppError(403, 'Cannot deactivate SuperAdmin');
         if (target.id === req.user?.id) throw new AppError(400, 'Cannot deactivate your own account');
 
         await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false } });

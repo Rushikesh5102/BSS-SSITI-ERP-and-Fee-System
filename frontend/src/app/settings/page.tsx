@@ -175,7 +175,7 @@ export default function SettingsPage() {
                                         <select className="form-control" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
                                             <option value="TEACHER">Teacher</option>
                                             <option value="ACCOUNTANT">Accountant</option>
-                                            {(user.role === 'SUPERADMIN' || user.role === 'DEVELOPER') && <option value="ADMIN">Administrator</option>}
+                                            {(user.role === 'ADMIN' || user.role === 'DEVELOPER') && <option value="ADMIN">Administrator</option>}
                                         </select>
                                     </div>
                                 </div>
