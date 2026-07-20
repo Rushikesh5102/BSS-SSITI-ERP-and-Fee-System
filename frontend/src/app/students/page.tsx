@@ -8,11 +8,9 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
 
-function StudentsContent() {
+function StudentsContent({ actionParam, simulateParam }: { actionParam: string | null; simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const actionParam = searchParams.get('action');
 
     const [students, setStudents] = useState<any[]>([]);
     const [search, setSearch] = useState('');
@@ -199,7 +197,6 @@ function StudentsContent() {
         } finally { setSaving(false); }
     };
 
-    const simulateParam = searchParams.get('simulate');
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const isAdminOrDev = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
@@ -1099,10 +1096,17 @@ function StudentsContent() {
     );
 }
 
+function SearchParamsLoader() {
+    const searchParams = useSearchParams();
+    const actionParam = searchParams.get('action');
+    const simulateParam = searchParams.get('simulate');
+    return <StudentsContent actionParam={actionParam} simulateParam={simulateParam} />;
+}
+
 export default function StudentsPage() {
     return (
         <Suspense fallback={<div className="layout-loading"><div className="spinner" /></div>}>
-            <StudentsContent />
+            <SearchParamsLoader />
         </Suspense>
     );
 }

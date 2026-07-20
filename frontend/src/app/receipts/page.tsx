@@ -9,11 +9,9 @@ import api from '../../services/api';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
-function ReceiptsContent() {
+function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const simulateParam = searchParams.get('simulate');
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [receipts, setReceipts] = useState<any[]>([]);
@@ -142,10 +140,16 @@ function ReceiptsContent() {
     );
 }
 
+function SearchParamsLoader() {
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    return <ReceiptsContent simulateParam={simulateParam} />;
+}
+
 export default function ReceiptsPage() {
     return (
         <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading receipts...</div></div></div>}>
-            <ReceiptsContent />
+            <SearchParamsLoader />
         </Suspense>
     );
 }

@@ -10,11 +10,9 @@ import api from '../../services/api';
 const PAYMENT_MODES = ['CASH', 'CHEQUE', 'BANK_TRANSFER', 'UPI', 'CARD', 'NET_BANKING', 'RAZORPAY', 'STRIPE'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
-function PaymentsContent() {
+function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const simulateParam = searchParams.get('simulate');
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [students, setStudents] = useState<any[]>([]);
@@ -570,10 +568,16 @@ function PaymentsContent() {
     );
 }
 
+function SearchParamsLoader() {
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    return <PaymentsContent simulateParam={simulateParam} />;
+}
+
 export default function PaymentsPage() {
     return (
         <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading payments...</div></div></div>}>
-            <PaymentsContent />
+            <SearchParamsLoader />
         </Suspense>
     );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
@@ -7,11 +9,9 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
-function SettingsContent() {
+function SettingsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const simulateParam = searchParams.get('simulate');
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [staff, setStaff] = useState<any[]>([]);
@@ -199,10 +199,16 @@ function SettingsContent() {
     );
 }
 
+function SearchParamsLoader() {
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    return <SettingsContent simulateParam={simulateParam} />;
+}
+
 export default function SettingsPage() {
     return (
         <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading settings...</div></div></div>}>
-            <SettingsContent />
+            <SearchParamsLoader />
         </Suspense>
     );
 }

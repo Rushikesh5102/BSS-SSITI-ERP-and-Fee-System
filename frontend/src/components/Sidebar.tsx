@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -39,7 +39,7 @@ const roleLabels: Record<string, string> = {
 
 import { useSearchParams } from 'next/navigation';
 
-export default function Sidebar() {
+function SidebarInner() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const simulateParam = searchParams.get('simulate');
@@ -280,5 +280,13 @@ export default function Sidebar() {
                 </div>
             )}
         </>
+    );
+}
+
+export default function Sidebar() {
+    return (
+        <Suspense fallback={null}>
+            <SidebarInner />
+        </Suspense>
     );
 }

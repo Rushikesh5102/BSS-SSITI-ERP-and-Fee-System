@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
@@ -9,11 +11,9 @@ import api from '../../services/api';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
-function FeeStructuresContent() {
+function FeeStructuresContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const simulateParam = searchParams.get('simulate');
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [structures, setStructures] = useState<any[]>([]);
@@ -87,7 +87,7 @@ function FeeStructuresContent() {
         } finally { setSaving(false); }
     };
 
-    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
+    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
 
     if (loading || !user) return null;
 
@@ -163,19 +163,16 @@ function FeeStructuresContent() {
                                 <div className="grid grid-2">
                                     <div className="form-group">
                                         <label className="form-label">Structure Name *</label>
-                                        <input className="form-control" required placeholder="e.g. Electrician 2024-25 Fee"
-                                            value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
+                                        <input className="form-control" required value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Electrician 2024-25" />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Academic Year *</label>
-                                        <input className="form-control" required placeholder="e.g. 2024-25"
-                                            value={form.academicYear} onChange={(e) => setForm(f => ({ ...f, academicYear: e.target.value }))} />
+                                        <input className="form-control" required value={form.academicYear} onChange={(e) => setForm(f => ({ ...f, academicYear: e.target.value }))} placeholder="e.g. 2024-25" />
                                     </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Trade / Class *</label>
-                                        <input className="form-control" required placeholder="e.g. Electrician"
-                                            value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} />
-                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Class / Course *</label>
+                                    <input className="form-control" required value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} placeholder="e.g. Electrician" />
                                 </div>
 
                                 <div className="form-group">
@@ -204,7 +201,7 @@ function FeeStructuresContent() {
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Create Structure'}</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : (editingId ? '💾 Save Changes' : 'Create Structure')}</button>
                             </div>
                         </form>
                     </div>
@@ -216,10 +213,16 @@ function FeeStructuresContent() {
     );
 }
 
+function SearchParamsLoader() {
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    return <FeeStructuresContent simulateParam={simulateParam} />;
+}
+
 export default function FeeStructuresPage() {
     return (
         <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading fee structures...</div></div></div>}>
-            <FeeStructuresContent />
+            <SearchParamsLoader />
         </Suspense>
     );
 }

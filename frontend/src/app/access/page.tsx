@@ -1,9 +1,10 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
-import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -25,9 +26,10 @@ interface RoleStats {
     DEVELOPER: number;
 }
 
-function AccessContent() {
+function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const { user: currentUser, loading: authLoading } = useAuth();
     const router = useRouter();
+    const effectiveRole = (currentUser?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : currentUser?.role;
 
     const [users, setUsers] = useState<UserRecord[]>([]);
     const [stats, setStats] = useState<RoleStats>({
@@ -35,27 +37,25 @@ function AccessContent() {
         ACCOUNTANT: 0,
         TEACHER: 0,
         STUDENT: 0,
-        DEVELOPER: 0
+        DEVELOPER: 0,
     });
     const [fetching, setFetching] = useState(true);
     const [search, setSearch] = useState('');
-    const [roleFilter, setRoleFilter] = useState('ALL');
-    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [filterRole, setFilterRole] = useState('ALL');
+    const [activeTab, setActiveTab] = useState<'users' | 'activity'>('users');
 
     // Modals
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showResetModal, setShowResetModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
     // Form states
     const [addForm, setAddForm] = useState({ name: '', email: '', password: '', role: 'TEACHER' });
     const [resetPasswordVal, setResetPasswordVal] = useState('');
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
-
-    const searchParams = useSearchParams();
-    const simulateParam = searchParams.get('simulate');
-    const effectiveRole = (currentUser?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : currentUser?.role;
+    const [statusFilter, setStatusFilter] = useState('ALL');
 
     useEffect(() => {
         if (!authLoading) {
@@ -170,7 +170,7 @@ function AccessContent() {
         const matchesSearch = 
             u.name.toLowerCase().includes(search.toLowerCase()) || 
             u.email.toLowerCase().includes(search.toLowerCase());
-        const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+        const matchesRole = filterRole === 'ALL' || u.role === filterRole;
         const matchesStatus = 
             statusFilter === 'ALL' || 
             (statusFilter === 'ACTIVE' && u.isActive) || 
@@ -236,7 +236,7 @@ function AccessContent() {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">🎭 Authority Filter</label>
-                                <select className="form-control" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+                                <select className="form-control" value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
                                     <option value="ALL">All Authorization Types</option>
                                     <option value="ADMIN">Administrator</option>
                                     <option value="ACCOUNTANT">Accountant</option>
@@ -456,10 +456,16 @@ function AccessContent() {
     );
 }
 
+function SearchParamsLoader() {
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    return <AccessContent simulateParam={simulateParam} />;
+}
+
 export default function AccessPage() {
     return (
         <Suspense fallback={<div className="layout-loading"><div className="spinner" /></div>}>
-            <AccessContent />
+            <SearchParamsLoader />
         </Suspense>
     );
 }
