@@ -22,7 +22,7 @@ function StudentsContent() {
     const [showModal, setShowModal] = useState(false);
     const initialFormState = {
         name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '',
-        category: 'OPEN', landline: '', parentName: '', parentPhone: '', parentEmail: '',
+        category: 'OPEN', bloodGroup: 'O+', landline: '', parentName: '', parentPhone: '', parentEmail: '',
         feeStructureId: '', customAmountRupees: '',
         educationDetails: { board: 'Maharashtra State Board', school: '', passingYear: '2023', medium: 'English', percentage: '', city: 'Bhadravati', rollNo: '', result: 'PASSED' },
         submittedDocuments: { tc: false, marklist: false, caste: false, nonCreamy: false, photo4: true, income: false, affidavit: false, gap: false, aadhar: true, bankPassbook: false }
@@ -491,6 +491,19 @@ function StudentsContent() {
                                             <option value="VJNT">VJ / NT</option>
                                             <option value="SBC">SBC</option>
                                             <option value="EWS">EWS</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Blood Group 🩸</label>
+                                        <select className="form-control" value={form.bloodGroup} onChange={(e) => setForm(f => ({ ...f, bloodGroup: e.target.value }))}>
+                                            <option value="A+">A +ve</option>
+                                            <option value="A-">A -ve</option>
+                                            <option value="B+">B +ve</option>
+                                            <option value="B-">B -ve</option>
+                                            <option value="O+">O +ve</option>
+                                            <option value="O-">O -ve</option>
+                                            <option value="AB+">AB +ve</option>
+                                            <option value="AB-">AB -ve</option>
                                         </select>
                                     </div>
                                     <div className="form-group">

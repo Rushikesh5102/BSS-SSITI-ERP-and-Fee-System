@@ -98,6 +98,7 @@ model Student {
   photo       String?  // URL to student photo
   signature   String?  // URL or Base64 to student signature
   category    String?  // SC/ST/OBC/OPEN/etc
+  bloodGroup  String?  @map("blood_group") // A+, A-, B+, B-, O+, O-, AB+, AB-
   landline    String?  // Alternate phone/landline
   educationDetails   Json? // Class X Board, School, Year, %, Roll No, etc.
   submittedDocuments Json? // Checkboxes for submitted original documents

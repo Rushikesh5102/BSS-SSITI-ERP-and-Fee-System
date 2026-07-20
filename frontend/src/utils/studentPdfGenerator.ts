@@ -138,7 +138,7 @@ export async function generateAdmissionFormPdf(student: any) {
         ['7. Name of Student', student.name || '', '11. Mobile No', student.parent?.phone || '—'],
         ['8. Course / Trade', `${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, '12. Landline / Alt', student.landline || '—'],
         ['9. Date of Birth', student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN') : '—', '13. E-mail', student.email || '—'],
-        ['10. Category', student.category || 'OPEN', '14. Enrollment No', student.studentId || 'SSITI-2026-E01'],
+        ['10. Category & Blood', `${student.category || 'OPEN'} | ${student.bloodGroup || 'O+'}`, '14. Enrollment No', student.studentId || 'SSITI-2026-E01'],
     ];
 
     rowY = y + 6;
@@ -361,7 +361,7 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.text(`Emergency Contact: ${student.parent?.phone || '+91 9890273889'}`, 7, y);
 
     y += 5;
-    doc.text(`Blood Group: ${student.gender === 'Female' ? 'B+' : 'O+'}`, 7, y);
+    doc.text(`Blood Group: ${student.bloodGroup || 'O+'}`, 7, y);
 
     // Rules & Terms
     y += 8;
