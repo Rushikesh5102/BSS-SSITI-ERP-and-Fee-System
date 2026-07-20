@@ -174,12 +174,13 @@ function StudentsContent() {
         } finally { setSaving(false); }
     };
 
-    const canEdit = user && ['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role);
+    const isAdminOrDev = user && ['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role);
+    const isAccountant = user && user.role === 'ACCOUNTANT';
+    const canAdmitStudent = user && ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(user.role);
 
     if (loading || !user) return null;
 
     const totalPages = Math.ceil(total / 15);
-
     const getBaseUrl = () => {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
             ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
@@ -199,7 +200,7 @@ function StudentsContent() {
                         <button className="btn btn-secondary" onClick={() => setShowUserGuide(true)} style={{ fontSize: 13 }}>
                             📖 User Guide
                         </button>
-                        {canEdit && (
+                        {canAdmitStudent && (
                             <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                                 ➕ New Admission
                             </button>
@@ -242,6 +243,9 @@ function StudentsContent() {
                                         const totalFee = s.studentFees?.reduce((a: number, f: any) => a + f.totalAmount, 0) || 0;
                                         const paidFee = s.studentFees?.reduce((a: number, f: any) => a + f.paidAmount, 0) || 0;
                                         const pending = totalFee - paidFee;
+                                        const feeAlreadyAssigned = totalFee > 0;
+                                        const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
+
                                         return (
                                             <tr key={s.id}>
                                                 <td><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2026-${s.rollNumber || '01'}` : s.studentId}</span></td>
@@ -291,9 +295,9 @@ function StudentsContent() {
                                                         <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
                                                             📄 Form PDF
                                                         </button>
-                                                        {(canEdit || (user.role === 'ACCOUNTANT' && totalFee === 0)) && (
+                                                        {canShowFeeBtn && (
                                                             <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openFeeModal(s)}>
-                                                                💳 {totalFee > 0 ? 'Edit Fee' : 'Assign Fee'}
+                                                                💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
                                                             </button>
                                                         )}
                                                     </div>

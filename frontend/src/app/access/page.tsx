@@ -117,8 +117,8 @@ function AccessContent() {
         if (targetUser.id === currentUser?.id) {
             return showToast('❌ You cannot deactivate your own administrative session!');
         }
-        if (targetUser.role === 'DEVELOPER' && currentUser?.role !== 'DEVELOPER') {
-            return showToast('❌ System Architect account status is protected.');
+        if (targetUser.role === 'SUPERADMIN' && currentUser?.role !== 'SUPERADMIN') {
+            return showToast('❌ Only Super Administrators can suspend SuperAdmin accounts!');
         }
 
         const newStatus = !targetUser.isActive;

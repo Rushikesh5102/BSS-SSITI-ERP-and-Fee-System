@@ -30,8 +30,8 @@ const navItems: NavItem[] = [
 ];
 
 const roleLabels: Record<string, string> = {
-    SUPERADMIN: 'Branch Admin / Principal',
-    ADMIN: 'Branch Admin / Principal',
+    SUPERADMIN: 'Super Admin',
+    ADMIN: 'Administrator',
     ACCOUNTANT: 'Accountant',
     TEACHER: 'Teacher',
     STUDENT: 'Student',
