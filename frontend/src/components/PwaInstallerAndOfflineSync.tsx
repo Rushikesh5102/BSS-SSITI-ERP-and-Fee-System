@@ -25,8 +25,25 @@ export default function PwaInstallerAndOfflineSync() {
         const handleBeforeInstall = (e: any) => {
             e.preventDefault();
             setDeferredPrompt(e);
+            (window as any).deferredPwaPrompt = e;
         };
         window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+        (window as any).installPwaApp = () => {
+            const prompt = (window as any).deferredPwaPrompt;
+            if (prompt) {
+                prompt.prompt();
+                prompt.userChoice.then((choiceResult: any) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        setIsInstalled(true);
+                    }
+                    (window as any).deferredPwaPrompt = null;
+                    setDeferredPrompt(null);
+                });
+            } else {
+                alert('📲 App Installation:\n\nTo install this app on your device:\n• Chrome/Edge: Click the install icon in your address bar.\n• Android Chrome: Tap Menu (⋮) ➔ Add to Home Screen.\n• iPhone Safari: Tap Share (⎋) ➔ Add to Home Screen.');
+            }
+        };
 
         const checkPending = async () => {
             const count = await getPendingOfflineCount();
@@ -81,23 +98,6 @@ export default function PwaInstallerAndOfflineSync() {
 
     return (
         <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 99999, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-            {/* Install PWA Button */}
-            {deferredPrompt && !isInstalled && (
-                <button
-                    onClick={handleInstallPwa}
-                    className="btn"
-                    style={{
-                        background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                        color: '#ffffff', fontWeight: 700, fontSize: 13,
-                        padding: '10px 16px', borderRadius: 100,
-                        boxShadow: '0 8px 24px rgba(2, 132, 199, 0.4)',
-                        display: 'flex', alignItems: 'center', gap: 8, border: 'none'
-                    }}
-                >
-                    📲 Install App on Device
-                </button>
-            )}
-
             {/* Offline / Online Sync Status Indicator */}
             {(!isOnline || pendingCount > 0 || syncing || syncMsg) && (
                 <div style={{

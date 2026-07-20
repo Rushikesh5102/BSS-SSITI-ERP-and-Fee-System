@@ -7,11 +7,11 @@ export const generateReceiptNumber = (): string => {
     return `SSITI-${year}-${uuid}`;
 };
 
-/** Generate a unique student ID in SITI-YEAR-E01 format */
+/** Generate a unique student ID in SSITI-YEAR-E01 format */
 export const generateStudentId = (tradeName: string = 'Electrician', rollOrSeq: string | number = 1, yearInput?: number): string => {
     const year = yearInput || new Date().getFullYear();
     const tradeInitial = (tradeName.trim().charAt(0) || 'E').toUpperCase();
     const num = typeof rollOrSeq === 'number' ? rollOrSeq : parseInt(String(rollOrSeq)) || 1;
     const paddedNum = String(num).padStart(2, '0');
-    return `SITI-${year}-${tradeInitial}${paddedNum}`;
+    return `SSITI-${year}-${tradeInitial}${paddedNum}`;
 };

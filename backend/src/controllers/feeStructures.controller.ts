@@ -158,6 +158,10 @@ export const feeStructuresController = {
         const { id } = req.params;
         const { totalAmount, dueDate, academicYear } = req.body;
 
+        if (req.user?.role === 'ACCOUNTANT') {
+            throw new AppError(403, 'Accountants cannot modify fee structures once set. Only Administrators can update set fee structures.');
+        }
+
         const existing = await prisma.studentFee.findUnique({ where: { id } });
         if (!existing) throw new AppError(404, 'Student fee record not found');
 

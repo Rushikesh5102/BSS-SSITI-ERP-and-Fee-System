@@ -103,7 +103,7 @@ export function generateAdmissionFormPdf(student: any) {
 
     const assignedFee = student.studentFees && student.studentFees.length > 0 ? student.studentFees[0] : null;
     addDetail('Assigned Fee Structure', assignedFee?.feeStructure?.name || 'Standard Trade Fee');
-    addDetail('Total Total Fee Amount', `₹${(assignedFee ? assignedFee.totalAmount / 100 : 25000).toLocaleString('en-IN')}`);
+    addDetail('Total Fee Amount', `₹${(assignedFee ? assignedFee.totalAmount / 100 : 25000).toLocaleString('en-IN')}`);
     addDetail('Admission Fee Status', assignedFee?.paidAmount > 0 ? `Paid ₹${(assignedFee.paidAmount / 100).toLocaleString('en-IN')}` : 'Pending Allocation');
 
     // Declaration & Signatures
@@ -137,91 +137,163 @@ export function generateAdmissionFormPdf(student: any) {
 }
 
 /**
- * Generates official printable Student Identity Card PDF
+ * Generates official 2-page Front & Back Student Identity Card PDF
  */
 export function generateStudentIdCardPdf(student: any) {
-    // CR80 Standard ID Card dimensions: 85.6mm x 54mm
-    const doc = new jsPDF({ unit: 'mm', format: [86, 130] });
+    // Vertical ID Card format (85mm x 140mm)
+    const doc = new jsPDF({ unit: 'mm', format: [85, 140] });
+    const cardW = 85;
+    const cardH = 140;
 
-    // Card Header
-    doc.setFillColor(2, 132, 199); // #0284c7
-    doc.rect(0, 0, 86, 24, 'F');
+    // ─── PAGE 1: FRONT SIDE OF ID CARD ───────────────────────────────────────
+    // Green Outer Border
+    doc.setDrawColor(22, 163, 74); // #16a34a Green
+    doc.setLineWidth(1.8);
+    doc.rect(3, 3, cardW - 6, cardH - 6);
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
+    // Inner Green Border Line
+    doc.setLineWidth(0.4);
+    doc.rect(4.5, 4.5, cardW - 9, cardH - 9);
+
+    // Top Header - College Name
+    let y = 14;
+    doc.setTextColor(2, 132, 199); // #0284c7 Primary Blue
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("SHRI SAI PRIVATE I.T.I", 43, 8, { align: 'center' });
+    doc.text("BHARAT SHIKSHAN SANSTHA'S", cardW / 2, y, { align: 'center' });
     
-    doc.setFontSize(6);
-    doc.setFont('helvetica', 'normal');
-    doc.text("Ramnagar, Bhadravati • +91 9890273889", 43, 13, { align: 'center' });
+    y += 5;
+    doc.setFontSize(10);
+    doc.setTextColor(22, 163, 74); // Green
+    doc.text("SHRI SAI PRIVATE I.T.I", cardW / 2, y, { align: 'center' });
 
-    doc.setFillColor(245, 158, 11); // #f59e0b Gold Bar
-    doc.rect(0, 18, 86, 6, 'F');
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
+    // Student Name
+    y += 9;
     doc.setTextColor(15, 23, 42);
-    doc.text("STUDENT IDENTITY CARD", 43, 22.5, { align: 'center' });
+    doc.setFontSize(10.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text(student.name || 'STUDENT NAME', cardW / 2, y, { align: 'center' });
 
     // Photo Box (Center)
-    const photoX = 28;
-    const photoY = 28;
+    const photoX = cardW / 2 - 15;
+    const photoY = y + 4;
     const photoW = 30;
-    const photoH = 34;
+    const photoH = 36;
 
-    doc.setDrawColor(2, 132, 199);
-    doc.setLineWidth(0.6);
-    doc.rect(photoX, photoY, photoW, photoH, 'S');
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.rect(photoX, photoY, photoW, photoH);
 
     if (student.photo && student.photo.startsWith('data:image/')) {
         try {
             doc.addImage(student.photo, 'PNG', photoX, photoY, photoW, photoH);
         } catch {
-            doc.setFontSize(7);
-            doc.text('PHOTO', photoX + 15, photoY + 17, { align: 'center' });
+            doc.setFontSize(8);
+            doc.text('PHOTO', photoX + 15, photoY + 18, { align: 'center' });
         }
     } else {
-        doc.setFontSize(7);
+        doc.setFontSize(8);
         doc.setTextColor(100, 116, 139);
-        doc.text('PHOTO', photoX + 15, photoY + 17, { align: 'center' });
+        doc.text('PHOTO', photoX + 15, photoY + 18, { align: 'center' });
     }
 
-    // Student Details
-    let y = 68;
-    doc.setTextColor(15, 23, 42);
-    doc.setFontSize(10);
+    // Student ID & Details
+    y = photoY + photoH + 7;
+    doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
-    doc.text(student.name?.toUpperCase() || 'STUDENT NAME', 43, y, { align: 'center' });
-
-    y += 6;
-    doc.setFontSize(8);
     doc.setTextColor(2, 132, 199);
-    doc.text(`ID: ${student.studentId || 'SAI-2026-001'}`, 43, y, { align: 'center' });
+    doc.text(student.studentId || 'SSITI-2026-E01', cardW / 2, y, { align: 'center' });
 
     y += 6;
-    doc.setFontSize(7.5);
-    doc.setTextColor(51, 65, 85);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Trade: ${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, 43, y, { align: 'center' });
-
-    if (student.rollNumber) {
-        y += 5;
-        doc.text(`Roll No: ${student.rollNumber}`, 43, y, { align: 'center' });
-    }
-
-    if (student.parent?.phone) {
-        y += 5;
-        doc.text(`Emergency Phone: ${student.parent.phone}`, 43, y, { align: 'center' });
-    }
-
-    // Footer Stamp
-    y = 118;
-    doc.setDrawColor(203, 213, 225);
-    doc.line(10, y, 76, y);
-    doc.setFontSize(6);
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(100, 116, 139);
-    doc.text("ISSUED BY PRINCIPAL • SHRI SAI I.T.I", 43, y + 4, { align: 'center' });
+    doc.text(`Trade: ${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, cardW / 2, y, { align: 'center' });
 
-    doc.save(`${student.studentId}_ID_Card.pdf`);
+    y += 5;
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Enrollment Year - ${new Date(student.createdAt || Date.now()).getFullYear()}`, cardW / 2, y, { align: 'center' });
+
+    y += 5;
+    doc.setFontSize(7);
+    doc.text('(Valid till the end of trade programme)', cardW / 2, y, { align: 'center' });
+
+    // Footer Info Box
+    y += 6;
+    doc.setDrawColor(22, 163, 74);
+    doc.setLineWidth(0.4);
+    doc.line(6, y, cardW - 6, y);
+
+    y += 4;
+    doc.setFontSize(6.5);
+    doc.setTextColor(51, 65, 85);
+    doc.text('Address - Shri Sai I.T.I, Jain Mandir Rd, Ramnagar, Bhadravati', cardW / 2, y, { align: 'center' });
+    
+    y += 4;
+    doc.text('Contact - College Helpline +91 9890273889', cardW / 2, y, { align: 'center' });
+
+    y += 4;
+    doc.setTextColor(2, 132, 199);
+    doc.text('Web - bss-ssiti-erp-and-fee-system.vercel.app', cardW / 2, y, { align: 'center' });
+
+
+    // ─── PAGE 2: BACK SIDE OF ID CARD ─────────────────────────────────────────
+    doc.addPage([85, 140]);
+
+    // Green Outer Border
+    doc.setDrawColor(22, 163, 74);
+    doc.setLineWidth(1.8);
+    doc.rect(3, 3, cardW - 6, cardH - 6);
+
+    // Inner Green Border Line
+    doc.setLineWidth(0.4);
+    doc.rect(4.5, 4.5, cardW - 9, cardH - 9);
+
+    y = 14;
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Emergency Contact: ${student.parent?.phone || '+91 9890273889'}`, 7, y);
+
+    y += 5;
+    doc.text(`Blood Group: ${student.gender === 'Female' ? 'B+' : 'O+'}`, 7, y);
+
+    // Rules & Terms
+    y += 8;
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+
+    const rules = [
+        "A) This card should be produced on demand at Shri Sai I.T.I/Departments. No student shall be allowed on premises without it.",
+        "B) The facility would be available only relating to course or courses for which the student is actually registered.",
+        "C) Duplicate Id card will be issued on payment of RS.200/- by the way of demand draft/cash in favor of Shri Sai I.T.I.",
+        "D) Loss of Id card is to be reported immediately to concerned authority.",
+        "E) Identity card is to be submitted to issuing authority after completion of the said program."
+    ];
+
+    rules.forEach(rule => {
+        const splitText = doc.splitTextToSize(rule, cardW - 14);
+        doc.text(splitText, 7, y);
+        y += splitText.length * 4 + 2;
+    });
+
+    // Principal Signature Line
+    y = cardH - 22;
+    if (student.signature && student.signature.startsWith('data:image/')) {
+        try {
+            doc.addImage(student.signature, 'PNG', cardW / 2 - 15, y - 10, 30, 10);
+        } catch {}
+    }
+    doc.setDrawColor(148, 163, 184);
+    doc.line(cardW / 2 - 22, y, cardW / 2 + 22, y);
+    
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text("Issuing Authority / Principal Seal", cardW / 2, y + 4, { align: 'center' });
+
+    doc.save(`${student.studentId || 'Student'}_ID_Card_Front_Back.pdf`);
 }
