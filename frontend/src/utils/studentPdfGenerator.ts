@@ -28,14 +28,44 @@ async function getLogoDataUrl(): Promise<string | null> {
 }
 
 /**
+ * Loads the official Principal Signature & Stamp as a Base64 JPEG
+ */
+async function getPrincipalStampDataUrl(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = '/sai_iti_principal_sign_stamp.jpg';
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth || img.width;
+                canvas.height = img.naturalHeight || img.height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                    return;
+                }
+            } catch {}
+            resolve(null);
+        };
+        img.onerror = () => resolve(null);
+    });
+}
+
+/**
  * Generates official Admission Application Form PDF with Institute Logo & Royal Gold Theme
  */
 export async function generateAdmissionFormPdf(student: any) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Load Institute Logo
-    const logoDataUrl = await getLogoDataUrl();
+    // Load Institute Logo & Principal Stamp
+    const [logoDataUrl, stampDataUrl] = await Promise.all([
+        getLogoDataUrl(),
+        getPrincipalStampDataUrl(),
+    ]);
 
     // ─── Header: Imperial Gold & Deep Navy (Matching Logo Colors) ────────────
     doc.setFillColor(15, 23, 42); // Deep Navy (#0f172a)
@@ -222,7 +252,9 @@ export async function generateAdmissionFormPdf(student: any) {
     doc.line(pageWidth / 2 - 25, y, pageWidth / 2 + 25, y);
     doc.text('Parent / Guardian Signature', pageWidth / 2 - 25, y + 4);
 
-    if (logoDataUrl) {
+    if (stampDataUrl) {
+        try { doc.addImage(stampDataUrl, 'JPEG', pageWidth - 65, y - 20, 52, 18); } catch {}
+    } else if (logoDataUrl) {
         try { doc.addImage(logoDataUrl, 'PNG', pageWidth - 50, y - 16, 15, 15); } catch {}
     }
     doc.line(pageWidth - 60, y, pageWidth - 10, y);
@@ -240,7 +272,10 @@ export async function generateStudentIdCardPdf(student: any) {
     const cardW = 85;
     const cardH = 140;
 
-    const logoDataUrl = await getLogoDataUrl();
+    const [logoDataUrl, stampDataUrl] = await Promise.all([
+        getLogoDataUrl(),
+        getPrincipalStampDataUrl(),
+    ]);
 
     // ─── PAGE 1: FRONT SIDE OF ID CARD ───────────────────────────────────────
     // Imperial Gold Outer Border
@@ -384,7 +419,11 @@ export async function generateStudentIdCardPdf(student: any) {
 
     // Principal Signature & Official Seal Stamp
     y = cardH - 22;
-    if (logoDataUrl) {
+    if (stampDataUrl) {
+        try {
+            doc.addImage(stampDataUrl, 'JPEG', cardW / 2 - 20, y - 18, 40, 15);
+        } catch {}
+    } else if (logoDataUrl) {
         try {
             doc.addImage(logoDataUrl, 'PNG', cardW / 2 - 7, y - 15, 14, 14);
         } catch {}
