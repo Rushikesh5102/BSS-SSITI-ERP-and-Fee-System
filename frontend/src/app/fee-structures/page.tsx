@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
@@ -9,9 +9,13 @@ import api from '../../services/api';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
-export default function FeeStructuresPage() {
+function FeeStructuresContent() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
+
     const [structures, setStructures] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [showModal, setShowModal] = useState(false);
@@ -56,7 +60,7 @@ export default function FeeStructuresPage() {
         } finally { setSaving(false); }
     };
 
-    const canEdit = user && ['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role);
+    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
 
     if (loading || !user) return null;
 
@@ -126,59 +130,64 @@ export default function FeeStructuresPage() {
                             <div className="modal-body">
                                 <div className="grid grid-2">
                                     <div className="form-group">
-                                        <label className="form-label">Structure Name <span className="required">*</span></label>
-                                        <input className="form-control" required value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Electrician 2024-25" />
+                                        <label className="form-label">Structure Name *</label>
+                                        <input className="form-control" required placeholder="e.g. Electrician 2024-25 Fee"
+                                            value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Academic Year <span className="required">*</span></label>
-                                        <input className="form-control" required value={form.academicYear} onChange={(e) => setForm(f => ({ ...f, academicYear: e.target.value }))} placeholder="2024-25" />
+                                        <label className="form-label">Academic Year *</label>
+                                        <input className="form-control" required placeholder="e.g. 2024-25"
+                                            value={form.academicYear} onChange={(e) => setForm(f => ({ ...f, academicYear: e.target.value }))} />
                                     </div>
-                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <label className="form-label">Class / Trade</label>
-                                        <input className="form-control" value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} placeholder="e.g. Electrician" />
+                                    <div className="form-group">
+                                        <label className="form-label">Trade / Class *</label>
+                                        <input className="form-control" required placeholder="e.g. Electrician"
+                                            value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} />
                                     </div>
                                 </div>
 
-                                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                                    <div className="flex-between mb-4"><div className="font-bold" style={{ fontSize: 13 }}>FEE ITEMS</div>
-                                        <button type="button" className="btn btn-secondary btn-sm" onClick={addItem}>+ Add Item</button>
+                                <div className="form-group">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <label className="form-label mb-0">Fee Items *</label>
+                                        <button type="button" className="btn btn-secondary btn-sm" onClick={addItem}>➕ Add Item</button>
                                     </div>
-                                    {form.items.map((item, i) => (
-                                        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'flex-end' }}>
-                                            <div className="form-group" style={{ flex: 2, marginBottom: 0 }}>
-                                                {i === 0 && <label className="form-label">Category</label>}
-                                                <select className="form-control" required value={item.feeCategoryId} onChange={(e) => updateItem(i, 'feeCategoryId', e.target.value)}>
-                                                    <option value="" disabled>Select category</option>
-                                                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                                                {i === 0 && <label className="form-label">Amount (₹)</label>}
-                                                <input className="form-control" type="number" required min="0" step="0.01" value={item.amount}
-                                                    onChange={(e) => updateItem(i, 'amount', e.target.value)} placeholder="0.00" />
-                                            </div>
+                                    {form.items.map((item, idx) => (
+                                        <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                                            <select className="form-control" required value={item.feeCategoryId}
+                                                onChange={(e) => updateItem(idx, 'feeCategoryId', e.target.value)}>
+                                                <option value="">Choose category</option>
+                                                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                            </select>
+                                            <input className="form-control" type="number" step="0.01" required placeholder="Amount ₹"
+                                                value={item.amount} onChange={(e) => updateItem(idx, 'amount', e.target.value)} style={{ width: 140 }} />
                                             {form.items.length > 1 && (
-                                                <button type="button" className="btn btn-danger btn-sm" onClick={() => removeItem(i)}
-                                                    style={{ marginBottom: 0, flexShrink: 0 }}>✕</button>
+                                                <button type="button" className="btn btn-ghost btn-icon" onClick={() => removeItem(idx)}>✕</button>
                                             )}
                                         </div>
                                     ))}
-                                    <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--primary)', fontSize: 15, paddingTop: 8 }}>
+                                    <div style={{ textAlign: 'right', fontWeight: 700, marginTop: 8, color: 'var(--primary)' }}>
                                         Total: {formatRupees(totalAmount)}
                                     </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : '✅ Create Structure'}</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Create Structure'}</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {toast && <div className="toast-wrap"><div className={`toast ${toast.startsWith('✅') ? 'toast-success' : 'toast-error'}`}>{toast}</div></div>}
+            {toast && <div className="toast-wrap"><div className="toast toast-success">{toast}</div></div>}
         </div>
     );
 }
 
+export default function FeeStructuresPage() {
+    return (
+        <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading fee structures...</div></div></div>}>
+            <FeeStructuresContent />
+        </Suspense>
+    );
+}

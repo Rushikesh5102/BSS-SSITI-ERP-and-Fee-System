@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
@@ -53,12 +53,16 @@ function AccessContent() {
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
 
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    const effectiveRole = (currentUser?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : currentUser?.role;
+
     useEffect(() => {
         if (!authLoading) {
             if (!currentUser) router.push('/login');
-            else if (!['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(currentUser.role)) router.push('/dashboard');
+            else if (!['ADMIN', 'DEVELOPER'].includes(effectiveRole || '')) router.push('/dashboard');
         }
-    }, [currentUser, authLoading, router]);
+    }, [currentUser, effectiveRole, authLoading, router]);
 
     const showToast = (msg: string) => {
         setToast(msg);

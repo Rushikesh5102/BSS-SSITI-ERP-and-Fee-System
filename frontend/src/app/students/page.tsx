@@ -174,9 +174,12 @@ function StudentsContent() {
         } finally { setSaving(false); }
     };
 
-    const isAdminOrDev = user && ['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role);
-    const isAccountant = user && user.role === 'ACCOUNTANT';
-    const canAdmitStudent = user && ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(user.role);
+    const simulateParam = searchParams.get('simulate');
+    const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
+
+    const isAdminOrDev = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
+    const isAccountant = effectiveRole === 'ACCOUNTANT';
+    const canAdmitStudent = ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(effectiveRole || '');
 
     if (loading || !user) return null;
 
@@ -851,9 +854,9 @@ function StudentsContent() {
                     <div className="modal" style={{ maxWidth: 750, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">
-                                {user?.role === 'ADMIN' ? '🏢 Branch Admin User Guide' :
-                                 user?.role === 'ACCOUNTANT' ? '🧾 Accountant Operational Guide' :
-                                 user?.role === 'STUDENT' ? '🎓 Student Portal User Guide' :
+                                {effectiveRole === 'ADMIN' ? '🏢 Branch Admin User Guide' :
+                                 effectiveRole === 'ACCOUNTANT' ? '🧾 Accountant Operational Guide' :
+                                 effectiveRole === 'STUDENT' ? '🎓 Student Portal User Guide' :
                                  '🛠️ System Architect User Guide'}
                             </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowUserGuide(false)}>✕</button>
@@ -861,7 +864,7 @@ function StudentsContent() {
                         <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
                             
                             {/* BRANCH ADMIN GUIDE */}
-                            {user?.role === 'ADMIN' && (
+                            {effectiveRole === 'ADMIN' && (
                                 <>
                                     <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🏢 Branch Administrator Operational Capabilities</h3>
                                     <p className="text-muted mb-4">Complete management guide for Branch Administrators with full administrative privileges.</p>
@@ -902,7 +905,7 @@ function StudentsContent() {
                             )}
 
                             {/* ACCOUNTANT GUIDE */}
-                            {user?.role === 'ACCOUNTANT' && (
+                            {effectiveRole === 'ACCOUNTANT' && (
                                 <>
                                     <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🧾 Accountant Operational Capabilities</h3>
                                     <p className="text-muted mb-4">Daily workflow guide for fee collection, receipt issuing, and student document downloads.</p>
@@ -934,7 +937,7 @@ function StudentsContent() {
                             )}
 
                             {/* STUDENT GUIDE */}
-                            {user?.role === 'STUDENT' && (
+                            {effectiveRole === 'STUDENT' && (
                                 <>
                                     <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🎓 Student Self-Service Portal Guide</h3>
                                     <p className="text-muted mb-4">Instructions for viewing fee status, paying online via Razorpay, and downloading documents.</p>
@@ -958,7 +961,7 @@ function StudentsContent() {
                             )}
 
                             {/* DEVELOPER GUIDE */}
-                            {user?.role === 'DEVELOPER' && (
+                            {effectiveRole === 'DEVELOPER' && (
                                 <>
                                     <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🛠️ System Architect Diagnostic Guide</h3>
                                     <p className="text-muted mb-4">Developer level controls, system diagnostics, and role simulation tools.</p>

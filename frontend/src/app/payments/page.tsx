@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
@@ -10,9 +10,13 @@ import api from '../../services/api';
 const PAYMENT_MODES = ['CASH', 'CHEQUE', 'BANK_TRANSFER', 'UPI', 'CARD', 'NET_BANKING', 'RAZORPAY', 'STRIPE'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
-export default function PaymentsPage() {
+function PaymentsContent() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const simulateParam = searchParams.get('simulate');
+    const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
+
     const [students, setStudents] = useState<any[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [selectedFee, setSelectedFee] = useState<any>(null);
@@ -34,9 +38,9 @@ export default function PaymentsPage() {
     };
 
     useEffect(() => {
-        if (!user || user.role === 'TEACHER') return;
+        if (!user || effectiveRole === 'TEACHER') return;
         fetchStudentsList(studentSearch);
-    }, [user, studentSearch]);
+    }, [user, effectiveRole, studentSearch]);
 
     const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 
@@ -131,7 +135,7 @@ export default function PaymentsPage() {
     };
 
     if (loading || !user) return null;
-    if (user.role === 'TEACHER') {
+    if (effectiveRole === 'TEACHER') {
         return (
             <div className="layout"><Sidebar />
                 <div className="main-content">
@@ -537,6 +541,14 @@ export default function PaymentsPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function PaymentsPage() {
+    return (
+        <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading payments...</div></div></div>}>
+            <PaymentsContent />
+        </Suspense>
     );
 }
 
