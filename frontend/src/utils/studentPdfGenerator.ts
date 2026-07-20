@@ -223,7 +223,7 @@ export async function generateAdmissionFormPdf(student: any) {
     doc.text('Parent / Guardian Signature', pageWidth / 2 - 25, y + 4);
 
     if (logoDataUrl) {
-        try { doc.addImage(logoDataUrl, 'PNG', pageWidth - 52, y - 18, 18, 18); } catch {}
+        try { doc.addImage(logoDataUrl, 'PNG', pageWidth - 50, y - 16, 15, 15); } catch {}
     }
     doc.line(pageWidth - 60, y, pageWidth - 10, y);
     doc.text('Principal Seal & Signature', pageWidth - 60, y + 4);
@@ -358,13 +358,13 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.rect(4.5, 4.5, cardW - 9, cardH - 9);
 
     y = 14;
-    doc.setFontSize(7.5);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 23, 42);
     doc.text(`Blood Group: ${student.bloodGroup || 'O+'}`, 7, y);
 
     // Rules & Terms
-    y += 8;
+    y += 7;
     doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 65, 85);
@@ -379,14 +379,14 @@ export async function generateStudentIdCardPdf(student: any) {
     rules.forEach(rule => {
         const splitText = doc.splitTextToSize(rule, cardW - 14);
         doc.text(splitText, 7, y);
-        y += splitText.length * 3.8 + 2;
+        y += splitText.length * 3.8 + 2.5;
     });
 
-    // Principal Signature Line
+    // Principal Signature & Official Seal Stamp
     y = cardH - 22;
     if (logoDataUrl) {
         try {
-            doc.addImage(logoDataUrl, 'PNG', cardW / 2 - 8, y - 14, 16, 14);
+            doc.addImage(logoDataUrl, 'PNG', cardW / 2 - 7, y - 15, 14, 14);
         } catch {}
     }
     doc.setDrawColor(217, 119, 6);
