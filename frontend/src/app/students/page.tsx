@@ -6,6 +6,7 @@ import Sidebar from '../../components/Sidebar';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
 
 function StudentsContent() {
     const { user, loading } = useAuth();
@@ -257,9 +258,15 @@ function StudentsContent() {
                                                         </>
                                                     ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                 </td>
-                                                <td style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                <td style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                                                     <button className="btn btn-secondary btn-sm" onClick={() => openHistoryModal(s.id)}>
                                                         📜 History
+                                                    </button>
+                                                    <button className="btn btn-secondary btn-sm" onClick={() => generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
+                                                        🪪 ID Card
+                                                    </button>
+                                                    <button className="btn btn-secondary btn-sm" onClick={() => generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
+                                                        📄 Admission Form
                                                     </button>
                                                     {canEdit && (
                                                         <button className="btn btn-primary btn-sm" onClick={() => openFeeModal(s)}>
@@ -582,7 +589,14 @@ function StudentsContent() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className="badge badge-primary">{historyStudentDetail.branch?.name || 'Main Branch'}</span>
+                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                            <button className="btn btn-secondary btn-sm" onClick={() => generateStudentIdCardPdf(historyStudentDetail)}>
+                                                🪪 ID Card PDF
+                                            </button>
+                                            <button className="btn btn-secondary btn-sm" onClick={() => generateAdmissionFormPdf(historyStudentDetail)}>
+                                                📄 Admission PDF
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Parent Info */}

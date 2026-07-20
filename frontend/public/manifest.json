@@ -1,0 +1,21 @@
+{
+  "short_name": "Sai ITI ERP",
+  "name": "Shri Sai I.T.I Fee Management & ERP System",
+  "icons": [
+    {
+      "src": "/sai_iti_logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/sai_iti_logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/dashboard",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "display": "standalone",
+  "orientation": "portrait"
+}

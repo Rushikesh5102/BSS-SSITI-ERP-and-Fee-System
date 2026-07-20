@@ -71,9 +71,11 @@ export default function TermsAndConditions() {
                             <p style={{ color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '16px', borderRadius: '8px' }}>
                                 For any payment-related disputes or technical assistance, please contact the administration:<br/>
                                 <br/>
-                                <strong>Shri Sai I.T.I Administration Office</strong><br/>
-                                Email: support@saisiti.edu.in<br/>
-                                Working Hours: Monday - Saturday, 9:00 AM - 5:00 PM
+                                <strong>Bharat Shikshan Sanstha's Shri Sai Private I.T.I</strong><br/>
+                                📍 <b>Address:</b> Shri Sai I.T.I, Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902<br/>
+                                📞 <b>Phone:</b> +91 9890273889<br/>
+                                ✉️ <b>Email:</b> info@saiiti.edu.in / admin@saiiti.edu.in<br/>
+                                🕒 <b>Working Hours:</b> Monday - Saturday, 9:00 AM - 5:00 PM
                             </p>
                         </section>
 

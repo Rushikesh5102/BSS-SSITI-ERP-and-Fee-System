@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import { AuthProvider } from '../context/AuthContext';
 import '../styles/globals.css';
 
+import PwaInstallerAndOfflineSync from '../components/PwaInstallerAndOfflineSync';
+
 export const metadata: Metadata = {
     title: 'Shri Sai I.T.I Fee Management System',
     description: 'Comprehensive fee management system for Shri Sai I.T.I — track student fees, payments, and generate receipts.',
     keywords: ['ITI', 'fee management', 'school fees', 'student management'],
+    manifest: '/manifest.json',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <head>
                 <meta charSet="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                <link rel="manifest" href="/manifest.json" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
                 <script
@@ -32,7 +36,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 />
             </head>
             <body>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider>
+                    {children}
+                    <PwaInstallerAndOfflineSync />
+                </AuthProvider>
             </body>
         </html>
     );
