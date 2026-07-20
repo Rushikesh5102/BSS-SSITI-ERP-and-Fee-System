@@ -174,7 +174,7 @@ function StudentsContent() {
         } finally { setSaving(false); }
     };
 
-    const canEdit = user && ['SUPERADMIN', 'ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(user.role);
+    const canEdit = user && ['SUPERADMIN', 'ADMIN', 'DEVELOPER'].includes(user.role);
 
     if (loading || !user) return null;
 
@@ -291,7 +291,7 @@ function StudentsContent() {
                                                         <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
                                                             📄 Form PDF
                                                         </button>
-                                                        {canEdit && (
+                                                        {(canEdit || (user.role === 'ACCOUNTANT' && totalFee === 0)) && (
                                                             <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openFeeModal(s)}>
                                                                 💳 {totalFee > 0 ? 'Edit Fee' : 'Assign Fee'}
                                                             </button>
