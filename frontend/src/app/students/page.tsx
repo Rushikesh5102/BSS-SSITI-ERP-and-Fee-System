@@ -70,10 +70,10 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
         setFetching(students.length === 0);
         try {
             const { data } = await api.get(`/students?page=${page}&limit=15&search=${search}`);
-            setStudents(data.data.students);
-            setTotal(data.data.total);
+            setStudents(data.data || []);
+            setTotal(data.pagination?.total || 0);
             if (typeof window !== 'undefined') {
-                localStorage.setItem('sai_iti_students_cache', JSON.stringify({ students: data.data.students, total: data.data.total }));
+                localStorage.setItem('sai_iti_students_cache', JSON.stringify({ students: data.data || [], total: data.pagination?.total || 0 }));
             }
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to fetch students'}`);
