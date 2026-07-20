@@ -164,11 +164,30 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
     // ── Signature section ──────────────────────────────────────────────────────
     y -= 80;
+
+    let stampImage: any = null;
+    try {
+        const stampPath = path.join(process.cwd(), 'assets', 'sai_iti_principal_sign_stamp.jpg');
+        if (fs.existsSync(stampPath)) {
+            const stampBytes = fs.readFileSync(stampPath);
+            stampImage = await doc.embedJpg(stampBytes);
+        }
+    } catch { }
+
     page.drawLine({ start: { x: leftX, y }, end: { x: leftX + 150, y }, thickness: 0.5, color: gray });
     page.drawText("Student's Signature", { x: leftX, y: y - 15, font: regularFont, size: 8, color: gray });
 
+    if (stampImage) {
+        page.drawImage(stampImage, {
+            x: width - 190,
+            y: y - 5,
+            width: 140,
+            height: 45,
+        });
+    }
+
     page.drawLine({ start: { x: width - 190, y }, end: { x: width - 40, y }, thickness: 0.5, color: gray });
-    page.drawText("Authorized Signature", { x: width - 190, y: y - 15, font: regularFont, size: 8, color: gray });
+    page.drawText("Authorized Signature & Seal", { x: width - 190, y: y - 15, font: regularFont, size: 8, color: gray });
     page.drawText(config.school.name, { x: width - 190, y: y - 28, font: boldFont, size: 8, color: primary });
 
     // ── Footer ─────────────────────────────────────────────────────────────────
