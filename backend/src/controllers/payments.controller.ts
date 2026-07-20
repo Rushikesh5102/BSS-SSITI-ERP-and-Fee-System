@@ -211,7 +211,7 @@ export const paymentsController = {
         }
 
         const order = await razorpayService.createOrder(amount, studentFeeId, { studentFeeId });
-        res.json({ success: true, data: order });
+        res.json({ success: true, data: { ...order, keyId: config.razorpay.keyId } });
     }),
 
     /**
