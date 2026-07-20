@@ -288,10 +288,10 @@ function StudentsContent() {
                                                         <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
                                                             📜 History
                                                         </button>
-                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
+                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
                                                             🪪 ID Card
                                                         </button>
-                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
+                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
                                                             📄 Form PDF
                                                         </button>
                                                         {canEdit && (

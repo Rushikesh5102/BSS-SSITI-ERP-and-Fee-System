@@ -1,41 +1,86 @@
 import { jsPDF } from 'jspdf';
 
 /**
- * Generates official Admission Application Form PDF with exact Institute Registration & Document Checklist (Images 2, 3, 4)
+ * Loads the official institute logo as a Base64 PNG
  */
-export function generateAdmissionFormPdf(student: any) {
+async function getLogoDataUrl(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = '/sai_iti_logo.png';
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth || img.width;
+                canvas.height = img.naturalHeight || img.height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                    return;
+                }
+            } catch {}
+            resolve(null);
+        };
+        img.onerror = () => resolve(null);
+    });
+}
+
+/**
+ * Generates official Admission Application Form PDF with Institute Logo & Royal Gold Theme
+ */
+export async function generateAdmissionFormPdf(student: any) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // ─── Header ───────────────────────────────────────────────────────────────
-    doc.setFillColor(2, 132, 199);
-    doc.rect(0, 0, pageWidth, 26, 'F');
+    // Load Institute Logo
+    const logoDataUrl = await getLogoDataUrl();
 
+    // ─── Header: Imperial Gold & Deep Navy (Matching Logo Colors) ────────────
+    doc.setFillColor(15, 23, 42); // Deep Navy (#0f172a)
+    doc.rect(0, 0, pageWidth, 30, 'F');
+
+    doc.setFillColor(217, 119, 6); // Imperial Gold Accent (#d97706)
+    doc.rect(0, 28, pageWidth, 2, 'F');
+
+    // Logo on Top Left of Header
+    if (logoDataUrl) {
+        try {
+            doc.addImage(logoDataUrl, 'PNG', 10, 3, 24, 24);
+        } catch {}
+    }
+
+    // Header Title
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
+    doc.setFontSize(12.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("SHRI SAI PRIVATE INDUSTRIAL TRAINING INSTITUTE, BHADRAWATI", pageWidth / 2, 8, { align: 'center' });
+    doc.text("SHRI SAI PRIVATE INDUSTRIAL TRAINING INSTITUTE, BHADRAWATI", pageWidth / 2 + 8, 9, { align: 'center' });
     
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.text("RUN BY - BHARAT SHIKSHAN SANSTHA, BHADRAWATI | Affiliated by DGET New Delhi & NCVT New Delhi", pageWidth / 2, 14, { align: 'center' });
-    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9890273889", pageWidth / 2, 20, { align: 'center' });
+    doc.setTextColor(254, 243, 199); // Light Warm Gold
+    doc.text("RUN BY - BHARAT SHIKSHAN SANSTHA, BHADRAWATI | Affiliated by DGET New Delhi & NCVT New Delhi", pageWidth / 2 + 8, 15, { align: 'center' });
+    doc.setTextColor(226, 232, 240);
+    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9890273889", pageWidth / 2 + 8, 21, { align: 'center' });
 
-    // Document Sub-Header
-    doc.setFillColor(241, 245, 249);
-    doc.rect(10, 29, pageWidth - 20, 8, 'F');
-    doc.setDrawColor(203, 213, 225);
-    doc.rect(10, 29, pageWidth - 20, 8, 'S');
+    // Document Sub-Header Banner
+    doc.setFillColor(254, 243, 199); // Soft Gold Bar
+    doc.rect(10, 33, pageWidth - 20, 8, 'F');
+    doc.setDrawColor(217, 119, 6);
+    doc.setLineWidth(0.4);
+    doc.rect(10, 33, pageWidth - 20, 8, 'S');
 
-    doc.setTextColor(15, 23, 42);
+    doc.setTextColor(180, 83, 9); // Deep Gold-Amber
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('Student Information & Application form - I.T.I. Details', pageWidth / 2, 34.5, { align: 'center' });
+    doc.text('Student Information & Application Form - I.T.I. Details', pageWidth / 2, 38.5, { align: 'center' });
 
     // Photo Box (Top Right)
     const photoX = pageWidth - 42;
-    const photoY = 40;
-    doc.setDrawColor(148, 163, 184);
+    const photoY = 44;
+    doc.setDrawColor(217, 119, 6);
+    doc.setLineWidth(0.5);
     doc.rect(photoX, photoY, 32, 38);
     if (student.photo && student.photo.startsWith('data:image/')) {
         try { doc.addImage(student.photo, 'PNG', photoX, photoY, 32, 38); } catch {}
@@ -45,12 +90,12 @@ export function generateAdmissionFormPdf(student: any) {
         doc.text('PASSPORT PHOTO', photoX + 16, photoY + 20, { align: 'center' });
     }
 
-    // ─── 1. Institute Details (Image 2) ───────────────────────────────────────
-    let y = 40;
+    // ─── 1. Institute Details (Confirmed Registration & G.R. Numbers) ────────
+    let y = 44;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(2, 132, 199);
-    doc.text('Institute Details', 10, y);
+    doc.setTextColor(180, 83, 9);
+    doc.text('Institute Registration Details', 10, y);
     y += 3;
 
     doc.setDrawColor(203, 213, 225);
@@ -61,12 +106,13 @@ export function generateAdmissionFormPdf(student: any) {
     doc.setFontSize(7.5);
     doc.setTextColor(15, 23, 42);
     
+    // Exact confirmed numbers matching user's official document image
     const instDetails = [
         ['1. Application No', student.studentId || 'SSITI-2026-E01'],
         ['2. Name of the I.T.I.', 'SHRI SAI INDUSTRIAL TRAINING CENTER, BHADRAWATI'],
-        ['3. I.T.I. Registration No', 'I.T.I.- 2011/प्र.क्र.11/व्या.शि.-03 DGET-06/13/2/2013-TC'],
+        ['3. I.T.I. Registration No', 'I.T.I.- 2011/P.K.11/V.S.-03  DGET-06/13/2/2013-TC'],
         ['4. Registration Date', '01/07/2013'],
-        ['5. G.R. No.', 'I.T.I.- 2011/प्र.क्र.11/व्या.शि.-03'],
+        ['5. G.R. No.', 'I.T.I.- 2011/P.K.11/V.S.-03'],
         ['6. G.R. Date', '25/03/2011'],
     ];
 
@@ -83,8 +129,8 @@ export function generateAdmissionFormPdf(student: any) {
     y = y + 33;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(2, 132, 199);
-    doc.text('Basic Details', 10, y);
+    doc.setTextColor(180, 83, 9);
+    doc.text('Basic Student Details', 10, y);
     y += 3;
 
     doc.rect(10, y, pageWidth - 20, 32, 'S');
@@ -104,11 +150,11 @@ export function generateAdmissionFormPdf(student: any) {
         rowY += 7;
     });
 
-    // ─── 3. Class X Education Details (Image 3) ──────────────────────────────
+    // ─── 3. Class X Education Details ───────────────────────────────────────
     y = y + 36;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(2, 132, 199);
+    doc.setTextColor(180, 83, 9);
     doc.text('Education Details - Class X', 10, y);
     y += 3;
 
@@ -130,11 +176,11 @@ export function generateAdmissionFormPdf(student: any) {
         rowY += 6;
     });
 
-    // ─── 4. Submitted Original Documents Checklist (Image 4) ────────────────
+    // ─── 4. Submitted Original Documents Checklist ──────────────────────────
     y = y + 30;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(2, 132, 199);
+    doc.setTextColor(180, 83, 9);
     doc.text('Submitted Original Documents Checklist', 10, y);
     y += 3;
 
@@ -168,7 +214,7 @@ export function generateAdmissionFormPdf(student: any) {
     if (student.signature && student.signature.startsWith('data:image/')) {
         try { doc.addImage(student.signature, 'PNG', 12, y - 16, 32, 14); } catch {}
     }
-    doc.setDrawColor(148, 163, 184);
+    doc.setDrawColor(217, 119, 6);
     doc.line(10, y, 60, y);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(15, 23, 42);
     doc.text('Student Signature', 10, y + 4);
@@ -183,42 +229,52 @@ export function generateAdmissionFormPdf(student: any) {
 }
 
 /**
- * Generates official 2-page Front & Back Student Identity Card PDF
+ * Generates official 2-page Front & Back Student Identity Card PDF with Logo & Royal Gold Scheme
  */
-export function generateStudentIdCardPdf(student: any) {
+export async function generateStudentIdCardPdf(student: any) {
     // Vertical ID Card format (85mm x 140mm)
     const doc = new jsPDF({ unit: 'mm', format: [85, 140] });
     const cardW = 85;
     const cardH = 140;
 
+    const logoDataUrl = await getLogoDataUrl();
+
     // ─── PAGE 1: FRONT SIDE OF ID CARD ───────────────────────────────────────
-    // Green Outer Border
-    doc.setDrawColor(22, 163, 74); // #16a34a Green
+    // Imperial Gold Outer Border
+    doc.setDrawColor(217, 119, 6); // Imperial Gold (#d97706)
     doc.setLineWidth(1.8);
     doc.rect(3, 3, cardW - 6, cardH - 6);
 
-    // Inner Green Border Line
+    // Inner Navy Border Line
+    doc.setDrawColor(15, 23, 42); // Deep Navy (#0f172a)
     doc.setLineWidth(0.4);
     doc.rect(4.5, 4.5, cardW - 9, cardH - 9);
 
-    // Top Header - College Name
-    let y = 14;
-    doc.setTextColor(2, 132, 199); // #0284c7 Primary Blue
-    doc.setFontSize(8.5);
+    // Top Logo Banner
+    let y = 8;
+    if (logoDataUrl) {
+        try {
+            doc.addImage(logoDataUrl, 'PNG', cardW / 2 - 8, y, 16, 16);
+            y += 18;
+        } catch { y += 6; }
+    } else { y += 6; }
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.text("BHARAT SHIKSHAN SANSTHA'S", cardW / 2, y, { align: 'center' });
     
-    y += 5;
-    doc.setFontSize(10);
-    doc.setTextColor(22, 163, 74); // Green
+    y += 4.5;
+    doc.setFontSize(9.5);
+    doc.setTextColor(180, 83, 9); // Imperial Gold Accent
     doc.text("SHRI SAI PRIVATE I.T.I", cardW / 2, y, { align: 'center' });
 
     // Student Name
-    y += 9;
+    y += 8;
     doc.setTextColor(15, 23, 42);
-    doc.setFontSize(10.5);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(student.name || 'STUDENT NAME', cardW / 2, y, { align: 'center' });
+    doc.text(student.name?.toUpperCase() || 'STUDENT NAME', cardW / 2, y, { align: 'center' });
 
     // Photo Box (Center)
     const photoX = cardW / 2 - 15;
@@ -226,8 +282,8 @@ export function generateStudentIdCardPdf(student: any) {
     const photoW = 30;
     const photoH = 36;
 
-    doc.setDrawColor(203, 213, 225);
-    doc.setLineWidth(0.5);
+    doc.setDrawColor(217, 119, 6);
+    doc.setLineWidth(0.6);
     doc.rect(photoX, photoY, photoW, photoH);
 
     if (student.photo && student.photo.startsWith('data:image/')) {
@@ -247,10 +303,10 @@ export function generateStudentIdCardPdf(student: any) {
     y = photoY + photoH + 7;
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(2, 132, 199);
+    doc.setTextColor(180, 83, 9);
     doc.text(student.studentId || 'SSITI-2026-E01', cardW / 2, y, { align: 'center' });
 
-    y += 6;
+    y += 5.5;
     doc.setFontSize(8.5);
     doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'bold');
@@ -262,38 +318,39 @@ export function generateStudentIdCardPdf(student: any) {
     doc.setTextColor(71, 85, 105);
     doc.text(`Enrollment Year - ${new Date(student.createdAt || Date.now()).getFullYear()}`, cardW / 2, y, { align: 'center' });
 
-    y += 5;
-    doc.setFontSize(7);
+    y += 4.5;
+    doc.setFontSize(6.5);
     doc.text('(Valid till the end of trade programme)', cardW / 2, y, { align: 'center' });
 
     // Footer Info Box
-    y += 6;
-    doc.setDrawColor(22, 163, 74);
+    y += 5;
+    doc.setDrawColor(217, 119, 6);
     doc.setLineWidth(0.4);
     doc.line(6, y, cardW - 6, y);
 
-    y += 4;
+    y += 3.5;
     doc.setFontSize(6.5);
     doc.setTextColor(51, 65, 85);
     doc.text('Address - Shri Sai I.T.I, Jain Mandir Rd, Ramnagar, Bhadravati', cardW / 2, y, { align: 'center' });
     
-    y += 4;
+    y += 3.5;
     doc.text('Contact - College Helpline +91 9890273889', cardW / 2, y, { align: 'center' });
 
-    y += 4;
-    doc.setTextColor(2, 132, 199);
+    y += 3.5;
+    doc.setTextColor(180, 83, 9);
     doc.text('Web - bss-ssiti-erp-and-fee-system.vercel.app', cardW / 2, y, { align: 'center' });
 
 
     // ─── PAGE 2: BACK SIDE OF ID CARD ─────────────────────────────────────────
     doc.addPage([85, 140]);
 
-    // Green Outer Border
-    doc.setDrawColor(22, 163, 74);
+    // Imperial Gold Outer Border
+    doc.setDrawColor(217, 119, 6);
     doc.setLineWidth(1.8);
     doc.rect(3, 3, cardW - 6, cardH - 6);
 
-    // Inner Green Border Line
+    // Inner Navy Border Line
+    doc.setDrawColor(15, 23, 42);
     doc.setLineWidth(0.4);
     doc.rect(4.5, 4.5, cardW - 9, cardH - 9);
 
@@ -308,7 +365,7 @@ export function generateStudentIdCardPdf(student: any) {
 
     // Rules & Terms
     y += 8;
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 65, 85);
 
@@ -323,7 +380,7 @@ export function generateStudentIdCardPdf(student: any) {
     rules.forEach(rule => {
         const splitText = doc.splitTextToSize(rule, cardW - 14);
         doc.text(splitText, 7, y);
-        y += splitText.length * 4 + 2;
+        y += splitText.length * 3.8 + 2;
     });
 
     // Principal Signature Line
@@ -333,7 +390,7 @@ export function generateStudentIdCardPdf(student: any) {
             doc.addImage(student.signature, 'PNG', cardW / 2 - 15, y - 10, 30, 10);
         } catch {}
     }
-    doc.setDrawColor(148, 163, 184);
+    doc.setDrawColor(217, 119, 6);
     doc.line(cardW / 2 - 22, y, cardW / 2 + 22, y);
     
     doc.setFontSize(7);
