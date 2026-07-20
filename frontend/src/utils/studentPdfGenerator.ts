@@ -222,6 +222,9 @@ export async function generateAdmissionFormPdf(student: any) {
     doc.line(pageWidth / 2 - 25, y, pageWidth / 2 + 25, y);
     doc.text('Parent / Guardian Signature', pageWidth / 2 - 25, y + 4);
 
+    if (logoDataUrl) {
+        try { doc.addImage(logoDataUrl, 'PNG', pageWidth - 52, y - 18, 18, 18); } catch {}
+    }
     doc.line(pageWidth - 60, y, pageWidth - 10, y);
     doc.text('Principal Seal & Signature', pageWidth - 60, y + 4);
 
@@ -358,9 +361,6 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 23, 42);
-    doc.text(`Emergency Contact: ${student.parent?.phone || '+91 9529054868'}`, 7, y);
-
-    y += 5;
     doc.text(`Blood Group: ${student.bloodGroup || 'O+'}`, 7, y);
 
     // Rules & Terms
@@ -373,8 +373,7 @@ export async function generateStudentIdCardPdf(student: any) {
         "A) This card should be produced on demand at Shri Sai I.T.I/Departments. No student shall be allowed on premises without it.",
         "B) The facility would be available only relating to course or courses for which the student is actually registered.",
         "C) Duplicate Id card will be issued on payment of RS.200/- by the way of demand draft/cash in favor of Shri Sai I.T.I.",
-        "D) Loss of Id card is to be reported immediately to concerned authority.",
-        "E) Identity card is to be submitted to issuing authority after completion of the said program."
+        "D) Loss of Id card is to be reported immediately to concerned authority."
     ];
 
     rules.forEach(rule => {
@@ -385,9 +384,9 @@ export async function generateStudentIdCardPdf(student: any) {
 
     // Principal Signature Line
     y = cardH - 22;
-    if (student.signature && student.signature.startsWith('data:image/')) {
+    if (logoDataUrl) {
         try {
-            doc.addImage(student.signature, 'PNG', cardW / 2 - 15, y - 10, 30, 10);
+            doc.addImage(logoDataUrl, 'PNG', cardW / 2 - 8, y - 14, 16, 14);
         } catch {}
     }
     doc.setDrawColor(217, 119, 6);
