@@ -199,9 +199,6 @@ function StudentsContent() {
                         <button className="btn btn-secondary" onClick={() => setShowUserGuide(true)} style={{ fontSize: 13 }}>
                             📖 User Guide
                         </button>
-                        <button className="btn btn-secondary" onClick={() => setShowStorageCalc(true)} style={{ fontSize: 13 }}>
-                            💾 Storage Estimate
-                        </button>
                         {canEdit && (
                             <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                                 ➕ New Admission
@@ -844,124 +841,135 @@ function StudentsContent() {
                 </div>
             )}
 
-            {/* Interactive User Guide Modal */}
+            {/* Interactive Role-Separated User Guide Modal */}
             {showUserGuide && (
                 <div className="modal-overlay" onClick={() => setShowUserGuide(false)}>
                     <div className="modal" style={{ maxWidth: 750, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <div className="modal-title">📖 Shri Sai I.T.I System User Guide</div>
+                            <div className="modal-title">
+                                {user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' ? '🏢 Branch Admin User Guide' :
+                                 user?.role === 'ACCOUNTANT' ? '🧾 Accountant Operational Guide' :
+                                 user?.role === 'STUDENT' ? '🎓 Student Portal User Guide' :
+                                 '🛠️ System Architect User Guide'}
+                            </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowUserGuide(false)}>✕</button>
                         </div>
                         <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
-                            <h3 style={{ color: 'var(--primary)', marginBottom: 8 }}>👨‍💼 Branch Admin & Accountant Operational Guide</h3>
-                            <p className="text-muted mb-4">Complete workflow instructions for managing students, fee structures, payments, receipts, and reporting.</p>
+                            
+                            {/* BRANCH ADMIN GUIDE */}
+                            {(user?.role === 'ADMIN' || user?.role === 'SUPERADMIN') && (
+                                <>
+                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🏢 Branch Administrator Operational Capabilities</h3>
+                                    <p className="text-muted mb-4">Complete management guide for Branch Administrators with full administrative privileges.</p>
 
-                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                <h4>1. Student Admission & Automatic Credential Generation</h4>
-                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                    <li>Click <b>➕ New Admission</b> or <b>Quick Student Admission</b> on Record Payment page.</li>
-                                    <li>Fill in Student Name, Class/Trade, and optional Parent Contact.</li>
-                                    <li>Upload Student Photo & Signature via <b>Drag & Drop</b> or file select.</li>
-                                    <li>Optionally select Fee Structure to assign fees immediately during admission!</li>
-                                    <li>System auto-generates Roll Number and Student ID (e.g. <code>SITI-2026-E01</code>) to prevent human errors.</li>
-                                </ul>
-                            </div>
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>1. Full Student Admissions & Fee Customization</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Click <b>➕ New Admission</b> to register students with trade, photo, signature, Class X education details, and submitted document checklist.</li>
+                                            <li>System auto-generates Roll Number and Student ID (e.g. <code>SSITI-2026-E01</code>).</li>
+                                            <li><b>Admin Privilege</b>: Assign or customize custom admission fee amounts directly during student registration.</li>
+                                        </ul>
+                                    </div>
 
-                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                <h4>2. Recording Fee Payments & Receipts</h4>
-                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                    <li>Navigate to <b>💳 Record Payment</b>. Select student by ID, Roll No, or Name.</li>
-                                    <li>Choose payment mode (Cash, UPI, Cheque, Bank Transfer, Razorpay).</li>
-                                    <li>Instantly preview live receipt and UPI QR Code before confirming payment.</li>
-                                    <li>After recording, receipt PDF with college logo is generated automatically.</li>
-                                </ul>
-                            </div>
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>2. Fee Structure Creation & Unrestricted Fee Modifications</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Navigate to <b>⚙️ Fee Structures</b> to create master trade fee templates.</li>
+                                            <li><b>Admin Privilege</b>: As Branch Admin, you can edit and update established fee amounts even after they have been assigned to students.</li>
+                                            <li>Accountant accounts are locked from changing assigned fee structures for security.</li>
+                                        </ul>
+                                    </div>
 
-                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                <h4>3. Photo & Signature Viewing / Downloading</h4>
-                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                    <li>Click any student photo avatar or signature image in tables, history modals, or profiles.</li>
-                                    <li>A full-screen high-res image modal opens with a single-click <b>📥 Download Image File</b> button.</li>
-                                </ul>
-                            </div>
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>3. Payment Collection & PDF Generation</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Collect offline payments (Cash, UPI, Cheque, Bank Transfer) or launch live <b>💳 Razorpay Checkout</b>.</li>
+                                            <li>Instantly generate 2-Page Front & Back Student ID Cards and Official Admission Application PDFs with institute logo.</li>
+                                        </ul>
+                                    </div>
 
-                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
-                                <h4>4. Data Backup & Storage Maintenance</h4>
-                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                    <li>Use <b>📈 Reports</b> to export monthly/yearly payment logs in Excel or PDF formats.</li>
-                                    <li>Regular backups allow storage space to stay clean and infinite!</li>
-                                </ul>
-                            </div>
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>4. Revenue Analytics & Branch Reports</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Use <b>📈 Reports</b> to track collected vs outstanding dues, monthly revenue trends, and export financial summaries to Excel/PDF.</li>
+                                        </ul>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* ACCOUNTANT GUIDE */}
+                            {user?.role === 'ACCOUNTANT' && (
+                                <>
+                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🧾 Accountant Operational Capabilities</h3>
+                                    <p className="text-muted mb-4">Daily workflow guide for fee collection, receipt issuing, and student document downloads.</p>
+
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>1. Recording Payments & Razorpay Online Checkout</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Navigate to <b>💳 Record Payment</b>. Select student by ID, Roll No, or Name.</li>
+                                            <li>Record offline payments (Cash, UPI, Cheque, Bank Transfer) or click <b>💳 Pay via Razorpay</b> for instant online checkout!</li>
+                                            <li>Live receipt preview and official PDF receipt generation with institute logo are auto-created upon payment.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>2. Student Admission & ID Card Downloads</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Click <b>➕ New Admission</b> to enroll new students with photo, signature, and Class X details.</li>
+                                            <li>Single-click download for <b>🪪 2-Page Front & Back ID Cards</b> and <b>📄 Admission Application PDFs</b>.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', padding: 14, borderRadius: 10 }}>
+                                        <h4 style={{ color: '#b45309' }}>🔒 Fee Structure Security Lock Notice</h4>
+                                        <p style={{ marginTop: 6, fontSize: 13, color: '#92400e' }}>
+                                            As an Accountant, you can collect fee payments and assign initial fee structures. However, established fee amounts cannot be modified once set. Fee structure adjustments require <b>Branch Admin</b> authorization.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* STUDENT GUIDE */}
+                            {user?.role === 'STUDENT' && (
+                                <>
+                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🎓 Student Self-Service Portal Guide</h3>
+                                    <p className="text-muted mb-4">Instructions for viewing fee status, paying online via Razorpay, and downloading documents.</p>
+
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>1. Online Fee Payment via Razorpay</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>View total assigned trade fees, total paid, and pending balance.</li>
+                                            <li>Click <b>💳 Pay via Razorpay</b> to pay online using GPay, PhonePe, Paytm, UPI, Cards, or NetBanking.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
+                                        <h4 style={{ color: 'var(--primary)' }}>2. Digital Receipts & ID Card Download</h4>
+                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
+                                            <li>Download official fee payment receipts for your records anytime.</li>
+                                            <li>Download your official <b>🪪 2-Page Front & Back Student ID Card PDF</b> with college seal and emergency contacts.</li>
+                                        </ul>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* DEVELOPER GUIDE */}
+                            {user?.role === 'DEVELOPER' && (
+                                <>
+                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🛠️ System Architect Diagnostic Guide</h3>
+                                    <p className="text-muted mb-4">Developer level controls, system diagnostics, and role simulation tools.</p>
+                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
+                                        <ul style={{ marginLeft: 20 }}>
+                                            <li>Access <b>⚙️ System Health</b> for live PostgreSQL telemetry and API latency monitoring.</li>
+                                            <li>Use <b>Role Simulation Mode</b> to test Branch Admin, Accountant, or Student perspective in real-time.</li>
+                                        </ul>
+                                    </div>
+                                </>
+                            )}
+
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-primary" onClick={() => setShowUserGuide(false)}>Got It!</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Storage Lifespan Estimate Modal (Request 8) */}
-            {showStorageCalc && (
-                <div className="modal-overlay" onClick={() => setShowStorageCalc(false)}>
-                    <div className="modal" style={{ maxWidth: 650, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div className="modal-title">💾 System Storage & Lifespan Calculation</div>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowStorageCalc(false)}>✕</button>
-                        </div>
-                        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
-                            <div style={{ background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: 16, borderRadius: 12, marginBottom: 16 }}>
-                                <h3 style={{ color: '#38bdf8', margin: 0 }}>📊 Estimated Database Lifespan for 250 Students / Year</h3>
-                                <p style={{ fontSize: 24, fontWeight: 900, color: '#10b981', margin: '8px 0 0 0' }}>~19 YEARS on Free Supabase Tier (500 MB)</p>
-                            </div>
-
-                            <table className="table" style={{ fontSize: 13, marginBottom: 16 }}>
-                                <thead>
-                                    <tr>
-                                        <th>Data Item per Student</th>
-                                        <th>Average Size</th>
-                                        <th>250 Students / Year Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Student Record + Parent Details</td>
-                                        <td>1.5 KB</td>
-                                        <td>375 KB</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Fee Assignments & Payments (4-6 transactions)</td>
-                                        <td>3.5 KB</td>
-                                        <td>875 KB</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Student Photo (Compressed WebP/JPEG)</td>
-                                        <td>~60 KB</td>
-                                        <td>15.0 MB</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Student Signature (Compressed WebP/PNG)</td>
-                                        <td>~40 KB</td>
-                                        <td>10.0 MB</td>
-                                    </tr>
-                                    <tr style={{ fontWeight: 800, background: 'var(--surface-2)' }}>
-                                        <td>TOTAL Yearly Consumption</td>
-                                        <td>~105 KB / student</td>
-                                        <td>~26.25 MB / year</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
-                                <b>Key Insights & Recommendations:</b>
-                                <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                    <li>Free Supabase PostgreSQL limit is <b>500 MB</b> (512,000 KB).</li>
-                                    <li>At 26.25 MB per year for 250 students, your storage will last <b>~19 YEARS</b> without spending a rupee!</li>
-                                    <li>If photos/signatures are hosted on Cloudinary or Supabase Storage bucket, DB usage drops to 1.2 MB/yr, giving &gt; 400 YEARS of capacity!</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-primary" onClick={() => setShowStorageCalc(false)}>Understood</button>
                         </div>
                     </div>
                 </div>

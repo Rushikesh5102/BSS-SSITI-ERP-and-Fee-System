@@ -270,9 +270,87 @@ export default function PaymentsPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border)' }}>
+                                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                             <button type="submit" className="btn btn-primary btn-lg" disabled={saving || !form.amount} style={{ width: '100%', justifyContent: 'center' }}>
-                                                {saving ? '⏳ Processing Payment...' : '✅ Record Payment & Generate Receipt'}
+                                                {saving ? '⏳ Processing...' : '✅ Record Payment'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-secondary btn-lg"
+                                                disabled={saving || !selectedFee || pendingBalance <= 0}
+                                                onClick={async () => {
+                                                    const amountPaise = form.amount ? Math.round(parseFloat(form.amount) * 100) : pendingBalance;
+                                                    if (amountPaise <= 0) return alert('Please enter a valid payment amount');
+                                                    setSaving(true);
+                                                    try {
+                                                        const script = document.createElement('script');
+                                                        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                                                        document.body.appendChild(script);
+                                                        await new Promise(r => setTimeout(r, 600));
+
+                                                        const { data: orderRes } = await api.post('/payments/razorpay/order', {
+                                                            studentFeeId: selectedFee.id,
+                                                            amount: amountPaise
+                                                        });
+
+                                                        if (!orderRes.success || !orderRes.data) throw new Error('Order creation failed');
+                                                        const order = orderRes.data;
+
+                                                        const options = {
+                                                            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_test_TEUu7W94JCplrN',
+                                                            amount: order.amount,
+                                                            currency: order.currency,
+                                                            name: 'Shri Sai I.T.I',
+                                                            description: `Fee Payment - ${selectedStudent.name}`,
+                                                            order_id: order.id,
+                                                            handler: async function (response: any) {
+                                                                try {
+                                                                    const { data: verifyRes } = await api.post('/payments/razorpay/verify', {
+                                                                        razorpayOrderId: response.razorpay_order_id || order.id,
+                                                                        razorpayPaymentId: response.razorpay_payment_id || 'pay_mock_' + Math.random().toString(36).substring(2, 12),
+                                                                        razorpaySignature: response.razorpay_signature || 'mock_signature',
+                                                                        studentFeeId: selectedFee.id,
+                                                                        amount: order.amount
+                                                                    });
+                                                                    if (verifyRes.success) {
+                                                                        setResult(verifyRes.data);
+                                                                        showToast('✅ Razorpay Payment Successful! Receipt generated.');
+                                                                        setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
+                                                                    }
+                                                                } catch (err: any) {
+                                                                    showToast(`❌ Verification error: ${err.message}`);
+                                                                }
+                                                            },
+                                                            prefill: { name: selectedStudent.name, phone: selectedStudent.parent?.phone || '' },
+                                                            theme: { color: '#0f172a' }
+                                                        };
+
+                                                        if (order.id.startsWith('order_mock_')) {
+                                                            const confirmPay = window.confirm(`[SANDBOX GATEWAY] Pay ₹${(amountPaise / 100).toLocaleString('en-IN')} via Razorpay?`);
+                                                            if (confirmPay) {
+                                                                await (options.handler as any)({
+                                                                    razorpay_order_id: order.id,
+                                                                    razorpay_payment_id: 'pay_mock_' + Math.random().toString(36).substring(2, 12),
+                                                                    razorpay_signature: 'mock_signature'
+                                                                });
+                                                            }
+                                                        } else {
+                                                            const rzp = new (window as any).Razorpay(options);
+                                                            rzp.open();
+                                                        }
+                                                    } catch (err: any) {
+                                                        showToast(`❌ Razorpay Error: ${err.response?.data?.message || err.message}`);
+                                                    } finally {
+                                                        setSaving(false);
+                                                    }
+                                                }}
+                                                style={{
+                                                    width: '100%', justifyContent: 'center',
+                                                    background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                                    color: '#ffffff', fontWeight: 700, border: 'none'
+                                                }}
+                                            >
+                                                💳 Pay via Razorpay
                                             </button>
                                         </div>
                                     </form>
