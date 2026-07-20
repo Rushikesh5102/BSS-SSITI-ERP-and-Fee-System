@@ -1,139 +1,185 @@
 import { jsPDF } from 'jspdf';
 
-const COLLEGE_NAME = "BHARAT SHIKSHAN SANSTHA'S SHRI SAI PRIVATE I.T.I";
-const COLLEGE_ADDRESS = "Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902";
-const COLLEGE_CONTACT = "Phone: +91 9890273889 | Email: info@saiiti.edu.in";
-
 /**
- * Generates official 1-page Admission Application Form PDF
+ * Generates official Admission Application Form PDF with exact Institute Registration & Document Checklist (Images 2, 3, 4)
  */
 export function generateAdmissionFormPdf(student: any) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Primary Header Background
-    doc.setFillColor(2, 132, 199); // #0284c7
-    doc.rect(0, 0, pageWidth, 28, 'F');
+    // ─── Header ───────────────────────────────────────────────────────────────
+    doc.setFillColor(2, 132, 199);
+    doc.rect(0, 0, pageWidth, 26, 'F');
 
-    // Header Text
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.text(COLLEGE_NAME, pageWidth / 2, 10, { align: 'center' });
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(COLLEGE_ADDRESS, pageWidth / 2, 16, { align: 'center' });
-    doc.text(COLLEGE_CONTACT, pageWidth / 2, 22, { align: 'center' });
-
-    // Document Title Banner
-    doc.setFillColor(241, 245, 249);
-    doc.rect(14, 34, pageWidth - 28, 10, 'F');
-    doc.setDrawColor(203, 213, 225);
-    doc.rect(14, 34, pageWidth - 28, 10, 'S');
-
-    doc.setTextColor(15, 23, 42);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('OFFICIAL ADMISSION APPLICATION FORM', pageWidth / 2, 40.5, { align: 'center' });
-
-    // Photo & Signature Boxes (Top Right)
-    const photoX = pageWidth - 46;
-    const photoY = 48;
+    doc.text("SHRI SAI PRIVATE INDUSTRIAL TRAINING INSTITUTE, BHADRAWATI", pageWidth / 2, 8, { align: 'center' });
     
-    // Render Student Photo if present
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text("RUN BY - BHARAT SHIKSHAN SANSTHA, BHADRAWATI | Affiliated by DGET New Delhi & NCVT New Delhi", pageWidth / 2, 14, { align: 'center' });
+    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9890273889", pageWidth / 2, 20, { align: 'center' });
+
+    // Document Sub-Header
+    doc.setFillColor(241, 245, 249);
+    doc.rect(10, 29, pageWidth - 20, 8, 'F');
+    doc.setDrawColor(203, 213, 225);
+    doc.rect(10, 29, pageWidth - 20, 8, 'S');
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Student Information & Application form - I.T.I. Details', pageWidth / 2, 34.5, { align: 'center' });
+
+    // Photo Box (Top Right)
+    const photoX = pageWidth - 42;
+    const photoY = 40;
+    doc.setDrawColor(148, 163, 184);
+    doc.rect(photoX, photoY, 32, 38);
     if (student.photo && student.photo.startsWith('data:image/')) {
-        try {
-            doc.addImage(student.photo, 'PNG', photoX, photoY, 32, 38);
-        } catch {
-            doc.rect(photoX, photoY, 32, 38, 'S');
-            doc.setFontSize(8);
-            doc.text('AFFIX PHOTO', photoX + 16, photoY + 20, { align: 'center' });
-        }
+        try { doc.addImage(student.photo, 'PNG', photoX, photoY, 32, 38); } catch {}
     } else {
-        doc.setDrawColor(148, 163, 184);
-        doc.rect(photoX, photoY, 32, 38, 'S');
-        doc.setFontSize(8);
+        doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
         doc.text('PASSPORT PHOTO', photoX + 16, photoY + 20, { align: 'center' });
     }
 
-    // Student Details Grid
-    doc.setFontSize(10);
+    // ─── 1. Institute Details (Image 2) ───────────────────────────────────────
+    let y = 40;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(2, 132, 199);
+    doc.text('Institute Details', 10, y);
+    y += 3;
+
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.3);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(10, y, pageWidth - 55, 30, 'S');
+
+    doc.setFontSize(7.5);
     doc.setTextColor(15, 23, 42);
-    let y = 52;
-    const col1 = 16;
-    const col2 = 60;
+    
+    const instDetails = [
+        ['1. Application No', student.studentId || 'SSITI-2026-E01'],
+        ['2. Name of the I.T.I.', 'SHRI SAI INDUSTRIAL TRAINING CENTER, BHADRAWATI'],
+        ['3. I.T.I. Registration No', 'I.T.I.- 2011/प्र.क्र.11/व्या.शि.-03 DGET-06/13/2/2013-TC'],
+        ['4. Registration Date', '01/07/2013'],
+        ['5. G.R. No.', 'I.T.I.- 2011/प्र.क्र.11/व्या.शि.-03'],
+        ['6. G.R. Date', '25/03/2011'],
+    ];
 
-    const addDetail = (label: string, value: string) => {
+    let rowY = y + 4.5;
+    instDetails.forEach(([lbl, val]) => {
         doc.setFont('helvetica', 'bold');
-        doc.text(`${label}:`, col1, y);
+        doc.text(lbl, 12, rowY);
         doc.setFont('helvetica', 'normal');
-        doc.text(value || 'N/A', col2, y);
-        y += 8;
-    };
+        doc.text(val, 50, rowY);
+        rowY += 4.5;
+    });
 
-    addDetail('Student ID', student.studentId || 'N/A');
-    addDetail('Roll Number', student.rollNumber || 'Auto-Assigned');
-    addDetail('Full Name', student.name || '');
-    addDetail('Course / Trade', `${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`);
-    addDetail('Date of Admission', new Date(student.createdAt || Date.now()).toLocaleDateString('en-IN'));
-    addDetail('Email Address', student.email || 'N/A');
-
-    // Section 2: Parent / Guardian Info
-    y = Math.max(y + 4, 102);
-    doc.setFillColor(241, 245, 249);
-    doc.rect(14, y, pageWidth - 28, 7, 'F');
+    // ─── 2. Basic Details Grid ───────────────────────────────────────────────
+    y = y + 33;
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('PARENT / GUARDIAN INFORMATION', 18, y + 5);
-    y += 12;
+    doc.setTextColor(2, 132, 199);
+    doc.text('Basic Details', 10, y);
+    y += 3;
 
-    addDetail('Parent Name', student.parent?.name || 'N/A');
-    addDetail('Contact Number', student.parent?.phone || 'N/A');
-    addDetail('Parent Email', student.parent?.email || 'N/A');
+    doc.rect(10, y, pageWidth - 20, 32, 'S');
+    const basicDetails = [
+        ['7. Name of Student', student.name || '', '11. Mobile No', student.parent?.phone || '—'],
+        ['8. Course / Trade', `${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, '12. Landline / Alt', student.landline || '—'],
+        ['9. Date of Birth', student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN') : '—', '13. E-mail', student.email || '—'],
+        ['10. Category', student.category || 'OPEN', '14. Enrollment No', student.studentId || 'SSITI-2026-E01'],
+    ];
 
-    // Section 3: Fee Allocation
-    y += 4;
-    doc.setFillColor(241, 245, 249);
-    doc.rect(14, y, pageWidth - 28, 7, 'F');
+    rowY = y + 6;
+    basicDetails.forEach(([l1, v1, l2, v2]) => {
+        doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v1), 45, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 110, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v2), 148, rowY);
+        rowY += 7;
+    });
+
+    // ─── 3. Class X Education Details (Image 3) ──────────────────────────────
+    y = y + 36;
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('FEE ASSIGNMENT & ADMISSION STATUS', 18, y + 5);
-    y += 12;
+    doc.setTextColor(2, 132, 199);
+    doc.text('Education Details - Class X', 10, y);
+    y += 3;
 
-    const assignedFee = student.studentFees && student.studentFees.length > 0 ? student.studentFees[0] : null;
-    addDetail('Assigned Fee Structure', assignedFee?.feeStructure?.name || 'Standard Trade Fee');
-    addDetail('Total Fee Amount', `₹${(assignedFee ? assignedFee.totalAmount / 100 : 25000).toLocaleString('en-IN')}`);
-    addDetail('Admission Fee Status', assignedFee?.paidAmount > 0 ? `Paid ₹${(assignedFee.paidAmount / 100).toLocaleString('en-IN')}` : 'Pending Allocation');
+    const edu = student.educationDetails || {};
+    doc.rect(10, y, pageWidth - 20, 26, 'S');
+    const eduRows = [
+        ['39. Board', edu.board || 'Maharashtra State Board', '43. Aggregate %', edu.percentage || '—'],
+        ['40. School', edu.school || 'High School', '44. City / District', edu.city || 'Bhadravati'],
+        ['41. Passing Year', edu.passingYear || '2023', '45. Roll No', edu.rollNo || '—'],
+        ['42. Medium', edu.medium || 'English', '46. Result Status', edu.result || 'PASSED'],
+    ];
 
-    // Declaration & Signatures
-    y = 230;
-    doc.setFontSize(8.5);
+    rowY = y + 5.5;
+    eduRows.forEach(([l1, v1, l2, v2]) => {
+        doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v1), 45, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 110, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v2), 148, rowY);
+        rowY += 6;
+    });
+
+    // ─── 4. Submitted Original Documents Checklist (Image 4) ────────────────
+    y = y + 30;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(2, 132, 199);
+    doc.text('Submitted Original Documents Checklist', 10, y);
+    y += 3;
+
+    doc.rect(10, y, pageWidth - 20, 32, 'S');
+    const docs = student.submittedDocuments || {};
+    const docChecklist = [
+        ['TC (Transfer Certificate)', docs.tc ? '[X] Submitted' : '[  ] Pending', 'Income Certificate', docs.income ? '[X] Submitted' : '[  ] Pending'],
+        ['Mark list (Class X)', docs.marklist ? '[X] Submitted' : '[  ] Pending', 'Affidavit', docs.affidavit ? '[X] Submitted' : '[  ] Pending'],
+        ['Caste Certificate', docs.caste ? '[X] Submitted' : '[  ] Pending', 'Gap Certificate', docs.gap ? '[X] Submitted' : '[  ] Pending'],
+        ['Non-Creamy Layer', docs.nonCreamy ? '[X] Submitted' : '[  ] Pending', 'Aadhaar Card', docs.aadhar ? '[X] Submitted' : '[  ] Pending'],
+        ['Photos (4 Passport)', docs.photo4 ? '[X] Submitted' : '[  ] Pending', 'Bank Pass Book Xerox', docs.bankPassbook ? '[X] Submitted' : '[  ] Pending'],
+    ];
+
+    rowY = y + 5.5;
+    docChecklist.forEach(([l1, v1, l2, v2]) => {
+        doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v1, 60, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 110, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v2, 155, rowY);
+        rowY += 5.5;
+    });
+
+    // ─── Declarations & Signatures ──────────────────────────────────────────
+    y = y + 36;
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(71, 85, 105);
-    doc.text('I hereby declare that all information provided in this admission form is true and correct to the best of my knowledge.', 16, y);
-    
-    y += 30;
-    doc.setDrawColor(148, 163, 184);
+    doc.text('I hereby declare that all information & original documents submitted are true and correct to the best of my knowledge.', 10, y);
 
-    // Student Signature Render
+    y += 18;
     if (student.signature && student.signature.startsWith('data:image/')) {
-        try {
-            doc.addImage(student.signature, 'PNG', 16, y - 22, 36, 16);
-        } catch { }
+        try { doc.addImage(student.signature, 'PNG', 12, y - 16, 32, 14); } catch {}
     }
-    doc.line(16, y, 66, y);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text('Student Signature', 16, y + 5);
+    doc.setDrawColor(148, 163, 184);
+    doc.line(10, y, 60, y);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(15, 23, 42);
+    doc.text('Student Signature', 10, y + 4);
 
     doc.line(pageWidth / 2 - 25, y, pageWidth / 2 + 25, y);
-    doc.text('Parent Signature', pageWidth / 2 - 25, y + 5);
+    doc.text('Parent / Guardian Signature', pageWidth / 2 - 25, y + 4);
 
-    doc.line(pageWidth - 66, y, pageWidth - 16, y);
-    doc.text('Authorized Principal Sign', pageWidth - 66, y + 5);
+    doc.line(pageWidth - 60, y, pageWidth - 10, y);
+    doc.text('Principal Seal & Signature', pageWidth - 60, y + 4);
 
-    doc.save(`${student.studentId}_Admission_Form.pdf`);
+    doc.save(`${student.studentId || 'Admission'}_Application_Form.pdf`);
 }
 
 /**

@@ -20,7 +20,14 @@ function StudentsContent() {
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '', parentName: '', parentPhone: '', parentEmail: '', feeStructureId: '', customAmountRupees: '' });
+    const initialFormState = {
+        name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '',
+        category: 'OPEN', landline: '', parentName: '', parentPhone: '', parentEmail: '',
+        feeStructureId: '', customAmountRupees: '',
+        educationDetails: { board: 'Maharashtra State Board', school: '', passingYear: '2023', medium: 'English', percentage: '', city: 'Bhadravati', rollNo: '', result: 'PASSED' },
+        submittedDocuments: { tc: false, marklist: false, caste: false, nonCreamy: false, photo4: true, income: false, affidavit: false, gap: false, aadhar: true, bankPassbook: false }
+    };
+    const [form, setForm] = useState(initialFormState);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
 
@@ -47,11 +54,25 @@ function StudentsContent() {
     }, [actionParam]);
 
     const fetchStudents = async () => {
-        setFetching(true);
+        // Load fast cached student list first if available
+        if (students.length === 0 && typeof window !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('sai_iti_students_cache');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    setStudents(parsed.students || []);
+                    setTotal(parsed.total || 0);
+                }
+            } catch {}
+        }
+        setFetching(students.length === 0);
         try {
             const { data } = await api.get(`/students?page=${page}&limit=15&search=${search}`);
             setStudents(data.data);
             setTotal(data.pagination?.total || 0);
+            if (typeof window !== 'undefined' && !search && page === 1) {
+                localStorage.setItem('sai_iti_students_cache', JSON.stringify({ students: data.data, total: data.pagination?.total || 0 }));
+            }
         } catch { /* handled by interceptor */ }
         finally { setFetching(false); }
     };
@@ -134,6 +155,8 @@ function StudentsContent() {
             const { data } = await api.post('/students', {
                 name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber,
                 photo: form.photo || undefined, signature: form.signature || undefined, email: form.email,
+                category: form.category, landline: form.landline || undefined,
+                educationDetails: form.educationDetails, submittedDocuments: form.submittedDocuments,
                 feeStructureId: form.feeStructureId || undefined, customTotalAmount: amountInPaise,
                 parent: form.parentName ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
             });
@@ -144,7 +167,7 @@ function StudentsContent() {
             } else {
                 showToast('✅ Student admitted successfully!');
             }
-            setForm({ name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '', parentName: '', parentPhone: '', parentEmail: '', feeStructureId: '', customAmountRupees: '' });
+            setForm(initialFormState);
             fetchStudents();
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to add student'}`);
@@ -224,7 +247,7 @@ function StudentsContent() {
                                         const pending = totalFee - paidFee;
                                         return (
                                             <tr key={s.id}>
-                                                <td><span className="badge badge-primary">{s.studentId}</span></td>
+                                                <td><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2026-${s.rollNumber || '01'}` : s.studentId}</span></td>
                                                 <td>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                         {s.photo ? (
@@ -242,7 +265,9 @@ function StudentsContent() {
                                                         )}
                                                         <div>
                                                             <b>{s.name}</b>
-                                                            {s.rollNumber && <><br /><span className="text-sm text-muted">Roll: {s.rollNumber}</span></>}
+                                                            {s.rollNumber && !s.rollNumber.includes('e+') && !s.rollNumber.includes('E+') && (
+                                                                <><br /><span className="text-sm text-muted">Roll: {s.rollNumber}</span></>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -258,21 +283,23 @@ function StudentsContent() {
                                                         </>
                                                     ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                 </td>
-                                                <td style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => openHistoryModal(s.id)}>
-                                                        📜 History
-                                                    </button>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
-                                                        🪪 ID Card
-                                                    </button>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
-                                                        📄 Admission Form
-                                                    </button>
-                                                    {canEdit && (
-                                                        <button className="btn btn-primary btn-sm" onClick={() => openFeeModal(s)}>
-                                                            💳 {totalFee > 0 ? 'Edit Fee' : 'Assign Fee'}
+                                                <td>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 210 }}>
+                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
+                                                            📜 History
                                                         </button>
-                                                    )}
+                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
+                                                            🪪 ID Card
+                                                        </button>
+                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
+                                                            📄 Form PDF
+                                                        </button>
+                                                        {canEdit && (
+                                                            <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openFeeModal(s)}>
+                                                                💳 {totalFee > 0 ? 'Edit Fee' : 'Assign Fee'}
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -450,9 +477,86 @@ function StudentsContent() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <label className="form-label">Student Email (Optional)</label>
-                                        <input className="form-control" type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} placeholder="student@gmail.com" />
+                                    <div className="form-group">
+                                        <label className="form-label">Category</label>
+                                        <select className="form-control" value={form.category} onChange={(e) => setForm(f => ({ ...f, category: e.target.value }))}>
+                                            <option value="OPEN">OPEN / General</option>
+                                            <option value="OBC">OBC</option>
+                                            <option value="SC">SC</option>
+                                            <option value="ST">ST</option>
+                                            <option value="VJNT">VJ / NT</option>
+                                            <option value="SBC">SBC</option>
+                                            <option value="EWS">EWS</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Landline / Alt Phone</label>
+                                        <input className="form-control" value={form.landline} onChange={(e) => setForm(f => ({ ...f, landline: e.target.value }))} placeholder="Optional alternate number" />
+                                    </div>
+
+                                    {/* Class X Educational Details Section (Image 3) */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                                        <div className="form-label font-bold mb-3" style={{ fontSize: 13, color: 'var(--primary)' }}>🎓 CLASS X EDUCATION DETAILS</div>
+                                        <div className="grid grid-2" style={{ gap: 10 }}>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>Board</label>
+                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.board} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, board: e.target.value } }))} placeholder="e.g. Maharashtra State Board" />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>School Name</label>
+                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.school} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, school: e.target.value } }))} placeholder="High School Name" />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>Passing Year</label>
+                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.passingYear} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, passingYear: e.target.value } }))} placeholder="e.g. 2023" />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>Medium</label>
+                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.medium} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, medium: e.target.value } }))} placeholder="e.g. English / Marathi" />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>Aggregate %</label>
+                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.percentage} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, percentage: e.target.value } }))} placeholder="e.g. 78.50%" />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>Class X Roll No</label>
+                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.rollNo} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, rollNo: e.target.value } }))} placeholder="Class 10 Roll No" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Submitted Original Documents Checklist (Image 4) */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                                        <div className="form-label font-bold mb-3" style={{ fontSize: 13, color: 'var(--primary)' }}>📁 ORIGINAL DOCUMENTS SUBMITTED CHECKLIST</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 10, background: 'var(--surface-2)', padding: 12, borderRadius: 8 }}>
+                                            {[
+                                                { key: 'tc', label: 'TC (Transfer Cert)' },
+                                                { key: 'marklist', label: 'Class X Mark list' },
+                                                { key: 'caste', label: 'Caste Certificate' },
+                                                { key: 'nonCreamy', label: 'Non-Creamy Layer' },
+                                                { key: 'photo4', label: 'Photo - 4 Copies' },
+                                                { key: 'income', label: 'Income Certificate' },
+                                                { key: 'affidavit', label: 'Affidavit' },
+                                                { key: 'gap', label: 'Gap Certificate' },
+                                                { key: 'aadhar', label: 'Aadhaar Card' },
+                                                { key: 'bankPassbook', label: 'Bank Passbook Xerox' },
+                                            ].map((docItem) => (
+                                                <label key={docItem.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={(form.submittedDocuments as any)[docItem.key]}
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked;
+                                                            setForm(f => ({
+                                                                ...f,
+                                                                submittedDocuments: { ...f.submittedDocuments, [docItem.key]: checked }
+                                                            }));
+                                                        }}
+                                                    />
+                                                    {docItem.label}
+                                                </label>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>

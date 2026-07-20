@@ -12,17 +12,9 @@ export default function SystemHealthPage() {
     const router = useRouter();
     const [health, setHealth] = useState<any>(null);
     const [fetching, setFetching] = useState(true);
-    const [showWelcome, setShowWelcome] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [isLockingDown, setIsLockingDown] = useState(false);
     const [lastRefresh, setLastRefresh] = useState(new Date());
-
-    useEffect(() => {
-        if (showWelcome) {
-            const timer = setTimeout(() => setShowWelcome(false), 3500);
-            return () => clearTimeout(timer);
-        }
-    }, [showWelcome]);
 
     useEffect(() => {
         if (!loading) {
@@ -87,63 +79,6 @@ export default function SystemHealthPage() {
 
     return (
         <div className="layout" style={{ background: '#020617' }}>
-            {/* Developer Welcome Animation Overlay */}
-            {showWelcome && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #0284c7 100%)', zIndex: 99999,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'monospace', color: '#38bdf8', padding: '24px 16px', textAlign: 'center',
-                    animation: 'fadeOut 0.8s ease 2.2s forwards'
-                }}>
-                    <style>{`
-                        @keyframes fadeOut { to { opacity: 0; pointer-events: none; visibility: hidden; } }
-                        @keyframes cyberGlow { 0% { transform: scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px #38bdf8); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 30px #38bdf8); } 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 15px #38bdf8); } }
-                        @keyframes cyberBar { 0% { width: 0%; } 100% { width: 100%; } }
-                    `}</style>
-                    <div style={{
-                        width: '80px', height: '80px', borderRadius: '20px', background: '#ffffff',
-                        padding: '10px', boxShadow: '0 0 40px rgba(56, 189, 248, 0.6)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        animation: 'cyberGlow 1.2s ease forwards', marginBottom: '16px'
-                    }}>
-                        <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    </div>
-
-                    <div style={{
-                        animation: 'cyberGlow 1.2s ease forwards',
-                        fontSize: 'clamp(1.8rem, 6vw, 3rem)',
-                        fontWeight: 900,
-                        letterSpacing: 'clamp(2px, 1.5vw, 6px)',
-                        textShadow: '0 0 25px #38bdf8',
-                        textAlign: 'center',
-                        maxWidth: '90vw',
-                        lineHeight: 1.2,
-                        color: '#f8fafc'
-                    }}>
-                        SYSTEM_ARCHITECT
-                    </div>
-                    <div style={{
-                        marginTop: 12, color: '#94a3b8',
-                        fontSize: 'clamp(0.85rem, 3.5vw, 1.1rem)',
-                        textAlign: 'center',
-                        maxWidth: '90vw',
-                    }}>
-                        Establishing secure neural uplink & diagnostic link...
-                    </div>
-                    <div style={{
-                        width: '220px', height: '4px', background: 'rgba(56, 189, 248, 0.2)',
-                        borderRadius: '4px', overflow: 'hidden', marginTop: '24px'
-                    }}>
-                        <div style={{
-                            height: '100%', background: '#38bdf8',
-                            borderRadius: '4px', boxShadow: '0 0 12px #38bdf8',
-                            animation: 'cyberBar 2s ease-in-out forwards'
-                        }} />
-                    </div>
-                </div>
-            )}
-
             <Sidebar />
             
             <div className="main-content" style={{ paddingBottom: '40px' }}>

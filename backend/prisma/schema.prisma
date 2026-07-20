@@ -97,6 +97,10 @@ model Student {
   address     String?
   photo       String?  // URL to student photo
   signature   String?  // URL or Base64 to student signature
+  category    String?  // SC/ST/OBC/OPEN/etc
+  landline    String?  // Alternate phone/landline
+  educationDetails   Json? // Class X Board, School, Year, %, Roll No, etc.
+  submittedDocuments Json? // Checkboxes for submitted original documents
   isActive    Boolean  @default(true)
   branchId    String   @map("branch_id")
   parentId    String?  @map("parent_id")
