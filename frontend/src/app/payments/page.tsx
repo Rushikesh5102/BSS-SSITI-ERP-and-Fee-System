@@ -31,6 +31,9 @@ function PaymentsContent() {
     const [quickAddForm, setQuickAddForm] = useState({ name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', parentName: '', parentPhone: '', parentEmail: '' });
     const [quickAdding, setQuickAdding] = useState(false);
 
+    // Full-Res Image Viewer Modal State
+    const [viewImageModal, setViewImageModal] = useState<{ url: string; title: string; filename: string } | null>(null);
+
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
     const fetchStudentsList = (query: string) => {
@@ -430,19 +433,21 @@ function PaymentsContent() {
                                         </div>
                                     )}
 
-                                    {/* QR Code Placeholder for Instant UPI Payment */}
+                                    {/* Official Institute UPI QR Code */}
                                     <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--border)', textAlign: 'center' }}>
-                                        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>
-                                            📱 Scan & Pay via Institute UPI QR
+                                        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 8, letterSpacing: '0.5px' }}>
+                                            📲 Official Direct UPI QR Code
                                         </div>
-                                        <div style={{ width: 140, height: 140, margin: '0 auto 8px', border: '2px solid var(--border)', borderRadius: 8, padding: 8, background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            {/* Crisp SVG QR Code Graphic */}
-                                            <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
-                                                <path d="M0,0 h30 v30 h-30 z M40,0 h20 v10 h-20 z M70,0 h30 v30 h-30 z M10,10 h10 v10 h-10 z M80,10 h10 v10 h-10 z M0,40 h10 v20 h-10 z M30,40 h40 v10 h-40 z M80,40 h20 v30 h-20 z M0,70 h30 v30 h-30 z M10,80 h10 v10 h-10 z M40,60 h20 v40 h-20 z M70,80 h30 v20 h-30 z" fill="#1a3a7c" />
-                                            </svg>
+                                        <div style={{ 
+                                            background: '#ffffff', borderRadius: 14, padding: 12, border: '2px solid #0284c7',
+                                            boxShadow: '0 8px 24px rgba(2, 132, 199, 0.15)', display: 'inline-block', cursor: 'pointer', transition: 'transform 0.2s ease'
+                                        }} onClick={() => setViewImageModal({ url: '/sai_iti_upi_qr.png', title: 'Official Shri Sai I.T.I UPI QR Code', filename: 'shri_sai_iti_upi_qr.png' })}>
+                                            <img src="/sai_iti_upi_qr.png" alt="Official Shri Sai ITI UPI QR Code" style={{ width: 180, height: 'auto', borderRadius: 8, display: 'block' }} />
                                         </div>
-                                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)' }}>UPI ID: saiiti@upi</div>
-                                        <small className="text-muted" style={{ fontSize: 10 }}>Accepts Google Pay, PhonePe, Paytm, BHIM</small>
+                                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', marginTop: 8 }}>
+                                            M/S. SHREE SAI KHAJAGI AUDYOGIK PRASHIKSHAN SANSTHA
+                                        </div>
+                                        <small className="text-muted" style={{ fontSize: 11 }}>Tap QR code to zoom full screen | Accepts GPay, PhonePe, Paytm, BHIM</small>
                                     </div>
                                 </div>
                             )}
@@ -531,6 +536,27 @@ function PaymentsContent() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Full-Res Image & QR Viewer Modal */}
+            {viewImageModal && (
+                <div className="modal-overlay" onClick={() => setViewImageModal(null)}>
+                    <div className="modal" style={{ maxWidth: 480, padding: 24, textAlign: 'center', background: 'var(--surface)' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header" style={{ marginBottom: 16 }}>
+                            <div className="modal-title" style={{ fontSize: 16, fontWeight: 700 }}>{viewImageModal.title}</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setViewImageModal(null)}>✕</button>
+                        </div>
+                        <div style={{ background: '#ffffff', padding: 16, borderRadius: 12, border: '2px solid #0284c7', display: 'inline-block', marginBottom: 16 }}>
+                            <img src={viewImageModal.url} alt={viewImageModal.title} style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 8, display: 'block' }} />
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                            <a href={viewImageModal.url} download={viewImageModal.filename} className="btn btn-primary" style={{ textDecoration: 'none' }}>
+                                📥 Download Image / QR
+                            </a>
+                            <button className="btn btn-secondary" onClick={() => setViewImageModal(null)}>Close</button>
+                        </div>
                     </div>
                 </div>
             )}

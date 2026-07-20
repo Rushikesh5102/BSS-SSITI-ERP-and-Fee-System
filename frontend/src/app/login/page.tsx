@@ -109,7 +109,7 @@ export default function LoginPage() {
                         <input
                             type="email"
                             className="form-control"
-                            placeholder="admin@saiiti.edu.in"
+                            placeholder="saiiti151@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required

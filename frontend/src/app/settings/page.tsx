@@ -167,7 +167,7 @@ function SettingsContent() {
                                 </div>
                                 <div className="form-group mb-4">
                                     <label className="form-label">Login Email Address *</label>
-                                    <input className="form-control" type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="accountant@saiiti.edu.in" />
+                                    <input className="form-control" type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="accountant@gmail.com" />
                                 </div>
                                 <div className="grid grid-2" style={{ gap: 16 }}>
                                     <div className="form-group">

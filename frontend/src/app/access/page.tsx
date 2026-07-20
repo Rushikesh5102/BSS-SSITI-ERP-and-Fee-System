@@ -377,7 +377,7 @@ function AccessContent() {
                                 </div>
                                 <div className="form-group mb-4">
                                     <label className="form-label">Network Email Address</label>
-                                    <input className="form-control" type="email" required value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} placeholder="staff@saiiti.edu.in" />
+                                    <input className="form-control" type="email" required value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} placeholder="staff@gmail.com" />
                                 </div>
                                 <div className="grid grid-2" style={{ gap: 16 }}>
                                     <div className="form-group">

@@ -73,8 +73,9 @@ export default function TermsAndConditions() {
                                 <br/>
                                 <strong>Bharat Shikshan Sanstha's Shri Sai Private I.T.I</strong><br/>
                                 📍 <b>Address:</b> Shri Sai I.T.I, Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902<br/>
-                                📞 <b>Phone:</b> +91 9890273889<br/>
-                                ✉️ <b>Email:</b> info@saiiti.edu.in / admin@saiiti.edu.in<br/>
+                                🏛️ <b>I.T.I Registration No:</b> I.T.I.- 2011/P.K.11/V.S.-03 DGET-06/13/2/2013-TC<br/>
+                                📞 <b>Phone:</b> +91 9529054868<br/>
+                                ✉️ <b>Email:</b> saiiti151@gmail.com<br/>
                                 🕒 <b>Working Hours:</b> Monday - Saturday, 9:00 AM - 5:00 PM
                             </p>
                         </section>

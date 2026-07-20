@@ -428,11 +428,11 @@ function DashboardContent() {
                                                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                                                     <div style={{ background: 'var(--surface-2)', padding: '12px 16px', borderRadius: 8 }}>
                                                         <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Phone</div>
-                                                        <b style={{ color: 'var(--text-primary)' }}>+91 98765 43210</b>
+                                                        <b style={{ color: 'var(--text-primary)' }}>+91 9529054868</b>
                                                     </div>
                                                     <div style={{ background: 'var(--surface-2)', padding: '12px 16px', borderRadius: 8 }}>
                                                         <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Email</div>
-                                                        <b style={{ color: 'var(--text-primary)' }}>support@saiiti.edu.in</b>
+                                                        <b style={{ color: 'var(--text-primary)' }}>saiiti151@gmail.com</b>
                                                     </div>
                                                 </div>
                                             </div>

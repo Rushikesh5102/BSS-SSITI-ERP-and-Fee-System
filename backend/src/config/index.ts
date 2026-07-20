@@ -51,15 +51,15 @@ export const config = {
         secure: process.env.SMTP_SECURE === 'true',
         user: process.env.SMTP_USER || '',
         pass: process.env.SMTP_PASS || '',
-        from: process.env.EMAIL_FROM || 'Sai ITI <noreply@saiiti.edu.in>',
+        from: process.env.EMAIL_FROM || 'Shri Sai I.T.I <saiiti151@gmail.com>',
     },
 
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 
     school: {
-        name: process.env.SCHOOL_NAME || 'Sai ITI',
-        address: process.env.SCHOOL_ADDRESS || 'Pune, Maharashtra',
-        phone: process.env.SCHOOL_PHONE || '',
-        email: process.env.SCHOOL_EMAIL || '',
+        name: process.env.SCHOOL_NAME || 'Shri Sai I.T.I',
+        address: process.env.SCHOOL_ADDRESS || 'Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902',
+        phone: process.env.SCHOOL_PHONE || '+91 9529054868',
+        email: process.env.SCHOOL_EMAIL || 'saiiti151@gmail.com',
     },
 };

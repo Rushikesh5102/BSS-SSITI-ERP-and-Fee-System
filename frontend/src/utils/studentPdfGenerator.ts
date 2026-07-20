@@ -62,7 +62,7 @@ export async function generateAdmissionFormPdf(student: any) {
     doc.setTextColor(254, 243, 199); // Light Warm Gold
     doc.text("RUN BY - BHARAT SHIKSHAN SANSTHA, BHADRAWATI | Affiliated by DGET New Delhi & NCVT New Delhi", pageWidth / 2 + 8, 15, { align: 'center' });
     doc.setTextColor(226, 232, 240);
-    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9890273889", pageWidth / 2 + 8, 21, { align: 'center' });
+    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9529054868 | Email: saiiti151@gmail.com", pageWidth / 2 + 8, 21, { align: 'center' });
 
     // Document Sub-Header Banner
     doc.setFillColor(254, 243, 199); // Soft Gold Bar
@@ -334,7 +334,7 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.text('Address - Shri Sai I.T.I, Jain Mandir Rd, Ramnagar, Bhadravati', cardW / 2, y, { align: 'center' });
     
     y += 3.5;
-    doc.text('Contact - College Helpline +91 9890273889', cardW / 2, y, { align: 'center' });
+    doc.text('Contact - College Helpline +91 9529054868', cardW / 2, y, { align: 'center' });
 
     y += 3.5;
     doc.setTextColor(180, 83, 9);
@@ -358,7 +358,7 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 23, 42);
-    doc.text(`Emergency Contact: ${student.parent?.phone || '+91 9890273889'}`, 7, y);
+    doc.text(`Emergency Contact: ${student.parent?.phone || '+91 9529054868'}`, 7, y);
 
     y += 5;
     doc.text(`Blood Group: ${student.bloodGroup || 'O+'}`, 7, y);
