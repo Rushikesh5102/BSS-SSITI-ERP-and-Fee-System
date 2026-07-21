@@ -455,14 +455,15 @@ export const reportsController = {
             }
         }
 
-        // 2. Clear database tables in cascading order
+        // 2. Clear database tables in strict foreign key cascade order
+        const auditLogsDeleted = await prisma.auditLog.deleteMany({});
+        const notificationsDeleted = await prisma.notification.deleteMany({}).catch(() => ({ count: 0 }));
         const receiptsDeleted = await prisma.receipt.deleteMany({});
         const paymentsDeleted = await prisma.payment.deleteMany({});
         const studentFeesDeleted = await prisma.studentFee.deleteMany({});
         const studentUsersDeleted = await prisma.user.deleteMany({ where: { role: 'STUDENT' } });
         const studentsDeleted = await prisma.student.deleteMany({});
         const parentsDeleted = await prisma.parent.deleteMany({});
-        const auditLogsDeleted = await prisma.auditLog.deleteMany({});
 
         await createAuditLog(req.user!.id, AuditAction.USER_UPDATED, 'System', 'MockDataWipe', {
             studentsDeleted: studentsDeleted.count,
