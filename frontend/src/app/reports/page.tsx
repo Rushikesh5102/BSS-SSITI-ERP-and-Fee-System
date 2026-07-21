@@ -102,6 +102,22 @@ export default function ReportsPage() {
         }
     };
 
+    const handleClearMockData = async () => {
+        if (!confirm('🚨 CRITICAL WARNING: Are you sure you want to permanently delete ALL testing students, fee records, payment transactions, and PDF receipts?\n\nThis will reset your database to 0 records so you can start with a 100% clean production system.')) {
+            return;
+        }
+        setPurging(true);
+        try {
+            const { data } = await api.post('/reports/clear-all-mock-data');
+            showToast(`✅ ${data.message || 'All mock data cleared!'}`);
+            fetchStorageStats();
+        } catch (err: any) {
+            showToast(`❌ ${err.response?.data?.message || 'Mock data wipe failed'}`);
+        } finally {
+            setPurging(false);
+        }
+    };
+
     if (loading || !user) return null;
 
     return (
@@ -363,44 +379,47 @@ export default function ReportsPage() {
                                                     </div>
                                                 </div>
                                             )}
+
+                                            {/* Purge & Clear Storage Utility (ADMIN and DEVELOPER) */}
+                                            {['ADMIN', 'DEVELOPER'].includes(user.role) ? (
+                                                <div className="card mt-4">
+                                                    <div className="card-header"><div className="card-title">🧹 Clear Historical Data & Clean Production Reset</div></div>
+                                                    <div className="card-body">
+                                                        <p className="text-muted" style={{ fontSize: 13, marginBottom: 16 }}>
+                                                            Export your monthly/yearly Excel & PDF backups first. Then use these tools to clear old audit logs, transaction history, or perform a complete 100% clean reset for production launch.
+                                                        </p>
+                                                        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                                <label className="form-label">Purge Data For Year</label>
+                                                                <select className="form-control" value={purgeYear} onChange={(e) => setPurgeYear(parseInt(e.target.value))}>
+                                                                    {[2024, 2025, 2026].map((y) => <option key={y} value={y}>Year {y} & Earlier</option>)}
+                                                                </select>
+                                                            </div>
+                                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                                <label className="form-label">Purge Scope</label>
+                                                                <select className="form-control" value={purgeLogsOnly ? 'logs' : 'all'} onChange={(e) => setPurgeLogsOnly(e.target.value === 'logs')}>
+                                                                    <option value="logs">Clear System Audit Logs Only (Safe)</option>
+                                                                    <option value="all">Clear Audit Logs + Old Receipts & Payments</option>
+                                                                </select>
+                                                            </div>
+                                                            <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handlePurgeData} disabled={purging}>
+                                                                {purging ? 'Purging Storage...' : '🧹 Purge Storage & Clear Space'}
+                                                            </button>
+                                                            <button className="btn btn-danger" style={{ fontWeight: 700 }} onClick={handleClearMockData} disabled={purging}>
+                                                                {purging ? 'Wiping Mock Data...' : '🗑️ Wipe All Mock & Test Data (Clean Reset)'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="card card-body text-center text-muted" style={{ padding: 20, marginTop: 16 }}>
+                                                    🔒 Storage clearing and cache purging tools are managed exclusively by Administrators and System Developers.
+                                                </div>
+                                            )}
                                         </div>
                                     ) : null}
                                 </div>
                             </div>
-
-                            {/* Purge & Clear Storage Utility (DEVELOPER ONLY) */}
-                            {user.role === 'DEVELOPER' ? (
-                                <div className="card">
-                                    <div className="card-header"><div className="card-title">🧹 Clear Historical Data for Infinite Free Storage (Developer Tool)</div></div>
-                                    <div className="card-body">
-                                        <p className="text-muted" style={{ fontSize: 13, marginBottom: 16 }}>
-                                            Export your monthly/yearly Excel & PDF backups first. Then use this tool to clear old audit logs and transaction history to free up database rows and disk space permanently.
-                                        </p>
-                                        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <label className="form-label">Purge Data For Year</label>
-                                                <select className="form-control" value={purgeYear} onChange={(e) => setPurgeYear(parseInt(e.target.value))}>
-                                                    {[2024, 2025, 2026].map((y) => <option key={y} value={y}>Year {y} & Earlier</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <label className="form-label">Purge Scope</label>
-                                                <select className="form-control" value={purgeLogsOnly ? 'logs' : 'all'} onChange={(e) => setPurgeLogsOnly(e.target.value === 'logs')}>
-                                                    <option value="logs">Clear System Audit Logs Only (Safe)</option>
-                                                    <option value="all">Clear Audit Logs + Old Receipts & Payments</option>
-                                                </select>
-                                            </div>
-                                            <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handlePurgeData} disabled={purging}>
-                                                {purging ? 'Purging Storage...' : '🧹 Purge Storage & Clear Space'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="card card-body text-center text-muted" style={{ padding: 20 }}>
-                                    🔒 Storage clearing and cache purging tools are managed exclusively by the System Developer / Architect.
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>

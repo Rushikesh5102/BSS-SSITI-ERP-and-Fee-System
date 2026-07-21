@@ -436,4 +436,54 @@ export const reportsController = {
             data: { deletedLogsCount, deletedPaymentsCount, deletedPdfFilesCount }
         });
     }),
+
+    /**
+     * POST /reports/clear-all-mock-data - Wipe all testing/mock student data, payments, receipts, and logs
+     */
+    clearAllMockData: asyncHandler(async (req: Request, res: Response) => {
+        // 1. Delete all generated receipt PDFs from disk
+        let deletedPdfs = 0;
+        if (fs.existsSync(RECEIPTS_DIR)) {
+            const files = fs.readdirSync(RECEIPTS_DIR);
+            for (const file of files) {
+                if (file.endsWith('.pdf')) {
+                    try {
+                        fs.unlinkSync(path.join(RECEIPTS_DIR, file));
+                        deletedPdfs++;
+                    } catch { }
+                }
+            }
+        }
+
+        // 2. Clear database tables in cascading order
+        const receiptsDeleted = await prisma.receipt.deleteMany({});
+        const paymentsDeleted = await prisma.payment.deleteMany({});
+        const studentFeesDeleted = await prisma.studentFee.deleteMany({});
+        const studentUsersDeleted = await prisma.user.deleteMany({ where: { role: 'STUDENT' } });
+        const studentsDeleted = await prisma.student.deleteMany({});
+        const parentsDeleted = await prisma.parent.deleteMany({});
+        const auditLogsDeleted = await prisma.auditLog.deleteMany({});
+
+        await createAuditLog(req.user!.id, AuditAction.USER_UPDATED, 'System', 'MockDataWipe', {
+            studentsDeleted: studentsDeleted.count,
+            paymentsDeleted: paymentsDeleted.count,
+            receiptsDeleted: receiptsDeleted.count,
+            deletedPdfs
+        }, req.ip);
+
+        res.json({
+            success: true,
+            message: `✅ All testing and mock data successfully wiped! Database is clean for production deployment.`,
+            data: {
+                studentsCleared: studentsDeleted.count,
+                parentsCleared: parentsDeleted.count,
+                studentFeesCleared: studentFeesDeleted.count,
+                paymentsCleared: paymentsDeleted.count,
+                receiptsCleared: receiptsDeleted.count,
+                studentAccountsCleared: studentUsersDeleted.count,
+                auditLogsCleared: auditLogsDeleted.count,
+                pdfsDeletedFromDisk: deletedPdfs
+            }
+        });
+    }),
 };

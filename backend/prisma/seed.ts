@@ -156,46 +156,6 @@ async function main() {
     });
     console.log(`✅ Fee structure: ${feeStructure.name}`);
 
-    // Sample parent
-    const parent = await prisma.parent.create({
-        data: {
-            name: 'Ramesh Sharma',
-            phone: '+919876543210',
-            email: 'ramesh.sharma@gmail.com',
-        },
-    });
-
-    // Sample student
-    const student = await prisma.student.upsert({
-        where: { studentId: 'SAI-2024-001' },
-        update: {},
-        create: {
-            studentId: 'SAI-2024-001',
-            name: 'Rahul Sharma',
-            class: 'Electrician',
-            section: 'A',
-            rollNumber: '01',
-            gender: 'Male',
-            branchId: branch.id,
-            parentId: parent.id,
-        },
-    });
-    console.log(`✅ Sample student: SAI-2024-001`);
-
-    // Create Sample Student User Account
-    await prisma.user.upsert({
-        where: { email: 'sai-2024-001@student.saiiti.edu.in' },
-        update: {},
-        create: {
-            name: 'Rahul Sharma',
-            email: 'sai-2024-001@student.saiiti.edu.in',
-            passwordHash: await bcrypt.hash('SAI-2024-001', 12),
-            role: 'STUDENT',
-            branchId: branch.id,
-        },
-    });
-    console.log(`✅ Sample Student User: sai-2024-001@student.saiiti.edu.in / SAI-2024-001`);
-
     console.log('\n🎉 Seeding complete!');
     console.log('─────────────────────────────────────────');
     console.log('Login credentials:');

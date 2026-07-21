@@ -1,9 +1,7 @@
 import { Router } from 'express';
 import { reportsController } from '../controllers/reports.controller';
 import { authenticate, authorize } from '../middleware/auth';
-
 import { Role } from '../types/enums';
-
 
 const router = Router();
 
@@ -29,5 +27,8 @@ router.get('/storage-stats', authorize(Role.ADMIN, Role.DEVELOPER), reportsContr
 
 // POST /reports/purge-old-data - Free up storage by purging old logs/receipts (DEVELOPER only)
 router.post('/purge-old-data', authorize(Role.DEVELOPER), reportsController.purgeOldData);
+
+// POST /reports/clear-all-mock-data - Wipe all testing/mock data (ADMIN and DEVELOPER)
+router.post('/clear-all-mock-data', authorize(Role.ADMIN, Role.DEVELOPER), reportsController.clearAllMockData);
 
 export default router;
