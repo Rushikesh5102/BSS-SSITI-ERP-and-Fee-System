@@ -91,8 +91,7 @@ export const errorHandler = (
 
     res.status(500).json({
         success: false,
-        message: err.message,
-        stack: err.stack,
+        message: 'Internal server error',
     });
 };
 
