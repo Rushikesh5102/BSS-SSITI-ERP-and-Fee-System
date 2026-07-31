@@ -84,7 +84,21 @@ app.use('/api/webhooks', webhooksRoutes);
 
 // ── Health Check ───────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'Sai ITI Fee API' });
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(), 
+        service: 'Sai ITI Fee API',
+        diagnostics: {
+            hasDatabaseUrl: !!process.env.DATABASE_URL,
+            databaseUrlLength: process.env.DATABASE_URL?.length || 0,
+            hasJwtSecret: !!process.env.JWT_SECRET,
+            jwtSecretLength: process.env.JWT_SECRET?.length || 0,
+            hasJwtRefreshSecret: !!process.env.JWT_REFRESH_SECRET,
+            jwtRefreshSecretLength: process.env.JWT_REFRESH_SECRET?.length || 0,
+            nodeVersion: process.version,
+            env: process.env.NODE_ENV
+        }
+    });
 });
 
 app.get('/api/health/system', async (_req, res) => {
