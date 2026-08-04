@@ -12,13 +12,23 @@ export const receiptsController = {
      * GET /receipts - List receipts (paginated)
      */
     list: asyncHandler(async (req: Request, res: Response) => {
-        const { page = 1, limit = 20, studentId } = req.query;
+        const { page = 1, limit = 20, studentId, search = '' } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
 
+        const where: any = {};
+        if (studentId) {
+            where.payment = { studentFee: { studentId: String(studentId) } };
+        }
+        if (search) {
+            where.OR = [
+                { receiptNumber: { contains: String(search), mode: 'insensitive' } },
+                { payment: { studentFee: { student: { name: { contains: String(search), mode: 'insensitive' } } } } },
+                { payment: { studentFee: { student: { studentId: { contains: String(search), mode: 'insensitive' } } } } }
+            ];
+        }
+
         const receipts = await prisma.receipt.findMany({
-            where: studentId
-                ? { payment: { studentFee: { studentId: String(studentId) } } }
-                : {},
+            where,
             include: {
                 payment: {
                     include: {
@@ -114,7 +124,7 @@ export const receiptsController = {
         }
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${receiptNumber}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${receiptNumber}.pdf"`);
         res.send(pdfBuffer);
     }),
 };

@@ -53,6 +53,8 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     // Form states
     const [addForm, setAddForm] = useState({ name: '', email: '', password: '', role: 'TEACHER' });
     const [resetPasswordVal, setResetPasswordVal] = useState('');
+    const [showAddPassword, setShowAddPassword] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
@@ -162,6 +164,21 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
             showToast(`❌ Reset Failed: ${err.response?.data?.message || 'Password requires min 8 characters'}`);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleRevokeAccess = async (targetUser: UserRecord) => {
+        if (targetUser.id === currentUser?.id) {
+            return showToast('❌ You cannot revoke your own access session!');
+        }
+        if (window.confirm(`⚠️ CRITICAL: Revoking access will attempt to PERMANENTLY delete user ${targetUser.name} and all associated login credentials from the database. If they have historical financial records, their login access will be deactivated instead. Proceed?`)) {
+            try {
+                const { data } = await api.delete(`/users/${targetUser.id}`);
+                showToast(`✅ ${data.message}`);
+                fetchData();
+            } catch (err: any) {
+                showToast(`❌ Revoke failed: ${err.response?.data?.message || 'Forbidden'}`);
+            }
         }
     };
 
@@ -349,6 +366,15 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                         >
                                                             🔑 Reset Pass
                                                         </button>
+                                                        {u.id !== currentUser.id && (
+                                                            <button 
+                                                                className="btn btn-danger btn-sm"
+                                                                onClick={() => handleRevokeAccess(u)}
+                                                                style={{ fontSize: 12, padding: '4px 8px', color: 'var(--danger)', border: '1px solid var(--danger)', background: 'transparent' }}
+                                                            >
+                                                                🗑️ Revoke
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -382,7 +408,28 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                 <div className="grid grid-2" style={{ gap: 16 }}>
                                     <div className="form-group">
                                         <label className="form-label">Password</label>
-                                        <input className="form-control" type="text" required minLength={8} value={addForm.password} onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))} placeholder="SecureKey123!" />
+                                        <div style={{ position: 'relative' }}>
+                                            <input 
+                                                className="form-control" 
+                                                type={showAddPassword ? "text" : "password"} 
+                                                required 
+                                                minLength={8} 
+                                                value={addForm.password} 
+                                                onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))} 
+                                                placeholder="SecureKey123!"
+                                                style={{ paddingRight: 40 }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAddPassword(!showAddPassword)}
+                                                style={{
+                                                    position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                                                    background: 'none', border: 'none', cursor: 'pointer', fontSize: 16
+                                                }}
+                                            >
+                                                {showAddPassword ? '👁️' : '🙈'}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Authority Policy</label>
@@ -423,16 +470,29 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">New Password</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        required
-                                        autoFocus
-                                        minLength={8}
-                                        value={resetPasswordVal}
-                                        onChange={(e) => setResetPasswordVal(e.target.value)}
-                                        placeholder="Min 8 characters (e.g. NewPassword123!)"
-                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showResetPassword ? "text" : "password"}
+                                            className="form-control"
+                                            required
+                                            autoFocus
+                                            minLength={8}
+                                            value={resetPasswordVal}
+                                            onChange={(e) => setResetPasswordVal(e.target.value)}
+                                            placeholder="Min 8 characters (e.g. NewPassword123!)"
+                                            style={{ paddingRight: 40 }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowResetPassword(!showResetPassword)}
+                                            style={{
+                                                position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                                                background: 'none', border: 'none', cursor: 'pointer', fontSize: 16
+                                            }}
+                                        >
+                                            {showResetPassword ? '👁️' : '🙈'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer" style={{ padding: 24 }}>

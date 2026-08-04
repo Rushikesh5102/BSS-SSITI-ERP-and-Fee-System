@@ -32,7 +32,6 @@ export const studentsController = {
                     { studentId: { contains: String(search), mode: 'insensitive' } },
                     { rollNumber: { contains: String(search), mode: 'insensitive' } },
                     { class: { contains: String(search), mode: 'insensitive' } },
-                    { studentFees: { some: { academicYear: { contains: String(search), mode: 'insensitive' } } } },
                 ]
             } : {}),
             ...(cls ? { class: String(cls) } : {}),

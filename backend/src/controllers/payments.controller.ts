@@ -66,7 +66,8 @@ export const paymentsController = {
         });
 
         // Generate receipt
-        const receiptNumber = generateReceiptNumber();
+        const receiptCount = await prisma.receipt.count();
+        const receiptNumber = generateReceiptNumber(receiptCount + 1);
         const pdfBuffer = await generateReceiptPdf({
             receiptNumber,
             studentName: studentFee.student.name,

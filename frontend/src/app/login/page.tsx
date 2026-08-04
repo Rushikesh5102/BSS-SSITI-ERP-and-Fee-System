@@ -206,6 +206,16 @@ export default function LoginPage() {
 
                         <button 
                             type="button"
+                            onClick={() => quickLogin('storemanager@saiiti.edu.in', 'Store@123')}
+                            className="btn btn-secondary w-full"
+                            disabled={loading}
+                            style={{ justifyContent: 'center' }}
+                        >
+                            📦 Login as Store Manager
+                        </button>
+
+                        <button 
+                            type="button"
                             onClick={() => quickLogin('pattiwarrushikesh5102@gmail.com', 'Rushikesh@5102')}
                             className="btn btn-primary w-full"
                             disabled={loading}

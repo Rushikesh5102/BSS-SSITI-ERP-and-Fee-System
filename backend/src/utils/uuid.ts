@@ -1,10 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 
-/** Generate a unique receipt number with SSITI prefix */
-export const generateReceiptNumber = (): string => {
-    const uuid = uuidv4().replace(/-/g, '').toUpperCase().slice(0, 10);
-    const year = new Date().getFullYear();
-    return `SSITI-${year}-${uuid}`;
+/** Generate a unique receipt number based on sequential count */
+export const generateReceiptNumber = (count: number): string => {
+    return String(count).padStart(2, '0');
 };
 
 /** Generate a unique student ID in SSITI-YEAR-E01 format */

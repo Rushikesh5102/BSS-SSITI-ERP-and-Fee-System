@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '../../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import WelcomeOverlay from '../../components/WelcomeOverlay';
 
 interface DashboardStats {
     totalStudents: number;
@@ -35,77 +36,7 @@ const StatCard = ({
     </div>
 );
 
-const WelcomeOverlay = ({ role }: { role: string }) => {
-    const roleConfig: Record<string, { title: string, icon: string, bg: string }> = {
-        SUPERADMIN: { title: 'College Director', icon: '🏛️', bg: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0284c7 100%)' },
-        ADMIN: { title: 'Administrator', icon: '⚡', bg: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)' },
-        ACCOUNTANT: { title: 'Accountant', icon: '🧾', bg: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f172a 100%)' },
-        TEACHER: { title: 'Teacher', icon: '👨‍🏫', bg: 'linear-gradient(135deg, #312e81 0%, #4338ca 50%, #0f172a 100%)' },
-        STUDENT: { title: 'Student', icon: '🎓', bg: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #0f172a 100%)' },
-        DEVELOPER: { title: 'System Architect', icon: '💻', bg: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #0284c7 100%)' },
-    };
-
-    const cfg = roleConfig[role] || { title: role, icon: '👋', bg: 'linear-gradient(135deg, #0284c7, #0f172a)' };
-
-    return (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999,
-            background: cfg.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            color: 'white', padding: '24px 16px', textAlign: 'center',
-            animation: 'fadeOut 0.8s ease 2.2s forwards'
-        }}>
-            <style>{`
-                @keyframes fadeOut { to { opacity: 0; pointer-events: none; visibility: hidden; } }
-                @keyframes zoomInGlow { 0% { transform: scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px #38bdf8); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 25px #38bdf8); } 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 15px #38bdf8); } }
-                @keyframes loadBar { 0% { width: 0%; } 100% { width: 100%; } }
-            `}</style>
-            <div style={{
-                width: '90px', height: '90px', borderRadius: '24px', background: '#ffffff',
-                padding: '12px', boxShadow: '0 0 40px rgba(56, 189, 248, 0.6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                animation: 'zoomInGlow 1.2s ease forwards', marginBottom: '16px'
-            }}>
-                <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-
-            <div style={{ fontSize: 'clamp(32px, 8vw, 54px)', margin: 0, animation: 'zoomInGlow 1.2s ease forwards' }}>{cfg.icon}</div>
-            
-            <h1 style={{
-                fontSize: 'clamp(24px, 6.5vw, 44px)',
-                fontWeight: 900,
-                margin: '16px 0 0 0',
-                textAlign: 'center',
-                maxWidth: '90vw',
-                letterSpacing: '0.5px',
-                color: '#ffffff',
-                textShadow: '0 4px 20px rgba(0,0,0,0.5)',
-                animation: 'zoomInGlow 1s ease forwards'
-            }}>
-                Welcome, {cfg.title}!
-            </h1>
-            <p style={{
-                fontSize: 'clamp(13px, 3.5vw, 17px)',
-                color: 'rgba(255,255,255,0.85)',
-                marginTop: 8,
-                textAlign: 'center',
-                maxWidth: '90vw',
-            }}>
-                Initializing Shri Sai I.T.I Central Access Portal...
-            </p>
-
-            <div style={{
-                width: '200px', height: '4px', background: 'rgba(255,255,255,0.2)',
-                borderRadius: '4px', overflow: 'hidden', marginTop: '24px'
-            }}>
-                <div style={{
-                    height: '100%', background: '#38bdf8',
-                    borderRadius: '4px', boxShadow: '0 0 10px #38bdf8',
-                    animation: 'loadBar 2s ease-in-out forwards'
-                }} />
-            </div>
-        </div>
-    );
-};
+// WelcomeOverlay is imported from components/WelcomeOverlay
 
 function DashboardContent() {
     const { user, loading } = useAuth();
@@ -117,6 +48,34 @@ function DashboardContent() {
     const [chartData, setChartData] = useState<any[]>([]);
     const [studentData, setStudentData] = useState<any>(null);
     const [welcomeRole, setWelcomeRole] = useState<string | null>(null);
+    const [showInquiryModal, setShowInquiryModal] = useState(false);
+    const [inquiryForm, setInquiryForm] = useState({ name: '', class: 'Electrician', email: '', phone: '', parentName: '' });
+    const [savingInquiry, setSavingInquiry] = useState(false);
+
+    const handleInquirySubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inquiryForm.name || !inquiryForm.class || !inquiryForm.phone) {
+            alert('❌ Name, Class/Trade, and Contact Phone are required!');
+            return;
+        }
+        setSavingInquiry(true);
+        try {
+            await api.post('/inquiries', {
+                name: inquiryForm.name,
+                class: inquiryForm.class,
+                email: inquiryForm.email || undefined,
+                phone: inquiryForm.phone,
+                parentName: inquiryForm.parentName || undefined
+            });
+            alert('✅ Inquiry logged successfully in pipeline!');
+            setShowInquiryModal(false);
+            setInquiryForm({ name: '', class: 'Electrician', email: '', phone: '', parentName: '' });
+        } catch (err: any) {
+            alert(`❌ Failed to log inquiry: ${err.response?.data?.message || 'Server error'}`);
+        } finally {
+            setSavingInquiry(false);
+        }
+    };
 
     useEffect(() => {
         if (!loading && !user) router.push('/login');
@@ -136,9 +95,6 @@ function DashboardContent() {
 
     useEffect(() => {
         if (!user) return;
-        if (effectiveRole === 'DEVELOPER') {
-            router.push('/system');
-        }
 
         const isStudentView = effectiveRole === 'STUDENT';
 
@@ -166,7 +122,7 @@ function DashboardContent() {
         }
     }, [user, effectiveRole, router]);
 
-    if (loading || !user || effectiveRole === 'DEVELOPER') {
+    if (loading || !user) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
                 <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
@@ -531,6 +487,7 @@ function DashboardContent() {
                                     {[
                                         ...(effectiveRole === 'SUPERADMIN' || effectiveRole === 'ADMIN' || effectiveRole === 'ACCOUNTANT' ? [
                                             { label: '➕ Add Student', href: '/students?action=new', color: 'var(--primary)' },
+                                            { label: '📋 Log Student Inquiry', onClick: () => setShowInquiryModal(true), color: '#10b981' },
                                         ] : []),
                                         ...(effectiveRole === 'SUPERADMIN' || effectiveRole === 'ADMIN' ? [
                                             { label: '📋 Assign Fee Structure', href: '/fee-structures', color: '#7c3aed' },
@@ -540,16 +497,30 @@ function DashboardContent() {
                                         ] : []),
                                         { label: '💳 Record Payment', href: '/payments', color: 'var(--accent)' },
                                         { label: '🧾 View Receipts', href: '/receipts', color: '#2563eb' },
-                                    ].map((action) => (
-                                        <Link
-                                            key={action.href}
-                                            href={action.href}
-                                            className="btn btn-secondary"
-                                            style={{ justifyContent: 'flex-start', borderLeft: `3px solid ${action.color}`, fontWeight: 500 }}
-                                        >
-                                            {action.label}
-                                        </Link>
-                                    ))}
+                                    ].map((action: any) => {
+                                        if (action.onClick) {
+                                            return (
+                                                <button
+                                                    key={action.label}
+                                                    onClick={action.onClick}
+                                                    className="btn btn-secondary w-full"
+                                                    style={{ justifyContent: 'flex-start', borderLeft: `3px solid ${action.color}`, fontWeight: 500, display: 'flex', alignItems: 'center' }}
+                                                >
+                                                    {action.label}
+                                                </button>
+                                            );
+                                        }
+                                        return (
+                                            <Link
+                                                key={action.href}
+                                                href={action.href}
+                                                className="btn btn-secondary"
+                                                style={{ justifyContent: 'flex-start', borderLeft: `3px solid ${action.color}`, fontWeight: 500 }}
+                                            >
+                                                {action.label}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -621,6 +592,91 @@ function DashboardContent() {
                             </div>
                         )}
                     </div>
+
+                    {/* Log Student Inquiry Modal */}
+                    {showInquiryModal && (
+                        <div className="modal-overlay">
+                            <div className="modal" style={{ maxWidth: 500 }}>
+                                <div className="modal-header">
+                                    <div className="modal-title">📋 Log New Student Inquiry</div>
+                                    <button className="btn-close" style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => setShowInquiryModal(false)}>✕</button>
+                                </div>
+                                <form onSubmit={handleInquirySubmit}>
+                                    <div className="modal-body">
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">Student Full Name <span className="required">*</span></label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="e.g. Ramesh Kumar"
+                                                value={inquiryForm.name}
+                                                onChange={(e) => setInquiryForm({ ...inquiryForm, name: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">Class / Trade Interest <span className="required">*</span></label>
+                                            <select
+                                                className="form-control"
+                                                value={inquiryForm.class}
+                                                onChange={(e) => setInquiryForm({ ...inquiryForm, class: e.target.value })}
+                                                required
+                                            >
+                                                <option value="Electrician">Electrician</option>
+                                                <option value="Fitter">Fitter</option>
+                                                <option value="COPA">COPA (Computer Operator)</option>
+                                                <option value="Welder">Welder</option>
+                                                <option value="Mechanic Motor Vehicle">Mechanic Motor Vehicle</option>
+                                                <option value="Other">Other / Miscellaneous</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">Contact Phone Number <span className="required">*</span></label>
+                                            <input
+                                                type="tel"
+                                                className="form-control"
+                                                placeholder="e.g. 9876543210"
+                                                value={inquiryForm.phone}
+                                                onChange={(e) => setInquiryForm({ ...inquiryForm, phone: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">Email Address (Optional)</label>
+                                            <input
+                                                type="email"
+                                                className="form-control"
+                                                placeholder="e.g. ramesh@gmail.com"
+                                                value={inquiryForm.email}
+                                                onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div className="form-group mb-3">
+                                            <label className="form-label">Parent / Guardian Name (Optional)</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="e.g. Suresh Kumar"
+                                                value={inquiryForm.parentName}
+                                                onChange={(e) => setInquiryForm({ ...inquiryForm, parentName: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" onClick={() => setShowInquiryModal(false)} disabled={savingInquiry}>Cancel</button>
+                                        <button type="submit" className="btn btn-primary" disabled={savingInquiry}>
+                                            {savingInquiry ? 'Logging...' : '💾 Log Inquiry'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
                     <footer className="footer">
                         <div>&copy; {new Date().getFullYear()} Shri Sai I.T.I All rights reserved. | <Link href="/terms" style={{ marginLeft: 8 }}>Terms and Conditions</Link></div>
                         <div>Developed by Rushikesh Pattiwar</div>

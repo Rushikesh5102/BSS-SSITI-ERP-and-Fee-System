@@ -44,8 +44,10 @@ export const generateExcel = async (
         width: col.width || 20,
     }));
     const headerRow = sheet.getRow(3);
-    headerRow.values = ['', ...columns.map((c) => c.header)]; // offset by 1
-    sheet.getRow(3).eachCell((cell) => {
+    columns.forEach((col, idx) => {
+        headerRow.getCell(idx + 1).value = col.header;
+    });
+    headerRow.eachCell((cell) => {
         cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2196F3' } };
         cell.border = {
@@ -67,13 +69,48 @@ export const generateExcel = async (
         });
     });
 
-    // Auto-fit columns
+    // Auto-fit columns according to size of data
     sheet.columns.forEach((col) => {
-        if (col && col.width) col.width = Math.max(col.width, 12);
+        if (!col) return;
+        let maxLen = 0;
+        if (col.header) {
+            maxLen = col.header.toString().length;
+        }
+        sheet.getColumn(col.key!).eachCell((cell, rowNumber) => {
+            if (rowNumber < 3) return; // Skip title and date row to avoid huge column stretch
+            const val = cell.value ? cell.value.toString() : '';
+            if (val.length > maxLen) {
+                maxLen = val.length;
+            }
+        });
+        col.width = Math.max(maxLen + 4, 12);
     });
 
-    // Summary row
-    const totalRow = sheet.addRow({ sr: 'TOTAL RECORDS', count: rows.length });
+    // Calculate sum totals of financial columns
+    const sums: Record<string, number> = {};
+    columns.forEach(col => {
+        if (col.header.includes('(₹)')) {
+            sums[col.key] = rows.reduce((sum, r) => {
+                const val = r[col.key];
+                const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+                return sum + num;
+            }, 0);
+        }
+    });
+
+    // Create Summary Row
+    const totalRowData: Record<string, any> = {};
+    columns.forEach((col, idx) => {
+        if (idx === 0) {
+            totalRowData[col.key] = 'TOTAL';
+        } else if (sums[col.key] !== undefined) {
+            totalRowData[col.key] = sums[col.key];
+        } else {
+            totalRowData[col.key] = '';
+        }
+    });
+
+    const totalRow = sheet.addRow(totalRowData);
     totalRow.font = { bold: true };
     totalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3F2FD' } };
 

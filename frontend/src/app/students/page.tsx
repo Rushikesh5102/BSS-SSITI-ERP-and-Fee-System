@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
 
-function StudentsContent({ actionParam, simulateParam }: { actionParam: string | null; simulateParam: string | null }) {
+function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam: string | null; simulateParam: string | null; tabParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
 
@@ -22,7 +22,7 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
         name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '',
         category: 'OPEN', bloodGroup: 'O+', landline: '', parentName: '', parentPhone: '', parentEmail: '',
         feeStructureId: '', customAmountRupees: '',
-        tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: '',
+        tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: '',
         educationDetails: { board: 'Maharashtra State Board', school: '', passingYear: '2023', medium: 'English', percentage: '', city: 'Bhadravati', rollNo: '', result: 'PASSED' },
         submittedDocuments: { tc: false, marklist: false, caste: false, nonCreamy: false, photo4: true, income: false, affidavit: false, gap: false, aadhar: true, bankPassbook: false }
     };
@@ -43,9 +43,56 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
     const [feeStructures, setFeeStructures] = useState<any[]>([]);
     const [feeForm, setFeeForm] = useState({
         feeStructureId: '', customAmountRupees: '', dueDate: '',
-        tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: ''
+        tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: ''
     });
     const [assigningFee, setAssigningFee] = useState(false);
+
+    const [activeTab, setActiveTab] = useState<'students' | 'inquiries'>('students');
+
+    useEffect(() => {
+        if (tabParam === 'inquiries') {
+            setActiveTab('inquiries');
+        }
+    }, [tabParam]);
+    const [inquiries, setInquiries] = useState<any[]>([]);
+    const [fetchingInquiries, setFetchingInquiries] = useState(false);
+    const [acceptingInquiryId, setAcceptingInquiryId] = useState<string | null>(null);
+
+    const fetchInquiries = async () => {
+        setFetchingInquiries(true);
+        try {
+            const { data } = await api.get('/inquiries');
+            setInquiries(data.data || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setFetchingInquiries(false);
+        }
+    };
+
+    const handleRejectInquiry = async (id: string) => {
+        if (!confirm('⚠️ Are you sure you want to reject and delete this student inquiry?')) return;
+        try {
+            await api.delete(`/inquiries/${id}`);
+            showToast('✅ Inquiry rejected and deleted.');
+            fetchInquiries();
+        } catch (err: any) {
+            showToast(`❌ Failed to reject inquiry: ${err.response?.data?.message || 'Server error'}`);
+        }
+    };
+
+    const handleAcceptInquiry = (inq: any) => {
+        setForm({
+            ...initialFormState,
+            name: inq.name,
+            class: inq.class,
+            email: inq.email || '',
+            parentPhone: inq.phone || '',
+            parentName: inq.parentName || ''
+        });
+        setAcceptingInquiryId(inq.id);
+        setShowModal(true);
+    };
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
@@ -90,11 +137,25 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
     };
 
     useEffect(() => {
+        if (!user) return;
+        const delayDebounceFn = setTimeout(() => {
+            fetchStudents();
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [search]);
+
+    useEffect(() => {
         if (user) {
             fetchStudents();
             fetchFeeStructures();
         }
-    }, [user, page, search]);
+    }, [user, page]);
+
+    useEffect(() => {
+        if (user && activeTab === 'inquiries') {
+            fetchInquiries();
+        }
+    }, [user, activeTab]);
 
     const showToast = (msg: string) => {
         setToast(msg);
@@ -108,7 +169,7 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
             feeStructureId: currentFee?.feeStructureId || (feeStructures[0]?.id || ''),
             customAmountRupees: currentFee?.totalAmount ? (currentFee.totalAmount / 100).toString() : '',
             dueDate: currentFee?.dueDate ? currentFee.dueDate.split('T')[0] : '',
-            tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: ''
+            tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: ''
         });
         setShowFeeModal(true);
     };
@@ -122,6 +183,9 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                 (parseFloat(feeForm.tuitionFee) || 0) +
                 (parseFloat(feeForm.examFee) || 0) +
                 (parseFloat(feeForm.dressMaterialFee) || 0) +
+                (parseFloat(feeForm.transportFee) || 0) +
+                (parseFloat(feeForm.hostelFee) || 0) +
+                (parseFloat(feeForm.miscellaneousFee) || 0) +
                 (parseFloat(feeForm.otherFee) || 0)
             );
             const rawAmount = calcTotal > 0 ? calcTotal.toString() : feeForm.customAmountRupees;
@@ -169,6 +233,9 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                 (parseFloat(form.tuitionFee) || 0) +
                 (parseFloat(form.examFee) || 0) +
                 (parseFloat(form.dressMaterialFee) || 0) +
+                (parseFloat(form.transportFee) || 0) +
+                (parseFloat(form.hostelFee) || 0) +
+                (parseFloat(form.miscellaneousFee) || 0) +
                 (parseFloat(form.otherFee) || 0)
             );
             const rawAmount = calcTotal > 0 ? calcTotal.toString() : form.customAmountRupees;
@@ -185,6 +252,15 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
             });
             const loginDetails = data.data?.loginDetails;
             setShowModal(false);
+            if (acceptingInquiryId) {
+                try {
+                    await api.put(`/inquiries/${acceptingInquiryId}/status`, { status: 'ACCEPTED' });
+                    fetchInquiries();
+                } catch (e) {
+                    console.error("Failed to update inquiry status:", e);
+                }
+                setAcceptingInquiryId(null);
+            }
             if (loginDetails) {
                 alert(`✅ Admission Successful!\n\nStudent Login Credentials:\nEmail / ID: ${loginDetails.email}\nPassword: ${loginDetails.defaultPassword}\n\nPlease share these credentials with the student to access the portal.`);
             } else {
@@ -234,9 +310,99 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                 </header>
 
                 <div className="page-content">
-                    {/* Search */}
-                    <div className="card mb-4">
-                        <div className="card-body" style={{ padding: '12px 16px' }}>
+                    {/* Tab Navigation */}
+                    <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                        <button 
+                            onClick={() => setActiveTab('students')}
+                            style={{
+                                background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer',
+                                fontSize: 14, fontWeight: 700,
+                                color: activeTab === 'students' ? 'var(--primary)' : 'var(--text-secondary)',
+                                borderBottom: activeTab === 'students' ? '2.5px solid var(--primary)' : 'none',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            👨‍🎓 Active Students
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('inquiries')}
+                            style={{
+                                background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer',
+                                fontSize: 14, fontWeight: 700,
+                                color: activeTab === 'inquiries' ? 'var(--primary)' : 'var(--text-secondary)',
+                                borderBottom: activeTab === 'inquiries' ? '2.5px solid var(--primary)' : 'none',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            📋 Inquiry Pipeline
+                        </button>
+                    </div>
+
+                    {activeTab === 'inquiries' ? (
+                        <div className="card">
+                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Name</th>
+                                            <th>Class/Trade</th>
+                                            <th>Phone</th>
+                                            <th>Parent Name</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {fetchingInquiries ? (
+                                            <tr><td colSpan={7} className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
+                                        ) : inquiries.length === 0 ? (
+                                            <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No inquiries found in pipeline</td></tr>
+                                        ) : inquiries.map((inq) => (
+                                            <tr key={inq.id}>
+                                                <td style={{ fontSize: 13 }}>{new Date(inq.createdAt).toLocaleDateString('en-IN')}</td>
+                                                <td><b>{inq.name}</b></td>
+                                                <td><span className="badge badge-secondary">{inq.class}</span></td>
+                                                <td>{inq.phone}</td>
+                                                <td>{inq.parentName || '—'}</td>
+                                                <td>
+                                                    <span className={`badge ${inq.status === 'ACCEPTED' ? 'badge-success' : 'badge-warning'}`}>
+                                                        {inq.status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {inq.status === 'PENDING' ? (
+                                                        <div style={{ display: 'flex', gap: 8 }}>
+                                                            <button 
+                                                                className="btn btn-primary btn-sm"
+                                                                onClick={() => handleAcceptInquiry(inq)}
+                                                                style={{ padding: '6px 12px', fontSize: 12 }}
+                                                            >
+                                                                ✓ Accept & Admit
+                                                            </button>
+                                                            <button 
+                                                                className="btn btn-danger btn-sm"
+                                                                onClick={() => handleRejectInquiry(inq.id)}
+                                                                style={{ padding: '6px 12px', fontSize: 12 }}
+                                                            >
+                                                                ✕ Reject
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted text-xs">Admitted &rarr;</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Search */}
+                            <div className="card mb-4">
+                                <div className="card-body" style={{ padding: '12px 16px' }}>
                             <input
                                 type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or year..."
                                 value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -346,6 +512,8 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                             </div>
                         )}
                     </div>
+                    </>
+                )}
                 </div>
 
                 <footer className="footer">
@@ -384,106 +552,148 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                             <span>💰 ADMISSION FEE BREAKDOWN</span>
                                             <span className="badge badge-success" style={{ fontSize: 12, padding: '4px 10px' }}>
                                                 Total Fee: ₹{(
-                                                    (parseFloat(form.tuitionFee) || 0) +
-                                                    (parseFloat(form.examFee) || 0) +
-                                                    (parseFloat(form.dressMaterialFee) || 0) +
-                                                    (parseFloat(form.otherFee) || 0)
-                                                ).toLocaleString('en-IN')}
-                                            </span>
-                                        </div>
-                                        <div className="text-xs text-muted mb-3">
-                                            Enter individual amounts assigned for Tuition, Exam, Material, and Other Dues for this student.
-                                        </div>
+                                                     (parseFloat(form.tuitionFee) || 0) +
+                                                     (parseFloat(form.examFee) || 0) +
+                                                     (parseFloat(form.dressMaterialFee) || 0) +
+                                                     (parseFloat(form.transportFee) || 0) +
+                                                     (parseFloat(form.hostelFee) || 0) +
+                                                     (parseFloat(form.miscellaneousFee) || 0) +
+                                                     (parseFloat(form.otherFee) || 0)
+                                                 ).toLocaleString('en-IN')}
+                                             </span>
+                                         </div>
+                                         <div className="text-xs text-muted mb-3">
+                                             Enter individual amounts assigned for Tuition, Exam, Material, Transport, Hostel, Miscellaneous, and Other Dues for this student.
+                                         </div>
 
-                                        <div className="form-group mb-3">
-                                            <label className="form-label" style={{ fontSize: 12 }}>Base Fee Structure Template (Optional)</label>
-                                            <select
-                                                className="form-control"
-                                                style={{ fontSize: 13 }}
-                                                value={form.feeStructureId}
-                                                onChange={(e) => {
-                                                    const id = e.target.value;
-                                                    const sel = feeStructures.find(f => f.id === id);
-                                                    if (sel && sel.items) {
-                                                        let t = 0, ex = 0, dr = 0, ot = 0;
-                                                        sel.items.forEach((item: any) => {
-                                                            const catName = (item.feeCategory?.name || '').toLowerCase();
-                                                            const val = item.amount / 100;
-                                                            if (catName.includes('tuition')) t += val;
-                                                            else if (catName.includes('exam')) ex += val;
-                                                            else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material') || catName.includes('misc')) dr += val;
-                                                            else ot += val;
-                                                        });
-                                                        setForm(f => ({
-                                                            ...f,
-                                                            feeStructureId: id,
-                                                            tuitionFee: t ? t.toString() : '',
-                                                            examFee: ex ? ex.toString() : '',
-                                                            dressMaterialFee: dr ? dr.toString() : '',
-                                                            otherFee: ot ? ot.toString() : '',
-                                                            customAmountRupees: (sel.totalAmount / 100).toString()
-                                                        }));
-                                                    } else {
-                                                        setForm(f => ({ ...f, feeStructureId: id }));
-                                                    }
-                                                }}
-                                            >
-                                                <option value="">-- Custom Fee Breakdown (Or Select Master Template) --</option>
-                                                {feeStructures.map((fs) => (
-                                                    <option key={fs.id} value={fs.id}>
-                                                        {fs.name} (AY: {fs.academicYear}) — Standard: ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                         <div className="form-group mb-3">
+                                             <label className="form-label" style={{ fontSize: 12 }}>Base Fee Structure Template (Optional)</label>
+                                             <select
+                                                 className="form-control"
+                                                 style={{ fontSize: 13 }}
+                                                 value={form.feeStructureId}
+                                                 onChange={(e) => {
+                                                     const id = e.target.value;
+                                                     const sel = feeStructures.find(f => f.id === id);
+                                                     if (sel && sel.items) {
+                                                         let t = 0, ex = 0, dr = 0, tr = 0, hs = 0, ms = 0, ot = 0;
+                                                         sel.items.forEach((item: any) => {
+                                                             const catName = (item.feeCategory?.name || '').toLowerCase();
+                                                             const val = item.amount / 100;
+                                                             if (catName.includes('tuition')) t += val;
+                                                             else if (catName.includes('exam')) ex += val;
+                                                             else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) dr += val;
+                                                             else if (catName.includes('transport')) tr += val;
+                                                             else if (catName.includes('hostel')) hs += val;
+                                                             else if (catName.includes('misc')) ms += val;
+                                                             else ot += val;
+                                                         });
+                                                         setForm(f => ({
+                                                             ...f,
+                                                             feeStructureId: id,
+                                                             tuitionFee: t ? t.toString() : '',
+                                                             examFee: ex ? ex.toString() : '',
+                                                             dressMaterialFee: dr ? dr.toString() : '',
+                                                             transportFee: tr ? tr.toString() : '',
+                                                             hostelFee: hs ? hs.toString() : '',
+                                                             miscellaneousFee: ms ? ms.toString() : '',
+                                                             otherFee: ot ? ot.toString() : '',
+                                                             customAmountRupees: (sel.totalAmount / 100).toString()
+                                                         }));
+                                                     } else {
+                                                         setForm(f => ({ ...f, feeStructureId: id }));
+                                                     }
+                                                 }}
+                                             >
+                                                 <option value="">-- Custom Fee Breakdown (Or Select Master Template) --</option>
+                                                 {feeStructures.map((fs) => (
+                                                     <option key={fs.id} value={fs.id}>
+                                                         {fs.name} (AY: {fs.academicYear}) — Standard: ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
+                                                     </option>
+                                                 ))}
+                                             </select>
+                                         </div>
 
-                                        <div className="grid grid-2" style={{ gap: 12 }}>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    style={{ fontSize: 13 }}
-                                                    placeholder="e.g. 15000"
-                                                    value={form.tuitionFee}
-                                                    onChange={(e) => setForm(f => ({ ...f, tuitionFee: e.target.value }))}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>📝 Exam Fees (₹)</label>
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    style={{ fontSize: 13 }}
-                                                    placeholder="e.g. 2000"
-                                                    value={form.examFee}
-                                                    onChange={(e) => setForm(f => ({ ...f, examFee: e.target.value }))}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material Fees (₹)</label>
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    style={{ fontSize: 13 }}
-                                                    placeholder="e.g. 3000"
-                                                    value={form.dressMaterialFee}
-                                                    onChange={(e) => setForm(f => ({ ...f, dressMaterialFee: e.target.value }))}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>📦 Other Dues / Charges (₹)</label>
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    style={{ fontSize: 13 }}
-                                                    placeholder="e.g. 1000"
-                                                    value={form.otherFee}
-                                                    onChange={(e) => setForm(f => ({ ...f, otherFee: e.target.value }))}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                         <div className="grid grid-2" style={{ gap: 12 }}>
+                                             <div>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 15000"
+                                                     value={form.tuitionFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, tuitionFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>📝 Exam Fees (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 2000"
+                                                     value={form.examFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, examFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material Fees (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 3000"
+                                                     value={form.dressMaterialFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, dressMaterialFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>🚌 Transport Fees (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 5000"
+                                                     value={form.transportFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, transportFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>🏢 Hostel Fees (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 12000"
+                                                     value={form.hostelFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, hostelFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>🛠️ Miscellaneous Fees (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 1500"
+                                                     value={form.miscellaneousFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, miscellaneousFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                             <div style={{ gridColumn: 'span 2' }}>
+                                                 <label className="form-label" style={{ fontSize: 12 }}>📦 Other Dues / Charges (₹)</label>
+                                                 <input
+                                                     type="number"
+                                                     className="form-control"
+                                                     style={{ fontSize: 13 }}
+                                                     placeholder="e.g. 1000"
+                                                     value={form.otherFee}
+                                                     onChange={(e) => setForm(f => ({ ...f, otherFee: e.target.value }))}
+                                                 />
+                                             </div>
+                                         </div>
+                                     </div>
 
                                     {/* Drag & Drop Photo Upload */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -719,11 +929,38 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                         onChange={(e) => {
                                             const id = e.target.value;
                                             const sel = feeStructures.find(f => f.id === id);
-                                            setFeeForm(f => ({
-                                                ...f,
-                                                feeStructureId: id,
-                                                customAmountRupees: sel ? (sel.totalAmount / 100).toString() : f.customAmountRupees
-                                            }));
+                                            if (sel && sel.items) {
+                                                let t = 0, ex = 0, dr = 0, tr = 0, hs = 0, ms = 0, ot = 0;
+                                                sel.items.forEach((item: any) => {
+                                                    const catName = (item.feeCategory?.name || '').toLowerCase();
+                                                    const val = item.amount / 100;
+                                                    if (catName.includes('tuition')) t += val;
+                                                    else if (catName.includes('exam')) ex += val;
+                                                    else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) dr += val;
+                                                    else if (catName.includes('transport')) tr += val;
+                                                    else if (catName.includes('hostel')) hs += val;
+                                                    else if (catName.includes('misc')) ms += val;
+                                                    else ot += val;
+                                                });
+                                                setFeeForm(f => ({
+                                                    ...f,
+                                                    feeStructureId: id,
+                                                    tuitionFee: t ? t.toString() : '',
+                                                    examFee: ex ? ex.toString() : '',
+                                                    dressMaterialFee: dr ? dr.toString() : '',
+                                                    transportFee: tr ? tr.toString() : '',
+                                                    hostelFee: hs ? hs.toString() : '',
+                                                    miscellaneousFee: ms ? ms.toString() : '',
+                                                    otherFee: ot ? ot.toString() : '',
+                                                    customAmountRupees: (sel.totalAmount / 100).toString()
+                                                }));
+                                            } else {
+                                                setFeeForm(f => ({
+                                                    ...f,
+                                                    feeStructureId: id,
+                                                    tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: ''
+                                                }));
+                                            }
                                         }}
                                         required
                                     >
@@ -750,7 +987,7 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                     </small>
                                 </div>
 
-                                <div className="form-group">
+                                <div className="form-group mb-3">
                                     <label className="form-label">Due Date</label>
                                     <input
                                         type="date"
@@ -758,6 +995,103 @@ function StudentsContent({ actionParam, simulateParam }: { actionParam: string |
                                         value={feeForm.dueDate}
                                         onChange={(e) => setFeeForm(f => ({ ...f, dueDate: e.target.value }))}
                                     />
+                                </div>
+
+                                {/* Custom Breakdown Grid */}
+                                <div className="form-group mb-0" style={{ background: 'var(--surface-2)', padding: 16, borderRadius: 12, border: '1.5px solid var(--primary-light)' }}>
+                                    <div className="form-label font-bold mb-2" style={{ fontSize: 13, color: 'var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>💰 OVERRIDE ITEM VALUES (OPTIONAL)</span>
+                                        <span className="badge badge-success" style={{ fontSize: 12, padding: '4px 10px' }}>
+                                            Total: ₹{(
+                                                (parseFloat(feeForm.tuitionFee) || 0) +
+                                                (parseFloat(feeForm.examFee) || 0) +
+                                                (parseFloat(feeForm.dressMaterialFee) || 0) +
+                                                (parseFloat(feeForm.transportFee) || 0) +
+                                                (parseFloat(feeForm.hostelFee) || 0) +
+                                                (parseFloat(feeForm.miscellaneousFee) || 0) +
+                                                (parseFloat(feeForm.otherFee) || 0)
+                                            ).toLocaleString('en-IN')}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-2" style={{ gap: 12 }}>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 15000"
+                                                value={feeForm.tuitionFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, tuitionFee: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: 12 }}>📝 Exam Fees (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 2000"
+                                                value={feeForm.examFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, examFee: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material Fees (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 3000"
+                                                value={feeForm.dressMaterialFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, dressMaterialFee: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: 12 }}>🚌 Transport Fees (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 5000"
+                                                value={feeForm.transportFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, transportFee: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: 12 }}>🏢 Hostel Fees (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 12000"
+                                                value={feeForm.hostelFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, hostelFee: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: 12 }}>🛠️ Miscellaneous Fees (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 1500"
+                                                value={feeForm.miscellaneousFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, miscellaneousFee: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div style={{ gridColumn: 'span 2' }}>
+                                            <label className="form-label" style={{ fontSize: 12 }}>📦 Other Dues / Charges (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                placeholder="e.g. 1000"
+                                                value={feeForm.otherFee}
+                                                onChange={(e) => setFeeForm(f => ({ ...f, otherFee: e.target.value }))}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
@@ -1100,7 +1434,8 @@ function SearchParamsLoader() {
     const searchParams = useSearchParams();
     const actionParam = searchParams.get('action');
     const simulateParam = searchParams.get('simulate');
-    return <StudentsContent actionParam={actionParam} simulateParam={simulateParam} />;
+    const tabParam = searchParams.get('tab');
+    return <StudentsContent actionParam={actionParam} simulateParam={simulateParam} tabParam={tabParam} />;
 }
 
 export default function StudentsPage() {

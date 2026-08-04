@@ -67,7 +67,8 @@ const processWebhookPayment = async (
     });
 
     // 5. Generate receipt number and PDF
-    const receiptNumber = generateReceiptNumber();
+    const receiptCount = await prisma.receipt.count();
+    const receiptNumber = generateReceiptNumber(receiptCount + 1);
     const pdfBuffer = await generateReceiptPdf({
         receiptNumber,
         studentName: studentFee.student.name,

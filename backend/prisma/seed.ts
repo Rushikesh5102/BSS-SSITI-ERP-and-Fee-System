@@ -93,6 +93,20 @@ async function main() {
     });
     console.log(`✅ Developer: ${developer.email} / Rushikesh@5102`);
 
+    // Create Store Manager User
+    const storeManager = await prisma.user.upsert({
+        where: { email: 'storemanager@saiiti.edu.in' },
+        update: { role: Role.STORE_MANAGER },
+        create: {
+            name: 'Store Manager',
+            email: 'storemanager@saiiti.edu.in',
+            passwordHash: await bcrypt.hash('Store@123', 12),
+            role: Role.STORE_MANAGER,
+            branchId: branch.id,
+        },
+    });
+    console.log(`✅ StoreManager: ${storeManager.email} / Store@123`);
+
     // Create System Automated User for webhook executions
     const systemUser = await prisma.user.upsert({
         where: { email: 'system@saiiti.edu.in' },
@@ -115,6 +129,8 @@ async function main() {
         { name: 'Hostel Fee', description: 'Boarding and lodging charges' },
         { name: 'Exam Fee', description: 'Examination and assessment charges' },
         { name: 'Miscellaneous', description: 'Books, uniforms, and other charges' },
+        { name: 'Dress Material Fee', description: 'Charges for uniform and dress materials' },
+        { name: 'Other Dues', description: 'Other school charges and activities' },
     ];
 
     for (const cat of categories) {

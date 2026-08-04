@@ -23,6 +23,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [result, setResult] = useState<any>(null);
     const [toast, setToast] = useState('');
     const [studentSearch, setStudentSearch] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
 
     // Quick Add Student Modal State
     const [showQuickAddModal, setShowQuickAddModal] = useState(false);
@@ -168,35 +169,69 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                     <div className="grid" style={{ gridTemplateColumns: '1.2fr 1fr', gap: 24, alignItems: 'flex-start' }}>
                         {/* Left: Payment Form */}
                         <div>
-                            <div className="card mb-4">
+                            <div className="card mb-4" style={{ overflow: 'visible' }}>
                                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div className="card-title">Step 1: Select Student & Fee Record</div>
                                     <button className="btn btn-secondary btn-sm" style={{ fontSize: 12 }} onClick={() => setShowQuickAddModal(true)}>
                                         ➕ New Student
                                     </button>
                                 </div>
-                                <div className="card-body">
-                                    <div className="form-group mb-3">
-                                        <label className="form-label">Search Student (Name, ID, Roll No, Trade)</label>
+                                <div className="card-body" style={{ overflow: 'visible', position: 'relative' }}>
+                                    <div className="form-group mb-3" style={{ position: 'relative' }}>
+                                        <label className="form-label">Search & Select Student <span className="required">*</span></label>
                                         <input
                                             className="form-control"
-                                            placeholder="🔍 Search by name, ID, roll no, trade..."
+                                            placeholder="🔍 Type student name, ID, roll no, or trade..."
                                             value={studentSearch}
-                                            onChange={(e) => setStudentSearch(e.target.value)}
+                                            onChange={(e) => {
+                                                setStudentSearch(e.target.value);
+                                                setShowDropdown(true);
+                                            }}
+                                            onFocus={() => setShowDropdown(true)}
                                         />
-                                    </div>
-                                    <div className="form-group mb-3">
-                                        <label className="form-label">Select Student <span className="required">*</span></label>
-                                        <select
-                                            className="form-control"
-                                            value={selectedStudent?.id || ''}
-                                            onChange={(e) => handleStudentSelect(e.target.value)}
-                                        >
-                                            <option value="" disabled>— Choose student from list —</option>
-                                            {students.map((s) => (
-                                                <option key={s.id} value={s.id}>{s.name} ({s.studentId}) - {s.class}</option>
-                                            ))}
-                                        </select>
+                                        {showDropdown && (
+                                            <div 
+                                                style={{ position: 'fixed', inset: 0, zIndex: 998 }} 
+                                                onClick={() => setShowDropdown(false)} 
+                                            />
+                                        )}
+                                        {showDropdown && (
+                                            students.filter(s => {
+                                                if (!studentSearch.trim()) return true;
+                                                const q = studentSearch.toLowerCase();
+                                                return s.name?.toLowerCase().includes(q) || s.studentId?.toLowerCase().includes(q) || s.rollNumber?.toLowerCase().includes(q) || s.class?.toLowerCase().includes(q);
+                                            }).length > 0
+                                        ) && (
+                                            <div style={{
+                                                position: 'absolute', top: '100%', left: 0, right: 0,
+                                                background: 'var(--surface)', border: '1px solid var(--border)',
+                                                borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+                                                maxHeight: '250px', overflowY: 'auto', zIndex: 999, marginTop: 4
+                                            }}>
+                                                {students.filter(s => {
+                                                    if (!studentSearch.trim()) return true;
+                                                    const q = studentSearch.toLowerCase();
+                                                    return s.name?.toLowerCase().includes(q) || s.studentId?.toLowerCase().includes(q) || s.rollNumber?.toLowerCase().includes(q) || s.class?.toLowerCase().includes(q);
+                                                }).map((s) => (
+                                                    <div
+                                                        key={s.id}
+                                                        onClick={() => {
+                                                            handleStudentSelect(s.id);
+                                                            setStudentSearch(`${s.name} (${s.studentId})`);
+                                                            setShowDropdown(false);
+                                                        }}
+                                                        style={{
+                                                            padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)',
+                                                            fontSize: 13, color: 'var(--text-primary)', transition: 'background 0.15s'
+                                                        }}
+                                                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-2)'}
+                                                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                                    >
+                                                        <b>{s.name}</b> ({s.studentId}) - {s.class} (Roll: {s.rollNumber || '—'})
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {selectedStudent && (

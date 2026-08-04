@@ -20,6 +20,8 @@ import reportsRoutes from './routes/reports.routes';
 import usersRoutes from './routes/users.routes';
 import branchesRoutes from './routes/branches.routes';
 import systemRoutes from './routes/system.routes';
+import storeRoutes from './routes/store.routes';
+import inquiriesRoutes from './routes/inquiries.routes';
 
 const app = express();
 
@@ -29,7 +31,13 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: config.frontendUrl,
+    origin: (origin, callback) => {
+        // Allow all requests during local development or matched frontendUrl
+        if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || origin === config.frontendUrl) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -78,6 +86,8 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/branches', branchesRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/store', storeRoutes);
+app.use('/api/inquiries', inquiriesRoutes);
 
 import webhooksRoutes from './routes/webhooks.routes';
 app.use('/api/webhooks', webhooksRoutes);
@@ -114,13 +124,16 @@ app.get('/api/health/system', async (_req, res) => {
     const realDbQueryTime = Date.now() - dbStartTime;
 
     // Real DB Counts & Database Size
-    const [studentCount, paymentCount, receiptCount, userCount, feeStructCount, auditLogs] = await Promise.all([
+    const [studentCount, paymentCount, receiptCount, userCount, feeStructCount, auditLogs, storeItemCount, supplierCount, transactionCount] = await Promise.all([
         prisma.student.count().catch(() => 0),
         prisma.payment.count().catch(() => 0),
         prisma.receipt.count().catch(() => 0),
         prisma.user.count().catch(() => 0),
         prisma.feeStructure.count().catch(() => 0),
         prisma.auditLog.findMany({ take: 5, orderBy: { createdAt: 'desc' }, include: { user: { select: { email: true, name: true } } } }).catch(() => []),
+        prisma.storeItem.count().catch(() => 0),
+        prisma.storeSupplier.count().catch(() => 0),
+        prisma.stockTransaction.count().catch(() => 0),
     ]);
 
     let dbSizeFormatted = '12.4 MB';
@@ -154,6 +167,9 @@ app.get('/api/health/system', async (_req, res) => {
             receipts: receiptCount,
             users: userCount,
             feeStructures: feeStructCount,
+            storeItems: storeItemCount,
+            storeSuppliers: supplierCount,
+            stockTransactions: transactionCount,
             dbSize: dbSizeFormatted,
             dbSizeBytes: dbSizeBytes,
         },

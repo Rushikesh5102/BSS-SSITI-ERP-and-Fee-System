@@ -275,6 +275,24 @@ export const reportsController = {
             return res.send(csv);
         }
 
+        if (format === 'pdf') {
+            const buffer = await generateReportPdf(
+                'Outstanding Fee Report',
+                rows,
+                [
+                    { header: 'Sr.', key: 'Sr.' },
+                    { header: 'Student ID', key: 'Student ID' },
+                    { header: 'Student Name', key: 'Student Name' },
+                    { header: 'Class', key: 'Class' },
+                    { header: 'Pending (₹)', key: 'Pending (₹)' },
+                    { header: 'Due Date', key: 'Due Date' },
+                ]
+            );
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="pending-fees.pdf"');
+            return res.send(buffer);
+        }
+
         const totalPending = pending.reduce((sum, sf) => sum + (sf.totalAmount - sf.paidAmount), 0);
         res.json({ success: true, data: { studentFees: pending, summary: { count: pending.length, totalPending, totalPendingRupees: paiseToRupees(totalPending) } } });
     }),

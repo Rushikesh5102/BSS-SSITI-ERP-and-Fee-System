@@ -13,17 +13,17 @@ datasource db {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-
-
-
-
-
-
-
-
-
-
-
+enum StockTransactionType {
+  INWARD
+  OUTWARD
+  ADJUSTMENT
+  ISSUE
+  RETURN
+  TRANSFER
+  MAINTENANCE
+  DAMAGE
+  LOSS
+}
 
 // ─── Branch ───────────────────────────────────────────────────────────────────
 
@@ -40,6 +40,7 @@ model Branch {
   users        User[]
   students     Student[]
   feeStructures FeeStructure[]
+  storeItems   StoreItem[]
 
   @@map("branches")
 }
@@ -63,6 +64,9 @@ model User {
   receipts        Receipt[]
   auditLogs       AuditLog[]
   notifications   Notification[]
+  recordedTransactions StockTransaction[] @relation("RecordedTransactions")
+  receivedTransactions StockTransaction[] @relation("ReceivedTransactions")
+  createdStoreItems StoreItem[] @relation("StoreItemsCreated")
 
   @@map("users")
 }
@@ -111,6 +115,7 @@ model Student {
   branch      Branch      @relation(fields: [branchId], references: [id])
   parent      Parent?     @relation(fields: [parentId], references: [id])
   studentFees StudentFee[]
+  issuedItems StockTransaction[]
 
   @@map("students")
 }
@@ -278,4 +283,101 @@ model AuditLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+// ─── Store Item (Inventory) ──────────────────────────────────────────────────
+model StoreItem {
+  id           String             @id @default(uuid())
+  name         String
+  sku          String?            @unique
+  description  String?
+  category     String             
+  quantity     Int                @default(0)
+  unit         String             @default("pcs")
+  reorderLevel Int                @default(5)  
+  pricePerUnit Int                @default(0)  
+  location     String?            
+  status       String             @default("AVAILABLE")
+  notes        String?
+  isActive     Boolean            @default(true)
+  branchId     String             @map("branch_id")
+  image        String?            
+  createdById  String?            @map("created_by_id")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  branch       Branch             @relation(fields: [branchId], references: [id])
+  createdBy    User?              @relation("StoreItemsCreated", fields: [createdById], references: [id])
+  transactions StockTransaction[]
+
+  @@map("store_items")
+}
+
+// ─── Supplier / Vendor ────────────────────────────────────────────────────────
+model StoreSupplier {
+  id            String             @id @default(uuid())
+  name          String
+  contactPerson String?            @map("contact_person")
+  phone         String
+  email         String?
+  address       String?
+  gstin         String?            
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  transactions  StockTransaction[]
+
+  @@map("store_suppliers")
+}
+
+// ─── Stock Transactions (Inward/Outward/Adjustments Logs) ───────────────────
+model StockTransaction {
+  id                 String               @id @default(uuid())
+  itemId             String               @map("item_id")
+  type               StockTransactionType
+  quantity           Int                  
+  rate               Int?                 @map("rate")
+  totalAmount        Int?                 @map("total_amount")
+  remarks            String?
+  transactionRef     String?              @map("transaction_ref")
+  
+  recipientType      String?              @map("recipient_type")
+  staffName          String?              @map("staff_name")
+  issuedDate         DateTime?            @map("issued_date")
+  expectedReturnDate DateTime?            @map("expected_return_date")
+  returnDate         DateTime?            @map("return_date")
+  condition          String?              
+  fromLocation       String?              @map("from_location")
+  toLocation         String?              @map("to_location")
+  status             String               @default("ACTIVE")
+
+  supplierId         String?              @map("supplier_id")
+  studentId          String?              @map("student_id")
+  recordedById       String               @map("recorded_by_id")
+  receivedById       String?              @map("received_by_id")
+  branchId           String               @map("branch_id")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @default(now()) @map("updated_at")
+
+  item               StoreItem            @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  supplier           StoreSupplier?       @relation(fields: [supplierId], references: [id])
+  recordedBy         User                 @relation("RecordedTransactions", fields: [recordedById], references: [id])
+  receivedBy         User?                @relation("ReceivedTransactions", fields: [receivedById], references: [id])
+  student            Student?             @relation(fields: [studentId], references: [id])
+
+  @@map("stock_transactions")
+}
+
+model StudentInquiry {
+  id          String   @id @default(uuid())
+  name        String
+  class       String   // Requested trade / class
+  email       String?
+  phone       String
+  parentName  String?  @map("parent_name")
+  status      String   @default("PENDING") // PENDING, ACCEPTED
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("student_inquiries")
 }

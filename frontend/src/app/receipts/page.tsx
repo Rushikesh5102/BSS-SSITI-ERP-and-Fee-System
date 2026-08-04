@@ -20,23 +20,25 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
-    const fetchReceipts = async () => {
+    const fetchReceipts = async (searchQuery: string = '') => {
         setFetching(true);
         try {
-            const { data } = await api.get('/receipts?limit=30');
+            const { data } = await api.get(`/receipts?limit=50&search=${searchQuery}`);
             setReceipts(data.data || []);
         } catch { /* */ } finally { setFetching(false); }
     };
 
-    useEffect(() => { if (user) fetchReceipts(); }, [user]);
+    useEffect(() => {
+        if (!user) return;
+        const delayDebounceFn = setTimeout(() => {
+            fetchReceipts(search);
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [user, search]);
 
     if (loading || !user) return null;
 
-    const filtered = receipts.filter((r) => {
-        const lc = search.toLowerCase();
-        return !search || r.receiptNumber?.toLowerCase().includes(lc)
-            || r.payment?.studentFee?.student?.name?.toLowerCase().includes(lc);
-    });
+    const filtered = receipts;
 
     const getBaseUrl = () => {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
@@ -99,14 +101,14 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                             <td>{r.generatedBy?.name}</td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 6 }}>
-                                                    <a
-                                                        href={`${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                    <button
+                                                        onClick={() => {
+                                                            window.location.href = `${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`;
+                                                        }}
                                                         className="btn btn-accent btn-sm"
                                                     >
                                                         📄 PDF
-                                                    </a>
+                                                    </button>
                                                     {canRefund && r.payment?.status !== 'REFUNDED' && (
                                                         <button
                                                             className="btn btn-danger btn-sm"

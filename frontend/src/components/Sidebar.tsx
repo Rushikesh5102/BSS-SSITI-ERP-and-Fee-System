@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 
 interface NavItem {
@@ -10,22 +10,35 @@ interface NavItem {
     label: string;
     icon: string;
     roles?: string[];
+    module: 'FEES' | 'STORE' | 'COMMON';
 }
 
 const navItems: NavItem[] = [
-    { href: '/system', label: 'Dev Home', icon: '💻', roles: ['DEVELOPER'] },
-    { href: '/dashboard?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'] },
-    { href: '/dashboard?simulate=accountant', label: 'View as Accountant', icon: '🧾', roles: ['DEVELOPER'] },
-    { href: '/dashboard?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'] },
-    { href: '/dashboard?simulate=student', label: 'View as Student', icon: '🕶️', roles: ['DEVELOPER'] },
+    { href: '/portal', label: 'Portal Hub', icon: '🏛️', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
+    { href: '/system', label: 'Dev Home', icon: '💻', roles: ['DEVELOPER'], module: 'COMMON' },
 
-    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'STUDENT'] },
-    { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
-    { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['ADMIN', 'DEVELOPER'] },
-    { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
-    { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'] },
-    { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'] },
-    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'] },
+    // FEES WORKSPACE & FEES DEVELOPER SIMULATIONS
+    { href: '/dashboard?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'FEES' },
+    { href: '/dashboard?simulate=accountant', label: 'View as Accountant', icon: '🧾', roles: ['DEVELOPER'], module: 'FEES' },
+    { href: '/dashboard?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'FEES' },
+    { href: '/dashboard?simulate=student', label: 'View as Student', icon: '🕶️', roles: ['DEVELOPER'], module: 'FEES' },
+
+    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'STUDENT'], module: 'FEES' },
+    { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'], module: 'FEES' },
+    { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['ADMIN', 'DEVELOPER'], module: 'FEES' },
+    { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
+    { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'], module: 'FEES' },
+    { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
+    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'FEES' },
+
+    // STORE WORKSPACE & STORE DEVELOPER SIMULATIONS
+    { href: '/store?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store?simulate=store_manager', label: 'View as Store Mgr', icon: '📦', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'STORE' },
+
+    { href: '/store/items', label: 'Asset Register', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store', label: 'Tool Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store?tab=reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -34,18 +47,19 @@ const roleLabels: Record<string, string> = {
     TEACHER: 'Teacher',
     STUDENT: 'Student',
     DEVELOPER: 'Developer / System Architect',
+    STORE_MANAGER: 'Store Manager',
 };
-
-import { useSearchParams } from 'next/navigation';
 
 function SidebarInner() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const router = useRouter();
     const simulateParam = searchParams.get('simulate');
     const { user, logout } = useAuth();
     
     const [isDark, setIsDark] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [activeWorkspace, setActiveWorkspace] = useState<'FEES' | 'STORE'>('FEES');
 
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
@@ -82,14 +96,47 @@ function SidebarInner() {
 
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
-    const visibleItems = navItems.filter((item) => {
-        // If developer is simulating a specific role, strictly show ONLY items for that simulated role
-        if (user?.role === 'DEVELOPER' && simulateParam) {
-            return item.roles?.includes(effectiveRole!);
+    useEffect(() => {
+        const saved = localStorage.getItem('activeWorkspace');
+        if (saved === 'STORE' || saved === 'FEES') {
+            setActiveWorkspace(saved as 'FEES' | 'STORE');
+        } else if (user?.role === 'STORE_MANAGER' || effectiveRole === 'STORE_MANAGER') {
+            setActiveWorkspace('STORE');
         }
-        // Normal developer or staff view
-        if (item.roles?.includes('DEVELOPER') && user?.role === 'DEVELOPER') return true;
-        return effectiveRole && item.roles?.includes(effectiveRole);
+    }, [user, effectiveRole]);
+
+    const handleSwitchWorkspace = (ws: 'FEES' | 'STORE') => {
+        localStorage.setItem('activeWorkspace', ws);
+        setActiveWorkspace(ws);
+        if (ws === 'STORE') {
+            router.push(simulateParam ? `/store?simulate=${simulateParam}` : '/store');
+        } else {
+            router.push(simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard');
+        }
+    };
+
+    const visibleItems = navItems.filter((item) => {
+        let hasRoleAccess = false;
+        if (user?.role === 'DEVELOPER' && simulateParam) {
+            hasRoleAccess = item.roles?.includes(effectiveRole!) || false;
+        } else if (item.roles?.includes('DEVELOPER') && user?.role === 'DEVELOPER') {
+            hasRoleAccess = true;
+        } else {
+            hasRoleAccess = effectiveRole ? item.roles?.includes(effectiveRole) || false : false;
+        }
+
+        if (!hasRoleAccess) return false;
+
+        const canAccessBoth = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
+        if (canAccessBoth) {
+            return item.module === 'COMMON' || item.module === activeWorkspace;
+        }
+
+        if (effectiveRole === 'STORE_MANAGER') {
+            return item.module === 'STORE' || item.module === 'COMMON';
+        }
+        
+        return item.module === 'FEES' || item.module === 'COMMON';
     });
 
     const initials = (user?.name || '?')
@@ -148,10 +195,58 @@ function SidebarInner() {
                         </div>
                         <div className="sidebar-logo-text">
                             <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I 🏠</h2>
-                            <span style={{ fontSize: 12 }}>Fee Management</span>
+                            <span style={{ fontSize: 12 }}>{activeWorkspace === 'STORE' ? 'Store Management' : 'Fee Management'}</span>
                         </div>
                     </div>
                 </Link>
+
+                {/* Workspace Switcher (Admin and Developer only) */}
+                {(effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER') && (
+                    <div style={{ padding: '0 16px 12px', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{
+                            display: 'flex',
+                            background: 'var(--surface-2)',
+                            borderRadius: '10px',
+                            padding: '4px',
+                            gap: '4px'
+                        }}>
+                            <button
+                                onClick={() => handleSwitchWorkspace('FEES')}
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    background: activeWorkspace === 'FEES' ? 'var(--primary)' : 'transparent',
+                                    color: activeWorkspace === 'FEES' ? 'white' : 'var(--text-muted)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                💰 Fees
+                            </button>
+                            <button
+                                onClick={() => handleSwitchWorkspace('STORE')}
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    background: activeWorkspace === 'STORE' ? 'var(--primary)' : 'transparent',
+                                    color: activeWorkspace === 'STORE' ? 'white' : 'var(--text-muted)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                📦 Store
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Developer Simulation Active Indicator */}
                 {user?.role === 'DEVELOPER' && simulateParam && (
@@ -179,7 +274,19 @@ function SidebarInner() {
                             const targetHref = (simulateParam && !item.href.includes('simulate') && item.href !== '/system') 
                                 ? `${item.href}${item.href.includes('?') ? '&' : '?'}simulate=${simulateParam}` 
                                 : item.href;
-                            const isActive = pathname === item.href || (pathname + searchParams.toString()).includes(item.href);
+
+                            let isActive = false;
+                            if (item.href.includes('?tab=')) {
+                                const tabVal = item.href.split('?tab=')[1];
+                                isActive = pathname.startsWith('/store') && searchParams.get('tab') === tabVal;
+                            } else if (item.href === '/store') {
+                                const currentTab = searchParams.get('tab');
+                                isActive = pathname === '/store' && (!currentTab || currentTab !== 'reports');
+                            } else if (item.href.includes('?simulate=')) {
+                                isActive = searchParams.get('simulate') === item.href.split('?simulate=')[1];
+                            } else {
+                                isActive = pathname === item.href;
+                            }
 
                             return (
                                 <Link

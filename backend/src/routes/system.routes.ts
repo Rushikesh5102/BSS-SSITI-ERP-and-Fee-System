@@ -6,8 +6,8 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 
-// Only DEVELOPER can access these
-router.use(authenticate, authorize(Role.DEVELOPER));
+// DEVELOPER and ADMIN can access these
+router.use(authenticate, authorize(Role.DEVELOPER, Role.ADMIN));
 
 /**
  * POST /api/system/lockdown

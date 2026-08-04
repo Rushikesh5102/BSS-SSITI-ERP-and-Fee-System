@@ -8,7 +8,7 @@ interface User {
     id: string;
     name: string;
     email: string;
-    role: 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'DEVELOPER';
+    role: 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'DEVELOPER' | 'STORE_MANAGER';
     branch: { id: string; name: string } | null;
 }
 
@@ -50,7 +50,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('refreshToken', refreshToken);
         sessionStorage.setItem('showWelcomeAnimation', 'true');
         setUser(userData);
-        router.push('/dashboard');
+        if (userData.role === 'DEVELOPER' || userData.role === 'ADMIN') {
+            router.push('/portal');
+        } else if (userData.role === 'STORE_MANAGER') {
+            router.push('/store');
+        } else {
+            router.push('/dashboard');
+        }
     };
 
     const logout = () => {

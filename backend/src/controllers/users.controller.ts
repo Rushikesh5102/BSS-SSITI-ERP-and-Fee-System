@@ -144,9 +144,19 @@ export const usersController = {
     deactivate: asyncHandler(async (req: Request, res: Response) => {
         const target = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!target) throw new AppError(404, 'User not found');
-        if (target.id === req.user?.id) throw new AppError(400, 'Cannot deactivate your own account');
+        if (target.id === req.user?.id) throw new AppError(400, 'Cannot revoke access for your own account');
 
-        await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false } });
-        res.json({ success: true, message: 'User deactivated successfully' });
+        try {
+            // Attempt to hard delete user first
+            await prisma.user.delete({ where: { id: req.params.id } });
+            res.json({ success: true, message: 'User permanently deleted from system database.' });
+        } catch (err) {
+            // Fall back to deactivating (lockout) if referenced in relations (foreign keys)
+            await prisma.user.update({
+                where: { id: req.params.id },
+                data: { isActive: false }
+            });
+            res.json({ success: true, message: 'User access revoked (account deactivated to preserve historical transaction history).' });
+        }
     }),
 };

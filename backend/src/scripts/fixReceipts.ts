@@ -23,8 +23,10 @@ async function main() {
     const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
     if (!fs.existsSync(RECEIPTS_DIR)) fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
 
+    let receiptCount = await prisma.receipt.count();
     for (const p of payments) {
-        const receiptNumber = generateReceiptNumber();
+        receiptCount++;
+        const receiptNumber = generateReceiptNumber(receiptCount);
         const pdfBuffer = await generateReceiptPdf({
             receiptNumber,
             studentName: p.studentFee.student.name,

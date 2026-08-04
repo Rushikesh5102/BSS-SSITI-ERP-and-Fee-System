@@ -260,8 +260,6 @@ input, select, textarea { font-family: inherit; }
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  width: 100%;
-  max-width: 100%;
 }
 .card-header {
   padding: 16px 20px;

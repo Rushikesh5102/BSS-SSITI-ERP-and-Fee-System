@@ -71,15 +71,15 @@ export default function ReportsPage() {
     }, [user, activeTab, month, year]);
 
     const downloadReport = (format: 'excel' | 'csv' | 'pdf') => {
-        const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-            ? 'https://bss-ssiti-erp-and-fee-system.onrender.com/api'
-            : (process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api');
+        const base = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:4000/api'
+            : 'https://bss-ssiti-erp-and-fee-system.onrender.com/api';
         const token = localStorage.getItem('accessToken');
         let endpoint = `${base}/reports/${activeTab}?format=${format}`;
         if (activeTab === 'monthly') endpoint = `${base}/reports/monthly?year=${year}&month=${month}&format=${format}`;
         if (activeTab === 'yearly') endpoint = `${base}/reports/yearly?year=${year}&format=${format}`;
 
-        window.open(`${endpoint}&token=${token}`, '_blank');
+        window.location.href = `${endpoint}&token=${token}`;
     };
 
     const handlePurgeData = async () => {

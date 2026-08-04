@@ -9,11 +9,11 @@ export default function TermsAndConditions() {
         <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
             <header className="header" style={{ position: 'relative' }}>
                 <div>
-                    <div className="header-title" style={{ color: 'white' }}>Shri Sai I.T.I</div>
-                    <div className="header-subtitle" style={{ color: 'var(--sidebar-text)' }}>Fee Management System</div>
+                    <div className="header-title">Shri Sai I.T.I</div>
+                    <div className="header-subtitle">Fee Management System</div>
                 </div>
                 <div className="header-actions">
-                    <button onClick={() => router.back()} className="btn btn-secondary" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none' }}>
+                    <button onClick={() => router.back()} className="btn btn-secondary">
                         ← Go Back
                     </button>
                 </div>
