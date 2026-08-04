@@ -682,7 +682,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                             { id: 'history', label: '🔄 Movement History' },
                             { id: 'maintenance', label: '🔧 Maintenance Log', count: stats?.maintenanceCount },
                             { id: 'damaged', label: '⚠️ Damaged / Lost', count: stats?.damagedCount },
-                            { id: 'reports', label: '📄 PDF & Excel Reports' },
                         ].map((t) => (
                             <button
                                 key={t.id}

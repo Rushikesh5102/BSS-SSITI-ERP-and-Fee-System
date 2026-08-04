@@ -30,12 +30,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Restore session on mount
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
+        const cachedUser = localStorage.getItem('user_cache');
+        if (cachedUser) {
+            try {
+                setUser(JSON.parse(cachedUser));
+                setLoading(false);
+            } catch {}
+        }
         if (token) {
             api.get('/auth/me')
-                .then(({ data }) => setUser(data.data))
+                .then(({ data }) => {
+                    setUser(data.data);
+                    localStorage.setItem('user_cache', JSON.stringify(data.data));
+                })
                 .catch(() => {
                     localStorage.removeItem('accessToken');
                     localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user_cache');
+                    setUser(null);
                 })
                 .finally(() => setLoading(false));
         } else {
@@ -48,12 +60,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { accessToken, refreshToken, user: userData } = data.data;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('user_cache', JSON.stringify(userData));
         sessionStorage.setItem('showWelcomeAnimation', 'true');
         setUser(userData);
         if (userData.role === 'DEVELOPER' || userData.role === 'ADMIN') {
             router.push('/portal');
         } else if (userData.role === 'STORE_MANAGER') {
-            router.push('/store');
+            router.push('/store/items');
         } else {
             router.push('/dashboard');
         }
@@ -63,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         api.post('/auth/logout').catch(() => { });
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user_cache');
         setUser(null);
         router.push('/login');
     };
