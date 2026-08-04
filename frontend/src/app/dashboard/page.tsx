@@ -462,17 +462,35 @@ function DashboardContent() {
                                     <div className="card-title">📈 Monthly Collection Trend</div>
                                     <span className="badge badge-info">Last 6 Months</span>
                                 </div>
-                                <div className="card-body" style={{ height: 260 }}>
+                                <div className="card-body" style={{ height: 260, padding: '16px 12px 12px 12px' }}>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} tickFormatter={(v) => `₹${v}k`} />
-                                            <Tooltip
-                                                formatter={(v) => [`₹${v}k`, 'Collection']}
-                                                contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', fontSize: 13 }}
+                                        <BarChart data={chartData} margin={{ top: 12, right: 16, left: -4, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.95} />
+                                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.7} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+                                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)', fontWeight: 600 }} />
+                                            <YAxis
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+                                                tickFormatter={(v) => v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`}
                                             />
-                                            <Bar dataKey="amount" fill="#1a3a7c" radius={[4, 4, 0, 0]} />
+                                            <Tooltip
+                                                formatter={(v: any) => [`₹${Number(v).toLocaleString('en-IN')}`, 'Collection']}
+                                                contentStyle={{
+                                                    borderRadius: 10,
+                                                    border: '1px solid var(--border)',
+                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                    fontSize: 13,
+                                                    background: 'var(--surface-card)',
+                                                    color: 'var(--text-primary)'
+                                                }}
+                                            />
+                                            <Bar dataKey="amount" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={44} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>

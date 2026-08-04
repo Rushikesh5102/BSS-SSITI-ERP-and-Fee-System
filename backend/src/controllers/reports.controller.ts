@@ -333,7 +333,7 @@ export const reportsController = {
                 _sum: { amount: true }
             }).then(monthAgg => ({
                 month: monthNames[dStrStart.getMonth()],
-                amount: Math.round((monthAgg._sum.amount || 0) / 100000)
+                amount: monthAgg._sum.amount || 0
             }));
         });
 

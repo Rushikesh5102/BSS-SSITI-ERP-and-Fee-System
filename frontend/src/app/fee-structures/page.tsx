@@ -115,27 +115,29 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                     ) : (
                         <div className="grid grid-3">
                             {structures.map((s) => (
-                                <div key={s.id} className="card">
-                                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div>
-                                            <div className="font-bold" style={{ fontSize: 15 }}>{s.name}</div>
-                                            <div className="text-sm text-muted">{s.class}{s.section ? ` - ${s.section}` : ''} | AY: {s.academicYear}</div>
-                                        </div>
-                                        <span className={`badge ${s.isActive ? 'badge-success' : 'badge-neutral'}`}>{s.isActive ? 'Active' : 'Inactive'}</span>
-                                    </div>
-                                    <div style={{ padding: '12px 20px' }}>
-                                        {(s.items || []).map((item: any) => (
-                                            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                                                <span>{item.feeCategory?.name}</span>
-                                                <b>{formatRupees(item.amount)}</b>
+                                <div key={s.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                                    <div>
+                                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div>
+                                                <div className="font-bold" style={{ fontSize: 15 }}>{s.name}</div>
+                                                <div className="text-sm text-muted">{s.class}{s.section ? ` - ${s.section}` : ''} | AY: {s.academicYear}</div>
                                             </div>
-                                        ))}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 0', fontWeight: 700, color: 'var(--primary)' }}>
-                                            <span>Total</span>
-                                            <span>{formatRupees(s.totalAmount)}</span>
+                                            <span className={`badge ${s.isActive ? 'badge-success' : 'badge-neutral'}`}>{s.isActive ? 'Active' : 'Inactive'}</span>
+                                        </div>
+                                        <div style={{ padding: '12px 20px' }}>
+                                            {(s.items || []).map((item: any) => (
+                                                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                                                    <span>{item.feeCategory?.name}</span>
+                                                    <b>{formatRupees(item.amount)}</b>
+                                                </div>
+                                            ))}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 0', fontWeight: 700, color: 'var(--primary)' }}>
+                                                <span>Total</span>
+                                                <span>{formatRupees(s.totalAmount)}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div style={{ padding: '12px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
+                                    <div style={{ padding: '12px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
                                         <span className="text-sm text-muted">{s._count?.studentFees || 0} students assigned</span>
                                         {canEdit && (
                                             <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(s)}>

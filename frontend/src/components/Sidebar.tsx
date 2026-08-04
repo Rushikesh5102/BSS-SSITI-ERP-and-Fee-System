@@ -32,13 +32,13 @@ const navItems: NavItem[] = [
     { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'FEES' },
 
     // STORE WORKSPACE & STORE DEVELOPER SIMULATIONS
-    { href: '/store?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
-    { href: '/store?simulate=store_manager', label: 'View as Store Mgr', icon: '📦', roles: ['DEVELOPER'], module: 'STORE' },
-    { href: '/store?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store/items?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store/items?simulate=store_manager', label: 'View as Store Mgr', icon: '📦', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store/items?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'STORE' },
 
-    { href: '/store/items', label: 'Asset Register', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/items', label: 'Workshop Asset Register', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
     { href: '/store', label: 'Tool Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
-    { href: '/store?tab=reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
 ];
 
 const roleLabels: Record<string, string> = {
@@ -109,7 +109,7 @@ function SidebarInner() {
         localStorage.setItem('activeWorkspace', ws);
         setActiveWorkspace(ws);
         if (ws === 'STORE') {
-            router.push(simulateParam ? `/store?simulate=${simulateParam}` : '/store');
+            router.push(simulateParam ? `/store/items?simulate=${simulateParam}` : '/store/items');
         } else {
             router.push(simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard');
         }
