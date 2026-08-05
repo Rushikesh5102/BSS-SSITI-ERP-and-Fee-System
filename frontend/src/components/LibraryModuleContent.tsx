@@ -1768,17 +1768,23 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                                 </div>
 
                                 <div>
-                                    <label className="form-label">Reference Price (INR)</label>
+                                    <label className="form-label">Book Unit Price (₹ / copy)</label>
                                     <input
                                         type="number"
+                                        min="0"
                                         className="form-control"
+                                        placeholder="e.g. 500"
                                         value={formData.price}
                                         onChange={e => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
                                     />
                                 </div>
 
+                                <div style={{ gridColumn: 'span 2', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>💰 Total Catalog Asset Valuation:</span>
+                                    <span style={{ fontSize: 14 }}>₹{((formData.quantity || 1) * (formData.price || 0)).toLocaleString('en-IN')}</span>
+                                </div>
+
                                 <div style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Book Cover Image</label>
                                     <ImageUploadWidget
                                         value={formData.coverImage}
                                         onChange={url => setFormData({ ...formData, coverImage: url })}

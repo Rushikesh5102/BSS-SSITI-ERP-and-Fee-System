@@ -233,6 +233,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         setItemQuantity('1');
         setItemUnit('pcs');
         setItemReorderLevel('5');
+        setItemPricePerUnit('0');
         setItemLocation('');
         setItemStatus('AVAILABLE');
         setItemNotes('');
@@ -251,6 +252,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         setItemQuantity(item.quantity.toString());
         setItemUnit(item.unit);
         setItemReorderLevel(item.reorderLevel.toString());
+        setItemPricePerUnit((item.pricePerUnit || 0).toString());
         setItemLocation(item.location || '');
         setItemStatus(item.status || 'AVAILABLE');
         setItemNotes(item.notes || '');
@@ -1011,7 +1013,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
                                         <input type="number" className="form-control" required value={itemQuantity} onChange={e => setItemQuantity(e.target.value)} min="0" />
@@ -1021,9 +1023,18 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                         <input type="text" className="form-control" required value={itemUnit} onChange={e => setItemUnit(e.target.value)} placeholder="pcs, sets" />
                                     </div>
                                     <div className="form-group">
+                                        <label className="form-label">Unit Price (₹)</label>
+                                        <input type="number" className="form-control" value={itemPricePerUnit} onChange={e => setItemPricePerUnit(e.target.value)} min="0" placeholder="e.g. 100" />
+                                    </div>
+                                    <div className="form-group">
                                         <label className="form-label">Reorder Level *</label>
                                         <input type="number" className="form-control" required value={itemReorderLevel} onChange={e => setItemReorderLevel(e.target.value)} min="0" />
                                     </div>
+                                </div>
+
+                                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>💰 Total Asset Stock Valuation:</span>
+                                    <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -1079,7 +1090,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
                                         <input type="number" className="form-control" required value={itemQuantity} onChange={e => setItemQuantity(e.target.value)} min="0" />
@@ -1089,9 +1100,18 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                         <input type="text" className="form-control" required value={itemUnit} onChange={e => setItemUnit(e.target.value)} />
                                     </div>
                                     <div className="form-group">
+                                        <label className="form-label">Unit Price (₹)</label>
+                                        <input type="number" className="form-control" value={itemPricePerUnit} onChange={e => setItemPricePerUnit(e.target.value)} min="0" placeholder="e.g. 100" />
+                                    </div>
+                                    <div className="form-group">
                                         <label className="form-label">Reorder Level *</label>
                                         <input type="number" className="form-control" required value={itemReorderLevel} onChange={e => setItemReorderLevel(e.target.value)} min="0" />
                                     </div>
+                                </div>
+
+                                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>💰 Total Asset Stock Valuation:</span>
+                                    <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
