@@ -341,8 +341,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
                     {activeTab === 'inquiries' ? (
                         <div className="card">
-                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
-                                <table className="table">
+                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent' }}>
+                                <table className="table responsive-table">
                                     <thead>
                                         <tr>
                                             <th>Date</th>
@@ -361,17 +361,17 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No inquiries found in pipeline</td></tr>
                                         ) : inquiries.map((inq) => (
                                             <tr key={inq.id}>
-                                                <td style={{ fontSize: 13 }}>{new Date(inq.createdAt).toLocaleDateString('en-IN')}</td>
-                                                <td><b>{inq.name}</b></td>
-                                                <td><span className="badge badge-secondary">{inq.class}</span></td>
-                                                <td>{inq.phone}</td>
-                                                <td>{inq.parentName || '—'}</td>
-                                                <td>
+                                                <td data-label="Date" style={{ fontSize: 13 }}>{new Date(inq.createdAt).toLocaleDateString('en-IN')}</td>
+                                                <td data-label="Name"><b>{inq.name}</b></td>
+                                                <td data-label="Class/Trade"><span className="badge badge-secondary">{inq.class}</span></td>
+                                                <td data-label="Phone">{inq.phone}</td>
+                                                <td data-label="Parent Name">{inq.parentName || '—'}</td>
+                                                <td data-label="Status">
                                                     <span className={`badge ${inq.status === 'ACCEPTED' ? 'badge-success' : 'badge-warning'}`}>
                                                         {inq.status}
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td data-label="Actions" className="cell-actions">
                                                     {inq.status === 'PENDING' ? (
                                                         <div style={{ display: 'flex', gap: 8 }}>
                                                             <button 
@@ -413,35 +413,34 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
                     {/* Table */}
                     <div className="card">
-                        <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
-                            <table className="table">
+                        <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent' }}>
+                            <table className="table responsive-table">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
-                                        <th>Name</th>
-                                        <th>Class / Section</th>
-                                        <th>Parent</th>
-                                        <th>Phone</th>
+                                        <th>Student</th>
+                                        <th>Trade & Year</th>
+                                        <th>Parent Name</th>
+                                        <th>Contact</th>
                                         <th>Fee Status</th>
-                                        <th>Actions</th>
+                                        <th style={{ minWidth: 210 }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {fetching ? (
+                                    {loading ? (
                                         <tr><td colSpan={7} className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
                                     ) : students.length === 0 ? (
                                         <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No students found</td></tr>
                                     ) : students.map((s) => {
-                                        const totalFee = s.studentFees?.reduce((a: number, f: any) => a + f.totalAmount, 0) || 0;
-                                        const paidFee = s.studentFees?.reduce((a: number, f: any) => a + f.paidAmount, 0) || 0;
-                                        const pending = totalFee - paidFee;
-                                        const feeAlreadyAssigned = totalFee > 0;
+                                        const pending = s.feeAssignment?.pendingAmount ?? 0;
+                                        const totalFee = s.feeAssignment?.totalAmount ?? 0;
+                                        const feeAlreadyAssigned = Boolean(s.feeAssignment);
                                         const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
 
                                         return (
                                             <tr key={s.id}>
-                                                <td><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2026-${s.rollNumber || '01'}` : s.studentId}</span></td>
-                                                <td>
+                                                <td data-label="Student ID"><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2026-${s.rollNumber || '01'}` : s.studentId}</span></td>
+                                                <td data-label="Student">
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                         {s.photo ? (
                                                             <img
@@ -464,10 +463,10 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>{s.class}{s.section ? ` - ${s.section}` : ''}</td>
-                                                <td>{s.parent?.name || <span className="text-muted">—</span>}</td>
-                                                <td>{s.parent?.phone || <span className="text-muted">—</span>}</td>
-                                                <td>
+                                                <td data-label="Trade & Year">{s.class}{s.section ? ` - ${s.section}` : ''}</td>
+                                                <td data-label="Parent Name">{s.parent?.name || <span className="text-muted">—</span>}</td>
+                                                <td data-label="Contact">{s.parent?.phone || <span className="text-muted">—</span>}</td>
+                                                <td data-label="Fee Status">
                                                     {totalFee > 0 ? (
                                                         <>
                                                             <span className={`badge ${pending > 0 ? 'badge-warning' : 'badge-success'}`}>
@@ -476,7 +475,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                         </>
                                                     ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                 </td>
-                                                <td>
+                                                <td data-label="Actions" className="cell-actions">
                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 210 }}>
                                                         <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
                                                             📜 History

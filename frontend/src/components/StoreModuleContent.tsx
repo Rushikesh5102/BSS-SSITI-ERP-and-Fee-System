@@ -772,8 +772,8 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     <h3 style={{ fontSize: 16, fontWeight: 700 }}>No Tool Issues Recorded</h3>
                                 </div>
                             ) : (
-                                <div className="table-wrap" style={{ border: 'none' }}>
-                                    <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%' }}>
+                                    <table className="table responsive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
                                             <tr style={{ borderBottom: '2px solid var(--border)' }}>
                                                 <th style={{ textAlign: 'left', padding: '14px' }}>Tool / Asset</th>
@@ -793,12 +793,12 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
 
                                                 return (
                                                     <tr key={rec.id} style={{ borderBottom: '1px solid var(--border)', background: overdue ? 'rgba(239, 68, 68, 0.04)' : 'transparent' }}>
-                                                        <td style={{ padding: '14px', fontWeight: 700 }}>{rec.item?.name}</td>
-                                                        <td style={{ padding: '14px', textAlign: 'center', fontWeight: 800 }}>{rec.quantity} {rec.item?.unit || 'pcs'}</td>
-                                                        <td style={{ padding: '14px', fontSize: 13 }}>{rec.recipientType === 'STUDENT' ? '🎓 ' : '👔 '}{recipientName}</td>
-                                                        <td style={{ padding: '14px', fontSize: 12 }}>{new Date(rec.issuedDate || rec.createdAt).toLocaleDateString()}</td>
-                                                        <td style={{ padding: '14px', fontSize: 12 }}>{rec.expectedReturnDate ? new Date(rec.expectedReturnDate).toLocaleDateString() : 'N/A'}</td>
-                                                        <td style={{ padding: '14px' }}>
+                                                        <td data-label="Tool / Asset" style={{ padding: '14px', fontWeight: 700 }}>{rec.item?.name}</td>
+                                                        <td data-label="Quantity" style={{ padding: '14px', textAlign: 'center', fontWeight: 800 }}>{rec.quantity} {rec.item?.unit || 'pcs'}</td>
+                                                        <td data-label="Issued To" style={{ padding: '14px', fontSize: 13 }}>{rec.recipientType === 'STUDENT' ? '🎓 ' : '👔 '}{recipientName}</td>
+                                                        <td data-label="Issue Date" style={{ padding: '14px', fontSize: 12 }}>{new Date(rec.issuedDate || rec.createdAt).toLocaleDateString()}</td>
+                                                        <td data-label="Expected Return" style={{ padding: '14px', fontSize: 12 }}>{rec.expectedReturnDate ? new Date(rec.expectedReturnDate).toLocaleDateString() : 'N/A'}</td>
+                                                        <td data-label="Status" style={{ padding: '14px' }}>
                                                             {rec.status === 'RETURNED' ? (
                                                                 <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>✓ Returned</span>
                                                             ) : overdue ? (
@@ -833,8 +833,8 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                         ✅ No tools are currently pending return.
                                     </div>
                                 ) : (
-                                    <div className="table-wrap" style={{ border: 'none' }}>
-                                        <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%' }}>
+                                        <table className="table responsive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead>
                                                 <tr style={{ borderBottom: '2px solid var(--border)' }}>
                                                     <th style={{ textAlign: 'left', padding: '12px' }}>Tool Name</th>
@@ -849,13 +849,13 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                     const overdue = issue.expectedReturnDate && new Date(issue.expectedReturnDate) < new Date();
                                                     return (
                                                         <tr key={issue.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                                            <td style={{ padding: '12px', fontWeight: 700 }}>{issue.item?.name}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>{issue.quantity}</td>
-                                                            <td style={{ padding: '12px', fontSize: 13 }}>{issue.recipientType === 'STUDENT' ? `🎓 ${issue.student?.name}` : `👔 Staff: ${issue.staffName}`}</td>
-                                                            <td style={{ padding: '12px', fontSize: 12, color: overdue ? 'var(--danger)' : 'var(--text-primary)', fontWeight: overdue ? 700 : 400 }}>
+                                                            <td data-label="Tool Name" style={{ padding: '12px', fontWeight: 700 }}>{issue.item?.name}</td>
+                                                            <td data-label="Qty" style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>{issue.quantity}</td>
+                                                            <td data-label="Issued To" style={{ padding: '12px', fontSize: 13 }}>{issue.recipientType === 'STUDENT' ? `🎓 ${issue.student?.name}` : `👔 Staff: ${issue.staffName}`}</td>
+                                                            <td data-label="Expected Return" style={{ padding: '12px', fontSize: 12, color: overdue ? 'var(--danger)' : 'var(--text-primary)', fontWeight: overdue ? 700 : 400 }}>
                                                                 {issue.expectedReturnDate ? new Date(issue.expectedReturnDate).toLocaleDateString() : 'N/A'} {overdue ? '(OVERDUE)' : ''}
                                                             </td>
-                                                            <td style={{ padding: '12px', textAlign: 'right' }}>
+                                                            <td data-label="Action" className="cell-actions" style={{ padding: '12px', textAlign: 'right' }}>
                                                                 <button onClick={() => openReturnModal(issue.id)} className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}>
                                                                     📥 Return Tool
                                                                 </button>

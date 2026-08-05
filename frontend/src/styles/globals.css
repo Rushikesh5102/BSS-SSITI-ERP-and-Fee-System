@@ -803,17 +803,70 @@ html.dark .footer {
   .header-title { font-size: 17px !important; }
 }
 
-/* ─── Mobile Table & Component Smooth Scrolling Rules ────────────────────── */
+/* ─── Global Mobile Card Table Responsive System (< 768px) ─────────────────── */
 .table-wrap {
   width: 100% !important;
   max-width: 100% !important;
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 768px) {
-  .table {
-    min-width: 800px !important;
+  .table-wrap {
+    overflow-x: visible !important;
+  }
+  .responsive-table {
+    display: block !important;
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  .responsive-table thead {
+    display: none !important;
+  }
+  .responsive-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+  .responsive-table tr {
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--surface-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .responsive-table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    width: 100% !important;
+    text-align: right !important;
+    box-sizing: border-box !important;
+  }
+  .responsive-table td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    text-align: left;
+  }
+  .responsive-table td.cell-actions {
+    margin-top: 6px;
+    padding-top: 10px !important;
+    border-top: 1px solid var(--border) !important;
+    justify-content: space-between !important;
   }
   .page-header {
     padding: 16px !important;

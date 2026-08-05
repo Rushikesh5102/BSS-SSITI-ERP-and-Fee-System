@@ -439,8 +439,8 @@ function AssetRegisterContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="table-wrap" style={{ border: 'none', background: 'var(--surface-card)', borderRadius: '12px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
-                            <table className="table" style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse' }}>
+                        <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%' }}>
+                            <table className="table responsive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
                                         <th style={{ textAlign: 'left', padding: '14px 16px', whiteSpace: 'nowrap' }}>Item Name</th>
@@ -460,7 +460,7 @@ function AssetRegisterContent() {
 
                                         return (
                                             <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: isLow ? 'rgba(245, 158, 11, 0.04)' : 'transparent' }}>
-                                                <td style={{ padding: '14px 16px' }}>
+                                                <td data-label="Item Name" style={{ padding: '14px 16px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                         <div style={{
                                                             width: '40px', height: '40px', borderRadius: '8px',
@@ -497,23 +497,23 @@ function AssetRegisterContent() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '14px 12px', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Category" style={{ padding: '14px 12px', whiteSpace: 'nowrap' }}>
                                                     <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: '6px', background: 'var(--surface-2)', color: 'var(--text-primary)', fontWeight: 700 }}>
                                                         {item.category}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Quantity" style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
                                                         {item.quantity} {cleanUnit}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Reorder Level" style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                                                     {item.reorderLevel} {cleanUnit}
                                                 </td>
-                                                <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>
+                                                <td data-label="Rack Location" style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>
                                                     {item.location ? `📍 ${item.location}` : 'Unassigned'}
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Status" style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{
                                                         fontSize: 11,
                                                         fontWeight: 700,
@@ -530,7 +530,7 @@ function AssetRegisterContent() {
                                                         ● {stObj.label}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Actions" className="cell-actions" style={{ padding: '14px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                                                     <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                                                         <button
                                                             onClick={() => openEditModal(item)}

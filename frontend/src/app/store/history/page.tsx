@@ -223,8 +223,8 @@ function MovementHistoryContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="table-wrap" style={{ border: 'none', background: 'var(--surface-card)', borderRadius: '12px', overflow: 'hidden' }}>
-                            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%' }}>
+                            <table className="table responsive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
                                         <th style={{ textAlign: 'left', padding: '14px 16px' }}>Date & Time</th>
@@ -248,23 +248,23 @@ function MovementHistoryContent() {
 
                                         return (
                                             <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                                <td style={{ padding: '14px 16px', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Date & Time" style={{ padding: '14px 16px', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                                     {new Date(log.createdAt).toLocaleString('en-IN')}
                                                 </td>
-                                                <td style={{ padding: '14px' }}>
+                                                <td data-label="Action" style={{ padding: '14px' }}>
                                                     <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 8, background: badgeBg, color: badgeColor }}>
                                                         {log.type}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px', fontWeight: 700 }}>{log.item?.name || 'Item'}</td>
-                                                <td style={{ padding: '14px', textAlign: 'center', fontWeight: 800 }}>{log.quantity || 1}</td>
-                                                <td style={{ padding: '14px', fontSize: 12 }}>
+                                                <td data-label="Asset / Tool" style={{ padding: '14px', fontWeight: 700 }}>{log.item?.name || 'Item'}</td>
+                                                <td data-label="Qty" style={{ padding: '14px', textAlign: 'center', fontWeight: 800 }}>{log.quantity || 1}</td>
+                                                <td data-label="Recipient" style={{ padding: '14px', fontSize: 12 }}>
                                                     {log.recipientType === 'STUDENT' ? `🎓 ${log.student?.name || 'Student'}` : log.staffName ? `👔 ${log.staffName}` : '-'}
                                                 </td>
-                                                <td style={{ padding: '14px', fontSize: 12, color: 'var(--text-muted)' }}>
+                                                <td data-label="Recorded By" style={{ padding: '14px', fontSize: 12, color: 'var(--text-muted)' }}>
                                                     {log.recordedBy?.name || 'System'}
                                                 </td>
-                                                <td style={{ padding: '14px 16px', fontSize: 12 }}>{log.remarks || '-'}</td>
+                                                <td data-label="Remarks" style={{ padding: '14px 16px', fontSize: 12 }}>{log.remarks || '-'}</td>
                                             </tr>
                                         );
                                     })}
