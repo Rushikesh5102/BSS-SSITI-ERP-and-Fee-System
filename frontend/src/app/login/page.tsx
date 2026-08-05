@@ -74,11 +74,20 @@ export default function LoginPage() {
             <div className="login-card">
                 <div className="login-logo">
                     <div style={{
-                        width: '70px', height: '70px', margin: '0 auto 12px',
-                        background: '#ffffff', borderRadius: '16px', padding: '8px',
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        width: '80px', height: '80px', margin: '0 auto 12px',
+                        background: 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                        <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <img
+                            src="/sai_iti_logo.png"
+                            alt="Shri Sai I.T.I Logo"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.7))'
+                            }}
+                        />
                     </div>
                     <h1>Shri Sai I.T.I</h1>
                     <p>Fee Management System</p>

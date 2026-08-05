@@ -439,17 +439,17 @@ function AssetRegisterContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="table-wrap" style={{ border: 'none', background: 'var(--surface-card)', borderRadius: '12px', overflow: 'hidden' }}>
-                            <table className="table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                        <div className="table-wrap" style={{ border: 'none', background: 'var(--surface-card)', borderRadius: '12px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                            <table className="table" style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
-                                        <th style={{ textAlign: 'left', padding: '14px 16px', width: '25%' }}>Item Name</th>
-                                        <th style={{ textAlign: 'left', padding: '14px 10px', width: '12%' }}>Category</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 10px', width: '10%' }}>Quantity</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 10px', width: '12%' }}>Reorder Level</th>
-                                        <th style={{ textAlign: 'left', padding: '14px 10px', width: '12%' }}>Rack Location</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 10px', width: '11%' }}>Status</th>
-                                        <th style={{ textAlign: 'right', padding: '14px 16px', width: '18%' }}>Actions</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 16px', whiteSpace: 'nowrap' }}>Item Name</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 12px', whiteSpace: 'nowrap' }}>Category</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Quantity</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Reorder Level</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 12px', whiteSpace: 'nowrap' }}>Rack Location</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Status</th>
+                                        <th style={{ textAlign: 'right', padding: '14px 16px', whiteSpace: 'nowrap' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -497,23 +497,23 @@ function AssetRegisterContent() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '14px 12px' }}>
+                                                <td style={{ padding: '14px 12px', whiteSpace: 'nowrap' }}>
                                                     <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: '6px', background: 'var(--surface-2)', color: 'var(--text-primary)', fontWeight: 700 }}>
                                                         {item.category}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center' }}>
+                                                <td style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
                                                         {item.quantity} {cleanUnit}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                                                     {item.reorderLevel} {cleanUnit}
                                                 </td>
-                                                <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 600, fontSize: 12 }}>
+                                                <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>
                                                     {item.location ? `📍 ${item.location}` : 'Unassigned'}
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center' }}>
+                                                <td style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{
                                                         fontSize: 11,
                                                         fontWeight: 700,
@@ -531,39 +531,40 @@ function AssetRegisterContent() {
                                                     </span>
                                                 </td>
                                                 <td style={{ padding: '14px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                                    <button
-                                                        onClick={() => openEditModal(item)}
-                                                        className="btn"
-                                                        style={{
-                                                            padding: '5px 10px',
-                                                            fontSize: 11,
-                                                            fontWeight: 700,
-                                                            background: 'rgba(2, 132, 199, 0.12)',
-                                                            color: '#0284c7',
-                                                            border: '1px solid rgba(2, 132, 199, 0.3)',
-                                                            borderRadius: '6px',
-                                                            marginRight: 6,
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        ✏️ Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleSoftArchiveAsset(item.id, item.name)}
-                                                        className="btn"
-                                                        style={{
-                                                            padding: '5px 10px',
-                                                            fontSize: 11,
-                                                            fontWeight: 700,
-                                                            background: 'rgba(239, 68, 68, 0.12)',
-                                                            color: '#ef4444',
-                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                            borderRadius: '6px',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        📦 Archive
-                                                    </button>
+                                                    <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
+                                                        <button
+                                                            onClick={() => openEditModal(item)}
+                                                            className="btn"
+                                                            style={{
+                                                                padding: '5px 10px',
+                                                                fontSize: 11,
+                                                                fontWeight: 700,
+                                                                background: 'rgba(2, 132, 199, 0.12)',
+                                                                color: '#0284c7',
+                                                                border: '1px solid rgba(2, 132, 199, 0.3)',
+                                                                borderRadius: '6px',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            ✏️ Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleSoftArchiveAsset(item.id, item.name)}
+                                                            className="btn"
+                                                            style={{
+                                                                padding: '5px 10px',
+                                                                fontSize: 11,
+                                                                fontWeight: 700,
+                                                                background: 'rgba(239, 68, 68, 0.12)',
+                                                                color: '#ef4444',
+                                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                borderRadius: '6px',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            📦 Archive
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );

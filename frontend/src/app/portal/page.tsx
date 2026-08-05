@@ -69,19 +69,20 @@ export default function PortalHubPage() {
     return (
         <div style={{
             minHeight: '100vh',
-            background: isDark ? 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)' : 'var(--background)',
+            background: isDark
+                ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%)'
+                : 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--text-primary)',
+            color: '#ffffff',
             padding: '24px 16px',
             fontFamily: "'Inter', sans-serif",
             position: 'relative'
         }}>
             <button
                 onClick={toggleTheme}
-                className="btn btn-secondary"
                 style={{
                     position: 'absolute',
                     top: 20,
@@ -89,7 +90,12 @@ export default function PortalHubPage() {
                     borderRadius: 20,
                     padding: '8px 16px',
                     fontSize: 13,
-                    fontWeight: 700
+                    fontWeight: 700,
+                    background: isDark ? '#1e293b' : '#ffffff',
+                    color: isDark ? '#f8fafc' : '#0f172a',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
                 }}
             >
                 {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
@@ -102,17 +108,18 @@ export default function PortalHubPage() {
                     100% { transform: translateY(0px); }
                 }
                 @keyframes pulseGlow {
-                    0% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); }
-                    50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.35); }
-                    100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); }
+                    0% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+                    50% { box-shadow: 0 0 30px rgba(56, 189, 248, 0.45); }
+                    100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
                 }
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
                 .portal-card {
-                    background: var(--surface-card);
-                    border: 1px solid var(--border);
+                    background: ${isDark ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.16)'};
+                    backdrop-filter: blur(16px);
+                    border: 1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.28)'};
                     border-radius: 20px;
                     padding: 32px 24px;
                     text-align: center;
@@ -122,13 +129,13 @@ export default function PortalHubPage() {
                     flex-direction: column;
                     align-items: center;
                     gap: 16px;
-                    box-shadow: var(--shadow-sm);
+                    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
                 }
                 .portal-card:hover {
                     transform: translateY(-8px);
-                    background: var(--surface-2);
-                    border-color: var(--primary);
-                    box-shadow: var(--shadow-md);
+                    background: ${isDark ? 'rgba(51, 65, 85, 0.85)' : 'rgba(255, 255, 255, 0.26)'};
+                    border-color: rgba(56, 189, 248, 0.6);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
                 }
             `}</style>
 
@@ -138,27 +145,37 @@ export default function PortalHubPage() {
                 marginBottom: '40px',
                 animation: 'fadeIn 0.8s ease forwards'
             }}>
+                {/* Backgroundless Logo with White Glow */}
                 <div style={{
-                    width: '80px', height: '80px', margin: '0 auto 20px',
-                    background: '#ffffff', borderRadius: '20px', padding: '10px',
-                    boxShadow: '0 8px 32px rgba(56, 189, 248, 0.25)',
+                    width: '90px', height: '90px', margin: '0 auto 16px',
+                    background: 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     animation: 'float 6s ease-in-out infinite'
                 }}>
-                    <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    <img
+                        src="/sai_iti_logo.png"
+                        alt="Logo"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 28px rgba(56, 189, 248, 0.7))'
+                        }}
+                    />
                 </div>
                 <h1 style={{
                     fontSize: 'clamp(28px, 6vw, 42px)',
                     fontWeight: 900,
                     letterSpacing: '-0.5px',
-                    margin: '0 0 10px 0',
-                    color: isDark ? '#ffffff' : 'var(--primary-dark)'
+                    margin: '0 0 8px 0',
+                    color: '#ffffff',
+                    textShadow: '0 4px 20px rgba(0,0,0,0.3)'
                 }}>
                     Shri Sai I.T.I
                 </h1>
                 <p style={{
                     fontSize: 'clamp(14px, 3.5vw, 17px)',
-                    color: 'var(--text-secondary)',
+                    color: '#e0f2fe',
                     fontWeight: 600,
                     margin: 0
                 }}>
@@ -183,20 +200,20 @@ export default function PortalHubPage() {
                 }}>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
-                        background: 'rgba(14, 165, 233, 0.15)', color: '#0ea5e9',
+                        background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '32px', marginBottom: '8px'
                     }}>
                         💰
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Fee Management</h2>
-                        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Fee Management</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
                             Track student fees, record collection payments, print invoices, and view financial reports.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--primary)',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#38bdf8',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
                         Enter Workspace &rarr;
@@ -209,20 +226,20 @@ export default function PortalHubPage() {
                 }}>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
-                        background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7',
+                        background: 'rgba(192, 132, 252, 0.2)', color: '#c084fc',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '32px', marginBottom: '8px'
                     }}>
                         📦
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Store Management</h2>
-                        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Store Management</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
                             Manage inventory, track stock inward/outward transactions, handle suppliers, and monitor low stock alerts.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--primary)',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#c084fc',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
                         Enter Workspace &rarr;
@@ -236,20 +253,20 @@ export default function PortalHubPage() {
                     }}>
                         <div style={{
                             width: '60px', height: '60px', borderRadius: '16px',
-                            background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b',
+                            background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '32px', marginBottom: '8px'
                         }}>
                             💻
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>System Diagnostics</h2>
-                            <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>System Diagnostics</h2>
+                            <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
                                 Monitor system uptime, check database vitals, configure global settings, and audit security events.
                             </p>
                         </div>
                         <div style={{
-                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#d97706',
+                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#fbbf24',
                             display: 'flex', alignItems: 'center', gap: '6px'
                         }}>
                             Control Center &rarr;
