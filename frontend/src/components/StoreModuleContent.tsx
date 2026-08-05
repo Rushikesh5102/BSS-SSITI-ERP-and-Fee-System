@@ -209,9 +209,12 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         }
     };
 
+    const [storageStats, setStorageStats] = useState<any>(null);
+
     useEffect(() => {
         if (user) {
             fetchAllData();
+            api.get('/reports/storage-stats').then(({ data }) => setStorageStats(data.data)).catch(() => { });
         }
     }, [user, itemSearch, categoryFilter, statusFilter, selectedBranch, simulateParam]);
 
@@ -533,6 +536,35 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                 <div className="page-content" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                     
                     {/* ALERT BANNERS SECTION */}
+                    {storageStats && storageStats.totalUsedPercent >= 80 && (
+                        <div style={{
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.18) 100%)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            borderRadius: '12px',
+                            padding: '14px 18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 12,
+                            boxShadow: '0 4px 14px rgba(239, 68, 68, 0.15)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <span style={{ fontSize: 24 }}>🚨</span>
+                                <div>
+                                    <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: 14 }}>
+                                        CRITICAL STORAGE WARNING: System Storage Reached {storageStats.totalUsedPercent}% Capacity!
+                                    </div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 2 }}>
+                                        PostgreSQL & file storage usage has crossed 90% threshold ({storageStats.dbUsedMb} MB / {storageStats.dbLimitMb} MB limit). Contact Administrator to purge audit logs.
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="/system" className="btn" style={{ background: 'var(--danger)', color: '#ffffff', fontSize: 12, padding: '6px 14px', border: 'none' }}>
+                                ⚙️ Manage System Storage
+                            </a>
+                        </div>
+                    )}
                     {stats && stats.overdueCount > 0 && (
                         <div style={{
                             background: 'rgba(239, 68, 68, 0.08)',

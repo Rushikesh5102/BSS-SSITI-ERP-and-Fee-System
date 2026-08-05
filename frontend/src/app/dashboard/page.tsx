@@ -432,6 +432,38 @@ function DashboardContent() {
                     </header>
 
                     <div className="page-content">
+                        {/* Storage Alert (90% Warning Threshold) */}
+                        {storageStats && storageStats.totalUsedPercent >= 80 && (
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.18) 100%)',
+                                border: '1px solid rgba(239, 68, 68, 0.4)',
+                                borderRadius: '12px',
+                                padding: '14px 18px',
+                                marginBottom: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                flexWrap: 'wrap',
+                                gap: 12,
+                                boxShadow: '0 4px 14px rgba(239, 68, 68, 0.15)'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <span style={{ fontSize: 24 }}>🚨</span>
+                                    <div>
+                                        <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: 14 }}>
+                                            CRITICAL STORAGE WARNING: System Storage Reached {storageStats.totalUsedPercent}% Capacity!
+                                        </div>
+                                        <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 2 }}>
+                                            PostgreSQL & file storage usage has crossed 90% threshold ({storageStats.dbUsedMb} MB / {storageStats.dbLimitMb} MB limit). Please purge old audit logs immediately.
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="/system" className="btn" style={{ background: 'var(--danger)', color: '#ffffff', fontSize: 12, padding: '6px 14px', border: 'none' }}>
+                                    ⚙️ Manage System Storage
+                                </a>
+                            </div>
+                        )}
+
                         {/* Stat Cards */}
                         <div className="grid grid-4 mb-6">
                             <StatCard
@@ -457,12 +489,12 @@ function DashboardContent() {
                         {/* Chart + Recent Payments */}
                         <div className="grid-2 mb-6">
                             {/* Collection Chart */}
-                            <div className="card">
+                            <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                 <div className="card-header">
                                     <div className="card-title">📈 Monthly Collection Trend</div>
                                     <span className="badge badge-info">Last 6 Months</span>
                                 </div>
-                                <div className="card-body" style={{ height: 260, padding: '16px 12px 12px 12px' }}>
+                                <div className="card-body" style={{ flex: 1, minHeight: 330, padding: '16px 12px 12px 12px', display: 'flex', flexDirection: 'column' }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={chartData} margin={{ top: 12, right: 16, left: -4, bottom: 0 }}>
                                             <defs>

@@ -115,8 +115,13 @@ function AssetRegisterContent() {
         }
     };
 
+    const [storageStats, setStorageStats] = useState<any>(null);
+
     useEffect(() => {
-        if (user) fetchItems();
+        if (user) {
+            fetchItems();
+            api.get('/reports/storage-stats').then(({ data }) => setStorageStats(data.data)).catch(() => { });
+        }
     }, [user, itemSearch, categoryFilter, statusFilter, selectedBranch, simulateParam]);
 
     const lowStockItems = items.filter(i => i.quantity <= i.reorderLevel);
@@ -273,6 +278,37 @@ function AssetRegisterContent() {
 
                 <div className="page-content" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
+                    {/* Storage Alert (90% Warning Threshold) */}
+                    {storageStats && storageStats.totalUsedPercent >= 80 && (
+                        <div style={{
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.18) 100%)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            borderRadius: '12px',
+                            padding: '14px 18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 12,
+                            boxShadow: '0 4px 14px rgba(239, 68, 68, 0.15)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <span style={{ fontSize: 24 }}>🚨</span>
+                                <div>
+                                    <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: 14 }}>
+                                        CRITICAL STORAGE WARNING: System Storage Reached {storageStats.totalUsedPercent}% Capacity!
+                                    </div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-primary)', marginTop: 2 }}>
+                                        PostgreSQL & file storage usage has crossed 90% threshold ({storageStats.dbUsedMb} MB / {storageStats.dbLimitMb} MB limit). Contact Administrator to purge audit logs.
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="/system" className="btn" style={{ background: 'var(--danger)', color: '#ffffff', fontSize: 12, padding: '6px 14px', border: 'none' }}>
+                                ⚙️ Manage System Storage
+                            </a>
+                        </div>
+                    )}
+
                     {/* Low stock alert banner */}
                     {lowStockItems.length > 0 && (
                         <div style={{
@@ -402,87 +438,102 @@ function AssetRegisterContent() {
                             </p>
                         </div>
                     ) : (
-                        <div className="table-wrap" style={{ border: 'none' }}>
-                            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <div className="table-wrap" style={{ border: 'none', background: 'var(--surface-card)', borderRadius: '12px', overflow: 'hidden' }}>
+                            <table className="table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                 <thead>
-                                    <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                                        <th style={{ textAlign: 'left', padding: '14px' }}>Item Name</th>
-                                        <th style={{ textAlign: 'left', padding: '14px' }}>Category</th>
-                                        <th style={{ textAlign: 'center', padding: '14px' }}>Quantity</th>
-                                        <th style={{ textAlign: 'center', padding: '14px' }}>Reorder Level</th>
-                                        <th style={{ textAlign: 'left', padding: '14px' }}>Rack Location</th>
-                                        <th style={{ textAlign: 'left', padding: '14px' }}>Status</th>
-                                        <th style={{ textAlign: 'right', padding: '14px' }}>Actions</th>
+                                    <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
+                                        <th style={{ textAlign: 'left', padding: '14px 16px', width: '28%' }}>Item Name</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 12px', width: '14%' }}>Category</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 12px', width: '12%' }}>Quantity</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 12px', width: '12%' }}>Reorder Level</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 12px', width: '14%' }}>Rack Location</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 12px', width: '10%' }}>Status</th>
+                                        <th style={{ textAlign: 'right', padding: '14px 16px', width: '10%' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {displayedItems.map((item) => {
                                         const isLow = item.quantity <= item.reorderLevel;
                                         const stObj = statusOptions.find(s => s.value === item.status) || { label: item.status || 'Available', color: '#10b981' };
+                                        const cleanUnit = (item.unit || 'pcs').replace(/pcs\s*pcs/gi, 'pcs').trim();
 
                                         return (
                                             <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: isLow ? 'rgba(245, 158, 11, 0.04)' : 'transparent' }}>
-                                                <td style={{ padding: '14px' }}>
+                                                <td style={{ padding: '14px 16px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                         <div style={{
-                                                            width: '44px', height: '44px', borderRadius: '8px',
+                                                            width: '40px', height: '40px', borderRadius: '8px',
                                                             background: 'var(--surface-2)', display: 'flex', alignItems: 'center',
                                                             justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border)',
                                                             flexShrink: 0
                                                         }}>
                                                             {item.image ? (
-                                                                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                <img
+                                                                    src={item.image}
+                                                                    alt={item.name}
+                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLElement).style.display = 'none';
+                                                                        if ((e.target as HTMLElement).parentElement) {
+                                                                            (e.target as HTMLElement).parentElement!.innerHTML = '<span style="font-size: 18px;">🛠️</span>';
+                                                                        }
+                                                                    }}
+                                                                />
                                                             ) : (
-                                                                <span style={{ fontSize: '20px' }}>🛠️</span>
+                                                                <span style={{ fontSize: '18px' }}>🛠️</span>
                                                             )}
                                                         </div>
-                                                        <div>
-                                                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                                {item.name}
+                                                        <div style={{ minWidth: 0, flex: 1 }}>
+                                                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                                <span>{item.name}</span>
                                                                 {isLow && (
-                                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: '#f59e0b', color: '#ffffff' }}>
+                                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#f59e0b', color: '#ffffff', whiteSpace: 'nowrap' }}>
                                                                         ⚠️ Low Stock Reorder
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {item.sku && <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>SKU: {item.sku}</div>}
+                                                            {item.sku && <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, marginTop: 2 }}>SKU: {item.sku}</div>}
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '14px' }}>
+                                                <td style={{ padding: '14px 12px' }}>
                                                     <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: '4px', background: 'var(--surface-2)', fontWeight: 600 }}>
                                                         {item.category}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px', textAlign: 'center' }}>
+                                                <td style={{ padding: '14px 12px', textAlign: 'center' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 800, color: isLow ? '#f59e0b' : 'var(--text-primary)' }}>
-                                                        {item.quantity} {item.unit}
+                                                        {item.quantity} {cleanUnit}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
-                                                    {item.reorderLevel} {item.unit}
+                                                <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
+                                                    {item.reorderLevel} {cleanUnit}
                                                 </td>
-                                                <td style={{ padding: '14px', color: 'var(--text-primary)', fontWeight: 500, fontSize: 12 }}>
+                                                <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 500, fontSize: 12 }}>
                                                     {item.location ? `📍 ${item.location}` : 'Unassigned'}
                                                 </td>
-                                                <td style={{ padding: '14px' }}>
+                                                <td style={{ padding: '14px 12px', textAlign: 'center' }}>
                                                     <span style={{
-                                                        fontSize: 10,
+                                                        fontSize: 11,
                                                         fontWeight: 700,
-                                                        padding: '3px 8px',
-                                                        borderRadius: '10px',
-                                                        background: `${stObj.color}15`,
+                                                        padding: '4px 10px',
+                                                        borderRadius: '12px',
+                                                        background: `${stObj.color}18`,
                                                         color: stObj.color,
-                                                        border: `1px solid ${stObj.color}30`
+                                                        border: `1px solid ${stObj.color}40`,
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: 4,
+                                                        whiteSpace: 'nowrap'
                                                     }}>
                                                         ● {stObj.label}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px', textAlign: 'right' }}>
-                                                    <button onClick={() => openEditModal(item)} className="btn btn-ghost" style={{ padding: '3px 8px', marginRight: 4, fontSize: 12 }}>
+                                                <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                                                    <button onClick={() => openEditModal(item)} className="btn btn-ghost" style={{ padding: '4px 8px', marginRight: 4, fontSize: 12 }}>
                                                         ✏️ Edit
                                                     </button>
-                                                    <button onClick={() => handleSoftArchiveAsset(item.id, item.name)} className="btn btn-ghost" style={{ padding: '3px 8px', color: 'var(--danger)', fontSize: 12 }}>
+                                                    <button onClick={() => handleSoftArchiveAsset(item.id, item.name)} className="btn btn-ghost" style={{ padding: '4px 8px', color: 'var(--danger)', fontSize: 12 }}>
                                                         📦 Archive
                                                     </button>
                                                 </td>
