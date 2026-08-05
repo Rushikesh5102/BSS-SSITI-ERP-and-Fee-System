@@ -8,7 +8,7 @@ import api from '../../../services/api';
 import WelcomeOverlay from '../../../components/WelcomeOverlay';
 import Footer from '../../../components/Footer';
 
-export const BOOK_CATEGORIES = [
+const BOOK_CATEGORIES = [
     'Engineering',
     'Electrical',
     'Mechanical',
