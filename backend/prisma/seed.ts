@@ -6,7 +6,35 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('🌱 Seeding database...');
+    console.log('🧹 Purging all test & dummy data from PostgreSQL Database...');
+
+    const safeDelete = async (fn: () => Promise<any>, tableName: string) => {
+        try {
+            await fn();
+        } catch {
+            // Table might not exist yet before initial schema push
+        }
+    };
+
+    await safeDelete(() => prisma.receipt.deleteMany({}), 'receipt');
+    await safeDelete(() => prisma.payment.deleteMany({}), 'payment');
+    await safeDelete(() => prisma.studentFee.deleteMany({}), 'studentFee');
+    await safeDelete(() => prisma.student.deleteMany({}), 'student');
+    await safeDelete(() => prisma.parent.deleteMany({}), 'parent');
+
+    await safeDelete(() => prisma.stockTransaction.deleteMany({}), 'stockTransaction');
+    await safeDelete(() => prisma.storeItem.deleteMany({}), 'storeItem');
+
+    await safeDelete(() => prisma.bookMovementLog.deleteMany({}), 'bookMovementLog');
+    await safeDelete(() => prisma.bookIssue.deleteMany({}), 'bookIssue');
+    await safeDelete(() => prisma.bookReservation.deleteMany({}), 'bookReservation');
+    await safeDelete(() => prisma.book.deleteMany({}), 'book');
+
+    await safeDelete(() => prisma.auditLog.deleteMany({}), 'auditLog');
+    await safeDelete(() => prisma.notification.deleteMany({}), 'notification');
+
+    console.log('✅ Purged test students, test payments, test books, test store assets & audit logs.');
+    console.log('🌱 Seeding staff/faculty credentials & base fee structures...');
 
     // Create main branch
     const branch = await prisma.branch.upsert({
