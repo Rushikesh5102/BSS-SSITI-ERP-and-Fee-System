@@ -10,7 +10,7 @@ interface NavItem {
     label: string;
     icon: string;
     roles?: string[];
-    module: 'FEES' | 'STORE' | 'COMMON';
+    module: 'FEES' | 'STORE' | 'LIBRARY' | 'COMMON';
 }
 
 const navItems: NavItem[] = [
@@ -32,23 +32,36 @@ const navItems: NavItem[] = [
     { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
 
     // STORE WORKSPACE & STORE DEVELOPER SIMULATIONS
-    { href: '/store/items?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
-    { href: '/store/items?simulate=store_manager', label: 'View as Store Mgr', icon: '📦', roles: ['DEVELOPER'], module: 'STORE' },
-    { href: '/store/items?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store?simulate=store_manager', label: 'View as Store Mgr', icon: '📦', roles: ['DEVELOPER'], module: 'STORE' },
+    { href: '/store?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'STORE' },
 
+    { href: '/store', label: 'Store Dashboard', icon: '📊', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
     { href: '/store/items', label: 'Workshop Asset Register', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
-    { href: '/store', label: 'Tool Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/issue', label: 'Tool Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
     { href: '/store/history', label: 'Movement History Log', icon: '🔄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
     { href: '/store/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+
+    // LIBRARY WORKSPACE & LIBRARY DEVELOPER SIMULATIONS
+    { href: '/library?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'LIBRARY' },
+    { href: '/library?simulate=librarian', label: 'View as Librarian', icon: '📚', roles: ['DEVELOPER'], module: 'LIBRARY' },
+    { href: '/library?simulate=teacher', label: 'View as Staff', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'LIBRARY' },
+
+    { href: '/library', label: 'Library Dashboard', icon: '📊', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT', 'STUDENT'], module: 'LIBRARY' },
+    { href: '/library/books', label: 'Book Catalog', icon: '📚', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT', 'STUDENT'], module: 'LIBRARY' },
+    { href: '/library/issue', label: 'Book Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT'], module: 'LIBRARY' },
+    { href: '/library/history', label: 'Movement History', icon: '📜', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT'], module: 'LIBRARY' },
+    { href: '/library/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT'], module: 'LIBRARY' },
 ];
 
 const roleLabels: Record<string, string> = {
     ADMIN: 'Administrator / Principal',
     ACCOUNTANT: 'Accountant',
-    TEACHER: 'Teacher',
+    TEACHER: 'Teacher / Staff',
     STUDENT: 'Student',
     DEVELOPER: 'Developer / System Architect',
     STORE_MANAGER: 'Store Manager',
+    LIBRARIAN: 'Chief Librarian',
 };
 
 function SidebarInner() {
@@ -60,7 +73,7 @@ function SidebarInner() {
     
     const [isDark, setIsDark] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [activeWorkspace, setActiveWorkspace] = useState<'FEES' | 'STORE'>('FEES');
+    const [activeWorkspace, setActiveWorkspace] = useState<'FEES' | 'STORE' | 'LIBRARY'>('FEES');
 
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
@@ -99,18 +112,26 @@ function SidebarInner() {
 
     useEffect(() => {
         const saved = localStorage.getItem('activeWorkspace');
-        if (saved === 'STORE' || saved === 'FEES') {
-            setActiveWorkspace(saved as 'FEES' | 'STORE');
+        if (saved === 'STORE' || saved === 'FEES' || saved === 'LIBRARY') {
+            setActiveWorkspace(saved as 'FEES' | 'STORE' | 'LIBRARY');
         } else if (user?.role === 'STORE_MANAGER' || effectiveRole === 'STORE_MANAGER') {
             setActiveWorkspace('STORE');
+        } else if (user?.role === 'LIBRARIAN' || effectiveRole === 'LIBRARIAN') {
+            setActiveWorkspace('LIBRARY');
+        } else if (pathname.startsWith('/library')) {
+            setActiveWorkspace('LIBRARY');
+        } else if (pathname.startsWith('/store')) {
+            setActiveWorkspace('STORE');
         }
-    }, [user, effectiveRole]);
+    }, [user, effectiveRole, pathname]);
 
-    const handleSwitchWorkspace = (ws: 'FEES' | 'STORE') => {
+    const handleSwitchWorkspace = (ws: 'FEES' | 'STORE' | 'LIBRARY') => {
         localStorage.setItem('activeWorkspace', ws);
         setActiveWorkspace(ws);
         if (ws === 'STORE') {
-            router.push(simulateParam ? `/store/items?simulate=${simulateParam}` : '/store/items');
+            router.push(simulateParam ? `/store?simulate=${simulateParam}` : '/store');
+        } else if (ws === 'LIBRARY') {
+            router.push(simulateParam ? `/library?simulate=${simulateParam}` : '/library');
         } else {
             router.push(simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard');
         }
@@ -128,16 +149,20 @@ function SidebarInner() {
 
         if (!hasRoleAccess) return false;
 
-        const canAccessBoth = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
-        if (canAccessBoth) {
+        const canAccessAll = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
+        if (canAccessAll) {
             return item.module === 'COMMON' || item.module === activeWorkspace;
         }
 
         if (effectiveRole === 'STORE_MANAGER') {
             return item.module === 'STORE' || item.module === 'COMMON';
         }
+
+        if (effectiveRole === 'LIBRARIAN') {
+            return item.module === 'LIBRARY' || item.module === 'COMMON';
+        }
         
-        return item.module === 'FEES' || item.module === 'COMMON';
+        return item.module === activeWorkspace || item.module === 'COMMON';
     });
 
     const initials = (user?.name || '?')
@@ -196,7 +221,7 @@ function SidebarInner() {
                         </div>
                         <div className="sidebar-logo-text">
                             <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I</h2>
-                            <span style={{ fontSize: 12 }}>{activeWorkspace === 'STORE' ? 'Store Management' : 'Fee Management'}</span>
+                            <span style={{ fontSize: 12 }}>{activeWorkspace === 'STORE' ? 'Store Management' : (activeWorkspace === 'LIBRARY' ? 'Library Management' : 'Fee Management')}</span>
                         </div>
                     </div>
                 </Link>
@@ -217,8 +242,8 @@ function SidebarInner() {
                                     flex: 1,
                                     border: 'none',
                                     borderRadius: '8px',
-                                    padding: '8px',
-                                    fontSize: '12px',
+                                    padding: '6px 4px',
+                                    fontSize: '11px',
                                     fontWeight: 700,
                                     cursor: 'pointer',
                                     background: activeWorkspace === 'FEES' ? 'var(--primary)' : 'transparent',
@@ -234,8 +259,8 @@ function SidebarInner() {
                                     flex: 1,
                                     border: 'none',
                                     borderRadius: '8px',
-                                    padding: '8px',
-                                    fontSize: '12px',
+                                    padding: '6px 4px',
+                                    fontSize: '11px',
                                     fontWeight: 700,
                                     cursor: 'pointer',
                                     background: activeWorkspace === 'STORE' ? 'var(--primary)' : 'transparent',
@@ -244,6 +269,23 @@ function SidebarInner() {
                                 }}
                             >
                                 📦 Store
+                            </button>
+                            <button
+                                onClick={() => handleSwitchWorkspace('LIBRARY')}
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '6px 4px',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    background: activeWorkspace === 'LIBRARY' ? 'var(--primary)' : 'transparent',
+                                    color: activeWorkspace === 'LIBRARY' ? 'white' : 'var(--text-muted)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                📚 Library
                             </button>
                         </div>
                     </div>

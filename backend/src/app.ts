@@ -22,6 +22,7 @@ import branchesRoutes from './routes/branches.routes';
 import systemRoutes from './routes/system.routes';
 import storeRoutes from './routes/store.routes';
 import inquiriesRoutes from './routes/inquiries.routes';
+import libraryRoutes from './routes/library.routes';
 
 const app = express();
 
@@ -88,6 +89,7 @@ app.use('/api/branches', branchesRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/store', storeRoutes);
 app.use('/api/inquiries', inquiriesRoutes);
+app.use('/api/library', libraryRoutes);
 
 import webhooksRoutes from './routes/webhooks.routes';
 app.use('/api/webhooks', webhooksRoutes);

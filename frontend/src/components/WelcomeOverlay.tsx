@@ -10,6 +10,7 @@ const roleConfig: Record<string, { title: string, icon: string, bg: string }> = 
     STUDENT: { title: 'Student', icon: '🎓', bg: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #0f172a 100%)' },
     DEVELOPER: { title: 'Developer', icon: '💻', bg: 'linear-gradient(135deg, #000000, #111827)' },
     STORE_MANAGER: { title: 'Store Manager', icon: '📦', bg: 'linear-gradient(135deg, #581c87 0%, #701a75 50%, #0f172a 100%)' },
+    LIBRARIAN: { title: 'Chief Librarian', icon: '📚', bg: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #0f172a 100%)' },
 };
 
 export default function WelcomeOverlay({ role }: { role: string }) {

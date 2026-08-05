@@ -41,6 +41,9 @@ model Branch {
   students     Student[]
   feeStructures FeeStructure[]
   storeItems   StoreItem[]
+  books        Book[]
+  bookIssues   BookIssue[]
+  bookReservations BookReservation[]
 
   @@map("branches")
 }
@@ -67,6 +70,12 @@ model User {
   recordedTransactions StockTransaction[] @relation("RecordedTransactions")
   receivedTransactions StockTransaction[] @relation("ReceivedTransactions")
   createdStoreItems StoreItem[] @relation("StoreItemsCreated")
+  issuedBooks      BookIssue[]  @relation("IssuedByStaff")
+  receivedBooks    BookIssue[]  @relation("ReceivedByStaff")
+  staffBookIssues  BookIssue[]  @relation("StaffBorrower")
+  staffBookReservations BookReservation[] @relation("StaffReservations")
+  createdBooks     Book[]       @relation("BooksCreated")
+  performedBookMovements BookMovementLog[]
 
   @@map("users")
 }
@@ -116,6 +125,8 @@ model Student {
   parent      Parent?     @relation(fields: [parentId], references: [id])
   studentFees StudentFee[]
   issuedItems StockTransaction[]
+  bookIssues  BookIssue[]
+  bookReservations BookReservation[]
 
   @@map("students")
 }
@@ -381,3 +392,115 @@ model StudentInquiry {
 
   @@map("student_inquiries")
 }
+
+// ─── Library Management System Models ──────────────────────────────────────
+
+model Book {
+  id              String   @id @default(uuid())
+  title           String
+  author          String
+  publisher       String?
+  isbn            String?  @unique
+  category        String   // Engineering, Electrical, Mechanical, Electronics, Computer, General Knowledge, Competitive Exams, Reference, Journals, Magazines
+  edition         String?
+  language        String   @default("English")
+  shelfLocation   String?  @map("shelf_location")
+  quantity        Int      @default(1)
+  availableCopies Int      @default(1) @map("available_copies")
+  issuedCopies    Int      @default(0) @map("issued_copies")
+  lostCopies      Int      @default(0) @map("lost_copies")
+  damagedCopies   Int      @default(0) @map("damaged_copies")
+  price           Int      @default(0) // Reference value in rupees
+  coverImage      String?  @map("cover_image")
+  status          String   @default("AVAILABLE") // AVAILABLE, OUT_OF_STOCK, ARCHIVED
+  isActive        Boolean  @default(true) @map("is_active") // Soft deletion flag
+  notes           String?
+  branchId        String   @map("branch_id")
+  createdById     String?  @map("created_by_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  branch          Branch   @relation(fields: [branchId], references: [id])
+  createdBy       User?    @relation("BooksCreated", fields: [createdById], references: [id])
+  issues          BookIssue[]
+  reservations    BookReservation[]
+  movements       BookMovementLog[]
+
+  @@map("books")
+}
+
+model BookIssue {
+  id                 String    @id @default(uuid())
+  bookId             String    @map("book_id")
+  borrowerType       String    @default("STUDENT") @map("borrower_type") // STUDENT or STAFF
+  studentId          String?   @map("student_id")
+  staffId            String?   @map("staff_id")
+  borrowerName       String    @map("borrower_name")
+  borrowerContact    String?   @map("borrower_contact")
+  issueDate          DateTime  @default(now()) @map("issue_date")
+  dueDate            DateTime  @map("due_date")
+  returnDate         DateTime? @map("return_date")
+  status             String    @default("ISSUED") // ISSUED, RETURNED, OVERDUE, LOST, DAMAGED
+  returnCondition    String?   @map("return_condition") // GOOD, DAMAGED, LOST
+  fineAmount         Int       @default(0) @map("fine_amount") // Fine in ₹
+  fineStatus         String    @default("NONE") @map("fine_status") // NONE, PENDING, PAID, WAIVED
+  fineOverrideBy     String?   @map("fine_override_by")
+  fineOverrideReason String?   @map("fine_override_reason")
+  issuedById         String    @map("issued_by_id")
+  receivedById       String?   @map("received_by_id")
+  remarks            String?
+  branchId           String    @map("branch_id")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  book               Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  student            Student?  @relation(fields: [studentId], references: [id])
+  staff              User?     @relation("StaffBorrower", fields: [staffId], references: [id])
+  issuedBy           User      @relation("IssuedByStaff", fields: [issuedById], references: [id])
+  receivedBy         User?     @relation("ReceivedByStaff", fields: [receivedById], references: [id])
+  branch             Branch    @relation(fields: [branchId], references: [id])
+
+  @@map("book_issues")
+}
+
+model BookReservation {
+  id              String   @id @default(uuid())
+  bookId          String   @map("book_id")
+  borrowerType    String   @default("STUDENT") @map("borrower_type")
+  studentId       String?  @map("student_id")
+  staffId         String?  @map("staff_id")
+  borrowerName    String   @map("borrower_name")
+  borrowerContact String?  @map("borrower_contact")
+  reservationDate DateTime @default(now()) @map("reservation_date")
+  status          String   @default("PENDING") @map("status") // PENDING, FULFILLED, CANCELLED
+  notes           String?
+  branchId        String   @map("branch_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  student         Student? @relation(fields: [studentId], references: [id])
+  staff           User?    @relation("StaffReservations", fields: [staffId], references: [id])
+  branch          Branch   @relation(fields: [branchId], references: [id])
+
+  @@map("book_reservations")
+}
+
+model BookMovementLog {
+  id              String   @id @default(uuid())
+  bookId          String   @map("book_id")
+  issueId         String?  @map("issue_id")
+  action          String   // ISSUE, RETURN, RENEWAL, LOST, DAMAGED, ADDED, UPDATED, ARCHIVED
+  borrowerName    String?  @map("borrower_name")
+  quantity        Int      @default(1)
+  remarks         String?
+  performedById   String   @map("performed_by_id")
+  performedByName String   @map("performed_by_name")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  book            Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  performedBy     User     @relation(fields: [performedById], references: [id])
+
+  @@map("book_movement_logs")
+}
+

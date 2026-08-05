@@ -8,7 +8,7 @@ interface User {
     id: string;
     name: string;
     email: string;
-    role: 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'DEVELOPER' | 'STORE_MANAGER';
+    role: 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'DEVELOPER' | 'STORE_MANAGER' | 'LIBRARIAN';
     branch: { id: string; name: string } | null;
 }
 
@@ -67,6 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             router.push('/portal');
         } else if (userData.role === 'STORE_MANAGER') {
             router.push('/store/items');
+        } else if (userData.role === 'LIBRARIAN') {
+            router.push('/library/books');
         } else {
             router.push('/dashboard');
         }

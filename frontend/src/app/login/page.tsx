@@ -225,6 +225,16 @@ export default function LoginPage() {
 
                         <button 
                             type="button"
+                            onClick={() => quickLogin('librarian@saiiti.edu.in', 'Library@123')}
+                            className="btn btn-secondary w-full"
+                            disabled={loading}
+                            style={{ justifyContent: 'center' }}
+                        >
+                            📚 Login as Librarian
+                        </button>
+
+                        <button 
+                            type="button"
                             onClick={() => quickLogin('pattiwarrushikesh5102@gmail.com', 'Rushikesh@5102')}
                             className="btn btn-primary w-full"
                             disabled={loading}

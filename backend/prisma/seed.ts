@@ -107,6 +107,20 @@ async function main() {
     });
     console.log(`✅ StoreManager: ${storeManager.email} / Store@123`);
 
+    // Create Librarian User
+    const librarian = await prisma.user.upsert({
+        where: { email: 'librarian@saiiti.edu.in' },
+        update: { role: Role.LIBRARIAN },
+        create: {
+            name: 'Chief Librarian',
+            email: 'librarian@saiiti.edu.in',
+            passwordHash: await bcrypt.hash('Library@123', 12),
+            role: Role.LIBRARIAN,
+            branchId: branch.id,
+        },
+    });
+    console.log(`✅ Librarian: ${librarian.email} / Library@123`);
+
     // Create System Automated User for webhook executions
     const systemUser = await prisma.user.upsert({
         where: { email: 'system@saiiti.edu.in' },

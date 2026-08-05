@@ -28,10 +28,12 @@ export default function PortalHubPage() {
         }
     }, [user, loading, router]);
 
-    const selectWorkspace = (ws: 'FEES' | 'STORE') => {
+    const selectWorkspace = (ws: 'FEES' | 'STORE' | 'LIBRARY') => {
         localStorage.setItem('activeWorkspace', ws);
         if (ws === 'STORE') {
             router.push('/store');
+        } else if (ws === 'LIBRARY') {
+            router.push('/library');
         } else {
             router.push('/dashboard');
         }
@@ -194,9 +196,37 @@ export default function PortalHubPage() {
                 animationFillMode: 'forwards',
                 marginBottom: '40px'
             }}>
+                {/* Card 0: System Diagnostics / Dev Home (Developer access only - FIRST CARD FOR DEV) */}
+                {user.role === 'DEVELOPER' && (
+                    <div className="portal-card" onClick={() => router.push('/system')} style={{
+                        animation: 'pulseGlow 4s infinite'
+                    }}>
+                        <div style={{
+                            width: '60px', height: '60px', borderRadius: '16px',
+                            background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '32px', marginBottom: '8px'
+                        }}>
+                            💻
+                        </div>
+                        <div>
+                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Dev Home & System Diagnostics</h2>
+                            <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                                Monitor system uptime, check database vitals, configure global settings, and audit security events.
+                            </p>
+                        </div>
+                        <div style={{
+                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#fbbf24',
+                            display: 'flex', alignItems: 'center', gap: '6px'
+                        }}>
+                            Control Center &rarr;
+                        </div>
+                    </div>
+                )}
+
                 {/* Card 1: Fees */}
                 <div className="portal-card" onClick={() => selectWorkspace('FEES')} style={{
-                    animation: 'pulseGlow 4s infinite'
+                    animation: user.role === 'DEVELOPER' ? 'pulseGlow 4s infinite 0.5s' : 'pulseGlow 4s infinite'
                 }}>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
@@ -246,33 +276,31 @@ export default function PortalHubPage() {
                     </div>
                 </div>
 
-                {/* Card 3: System Diagnostics (Developer access only) */}
-                {user.role === 'DEVELOPER' && (
-                    <div className="portal-card" onClick={() => router.push('/system')} style={{
-                        animation: 'pulseGlow 4s infinite 2s'
+                {/* Card 3: Library */}
+                <div className="portal-card" onClick={() => selectWorkspace('LIBRARY')} style={{
+                    animation: 'pulseGlow 4s infinite 1.5s'
+                }}>
+                    <div style={{
+                        width: '60px', height: '60px', borderRadius: '16px',
+                        background: 'rgba(52, 211, 153, 0.2)', color: '#34d399',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '32px', marginBottom: '8px'
                     }}>
-                        <div style={{
-                            width: '60px', height: '60px', borderRadius: '16px',
-                            background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '32px', marginBottom: '8px'
-                        }}>
-                            💻
-                        </div>
-                        <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>System Diagnostics</h2>
-                            <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
-                                Monitor system uptime, check database vitals, configure global settings, and audit security events.
-                            </p>
-                        </div>
-                        <div style={{
-                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#fbbf24',
-                            display: 'flex', alignItems: 'center', gap: '6px'
-                        }}>
-                            Control Center &rarr;
-                        </div>
+                        📚
                     </div>
-                )}
+                    <div>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Library Management</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                            Manage institute books catalog, student/staff issue & return registers, reservations, and overdue fines.
+                        </p>
+                    </div>
+                    <div style={{
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#34d399',
+                        display: 'flex', alignItems: 'center', gap: '6px'
+                    }}>
+                        Enter Workspace &rarr;
+                    </div>
+                </div>
             </div>
 
             <button
