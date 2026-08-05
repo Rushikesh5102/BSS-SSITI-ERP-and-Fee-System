@@ -79,6 +79,7 @@ function AssetRegisterContent() {
     const [itemQuantity, setItemQuantity] = useState('1');
     const [itemUnit, setItemUnit] = useState('pcs');
     const [itemReorderLevel, setItemReorderLevel] = useState('5');
+    const [itemPricePerUnit, setItemPricePerUnit] = useState('0');
     const [itemLocation, setItemLocation] = useState('');
     const [itemStatus, setItemStatus] = useState('AVAILABLE');
     const [itemNotes, setItemNotes] = useState('');
@@ -136,6 +137,7 @@ function AssetRegisterContent() {
         setItemQuantity('1');
         setItemUnit('pcs');
         setItemReorderLevel('5');
+        setItemPricePerUnit('0');
         setItemLocation('');
         setItemStatus('AVAILABLE');
         setItemNotes('');
@@ -154,6 +156,7 @@ function AssetRegisterContent() {
         setItemQuantity(item.quantity.toString());
         setItemUnit(item.unit);
         setItemReorderLevel(item.reorderLevel.toString());
+        setItemPricePerUnit((item.pricePerUnit || 0).toString());
         setItemLocation(item.location || '');
         setItemStatus(item.status || 'AVAILABLE');
         setItemNotes(item.notes || '');
@@ -176,6 +179,7 @@ function AssetRegisterContent() {
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
+                pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
                 location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
@@ -205,6 +209,7 @@ function AssetRegisterContent() {
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
+                pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
                 location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
@@ -632,7 +637,7 @@ function AssetRegisterContent() {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
                                         <input type="number" className="form-control" required value={itemQuantity} onChange={e => setItemQuantity(e.target.value)} min="0" />
@@ -642,9 +647,18 @@ function AssetRegisterContent() {
                                         <input type="text" className="form-control" required value={itemUnit} onChange={e => setItemUnit(e.target.value)} placeholder="pcs, sets" />
                                     </div>
                                     <div className="form-group">
+                                        <label className="form-label">Unit Price (₹)</label>
+                                        <input type="number" className="form-control" value={itemPricePerUnit} onChange={e => setItemPricePerUnit(e.target.value)} min="0" placeholder="e.g. 100" />
+                                    </div>
+                                    <div className="form-group">
                                         <label className="form-label">Reorder Level *</label>
                                         <input type="number" className="form-control" required value={itemReorderLevel} onChange={e => setItemReorderLevel(e.target.value)} min="0" />
                                     </div>
+                                </div>
+
+                                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>💰 Total Asset Stock Valuation:</span>
+                                    <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -701,7 +715,7 @@ function AssetRegisterContent() {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
                                         <input type="number" className="form-control" required value={itemQuantity} onChange={e => setItemQuantity(e.target.value)} min="0" />
@@ -711,9 +725,18 @@ function AssetRegisterContent() {
                                         <input type="text" className="form-control" required value={itemUnit} onChange={e => setItemUnit(e.target.value)} />
                                     </div>
                                     <div className="form-group">
+                                        <label className="form-label">Unit Price (₹)</label>
+                                        <input type="number" className="form-control" value={itemPricePerUnit} onChange={e => setItemPricePerUnit(e.target.value)} min="0" placeholder="e.g. 100" />
+                                    </div>
+                                    <div className="form-group">
                                         <label className="form-label">Reorder Level *</label>
                                         <input type="number" className="form-control" required value={itemReorderLevel} onChange={e => setItemReorderLevel(e.target.value)} min="0" />
                                     </div>
+                                </div>
+
+                                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>💰 Total Asset Stock Valuation:</span>
+                                    <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>

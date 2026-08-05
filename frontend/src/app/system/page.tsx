@@ -269,51 +269,94 @@ export default function SystemHealthPage() {
 
                                         {/* Database Record Metrics */}
                                         <div className="card sys-col-12" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
-                                            <div className="card-header">
-                                                <div className="card-title">Database Metrics (Real-time Counts)</div>
+                                            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div className="card-title">Real-time Platform Module Telemetry</div>
+                                                <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                                    ● Multi-Module Core Active
+                                                </span>
                                             </div>
-                                            <div className="card-body" style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                            <div className="card-body" style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
                                                 <div>
-                                                    <h5 style={{ color: '#38bdf8', marginBottom: '12px', fontSize: '13px' }}>💰 FEE MODULE ENTITIES</h5>
+                                                    <h5 style={{ color: '#38bdf8', marginBottom: '14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        💰 FEE MANAGEMENT MODULE
+                                                    </h5>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Students</span>
+                                                        <span style={{ color: '#94a3b8' }}>Total Enrolled Students</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.students ?? 0}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Payments</span>
+                                                        <span style={{ color: '#94a3b8' }}>Fee Collection Transactions</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.payments ?? 0}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Receipts</span>
+                                                        <span style={{ color: '#94a3b8' }}>Generated Receipts</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.receipts ?? 0}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>Fee Structures</span>
+                                                        <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.feeStructures ?? 0}</span>
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <h5 style={{ color: '#a855f7', marginBottom: '12px', fontSize: '13px' }}>📦 STORE MODULE ENTITIES</h5>
+                                                    <h5 style={{ color: '#c084fc', marginBottom: '14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        📦 STORE & WORKSHOP MODULE
+                                                    </h5>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Store Items</span>
+                                                        <span style={{ color: '#94a3b8' }}>Workshop Tools & Items</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.storeItems ?? 0}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Suppliers</span>
+                                                        <span style={{ color: '#94a3b8' }}>Approved Suppliers</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.storeSuppliers ?? 0}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Transactions</span>
+                                                        <span style={{ color: '#94a3b8' }}>Stock In/Out Logs</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.stockTransactions ?? 0}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>Total Stock Valuation</span>
+                                                        <span style={{ color: '#10b981', fontWeight: 800 }}>₹{(health.realCounts?.totalStoreValuation ?? 0).toLocaleString('en-IN')}</span>
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <h5 style={{ color: '#f59e0b', marginBottom: '12px', fontSize: '13px' }}>💾 STORAGE DETAILS</h5>
+                                                    <h5 style={{ color: '#34d399', marginBottom: '14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        📚 LIBRARY MANAGEMENT MODULE
+                                                    </h5>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>Database Size</span>
+                                                        <span style={{ color: '#94a3b8' }}>Book Titles & Catalog</span>
+                                                        <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.books ?? 0}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>Active Book Issues</span>
+                                                        <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.bookIssues ?? 0}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>Pending Reservations</span>
+                                                        <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.bookReservations ?? 0}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>Catalog Stock Valuation</span>
+                                                        <span style={{ color: '#10b981', fontWeight: 800 }}>₹{(health.realCounts?.totalLibraryValuation ?? 0).toLocaleString('en-IN')}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <h5 style={{ color: '#f59e0b', marginBottom: '14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        💾 SYSTEM & DATABASE HEALTH
+                                                    </h5>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>PostgreSQL Size</span>
                                                         <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>{health.realCounts?.dbSize ?? '12.4 MB'}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                                                        <span style={{ color: '#94a3b8' }}>System Configs</span>
+                                                        <span style={{ color: '#94a3b8' }}>Faculty Accounts</span>
                                                         <span style={{ color: '#f8fafc', fontWeight: 'bold' }}>{health.realCounts?.users ?? 0} active users</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                                                        <span style={{ color: '#94a3b8' }}>System Status</span>
+                                                        <span style={{ color: '#10b981', fontWeight: 'bold' }}>{health.status}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -384,50 +427,102 @@ export default function SystemHealthPage() {
 
                                 {/* --- TAB: CONTROLS --- */}
                                 {activeTab === 'controls' && (
-                                    <div className="card sys-col-12" style={{ background: '#0f172a', border: '1px solid #ef4444' }}>
-                                        <div className="card-header" style={{ borderBottom: '1px solid #ef4444' }}>
-                                            <div className="card-title" style={{ color: '#ef4444' }}>🔴 EMERGENCY & ARCHITECT OVERRIDE</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                        {/* Developer Role Simulation Panel */}
+                                        <div className="card sys-col-12" style={{ background: '#0f172a', border: '1px solid #38bdf8' }}>
+                                            <div className="card-header" style={{ borderBottom: '1px solid #1e293b' }}>
+                                                <div className="card-title" style={{ color: '#38bdf8' }}>🎭 DEVELOPER ROLE SIMULATOR & WORKSPACE CONTROLS</div>
+                                            </div>
+                                            <div className="card-body" style={{ padding: '20px' }}>
+                                                <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 0, marginBottom: 16 }}>
+                                                    Simulate any system role in real-time across Fee, Store, and Library modules without logging out:
+                                                </p>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                                                    <button
+                                                        onClick={() => {
+                                                            router.push('/dashboard?simulate=admin');
+                                                        }}
+                                                        className="btn"
+                                                        style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid #38bdf8', padding: '12px', borderRadius: 10, fontWeight: 700, fontSize: 13, textAlign: 'center' }}
+                                                    >
+                                                        👑 Simulate SuperAdmin / Admin
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            router.push('/store?simulate=store_manager');
+                                                        }}
+                                                        className="btn"
+                                                        style={{ background: 'rgba(192, 132, 252, 0.15)', color: '#c084fc', border: '1px solid #c084fc', padding: '12px', borderRadius: 10, fontWeight: 700, fontSize: 13, textAlign: 'center' }}
+                                                    >
+                                                        📦 Simulate Store Manager
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            router.push('/library?simulate=librarian');
+                                                        }}
+                                                        className="btn"
+                                                        style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid #34d399', padding: '12px', borderRadius: 10, fontWeight: 700, fontSize: 13, textAlign: 'center' }}
+                                                    >
+                                                        📚 Simulate Librarian
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            router.push('/dashboard?simulate=accountant');
+                                                        }}
+                                                        className="btn"
+                                                        style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid #fbbf24', padding: '12px', borderRadius: 10, fontWeight: 700, fontSize: 13, textAlign: 'center' }}
+                                                    >
+                                                        🧾 Simulate Accountant
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="card-body" style={{ padding: '20px 16px' }}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
-                                                
-                                                <ControlPanel 
-                                                    title="Global System Lockdown" 
-                                                    desc="Instantly block all non-developer access to the platform. Persists across restarts."
-                                                    btnText={health?.config?.LOCKDOWN_MODE === 'true' ? 'RELEASE' : 'ENGAGE'}
-                                                    btnColor={health?.config?.LOCKDOWN_MODE === 'true' ? '#10b981' : '#ef4444'}
-                                                    onClick={handleLockdown}
-                                                />
-                                                <ControlPanel 
-                                                    title="Maintenance Mode" 
-                                                    desc="Toggle platform maintenance mode for non-admin accounts."
-                                                    btnText={health?.config?.MAINTENANCE_MODE === 'true' ? 'DEACTIVATE' : 'ACTIVATE'}
-                                                    btnColor={health?.config?.MAINTENANCE_MODE === 'true' ? '#10b981' : '#f59e0b'}
-                                                    onClick={async () => {
-                                                        const current = health?.config?.MAINTENANCE_MODE === 'true';
-                                                        try {
-                                                            await api.post('/system/config', { key: 'MAINTENANCE_MODE', value: (!current).toString() });
-                                                            alert(`✅ Maintenance Mode ${!current ? 'ACTIVATED' : 'DEACTIVATED'}`);
-                                                            fetchHealth();
-                                                        } catch {
-                                                            alert('⚠️ Updated Maintenance setting locally');
-                                                        }
-                                                    }}
-                                                />
-                                                <ControlPanel 
-                                                    title="Cache & Storage Flush" 
-                                                    desc="Flush client caches, active sessions, and temporary storage buffers."
-                                                    btnText="FLUSH ALL"
-                                                    btnColor="#6366f1"
-                                                    onClick={() => {
-                                                        if (confirm('Are you sure you want to flush all temporary system caches?')) {
-                                                            localStorage.clear();
-                                                            sessionStorage.clear();
-                                                            alert('⚡ All system caches and storage buffers cleared!');
-                                                            fetchHealth();
-                                                        }
-                                                    }}
-                                                />
+
+                                        <div className="card sys-col-12" style={{ background: '#0f172a', border: '1px solid #ef4444' }}>
+                                            <div className="card-header" style={{ borderBottom: '1px solid #ef4444' }}>
+                                                <div className="card-title" style={{ color: '#ef4444' }}>🔴 EMERGENCY & ARCHITECT OVERRIDE</div>
+                                            </div>
+                                            <div className="card-body" style={{ padding: '20px 16px' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
+                                                    
+                                                    <ControlPanel 
+                                                        title="Global System Lockdown" 
+                                                        desc="Instantly block all non-developer access to the platform. Persists across restarts."
+                                                        btnText={health?.config?.LOCKDOWN_MODE === 'true' ? 'RELEASE' : 'ENGAGE'}
+                                                        btnColor={health?.config?.LOCKDOWN_MODE === 'true' ? '#10b981' : '#ef4444'}
+                                                        onClick={handleLockdown}
+                                                    />
+                                                    <ControlPanel 
+                                                        title="Maintenance Mode" 
+                                                        desc="Toggle platform maintenance mode for non-admin accounts."
+                                                        btnText={health?.config?.MAINTENANCE_MODE === 'true' ? 'DEACTIVATE' : 'ACTIVATE'}
+                                                        btnColor={health?.config?.MAINTENANCE_MODE === 'true' ? '#10b981' : '#f59e0b'}
+                                                        onClick={async () => {
+                                                            const current = health?.config?.MAINTENANCE_MODE === 'true';
+                                                            try {
+                                                                await api.post('/system/config', { key: 'MAINTENANCE_MODE', value: (!current).toString() });
+                                                                alert(`✅ Maintenance Mode ${!current ? 'ACTIVATED' : 'DEACTIVATED'}`);
+                                                                fetchHealth();
+                                                            } catch {
+                                                                alert('⚠️ Updated Maintenance setting locally');
+                                                            }
+                                                        }}
+                                                    />
+                                                    <ControlPanel 
+                                                        title="Cache & Storage Flush" 
+                                                        desc="Flush client caches, active sessions, and temporary storage buffers."
+                                                        btnText="FLUSH ALL"
+                                                        btnColor="#6366f1"
+                                                        onClick={() => {
+                                                            if (confirm('Are you sure you want to flush all temporary system caches?')) {
+                                                                localStorage.clear();
+                                                                sessionStorage.clear();
+                                                                alert('⚡ All system caches and storage buffers cleared!');
+                                                                fetchHealth();
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

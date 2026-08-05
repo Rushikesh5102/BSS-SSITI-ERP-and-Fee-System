@@ -126,7 +126,12 @@ app.get('/api/health/system', async (_req, res) => {
     const realDbQueryTime = Date.now() - dbStartTime;
 
     // Real DB Counts & Database Size
-    const [studentCount, paymentCount, receiptCount, userCount, feeStructCount, auditLogs, storeItemCount, supplierCount, transactionCount] = await Promise.all([
+    const [
+        studentCount, paymentCount, receiptCount, userCount, feeStructCount, auditLogs, 
+        storeItemCount, supplierCount, transactionCount,
+        bookCount, bookIssueCount, bookReservationCount,
+        storeItemsList, booksList
+    ] = await Promise.all([
         prisma.student.count().catch(() => 0),
         prisma.payment.count().catch(() => 0),
         prisma.receipt.count().catch(() => 0),
@@ -136,7 +141,15 @@ app.get('/api/health/system', async (_req, res) => {
         prisma.storeItem.count().catch(() => 0),
         prisma.storeSupplier.count().catch(() => 0),
         prisma.stockTransaction.count().catch(() => 0),
+        prisma.book.count().catch(() => 0),
+        prisma.bookIssue.count().catch(() => 0),
+        prisma.bookReservation.count().catch(() => 0),
+        prisma.storeItem.findMany({ select: { quantity: true, pricePerUnit: true } }).catch(() => []),
+        prisma.book.findMany({ select: { quantity: true, price: true } }).catch(() => [])
     ]);
+
+    const totalStoreValuation = storeItemsList.reduce((acc: number, item: any) => acc + ((item.quantity || 0) * (item.pricePerUnit || 0)), 0);
+    const totalLibraryValuation = booksList.reduce((acc: number, b: any) => acc + ((b.quantity || 0) * (b.price || 0)), 0);
 
     let dbSizeFormatted = '12.4 MB';
     let dbSizeBytes = 12984832;
@@ -172,6 +185,11 @@ app.get('/api/health/system', async (_req, res) => {
             storeItems: storeItemCount,
             storeSuppliers: supplierCount,
             stockTransactions: transactionCount,
+            books: bookCount,
+            bookIssues: bookIssueCount,
+            bookReservations: bookReservationCount,
+            totalStoreValuation,
+            totalLibraryValuation,
             dbSize: dbSizeFormatted,
             dbSizeBytes: dbSizeBytes,
         },
