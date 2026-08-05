@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import api from '../../../services/api';
 import ImageUploadWidget from '../../../components/ImageUploadWidget';
 import WelcomeOverlay from '../../../components/WelcomeOverlay';
+import Footer from '../../../components/Footer';
 
 interface StoreItem {
     id: string;
@@ -492,12 +493,12 @@ function AssetRegisterContent() {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {item.sku && <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, marginTop: 2 }}>SKU: {item.sku}</div>}
+                                                            {item.sku && <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700, marginTop: 2 }}>SKU: {item.sku}</div>}
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '14px 12px' }}>
-                                                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: '4px', background: 'var(--surface-2)', fontWeight: 600 }}>
+                                                    <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: '6px', background: 'var(--surface-2)', color: 'var(--text-primary)', fontWeight: 700 }}>
                                                         {item.category}
                                                     </span>
                                                 </td>
@@ -506,10 +507,10 @@ function AssetRegisterContent() {
                                                         {item.quantity} {cleanUnit}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
+                                                <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
                                                     {item.reorderLevel} {cleanUnit}
                                                 </td>
-                                                <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 500, fontSize: 12 }}>
+                                                <td style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 600, fontSize: 12 }}>
                                                     {item.location ? `📍 ${item.location}` : 'Unassigned'}
                                                 </td>
                                                 <td style={{ padding: '14px 12px', textAlign: 'center' }}>
@@ -529,11 +530,38 @@ function AssetRegisterContent() {
                                                         ● {stObj.label}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                                                    <button onClick={() => openEditModal(item)} className="btn btn-ghost" style={{ padding: '4px 8px', marginRight: 4, fontSize: 12 }}>
+                                                <td style={{ padding: '14px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                    <button
+                                                        onClick={() => openEditModal(item)}
+                                                        className="btn"
+                                                        style={{
+                                                            padding: '5px 10px',
+                                                            fontSize: 11,
+                                                            fontWeight: 700,
+                                                            background: 'rgba(2, 132, 199, 0.12)',
+                                                            color: '#0284c7',
+                                                            border: '1px solid rgba(2, 132, 199, 0.3)',
+                                                            borderRadius: '6px',
+                                                            marginRight: 6,
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
                                                         ✏️ Edit
                                                     </button>
-                                                    <button onClick={() => handleSoftArchiveAsset(item.id, item.name)} className="btn btn-ghost" style={{ padding: '4px 8px', color: 'var(--danger)', fontSize: 12 }}>
+                                                    <button
+                                                        onClick={() => handleSoftArchiveAsset(item.id, item.name)}
+                                                        className="btn"
+                                                        style={{
+                                                            padding: '5px 10px',
+                                                            fontSize: 11,
+                                                            fontWeight: 700,
+                                                            background: 'rgba(239, 68, 68, 0.12)',
+                                                            color: '#ef4444',
+                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                            borderRadius: '6px',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
                                                         📦 Archive
                                                     </button>
                                                 </td>
@@ -545,6 +573,7 @@ function AssetRegisterContent() {
                         </div>
                     )}
                 </div>
+                <Footer />
             </div>
 
             {/* ADD ASSET MODAL */}

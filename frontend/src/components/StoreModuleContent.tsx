@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import api from '../services/api';
 import ImageUploadWidget from './ImageUploadWidget';
 import WelcomeOverlay from './WelcomeOverlay';
+import Footer from './Footer';
 
 interface StoreDashboardStats {
     totalItems: number;
@@ -971,6 +972,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                         </div>
                     )}
                 </div>
+                <Footer />
             </div>
 
             {/* MODALS */}

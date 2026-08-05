@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
     { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
     { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'], module: 'FEES' },
     { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
-    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'FEES' },
+    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
 
     // STORE WORKSPACE & STORE DEVELOPER SIMULATIONS
     { href: '/store/items?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
@@ -159,7 +159,7 @@ function SidebarInner() {
                     <div style={{ width: 38, height: 38, background: '#ffffff', borderRadius: 10, padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
                         <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
-                    <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary-dark)' }}>Shri Sai I.T.I</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 15 }}>Shri Sai I.T.I</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {user && (
@@ -189,13 +189,13 @@ function SidebarInner() {
 
             <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
                 {/* Logo (Home Shortcut) */}
-                <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)} title="🏠 Home / Dashboard Shortcut">
+                <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
                     <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}>
                         <div style={{ width: 50, height: 50, background: '#ffffff', borderRadius: 14, padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.2)', flexShrink: 0 }}>
                             <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                         <div className="sidebar-logo-text">
-                            <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I 🏠</h2>
+                            <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I</h2>
                             <span style={{ fontSize: 12 }}>{activeWorkspace === 'STORE' ? 'Store Management' : 'Fee Management'}</span>
                         </div>
                     </div>

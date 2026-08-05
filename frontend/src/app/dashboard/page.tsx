@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import api from '../../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import WelcomeOverlay from '../../components/WelcomeOverlay';
+import Footer from '../../components/Footer';
 
 interface DashboardStats {
     totalStudents: number;
@@ -398,10 +399,7 @@ function DashboardContent() {
                                 </div>
                             )}
                         </div>
-                        <footer className="footer">
-                            <div>&copy; {new Date().getFullYear()} Shri Sai I.T.I All rights reserved. | <Link href="/terms" style={{ marginLeft: 8 }}>Terms and Conditions</Link></div>
-                            <div>Developed by Rushikesh Pattiwar</div>
-                        </footer>
+                        <Footer />
                     </div>
                 </div>
             </>
@@ -727,10 +725,7 @@ function DashboardContent() {
                         </div>
                     )}
 
-                    <footer className="footer">
-                        <div>&copy; {new Date().getFullYear()} Shri Sai I.T.I All rights reserved. | <Link href="/terms" style={{ marginLeft: 8 }}>Terms and Conditions</Link></div>
-                        <div>Developed by Rushikesh Pattiwar</div>
-                    </footer>
+                    <Footer />
                 </div>
             </div>
         </>

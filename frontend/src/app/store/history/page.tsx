@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../../components/Sidebar';
 import WelcomeOverlay from '../../../components/WelcomeOverlay';
+import Footer from '../../../components/Footer';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 
@@ -272,6 +273,7 @@ function MovementHistoryContent() {
                         </div>
                     )}
                 </div>
+                <Footer />
             </div>
         </div>
     );

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
+import Footer from '../../components/Footer';
 
 function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam: string | null; simulateParam: string | null; tabParam: string | null }) {
     const { user, loading } = useAuth();
@@ -516,15 +517,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 )}
                 </div>
 
-                <footer className="footer">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <span>&copy; 2026 Shri Sai I.T.I All rights reserved.</span>
-                        <Link href="/terms" style={{ color: 'var(--primary-light)', textDecoration: 'none', fontWeight: 500, fontSize: '13px' }}>
-                            Terms and Conditions
-                        </Link>
-                    </div>
-                    <div>Developed by Rushikesh Pattiwar</div>
-                </footer>
+                <Footer />
             </div>
 
             {/* Add Student Modal */}

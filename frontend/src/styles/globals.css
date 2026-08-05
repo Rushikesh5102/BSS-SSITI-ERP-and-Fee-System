@@ -480,6 +480,9 @@ input[type="file"]::file-selector-button:hover {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #0f172a 100%);
   position: relative;
 }
+html.dark .login-page {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%) !important;
+}
 .login-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);

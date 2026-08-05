@@ -37,13 +37,31 @@ export default function PortalHubPage() {
         }
     };
 
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        setIsDark(document.documentElement.classList.contains('dark'));
+    }, []);
+
+    const toggleTheme = () => {
+        if (isDark) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            setIsDark(false);
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            setIsDark(true);
+        }
+    };
+
     if (loading || !user || (user.role !== 'ADMIN' && user.role !== 'DEVELOPER')) {
         return (
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh',
-                background: '#020617'
+                background: 'var(--background)'
             }}>
-                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, borderColor: '#38bdf8' }} />
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
             </div>
         );
     }
@@ -51,15 +69,31 @@ export default function PortalHubPage() {
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)',
+            background: isDark ? 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)' : 'var(--background)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#f8fafc',
+            color: 'var(--text-primary)',
             padding: '24px 16px',
-            fontFamily: "'Inter', sans-serif"
+            fontFamily: "'Inter', sans-serif",
+            position: 'relative'
         }}>
+            <button
+                onClick={toggleTheme}
+                className="btn btn-secondary"
+                style={{
+                    position: 'absolute',
+                    top: 20,
+                    right: 20,
+                    borderRadius: 20,
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    fontWeight: 700
+                }}
+            >
+                {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
             {showWelcome && <WelcomeOverlay role={user.role} />}
             <style>{`
                 @keyframes float {
@@ -77,9 +111,8 @@ export default function PortalHubPage() {
                     to { opacity: 1; transform: translateY(0); }
                 }
                 .portal-card {
-                    background: rgba(15, 23, 42, 0.6);
-                    backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    background: var(--surface-card);
+                    border: 1px solid var(--border);
                     border-radius: 20px;
                     padding: 32px 24px;
                     text-align: center;
@@ -89,11 +122,13 @@ export default function PortalHubPage() {
                     flex-direction: column;
                     align-items: center;
                     gap: 16px;
+                    box-shadow: var(--shadow-sm);
                 }
                 .portal-card:hover {
                     transform: translateY(-8px);
-                    background: rgba(30, 41, 59, 0.8);
-                    border-color: rgba(56, 189, 248, 0.4);
+                    background: var(--surface-2);
+                    border-color: var(--primary);
+                    box-shadow: var(--shadow-md);
                 }
             `}</style>
 

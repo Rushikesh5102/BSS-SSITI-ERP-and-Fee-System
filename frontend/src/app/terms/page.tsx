@@ -6,7 +6,7 @@ export default function TermsAndConditions() {
     const router = useRouter();
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--background)', display: 'flex', flexDirection: 'column' }}>
             <header className="header" style={{ position: 'relative' }}>
                 <div>
                     <div className="header-title">Shri Sai I.T.I</div>
