@@ -711,7 +711,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                         {[
                             { id: 'issue', label: '📤 Tool Issue Register', count: activeIssues.length },
                             { id: 'returns', label: '📥 Tool Return Register' },
-                            { id: 'history', label: '🔄 Movement History' },
                             { id: 'maintenance', label: '🔧 Maintenance Log', count: stats?.maintenanceCount },
                             { id: 'damaged', label: '⚠️ Damaged / Lost', count: stats?.damagedCount },
                         ].map((t) => (
@@ -871,67 +870,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                         </div>
                     )}
 
-                    {/* TAB 4: MOVEMENT HISTORY */}
-                    {activeTab === 'history' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                            <div className="card" style={{ padding: '16px 20px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
-                                    <div>
-                                        <label className="form-label" style={{ fontSize: 11 }}>Search Movement Log</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="🔍 Search item, person, remarks..."
-                                            value={historySearch}
-                                            onChange={e => setHistorySearch(e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="form-label" style={{ fontSize: 11 }}>Action Type</label>
-                                        <select className="form-control" value={historyTypeFilter} onChange={e => setHistoryTypeFilter(e.target.value)}>
-                                            <option value="">All Movement Types</option>
-                                            <option value="ISSUE">📤 Tool Issue</option>
-                                            <option value="RETURN">📥 Tool Return</option>
-                                            <option value="TRANSFER">🔄 Location Transfer</option>
-                                            <option value="MAINTENANCE">🔧 Maintenance</option>
-                                            <option value="DAMAGE">⚠️ Damage / Loss</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div className="table-wrap" style={{ border: 'none' }}>
-                                <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                                            <th style={{ textAlign: 'left', padding: '14px' }}>Date & Time</th>
-                                            <th style={{ textAlign: 'left', padding: '14px' }}>Action</th>
-                                            <th style={{ textAlign: 'left', padding: '14px' }}>Asset / Tool</th>
-                                            <th style={{ textAlign: 'center', padding: '14px' }}>Qty</th>
-                                            <th style={{ textAlign: 'left', padding: '14px' }}>Person</th>
-                                            <th style={{ textAlign: 'left', padding: '14px' }}>Remarks</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredHistory.map((log) => (
-                                            <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                                <td style={{ padding: '14px', fontSize: 11, color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleString()}</td>
-                                                <td style={{ padding: '14px' }}>
-                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: 'var(--surface-2)' }}>
-                                                        {log.type}
-                                                    </span>
-                                                </td>
-                                                <td style={{ padding: '14px', fontWeight: 700 }}>{log.item?.name}</td>
-                                                <td style={{ padding: '14px', textAlign: 'center', fontWeight: 700 }}>{log.quantity}</td>
-                                                <td style={{ padding: '14px', fontSize: 12 }}>{log.recipientType === 'STUDENT' ? `🎓 ${log.student?.name}` : log.staffName ? `👔 ${log.staffName}` : '-'}</td>
-                                                <td style={{ padding: '14px', fontSize: 12 }}>{log.remarks || '-'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
 
                     {/* TAB 5: MAINTENANCE LOG */}
                     {activeTab === 'maintenance' && (
