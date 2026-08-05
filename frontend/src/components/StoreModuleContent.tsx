@@ -29,6 +29,7 @@ interface StoreItem {
     quantity: number;
     unit: string;
     reorderLevel: number;
+    pricePerUnit: number;
     location: string | null;
     status: string;
     notes: string | null;
@@ -117,6 +118,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     const [itemQuantity, setItemQuantity] = useState('1');
     const [itemUnit, setItemUnit] = useState('pcs');
     const [itemReorderLevel, setItemReorderLevel] = useState('5');
+    const [itemPricePerUnit, setItemPricePerUnit] = useState('0');
     const [itemLocation, setItemLocation] = useState('');
     const [itemStatus, setItemStatus] = useState('AVAILABLE');
     const [itemNotes, setItemNotes] = useState('');
@@ -312,6 +314,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
+                pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
                 location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
@@ -341,6 +344,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
+                pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
                 location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,

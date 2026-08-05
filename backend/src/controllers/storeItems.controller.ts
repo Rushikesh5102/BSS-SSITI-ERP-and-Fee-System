@@ -86,7 +86,7 @@ export const storeItemsController = {
      * POST /api/store/items
      */
     create: asyncHandler(async (req: Request, res: Response) => {
-        const { name, sku, description, category, quantity, unit, reorderLevel, location, status, notes, branchId, image } = req.body;
+        const { name, sku, description, category, quantity, unit, reorderLevel, pricePerUnit, location, status, notes, branchId, image } = req.body;
 
         if (!name || !category) {
             throw new AppError(400, 'Name and Category are required');
@@ -98,6 +98,7 @@ export const storeItemsController = {
         }
 
         const initialQty = quantity !== undefined ? parseInt(quantity, 10) : 0;
+        const parsedPrice = pricePerUnit !== undefined ? parseInt(pricePerUnit, 10) : 0;
 
         const item = await prisma.storeItem.create({
             data: {
@@ -108,6 +109,7 @@ export const storeItemsController = {
                 quantity: initialQty,
                 unit: unit || 'pcs',
                 reorderLevel: reorderLevel ? parseInt(reorderLevel, 10) : 5,
+                pricePerUnit: parsedPrice,
                 location,
                 status: status || 'AVAILABLE',
                 notes,
@@ -149,7 +151,7 @@ export const storeItemsController = {
      * PUT /api/store/items/:id
      */
     update: asyncHandler(async (req: Request, res: Response) => {
-        const { name, sku, description, category, quantity, unit, reorderLevel, location, status, notes, image } = req.body;
+        const { name, sku, description, category, quantity, unit, reorderLevel, pricePerUnit, location, status, notes, image } = req.body;
 
         const item = await prisma.storeItem.update({
             where: { id: req.params.id },
@@ -161,6 +163,7 @@ export const storeItemsController = {
                 ...(quantity !== undefined && { quantity: parseInt(quantity, 10) }),
                 ...(unit !== undefined && { unit }),
                 ...(reorderLevel !== undefined && { reorderLevel: parseInt(reorderLevel, 10) }),
+                ...(pricePerUnit !== undefined && { pricePerUnit: parseInt(pricePerUnit, 10) }),
                 ...(location !== undefined && { location }),
                 ...(status !== undefined && { status }),
                 ...(notes !== undefined && { notes }),

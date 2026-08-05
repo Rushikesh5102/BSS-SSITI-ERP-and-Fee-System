@@ -18,6 +18,7 @@ interface StoreItem {
     quantity: number;
     unit: string;
     reorderLevel: number;
+    pricePerUnit: number;
     location: string | null;
     status: string;
     notes: string | null;
@@ -369,6 +370,18 @@ function AssetRegisterContent() {
                         </div>
 
                         <div className="stat-card" style={{ padding: '14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                                <span style={{ fontSize: 18 }}>💰</span>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL STOCK VALUATION</div>
+                                <div style={{ color: '#8b5cf6', fontSize: 20, fontWeight: 800 }}>
+                                    ₹{items.reduce((acc, curr) => acc + ((curr.quantity || 0) * (curr.pricePerUnit || 0)), 0).toLocaleString('en-IN')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card" style={{ padding: '14px' }}>
                             <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
                                 <span style={{ fontSize: 18 }}>📉</span>
                             </div>
@@ -446,6 +459,8 @@ function AssetRegisterContent() {
                                         <th style={{ textAlign: 'left', padding: '14px 16px', whiteSpace: 'nowrap' }}>Item Name</th>
                                         <th style={{ textAlign: 'left', padding: '14px 12px', whiteSpace: 'nowrap' }}>Category</th>
                                         <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Quantity</th>
+                                        <th style={{ textAlign: 'right', padding: '14px 12px', whiteSpace: 'nowrap' }}>Unit Price (₹)</th>
+                                        <th style={{ textAlign: 'right', padding: '14px 12px', whiteSpace: 'nowrap' }}>Total Asset Value (₹)</th>
                                         <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Reorder Level</th>
                                         <th style={{ textAlign: 'left', padding: '14px 12px', whiteSpace: 'nowrap' }}>Rack Location</th>
                                         <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Status</th>
@@ -457,6 +472,8 @@ function AssetRegisterContent() {
                                         const isLow = item.quantity <= item.reorderLevel;
                                         const stObj = statusOptions.find(s => s.value === item.status) || { label: item.status || 'Available', color: '#10b981' };
                                         const cleanUnit = (item.unit || 'pcs').replace(/pcs\s*pcs/gi, 'pcs').trim();
+                                        const unitPrice = item.pricePerUnit || 0;
+                                        const totalVal = (item.quantity || 0) * unitPrice;
 
                                         return (
                                             <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: isLow ? 'rgba(245, 158, 11, 0.04)' : 'transparent' }}>
@@ -506,6 +523,12 @@ function AssetRegisterContent() {
                                                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
                                                         {item.quantity} {cleanUnit}
                                                     </span>
+                                                </td>
+                                                <td data-label="Unit Price (₹)" style={{ padding: '14px 12px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                    ₹{unitPrice.toLocaleString('en-IN')} / {cleanUnit}
+                                                </td>
+                                                <td data-label="Total Asset Value (₹)" style={{ padding: '14px 12px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 800, color: '#10b981' }}>
+                                                    ₹{totalVal.toLocaleString('en-IN')}
                                                 </td>
                                                 <td data-label="Reorder Level" style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                                                     {item.reorderLevel} {cleanUnit}

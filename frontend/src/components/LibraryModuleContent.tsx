@@ -301,6 +301,10 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
         let issuedCopies = 0;
         let lostCopies = 0;
         let damagedCopies = 0;
+        let totalCatalogValue = 0;
+        let availableValue = 0;
+        let issuedValue = 0;
+        let financialLossValue = 0;
 
         books.forEach(b => {
             if (b.isActive || includeArchived) {
@@ -310,6 +314,11 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                 issuedCopies += b.issuedCopies;
                 lostCopies += b.lostCopies;
                 damagedCopies += b.damagedCopies;
+                const bookPrice = b.price || 0;
+                totalCatalogValue += b.quantity * bookPrice;
+                availableValue += b.availableCopies * bookPrice;
+                issuedValue += b.issuedCopies * bookPrice;
+                financialLossValue += (b.lostCopies + b.damagedCopies) * bookPrice;
             }
         });
 
@@ -325,7 +334,11 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
             overdueCount,
             lostCopies,
             damagedCopies,
-            totalPendingFines
+            totalPendingFines,
+            totalCatalogValue,
+            availableValue,
+            issuedValue,
+            financialLossValue
         };
     }, [books, issues, includeArchived]);
 
@@ -820,7 +833,7 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                     {/* Summary Stat Cards Row */}
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
                         gap: 12
                     }}>
                         <div className="stat-card" style={{ padding: '14px' }}>
@@ -835,13 +848,24 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                         </div>
 
                         <div className="stat-card" style={{ padding: '14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                                💰
+                            </div>
+                            <div>
+                                <div className="stat-label">Stock Valuation</div>
+                                <div className="stat-value" style={{ color: '#8b5cf6', fontSize: 18 }}>₹{stats.totalCatalogValue.toLocaleString('en-IN')}</div>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>₹{stats.issuedValue.toLocaleString('en-IN')} issued value</div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card" style={{ padding: '14px' }}>
                             <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
                                 ✅
                             </div>
                             <div>
                                 <div className="stat-label">Available Copies</div>
                                 <div className="stat-value" style={{ color: '#10b981' }}>{stats.availableCopies}</div>
-                                <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>ready to issue</div>
+                                <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>₹{stats.availableValue.toLocaleString('en-IN')} value</div>
                             </div>
                         </div>
 

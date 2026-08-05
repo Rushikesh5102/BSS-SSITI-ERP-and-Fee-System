@@ -215,24 +215,43 @@ function ReportsPageContent() {
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Item Name</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Category</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'center' }}>Quantity</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'right' }}>Unit Price (₹)</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'right' }}>Total Asset Value (₹)</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'center' }}>Reorder Level</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Rack Location</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {items.map((item, idx) => (
-                                                <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                                    <td style={{ padding: '8px' }}>{idx + 1}</td>
-                                                    <td style={{ padding: '8px', fontWeight: 700 }}>{item.name}</td>
-                                                    <td style={{ padding: '8px' }}>{item.category}</td>
-                                                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{item.quantity} {item.unit}</td>
-                                                    <td style={{ padding: '8px', textAlign: 'center' }}>{item.reorderLevel} {item.unit}</td>
-                                                    <td style={{ padding: '8px' }}>{item.location || 'N/A'}</td>
-                                                    <td style={{ padding: '8px', fontWeight: 700 }}>{item.status}</td>
-                                                </tr>
-                                            ))}
+                                            {items.map((item, idx) => {
+                                                const unitPrice = item.pricePerUnit || 0;
+                                                const totalVal = (item.quantity || 0) * unitPrice;
+                                                return (
+                                                    <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                        <td style={{ padding: '8px' }}>{idx + 1}</td>
+                                                        <td style={{ padding: '8px', fontWeight: 700 }}>{item.name}</td>
+                                                        <td style={{ padding: '8px' }}>{item.category}</td>
+                                                        <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{item.quantity} {item.unit}</td>
+                                                        <td style={{ padding: '8px', textAlign: 'right', fontWeight: 600 }}>₹{unitPrice.toLocaleString('en-IN')}</td>
+                                                        <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>₹{totalVal.toLocaleString('en-IN')}</td>
+                                                        <td style={{ padding: '8px', textAlign: 'center' }}>{item.reorderLevel} {item.unit}</td>
+                                                        <td style={{ padding: '8px' }}>{item.location || 'N/A'}</td>
+                                                        <td style={{ padding: '8px', fontWeight: 700 }}>{item.status}</td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
+                                        <tfoot>
+                                            <tr style={{ background: '#f8fafc', fontWeight: 800, borderTop: '2px solid #0f172a' }}>
+                                                <td colSpan={3} style={{ padding: '10px 8px', textAlign: 'right' }}>Total Inventory Valuation:</td>
+                                                <td style={{ padding: '10px 8px', textAlign: 'center' }}>{items.reduce((a, i) => a + (i.quantity || 0), 0)} pcs</td>
+                                                <td style={{ padding: '10px 8px' }}></td>
+                                                <td style={{ padding: '10px 8px', textAlign: 'right', color: '#16a34a', fontSize: 13 }}>
+                                                    ₹{items.reduce((a, i) => a + ((i.quantity || 0) * (i.pricePerUnit || 0)), 0).toLocaleString('en-IN')}
+                                                </td>
+                                                <td colSpan={3}></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 )}
 

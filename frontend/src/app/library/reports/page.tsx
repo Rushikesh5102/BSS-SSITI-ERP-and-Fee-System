@@ -230,38 +230,57 @@ function LibraryReportsPageContent() {
                             <>
                                 {/* REPORT 1: BOOK CATALOG */}
                                 {reportType === 'BOOKS' && (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                                        <thead>
-                                            <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>#</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Book Title</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Author</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Category</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Shelf Location</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'center' }}>Total Copies</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'center' }}>Available</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'center' }}>Issued</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {books.map((b, idx) => (
-                                                <tr key={b.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                                    <td style={{ padding: '8px' }}>{idx + 1}</td>
-                                                    <td style={{ padding: '8px', fontWeight: 700 }}>{b.title}</td>
-                                                    <td style={{ padding: '8px' }}>{b.author}</td>
-                                                    <td style={{ padding: '8px' }}>{b.category}</td>
-                                                    <td style={{ padding: '8px' }}>{b.shelfLocation || 'Unassigned'}</td>
-                                                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{b.quantity || 1}</td>
-                                                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700, color: '#16a34a' }}>{b.availableCopies || 0}</td>
-                                                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700, color: '#0284c7' }}>{b.issuedCopies || 0}</td>
-                                                    <td style={{ padding: '8px', fontWeight: 700 }}>
-                                                        {b.availableCopies > 0 ? 'AVAILABLE' : 'OUT_OF_STOCK'}
-                                                    </td>
+                                    <>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                                            <thead>
+                                                <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'left' }}>#</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'left' }}>Book Title</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'left' }}>Author</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'left' }}>Category</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'left' }}>Shelf Location</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'center' }}>Total Copies</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'right' }}>Unit Price (₹)</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'right' }}>Total Asset Value (₹)</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'center' }}>Available</th>
+                                                    <th style={{ padding: '10px 8px', textAlign: 'left' }}>Status</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {books.map((b, idx) => {
+                                                    const price = b.price || 0;
+                                                    const totalVal = (b.quantity || 1) * price;
+                                                    return (
+                                                        <tr key={b.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                            <td style={{ padding: '8px' }}>{idx + 1}</td>
+                                                            <td style={{ padding: '8px', fontWeight: 700 }}>{b.title}</td>
+                                                            <td style={{ padding: '8px' }}>{b.author}</td>
+                                                            <td style={{ padding: '8px' }}>{b.category}</td>
+                                                            <td style={{ padding: '8px' }}>{b.shelfLocation || 'Unassigned'}</td>
+                                                            <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{b.quantity || 1}</td>
+                                                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 600 }}>₹{price.toLocaleString('en-IN')}</td>
+                                                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>₹{totalVal.toLocaleString('en-IN')}</td>
+                                                            <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700, color: '#16a34a' }}>{b.availableCopies || 0}</td>
+                                                            <td style={{ padding: '8px', fontWeight: 700 }}>
+                                                                {b.availableCopies > 0 ? 'AVAILABLE' : 'OUT_OF_STOCK'}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr style={{ background: '#f8fafc', fontWeight: 800, borderTop: '2px solid #0f172a' }}>
+                                                    <td colSpan={5} style={{ padding: '10px 8px', textAlign: 'right' }}>Total Inventory Valuation:</td>
+                                                    <td style={{ padding: '10px 8px', textAlign: 'center' }}>{books.reduce((a, b) => a + (b.quantity || 1), 0)}</td>
+                                                    <td style={{ padding: '10px 8px' }}></td>
+                                                    <td style={{ padding: '10px 8px', textAlign: 'right', color: '#16a34a', fontSize: 13 }}>
+                                                        ₹{books.reduce((a, b) => a + ((b.quantity || 1) * (b.price || 0)), 0).toLocaleString('en-IN')}
+                                                    </td>
+                                                    <td colSpan={2}></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </>
                                 )}
 
                                 {/* REPORT 2: ISSUES & OVERDUES */}
