@@ -240,91 +240,9 @@ const INITIAL_BOOKS_SEED: BookItem[] = [
     }
 ];
 
-const INITIAL_ISSUES_SEED: BookIssueItem[] = [
-    {
-        id: 'issue-201',
-        bookId: 'book-101',
-        borrowerType: 'STUDENT',
-        borrowerName: 'Rushikesh Pattiwar (SAI-2024-001)',
-        borrowerContact: '+91 9876543210',
-        issueDate: '2026-07-20T10:30:00Z',
-        dueDate: '2026-08-03T10:30:00Z',
-        status: 'OVERDUE',
-        fineAmount: 15,
-        fineStatus: 'PENDING',
-        remarks: 'Electrician Trade Year 1',
-        book: { title: 'Basic Electrical Engineering & Workshop Practice', isbn: '978-8121924405' }
-    },
-    {
-        id: 'issue-202',
-        bookId: 'book-107',
-        borrowerType: 'STUDENT',
-        borrowerName: 'Amol Deshmukh (SAI-2024-014)',
-        borrowerContact: '+91 9123456789',
-        issueDate: '2026-08-01T09:15:00Z',
-        dueDate: '2026-08-15T09:15:00Z',
-        status: 'ISSUED',
-        fineAmount: 0,
-        fineStatus: 'NONE',
-        remarks: 'RRB ALP Preparation',
-        book: { title: 'RRB ITI Apprentice & Loco Pilot Recruitment Exam Guide', isbn: '978-9386221589' }
-    },
-    {
-        id: 'issue-203',
-        bookId: 'book-102',
-        borrowerType: 'STAFF',
-        borrowerName: 'Prof. Suresh Kumar (Fitter Instructor)',
-        borrowerContact: '+91 9422113344',
-        issueDate: '2026-07-15T14:00:00Z',
-        dueDate: '2026-07-29T14:00:00Z',
-        returnDate: '2026-07-28T11:20:00Z',
-        status: 'RETURNED',
-        returnCondition: 'GOOD',
-        fineAmount: 0,
-        fineStatus: 'NONE',
-        remarks: 'Returned in good condition before due date.',
-        book: { title: 'Workshop Technology & Machine Tool Operations', isbn: '978-8185099156' }
-    }
-];
-
-const INITIAL_RESERVATIONS_SEED: BookReservationItem[] = [
-    {
-        id: 'res-301',
-        bookId: 'book-107',
-        borrowerType: 'STUDENT',
-        borrowerName: 'Vikas Kadam (SAI-2024-022)',
-        borrowerContact: '+91 9988776655',
-        reservationDate: '2026-08-02T11:00:00Z',
-        status: 'PENDING',
-        notes: 'Requested urgent notification when RRB guide is returned.',
-        book: { title: 'RRB ITI Apprentice & Loco Pilot Recruitment Exam Guide', availableCopies: 0 }
-    }
-];
-
-const INITIAL_MOVEMENT_LOGS_SEED: BookMovementLogItem[] = [
-    {
-        id: 'mov-401',
-        bookId: 'book-101',
-        action: 'ISSUE',
-        borrowerName: 'Rushikesh Pattiwar',
-        quantity: 1,
-        remarks: 'Issued to student Rushikesh Pattiwar for 14 days',
-        performedByName: 'Chief Librarian',
-        createdAt: '2026-07-20T10:30:00Z',
-        book: { title: 'Basic Electrical Engineering & Workshop Practice' }
-    },
-    {
-        id: 'mov-402',
-        bookId: 'book-102',
-        action: 'RETURN',
-        borrowerName: 'Prof. Suresh Kumar',
-        quantity: 1,
-        remarks: 'Returned by Staff. Condition: GOOD.',
-        performedByName: 'Chief Librarian',
-        createdAt: '2026-07-28T11:20:00Z',
-        book: { title: 'Workshop Technology & Machine Tool Operations' }
-    }
-];
+const INITIAL_ISSUES_SEED: BookIssueItem[] = [];
+const INITIAL_RESERVATIONS_SEED: BookReservationItem[] = [];
+const INITIAL_MOVEMENT_LOGS_SEED: BookMovementLogItem[] = [];
 
 interface Props {
     activeTab?: 'dashboard' | 'books' | 'issue' | 'history' | 'reports';

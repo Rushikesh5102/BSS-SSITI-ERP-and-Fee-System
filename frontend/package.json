@@ -9,14 +9,20 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@react-three/drei": "^9.121.5",
+        "@react-three/fiber": "^8.17.14",
         "@supabase/ssr": "^0.10.3",
         "@supabase/supabase-js": "^2.110.7",
+        "@types/three": "^0.185.4",
         "axios": "^1.6.8",
+        "framer-motion": "^13.0.0",
         "jspdf": "^4.2.1",
+        "lucide-react": "^1.28.0",
         "next": "14.1.4",
         "react": "^18",
         "react-dom": "^18",
-        "recharts": "^2.12.2"
+        "recharts": "^2.12.2",
+        "three": "^0.185.1"
     },
     "devDependencies": {
         "@types/node": "^20",
