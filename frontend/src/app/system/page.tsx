@@ -427,7 +427,7 @@ export default function SystemHealthPage() {
 
                                 {/* --- TAB: CONTROLS --- */}
                                 {activeTab === 'controls' && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                    <div className="sys-col-12" style={{ display: 'flex', flexDirection: 'column', gap: 20, width: '100%' }}>
                                         {/* Developer Role Simulation Panel */}
                                         <div className="card sys-col-12" style={{ background: '#0f172a', border: '1px solid #38bdf8' }}>
                                             <div className="card-header" style={{ borderBottom: '1px solid #1e293b' }}>
