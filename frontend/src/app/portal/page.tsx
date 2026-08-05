@@ -152,16 +152,14 @@ export default function PortalHubPage() {
                     fontWeight: 900,
                     letterSpacing: '-0.5px',
                     margin: '0 0 10px 0',
-                    background: 'linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
+                    color: isDark ? '#ffffff' : 'var(--primary-dark)'
                 }}>
                     Shri Sai I.T.I
                 </h1>
                 <p style={{
                     fontSize: 'clamp(14px, 3.5vw, 17px)',
-                    color: '#94a3b8',
-                    fontWeight: 500,
+                    color: 'var(--text-secondary)',
+                    fontWeight: 600,
                     margin: 0
                 }}>
                     Central Workspace Portal Hub
@@ -192,13 +190,13 @@ export default function PortalHubPage() {
                         💰
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Fee Management</h2>
-                        <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Fee Management</h2>
+                        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
                             Track student fees, record collection payments, print invoices, and view financial reports.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '13px', fontWeight: 700, color: '#38bdf8',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--primary)',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
                         Enter Workspace &rarr;
@@ -218,13 +216,13 @@ export default function PortalHubPage() {
                         📦
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Store Management</h2>
-                        <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Store Management</h2>
+                        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
                             Manage inventory, track stock inward/outward transactions, handle suppliers, and monitor low stock alerts.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '13px', fontWeight: 700, color: '#c084fc',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: 'var(--primary)',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
                         Enter Workspace &rarr;
@@ -245,13 +243,13 @@ export default function PortalHubPage() {
                             💻
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>System Diagnostics</h2>
-                            <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>System Diagnostics</h2>
+                            <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
                                 Monitor system uptime, check database vitals, configure global settings, and audit security events.
                             </p>
                         </div>
                         <div style={{
-                            marginTop: 'auto', fontSize: '13px', fontWeight: 700, color: '#fbbf24',
+                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#d97706',
                             display: 'flex', alignItems: 'center', gap: '6px'
                         }}>
                             Control Center &rarr;
@@ -260,37 +258,26 @@ export default function PortalHubPage() {
                 )}
             </div>
 
-            <div style={{
-                animation: 'fadeIn 1.2s ease 0.2s forwards',
-                opacity: 0,
-                animationFillMode: 'forwards'
-            }}>
-                <button
-                    onClick={logout}
-                    className="btn"
-                    style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        color: '#ef4444',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '12px',
-                        padding: '10px 24px',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.background = '#ef4444';
-                        e.currentTarget.style.color = '#ffffff';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                        e.currentTarget.style.color = '#ef4444';
-                    }}
-                >
-                    🚪 Sign Out
-                </button>
-            </div>
+            <button
+                onClick={logout}
+                style={{
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: 'var(--danger)',
+                    padding: '10px 24px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                    animation: 'fadeIn 1.2s ease forwards'
+                }}
+            >
+                🚪 Sign Out
+            </button>
         </div>
     );
 }

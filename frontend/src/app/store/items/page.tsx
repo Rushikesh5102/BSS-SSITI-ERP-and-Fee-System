@@ -443,13 +443,13 @@ function AssetRegisterContent() {
                             <table className="table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
-                                        <th style={{ textAlign: 'left', padding: '14px 16px', width: '28%' }}>Item Name</th>
-                                        <th style={{ textAlign: 'left', padding: '14px 12px', width: '14%' }}>Category</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 12px', width: '12%' }}>Quantity</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 12px', width: '12%' }}>Reorder Level</th>
-                                        <th style={{ textAlign: 'left', padding: '14px 12px', width: '14%' }}>Rack Location</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 12px', width: '10%' }}>Status</th>
-                                        <th style={{ textAlign: 'right', padding: '14px 16px', width: '10%' }}>Actions</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 16px', width: '25%' }}>Item Name</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 10px', width: '12%' }}>Category</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 10px', width: '10%' }}>Quantity</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 10px', width: '12%' }}>Reorder Level</th>
+                                        <th style={{ textAlign: 'left', padding: '14px 10px', width: '12%' }}>Rack Location</th>
+                                        <th style={{ textAlign: 'center', padding: '14px 10px', width: '11%' }}>Status</th>
+                                        <th style={{ textAlign: 'right', padding: '14px 16px', width: '18%' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -503,7 +503,7 @@ function AssetRegisterContent() {
                                                     </span>
                                                 </td>
                                                 <td style={{ padding: '14px 12px', textAlign: 'center' }}>
-                                                    <span style={{ fontSize: 13, fontWeight: 800, color: isLow ? '#f59e0b' : 'var(--text-primary)' }}>
+                                                    <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
                                                         {item.quantity} {cleanUnit}
                                                     </span>
                                                 </td>

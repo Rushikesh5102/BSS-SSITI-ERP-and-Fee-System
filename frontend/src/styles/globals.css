@@ -477,8 +477,9 @@ input[type="file"]::file-selector-button:hover {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #0f172a 100%);
+  background: var(--background);
   position: relative;
+  transition: background 0.3s ease;
 }
 html.dark .login-page {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%) !important;
