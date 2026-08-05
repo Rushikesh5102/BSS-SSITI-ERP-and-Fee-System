@@ -156,10 +156,10 @@ function SidebarInner() {
             {/* Mobile Top Header Bar */}
             <div className="mobile-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 38, height: 38, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(56, 189, 248, 0.7))' }} />
+                    <div style={{ width: 48, height: 48, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.7))' }} />
                     </div>
-                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 15 }}>Shri Sai I.T.I</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 16 }}>Shri Sai I.T.I</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {user && (
@@ -191,8 +191,8 @@ function SidebarInner() {
                 {/* Logo (Home Shortcut) */}
                 <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
                     <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}>
-                        <div style={{ width: 50, height: 50, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.7))' }} />
+                        <div style={{ width: 62, height: 62, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.75))' }} />
                         </div>
                         <div className="sidebar-logo-text">
                             <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I</h2>

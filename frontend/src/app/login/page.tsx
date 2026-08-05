@@ -74,7 +74,7 @@ export default function LoginPage() {
             <div className="login-card">
                 <div className="login-logo">
                     <div style={{
-                        width: '80px', height: '80px', margin: '0 auto 12px',
+                        width: '110px', height: '110px', margin: '0 auto 14px',
                         background: 'transparent',
                         display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
@@ -85,7 +85,7 @@ export default function LoginPage() {
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'contain',
-                                filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.7))'
+                                filter: 'drop-shadow(0 0 16px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 32px rgba(56, 189, 248, 0.8))'
                             }}
                         />
                     </div>

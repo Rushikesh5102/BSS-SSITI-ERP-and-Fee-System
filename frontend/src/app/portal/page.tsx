@@ -147,7 +147,7 @@ export default function PortalHubPage() {
             }}>
                 {/* Backgroundless Logo with White Glow */}
                 <div style={{
-                    width: '90px', height: '90px', margin: '0 auto 16px',
+                    width: '125px', height: '125px', margin: '0 auto 16px',
                     background: 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     animation: 'float 6s ease-in-out infinite'
@@ -159,7 +159,7 @@ export default function PortalHubPage() {
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: 'drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 28px rgba(56, 189, 248, 0.7))'
+                            filter: 'drop-shadow(0 0 18px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 36px rgba(56, 189, 248, 0.85))'
                         }}
                     />
                 </div>
