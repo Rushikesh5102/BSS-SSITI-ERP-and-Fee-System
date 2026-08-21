@@ -10,7 +10,8 @@
         "prisma:generate": "prisma generate",
         "prisma:migrate": "prisma migrate dev",
         "prisma:seed": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts",
-        "prisma:studio": "prisma studio"
+        "prisma:studio": "prisma studio",
+        "db:rls": "node src/scripts/apply-rls.js"
     },
     "prisma": {
         "seed": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts"

@@ -119,6 +119,10 @@ input, select, textarea { font-family: inherit; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
 
 /* ─── Desktop Base Layout ──────────────────────────────────────────────────── */
+body.sidebar-collapsed {
+  --sidebar-width: 76px;
+}
+
 .layout {
   display: flex;
   min-height: 100vh;
@@ -136,7 +140,7 @@ input, select, textarea { font-family: inherit; }
   flex-direction: column;
   overflow-y: auto;
   z-index: 100;
-  transition: transform var(--transition-md);
+  transition: width var(--transition-md), transform var(--transition-md);
 }
 
 .main-content {
@@ -149,7 +153,39 @@ input, select, textarea { font-family: inherit; }
   max-width: calc(100% - var(--sidebar-width));
   min-width: 0;
   overflow-x: hidden;
-  transition: margin-left var(--transition-md);
+  transition: margin-left var(--transition-md), width var(--transition-md), max-width var(--transition-md);
+}
+
+/* Retractable Sidebar Collapsed Rules */
+body.sidebar-collapsed .sidebar-logo-text,
+body.sidebar-collapsed .nav-text,
+body.sidebar-collapsed .user-info,
+body.sidebar-collapsed .sidebar-section-title,
+body.sidebar-collapsed .sidebar-logo h2,
+body.sidebar-collapsed .sidebar-logo span,
+body.sidebar-collapsed .workspace-btn-label {
+  display: none !important;
+}
+
+body.sidebar-collapsed .sidebar-logo {
+  padding: 12px 6px !important;
+  justify-content: center !important;
+}
+
+body.sidebar-collapsed .nav-link {
+  justify-content: center !important;
+  padding: 12px 0 !important;
+  text-align: center;
+}
+
+body.sidebar-collapsed .nav-icon {
+  margin-right: 0 !important;
+  font-size: 20px !important;
+}
+
+body.sidebar-collapsed .workspace-btn {
+  padding: 8px 2px !important;
+  justify-content: center !important;
 }
 
 .page-content {
@@ -157,7 +193,50 @@ input, select, textarea { font-family: inherit; }
   padding: 24px 28px;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ─── Institutional ERP Footer ──────────────────────────────────────────────── */
+.footer {
+  margin-top: auto;
+  min-height: 52px;
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-card);
+  color: #475569;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.footer a {
+  color: #334155;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.footer a:hover {
+  text-decoration: underline;
+  color: var(--primary);
+}
+
+html.dark .footer {
+  color: #94a3b8;
+}
+
+html.dark .footer a {
+  color: #cbd5e1;
+}
+
+html.dark .footer a:hover {
+  color: #38bdf8;
 }
 
 /* ─── Mobile Header (Hidden on Desktop) ────────────────────────────────────── */
@@ -883,3 +962,63 @@ html.dark .footer {
   .modal-overlay { padding: 8px !important; }
   .btn { min-height: 44px !important; padding: 8px 14px !important; font-size: 13.5px !important; }
 }
+
+/* ─── Donation Admin Mobile Responsive System ─────────────────────────────── */
+@media (max-width: 768px) {
+  main {
+    padding: 16px 12px !important;
+  }
+  
+  .donation-admin-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .donation-admin-header h1 {
+    font-size: 22px !important;
+  }
+
+  .donation-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Form and Button Touch Ergonomics */
+  .btn {
+    min-height: 46px;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Mobile Receipt Viewer Adaptability */
+  .modal {
+    max-width: 96vw !important;
+    margin: 8px auto !important;
+  }
+}
+
+/* ─── Global Horizontal Scroll Prevention ─────────────────────────────────── */
+body, html {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* ─── Performance & 60fps GPU Acceleration Rules ─────────────────────────── */
+.sidebar, .modal, .modal-overlay, .stat-card, .card {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.table-wrap {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 400px;
+}
+
+/* Smooth Scrolling with Zero Jitter */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+

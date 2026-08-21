@@ -8,6 +8,8 @@ import api from '../services/api';
 import ImageUploadWidget from './ImageUploadWidget';
 import WelcomeOverlay from './WelcomeOverlay';
 import Footer from './Footer';
+import AutoRecoverBanner from './AutoRecoverBanner';
+import { safeStorage } from '../utils/safeStorage';
 
 interface StoreDashboardStats {
     totalItems: number;
@@ -124,6 +126,67 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     const [itemNotes, setItemNotes] = useState('');
     const [itemBranchId, setItemBranchId] = useState('');
     const [itemImage, setItemImage] = useState('');
+
+    // Auto-Recover Draft State for Add Item Form
+    const [hasItemDraft, setHasItemDraft] = useState(false);
+    const [itemDraftTime, setItemDraftTime] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (showAddModal) {
+            const saved = safeStorage.get<any>('draft_store_item', null);
+            if (saved && (saved.name || saved.sku || saved.category)) {
+                setHasItemDraft(true);
+                setItemDraftTime(saved.savedAt);
+            }
+        }
+    }, [showAddModal]);
+
+    useEffect(() => {
+        if (showAddModal && (itemName || itemSku)) {
+            const timer = setTimeout(() => {
+                safeStorage.set('draft_store_item', {
+                    name: itemName,
+                    sku: itemSku,
+                    description: itemDescription,
+                    category: itemCategory,
+                    quantity: itemQuantity,
+                    unit: itemUnit,
+                    reorderLevel: itemReorderLevel,
+                    pricePerUnit: itemPricePerUnit,
+                    location: itemLocation,
+                    status: itemStatus,
+                    notes: itemNotes,
+                    image: itemImage,
+                    savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+    }, [showAddModal, itemName, itemSku, itemDescription, itemCategory, itemQuantity, itemUnit, itemReorderLevel, itemPricePerUnit, itemLocation, itemStatus, itemNotes, itemImage]);
+
+    const handleRestoreItemDraft = () => {
+        const saved = safeStorage.get<any>('draft_store_item', null);
+        if (saved) {
+            if (saved.name) setItemName(saved.name);
+            if (saved.sku) setItemSku(saved.sku);
+            if (saved.description) setItemDescription(saved.description);
+            if (saved.category) setItemCategory(saved.category);
+            if (saved.quantity) setItemQuantity(saved.quantity);
+            if (saved.unit) setItemUnit(saved.unit);
+            if (saved.reorderLevel) setItemReorderLevel(saved.reorderLevel);
+            if (saved.pricePerUnit) setItemPricePerUnit(saved.pricePerUnit);
+            if (saved.location) setItemLocation(saved.location);
+            if (saved.status) setItemStatus(saved.status);
+            if (saved.notes) setItemNotes(saved.notes);
+            if (saved.image) setItemImage(saved.image);
+            setHasItemDraft(false);
+        }
+    };
+
+    const handleDiscardItemDraft = () => {
+        safeStorage.remove('draft_store_item');
+        setHasItemDraft(false);
+    };
 
     // Issue Modal Form
     const [showIssueModal, setShowIssueModal] = useState(false);
@@ -323,6 +386,8 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                 branchId: itemBranchId,
                 image: itemImage || undefined
             });
+            safeStorage.remove('draft_store_item');
+            setHasItemDraft(false);
             setShowAddModal(false);
             fetchAllData();
         } catch (err: any) {
@@ -991,6 +1056,13 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                         </div>
                         <form onSubmit={handleCreateAsset}>
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                <AutoRecoverBanner
+                                    show={hasItemDraft}
+                                    savedAt={itemDraftTime}
+                                    onRestore={handleRestoreItemDraft}
+                                    onDiscard={handleDiscardItemDraft}
+                                />
+
                                 {formError && <div style={{ color: 'var(--danger)', fontSize: 13, background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px' }}>⚠️ {formError}</div>}
 
                                 <ImageUploadWidget value={itemImage} onChange={(val) => setItemImage(val)} label="Item / Asset Photo (Drag & Drop or Choose File)" />
@@ -1189,7 +1261,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                 ) : (
                                     <div className="form-group">
                                         <label className="form-label">Staff Name *</label>
-                                        <input type="text" className="form-control" required value={staffName} onChange={e => setStaffName(e.target.value)} placeholder="e.g. Prof. R. Sharma" />
+                                        <input type="text" className="form-control" required value={staffName} onChange={e => setStaffName(e.target.value)} placeholder="e.g. Rushikesh Pattiwar" />
                                     </div>
                                 )}
 

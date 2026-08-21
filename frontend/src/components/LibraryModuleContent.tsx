@@ -8,6 +8,8 @@ import api from '../services/api';
 import ImageUploadWidget from './ImageUploadWidget';
 import WelcomeOverlay from './WelcomeOverlay';
 import Footer from './Footer';
+import AutoRecoverBanner from './AutoRecoverBanner';
+import { safeStorage } from '../utils/safeStorage';
 
 export interface BookItem {
     id: string;
@@ -164,6 +166,45 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
         coverImage: '',
         notes: ''
     });
+
+    // Auto-Recover Draft State for Book Modal
+    const [hasBookDraft, setHasBookDraft] = useState(false);
+    const [bookDraftTime, setBookDraftTime] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (showBookModal && !editingBook) {
+            const saved = safeStorage.get<any>('draft_library_book', null);
+            if (saved && (saved.title || saved.author)) {
+                setHasBookDraft(true);
+                setBookDraftTime(saved.savedAt);
+            }
+        }
+    }, [showBookModal, editingBook]);
+
+    useEffect(() => {
+        if (showBookModal && !editingBook && (formData.title || formData.author)) {
+            const timer = setTimeout(() => {
+                safeStorage.set('draft_library_book', {
+                    ...formData,
+                    savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+    }, [formData, showBookModal, editingBook]);
+
+    const handleRestoreBookDraft = () => {
+        const saved = safeStorage.get<any>('draft_library_book', null);
+        if (saved) {
+            setFormData(saved);
+            setHasBookDraft(false);
+        }
+    };
+
+    const handleDiscardBookDraft = () => {
+        safeStorage.remove('draft_library_book');
+        setHasBookDraft(false);
+    };
 
     // Students list for linked borrower selection
     const [students, setStudents] = useState<any[]>([]);
@@ -473,6 +514,8 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
             addMovementLog(newBook.id, 'ADDED', `Added new book catalog entry with ${qty} total copies`);
         }
 
+        safeStorage.remove('draft_library_book');
+        setHasBookDraft(false);
         setShowBookModal(false);
     };
 
@@ -1668,6 +1711,15 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                         </div>
                         <form onSubmit={handleSaveBook}>
                             <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <AutoRecoverBanner
+                                        show={hasBookDraft}
+                                        savedAt={bookDraftTime}
+                                        onRestore={handleRestoreBookDraft}
+                                        onDiscard={handleDiscardBookDraft}
+                                    />
+                                </div>
+
                                 <div style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Book Title <span className="required">*</span></label>
                                     <input

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -71,15 +72,97 @@ export default function ReportsPage() {
     }, [user, activeTab, month, year]);
 
     const downloadReport = (format: 'excel' | 'csv' | 'pdf') => {
-        const base = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-            ? 'http://localhost:4000/api'
-            : 'https://bss-ssiti-erp-and-fee-system.onrender.com/api';
-        const token = localStorage.getItem('accessToken');
-        let endpoint = `${base}/reports/${activeTab}?format=${format}`;
-        if (activeTab === 'monthly') endpoint = `${base}/reports/monthly?year=${year}&month=${month}&format=${format}`;
-        if (activeTab === 'yearly') endpoint = `${base}/reports/yearly?year=${year}&format=${format}`;
+        if (format === 'pdf') {
+            window.print();
+            return;
+        }
 
-        window.location.href = `${endpoint}&token=${token}`;
+        const list = activeTab === 'monthly' ? (report?.payments || []) : (activeTab === 'yearly' ? (yearlyReport?.payments || []) : (pending?.students || []));
+
+        if (format === 'excel') {
+            const periodTitle = activeTab === 'monthly'
+                ? `Monthly Fee Report - ${new Date(0, month - 1).toLocaleString('en-IN', { month: 'long' })} ${year}`
+                : (activeTab === 'yearly' ? `Annual Fee Report - Year ${year}` : 'Outstanding Fees Report');
+
+            const totalSum = list.reduce((s: number, p: any) => s + (p.amount || p.pendingAmount || 0), 0);
+
+            const excelHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="utf-8"/><style>
+                    body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; }
+                    .header { font-size: 16pt; font-weight: bold; color: #0284c7; }
+                    .th { background: #0284c7; color: #ffffff; font-weight: bold; padding: 8px; border: 1px solid #0369a1; font-size: 10pt; }
+                    .td { padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 9.5pt; }
+                    .amount { text-align: right; font-weight: bold; color: #0284c7; }
+                    .total-row { background: #e0f2fe; font-weight: bold; border-top: 2px solid #0284c7; }
+                </style></head>
+                <body>
+                    <table>
+                        <tr><td colspan="7" class="header">BHARAT SHIKSHAN SANSTHA'S SHRI SAI PRIVATE ITI</td></tr>
+                        <tr><td colspan="7"><b>Official Fee Management Report:</b> ${periodTitle} | <b>Generated:</b> ${new Date().toLocaleString('en-IN')}</td></tr>
+                        <tr><td colspan="7"></td></tr>
+                        <thead>
+                            <tr>
+                                <th class="th">Sr</th>
+                                <th class="th">Date</th>
+                                <th class="th">Student Name</th>
+                                <th class="th">Student ID</th>
+                                <th class="th">Class / Trade</th>
+                                <th class="th">Payment Mode</th>
+                                <th class="th" style="text-align: right;">Amount (INR)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${list.map((p: any, i: number) => `
+                                <tr>
+                                    <td class="td" style="text-align: center;">${i + 1}</td>
+                                    <td class="td">${new Date(p.createdAt || Date.now()).toLocaleDateString('en-IN')}</td>
+                                    <td class="td"><b>${p.studentFee?.student?.name || p.name || '—'}</b></td>
+                                    <td class="td">${p.studentFee?.student?.studentId || p.studentId || '—'}</td>
+                                    <td class="td">${p.studentFee?.student?.class || p.class || '—'}</td>
+                                    <td class="td">${p.mode || 'Direct'}</td>
+                                    <td class="td amount">₹${((p.amount || p.pendingAmount || 0) / 100).toLocaleString('en-IN')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="6" class="td" style="text-align: right; font-weight: bold;">TOTAL:</td>
+                                <td class="td amount" style="font-size: 11pt;">₹${(totalSum / 100).toLocaleString('en-IN')}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </body>
+                </html>
+            `;
+            const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Sai_ITI_Fee_Report_${activeTab}_${new Date().toISOString().slice(0, 10)}.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            return;
+        }
+
+        if (format === 'csv') {
+            let csv = 'Sr No,Date,Student Name,Student ID,Class / Trade,Payment Mode,Amount (INR)\n';
+            list.forEach((p: any, i: number) => {
+                csv += `${i + 1},"${new Date(p.createdAt || Date.now()).toLocaleDateString('en-IN')}","${p.studentFee?.student?.name || p.name || '—'}","${p.studentFee?.student?.studentId || p.studentId || '—'}","${p.studentFee?.student?.class || p.class || '—'}","${p.mode || 'Direct'}",${((p.amount || p.pendingAmount || 0) / 100)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Sai_ITI_Fee_Report_${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            return;
+        }
     };
 
     const handlePurgeData = async () => {
@@ -424,15 +507,7 @@ export default function ReportsPage() {
                     )}
                 </div>
 
-                <footer className="footer">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <span>&copy; 2026 Shri Sai I.T.I All rights reserved.</span>
-                        <Link href="/terms" style={{ color: 'var(--primary-light)', textDecoration: 'none', fontWeight: 500, fontSize: '13px' }}>
-                            Terms and Conditions
-                        </Link>
-                    </div>
-                    <div>Developed by Rushikesh Pattiwar</div>
-                </footer>
+                <Footer />
             </div>
 
             {/* Toast */}

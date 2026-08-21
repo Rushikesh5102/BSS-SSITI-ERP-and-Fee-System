@@ -5,9 +5,12 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import AutoRecoverBanner from '../../components/AutoRecoverBanner';
+import { safeStorage } from '../../utils/safeStorage';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
@@ -23,6 +26,50 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
     const [toast, setToast] = useState('');
     const [form, setForm] = useState({ name: '', academicYear: '2024-25', class: '', items: [{ feeCategoryId: '', amount: '' }] });
     const [saving, setSaving] = useState(false);
+
+    // Auto-Recover Draft State
+    const [hasDraft, setHasDraft] = useState(false);
+    const [draftTime, setDraftTime] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (showModal && !editingId) {
+            const saved = safeStorage.get<any>('draft_fee_structure', null);
+            if (saved && (saved.name || saved.class)) {
+                setHasDraft(true);
+                setDraftTime(saved.savedAt);
+            }
+        }
+    }, [showModal, editingId]);
+
+    useEffect(() => {
+        if (showModal && !editingId && (form.name || form.class)) {
+            const timer = setTimeout(() => {
+                safeStorage.set('draft_fee_structure', {
+                    ...form,
+                    savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+    }, [form, showModal, editingId]);
+
+    const handleRestoreDraft = () => {
+        const saved = safeStorage.get<any>('draft_fee_structure', null);
+        if (saved) {
+            setForm({
+                name: saved.name || '',
+                academicYear: saved.academicYear || '2024-25',
+                class: saved.class || '',
+                items: saved.items || [{ feeCategoryId: '', amount: '' }]
+            });
+            setHasDraft(false);
+        }
+    };
+
+    const handleDiscardDraft = () => {
+        safeStorage.remove('draft_fee_structure');
+        setHasDraft(false);
+    };
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
@@ -80,6 +127,8 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
             }
             setShowModal(false);
             setEditingId(null);
+            safeStorage.remove('draft_fee_structure');
+            setHasDraft(false);
             setForm({ name: '', academicYear: '2024-25', class: '', items: [{ feeCategoryId: '', amount: '' }] });
             fetch();
         } catch (err: any) {
@@ -87,7 +136,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
         } finally { setSaving(false); }
     };
 
-    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
+    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN' || effectiveRole === 'ACCOUNTANT';
 
     if (loading || !user) return null;
 
@@ -150,6 +199,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                         </div>
                     )}
                 </div>
+                <Footer />
             </div>
 
             {/* Create / Edit Modal */}
@@ -162,6 +212,13 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                         </div>
                         <form onSubmit={handleSave}>
                             <div className="modal-body">
+                                <AutoRecoverBanner
+                                    show={hasDraft}
+                                    savedAt={draftTime}
+                                    onRestore={handleRestoreDraft}
+                                    onDiscard={handleDiscardDraft}
+                                />
+
                                 <div className="grid grid-2">
                                     <div className="form-group">
                                         <label className="form-label">Structure Name *</label>

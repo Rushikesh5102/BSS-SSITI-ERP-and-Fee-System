@@ -10,7 +10,7 @@ interface NavItem {
     label: string;
     icon: string;
     roles?: string[];
-    module: 'FEES' | 'STORE' | 'LIBRARY' | 'COMMON';
+    module: 'FEES' | 'STORE' | 'LIBRARY' | 'DONATION' | 'COMMON';
 }
 
 const navItems: NavItem[] = [
@@ -20,49 +20,63 @@ const navItems: NavItem[] = [
     // FEES WORKSPACE & FEES DEVELOPER SIMULATIONS
     { href: '/dashboard?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'FEES' },
     { href: '/dashboard?simulate=accountant', label: 'View as Accountant', icon: '🧾', roles: ['DEVELOPER'], module: 'FEES' },
-    { href: '/dashboard?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'FEES' },
     { href: '/dashboard?simulate=student', label: 'View as Student', icon: '🕶️', roles: ['DEVELOPER'], module: 'FEES' },
 
-    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'STUDENT'], module: 'FEES' },
-    { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'], module: 'FEES' },
-    { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['ADMIN', 'DEVELOPER'], module: 'FEES' },
+    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'STUDENT'], module: 'FEES' },
+    { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
+    { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT'], module: 'FEES' },
     { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
-    { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'DEVELOPER'], module: 'FEES' },
+    { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
     { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
     { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
 
     // STORE WORKSPACE & STORE DEVELOPER SIMULATIONS
     { href: '/store?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
     { href: '/store?simulate=store_manager', label: 'View as Store Mgr', icon: '📦', roles: ['DEVELOPER'], module: 'STORE' },
-    { href: '/store?simulate=teacher', label: 'View as Teacher', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'STORE' },
 
-    { href: '/store', label: 'Store Dashboard', icon: '📊', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
-    { href: '/store/items', label: 'Workshop Asset Register', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
-    { href: '/store/issue', label: 'Tool Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
-    { href: '/store/history', label: 'Movement History Log', icon: '🔄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
-    { href: '/store/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'TEACHER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store', label: 'Store Dashboard', icon: '📊', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/items', label: 'Workshop Asset Register', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/issue', label: 'Tool Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/history', label: 'Movement History Log', icon: '🔄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'ACCOUNTANT'], module: 'STORE' },
+    { href: '/store/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'STORE_MANAGER', 'ACCOUNTANT'], module: 'STORE' },
 
     // LIBRARY WORKSPACE & LIBRARY DEVELOPER SIMULATIONS
     { href: '/library?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'LIBRARY' },
     { href: '/library?simulate=librarian', label: 'View as Librarian', icon: '📚', roles: ['DEVELOPER'], module: 'LIBRARY' },
-    { href: '/library?simulate=teacher', label: 'View as Staff', icon: '👨‍🏫', roles: ['DEVELOPER'], module: 'LIBRARY' },
 
-    { href: '/library', label: 'Library Dashboard', icon: '📊', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT', 'STUDENT'], module: 'LIBRARY' },
-    { href: '/library/books', label: 'Book Catalog', icon: '📚', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT', 'STUDENT'], module: 'LIBRARY' },
-    { href: '/library/issue', label: 'Book Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT'], module: 'LIBRARY' },
-    { href: '/library/history', label: 'Movement History', icon: '📜', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT'], module: 'LIBRARY' },
-    { href: '/library/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'TEACHER', 'ACCOUNTANT'], module: 'LIBRARY' },
+    { href: '/library', label: 'Library Dashboard', icon: '📊', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'ACCOUNTANT', 'STUDENT'], module: 'LIBRARY' },
+    { href: '/library/books', label: 'Book Catalog', icon: '📚', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'ACCOUNTANT', 'STUDENT'], module: 'LIBRARY' },
+    { href: '/library/issue', label: 'Book Issue & Movement', icon: '🛠️', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'ACCOUNTANT'], module: 'LIBRARY' },
+    { href: '/library/history', label: 'Movement History', icon: '📜', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'ACCOUNTANT'], module: 'LIBRARY' },
+    { href: '/library/reports', label: 'PDF & Excel Reports', icon: '📄', roles: ['ADMIN', 'DEVELOPER', 'LIBRARIAN', 'ACCOUNTANT'], module: 'LIBRARY' },
+
+    // DONATION WORKSPACE & DONATION DEVELOPER SIMULATIONS
+    { href: '/donation-admin?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'DONATION' },
+    { href: '/donation-admin?simulate=accountant', label: 'View as Accountant', icon: '🧾', roles: ['DEVELOPER'], module: 'DONATION' },
+
+    { href: '/donation-admin', label: 'Donation Overview', icon: '🤝', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT', 'STORE_MANAGER', 'LIBRARIAN'], module: 'DONATION' },
+    { href: '/donation-admin/transactions', label: 'Donations & 80G Receipts', icon: '🧾', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT', 'STORE_MANAGER', 'LIBRARIAN'], module: 'DONATION' },
+    { href: '/donation-admin/campaigns', label: 'Campaigns & Causes', icon: '🎯', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT', 'STORE_MANAGER', 'LIBRARIAN'], module: 'DONATION' },
+    { href: '/donation-admin/donors', label: 'Donor Directory', icon: '👥', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT', 'STORE_MANAGER', 'LIBRARIAN'], module: 'DONATION' },
+    { href: '/donation-admin/reports', label: 'Audit & Form 10BD Reports', icon: '📈', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT', 'STORE_MANAGER', 'LIBRARIAN'], module: 'DONATION' },
 ];
 
 const roleLabels: Record<string, string> = {
     ADMIN: 'Administrator / Principal',
     ACCOUNTANT: 'Accountant',
-    TEACHER: 'Teacher / Staff',
     STUDENT: 'Student',
     DEVELOPER: 'Developer / System Architect',
     STORE_MANAGER: 'Store Manager',
     LIBRARIAN: 'Chief Librarian',
 };
+
+function getWorkspaceFromPath(p: string | null): 'FEES' | 'STORE' | 'LIBRARY' | 'DONATION' {
+    if (!p) return 'FEES';
+    if (p.startsWith('/donation-admin')) return 'DONATION';
+    if (p.startsWith('/library')) return 'LIBRARY';
+    if (p.startsWith('/store')) return 'STORE';
+    return 'FEES';
+}
 
 function SidebarInner() {
     const pathname = usePathname();
@@ -73,11 +87,33 @@ function SidebarInner() {
     
     const [isDark, setIsDark] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [activeWorkspace, setActiveWorkspace] = useState<'FEES' | 'STORE' | 'LIBRARY'>('FEES');
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [activeWorkspace, setActiveWorkspace] = useState<'FEES' | 'STORE' | 'LIBRARY' | 'DONATION'>(() => getWorkspaceFromPath(pathname));
+
+    useEffect(() => {
+        const nextWs = getWorkspaceFromPath(pathname);
+        setActiveWorkspace(prev => (prev !== nextWs ? nextWs : prev));
+    }, [pathname]);
 
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
+        const savedCollapse = localStorage.getItem('sidebar_collapsed');
+        if (savedCollapse === 'true') {
+            setIsCollapsed(true);
+            document.body.classList.add('sidebar-collapsed');
+        }
     }, []);
+
+    const toggleCollapse = () => {
+        const next = !isCollapsed;
+        setIsCollapsed(next);
+        localStorage.setItem('sidebar_collapsed', String(next));
+        if (next) {
+            document.body.classList.add('sidebar-collapsed');
+        } else {
+            document.body.classList.remove('sidebar-collapsed');
+        }
+    };
 
     // Close mobile drawer when route changes
     useEffect(() => {
@@ -110,28 +146,38 @@ function SidebarInner() {
 
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
+    // Route-based workspace synchronization (Guarded against unnecessary re-renders)
     useEffect(() => {
-        const saved = localStorage.getItem('activeWorkspace');
-        if (saved === 'STORE' || saved === 'FEES' || saved === 'LIBRARY') {
-            setActiveWorkspace(saved as 'FEES' | 'STORE' | 'LIBRARY');
-        } else if (user?.role === 'STORE_MANAGER' || effectiveRole === 'STORE_MANAGER') {
-            setActiveWorkspace('STORE');
-        } else if (user?.role === 'LIBRARIAN' || effectiveRole === 'LIBRARIAN') {
-            setActiveWorkspace('LIBRARY');
+        let nextWs: 'FEES' | 'STORE' | 'LIBRARY' | 'DONATION' = 'FEES';
+        if (pathname.startsWith('/donation-admin')) {
+            nextWs = 'DONATION';
         } else if (pathname.startsWith('/library')) {
-            setActiveWorkspace('LIBRARY');
+            nextWs = 'LIBRARY';
         } else if (pathname.startsWith('/store')) {
-            setActiveWorkspace('STORE');
+            nextWs = 'STORE';
+        } else if (pathname.startsWith('/dashboard') || pathname.startsWith('/students') || pathname.startsWith('/payments') || pathname.startsWith('/fee-structures') || pathname.startsWith('/reports') || pathname.startsWith('/receipts')) {
+            nextWs = 'FEES';
+        } else {
+            const saved = localStorage.getItem('activeWorkspace');
+            if (saved === 'STORE' || saved === 'FEES' || saved === 'LIBRARY' || saved === 'DONATION') {
+                nextWs = saved as any;
+            }
         }
-    }, [user, effectiveRole, pathname]);
+        setActiveWorkspace(prev => (prev !== nextWs ? nextWs : prev));
+        try {
+            localStorage.setItem('activeWorkspace', nextWs);
+        } catch {}
+    }, [pathname]);
 
-    const handleSwitchWorkspace = (ws: 'FEES' | 'STORE' | 'LIBRARY') => {
+    const handleSwitchWorkspace = (ws: 'FEES' | 'STORE' | 'LIBRARY' | 'DONATION') => {
         localStorage.setItem('activeWorkspace', ws);
         setActiveWorkspace(ws);
         if (ws === 'STORE') {
             router.push(simulateParam ? `/store?simulate=${simulateParam}` : '/store');
         } else if (ws === 'LIBRARY') {
             router.push(simulateParam ? `/library?simulate=${simulateParam}` : '/library');
+        } else if (ws === 'DONATION') {
+            router.push(simulateParam ? `/donation-admin?simulate=${simulateParam}` : '/donation-admin');
         } else {
             router.push(simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard');
         }
@@ -178,25 +224,18 @@ function SidebarInner() {
 
     return (
         <>
-            {/* Mobile Top Header Bar */}
+            {/* Mobile Top App Bar Header */}
             <div className="mobile-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 48, height: 48, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.7))' }} />
+                    <div style={{ width: 34, height: 34, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
-                    <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 16 }}>Shri Sai I.T.I</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-on-primary)' }}>Shri Sai I.T.I</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {user && (
-                        <div
-                            className="user-badge-avatar"
-                            style={{ cursor: 'pointer', width: 34, height: 34, fontSize: 14 }}
-                            onClick={() => setShowProfileModal(!showProfileModal)}
-                            title="Open Profile Menu"
-                        >
-                            {initials}
-                        </div>
-                    )}
+                    <button onClick={toggleTheme} className="btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '12px' }}>
+                        {isDark ? '☀️' : '🌙'}
+                    </button>
                     <button
                         className="hamburger-btn"
                         onClick={() => setMobileOpen(!mobileOpen)}
@@ -213,79 +252,155 @@ function SidebarInner() {
             )}
 
             <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
-                {/* Logo (Home Shortcut) */}
-                <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none' }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
-                    <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}>
-                        <div style={{ width: 62, height: 62, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.75))' }} />
+                {/* Logo & Retract Collapse Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '12px' }}>
+                    <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none', flex: 1 }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
+                        <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}>
+                            <div style={{ width: 56, height: 56, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.75))' }} />
+                            </div>
+                            <div className="sidebar-logo-text">
+                                <h2 style={{ letterSpacing: '0.5px', fontSize: 17 }}>Shri Sai I.T.I</h2>
+                                <span style={{ fontSize: 11.5 }}>{activeWorkspace === 'STORE' ? 'Store Management' : (activeWorkspace === 'LIBRARY' ? 'Library Management' : (activeWorkspace === 'DONATION' ? 'Donation Management' : 'Fee Management'))}</span>
+                            </div>
                         </div>
-                        <div className="sidebar-logo-text">
-                            <h2 style={{ letterSpacing: '0.5px', fontSize: 18 }}>Shri Sai I.T.I</h2>
-                            <span style={{ fontSize: 12 }}>{activeWorkspace === 'STORE' ? 'Store Management' : (activeWorkspace === 'LIBRARY' ? 'Library Management' : 'Fee Management')}</span>
-                        </div>
-                    </div>
-                </Link>
+                    </Link>
 
-                {/* Workspace Switcher (Admin and Developer only) */}
-                {(effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER') && (
-                    <div style={{ padding: '0 16px 12px', borderBottom: '1px solid var(--border)' }}>
-                        <div style={{
+                    {/* Retractable Sidebar Toggle Button */}
+                    <button
+                        onClick={toggleCollapse}
+                        style={{
+                            background: 'rgba(255,255,255,0.18)',
+                            border: '1px solid rgba(255,255,255,0.25)',
+                            color: '#ffffff',
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
                             display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            transition: 'all 0.2s ease'
+                        }}
+                        title={isCollapsed ? "Expand Sidebar (Shift+E)" : "Retract / Collapse Sidebar (Shift+C)"}
+                    >
+                        {isCollapsed ? '▶' : '◀'}
+                    </button>
+                </div>
+
+                {/* Workspace Switcher — 2x2 Rectangle Grid (Fees & Donation Top, Store & Library Bottom) */}
+                {(effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER') && (
+                    <div style={{ padding: '0 12px 12px', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
                             background: 'var(--surface-2)',
-                            borderRadius: '10px',
+                            borderRadius: '8px',
                             padding: '4px',
-                            gap: '4px'
+                            gap: '4px',
+                            border: '1px solid var(--border)'
                         }}>
+                            {/* Row 1 Left: Fees */}
                             <button
                                 onClick={() => handleSwitchWorkspace('FEES')}
+                                className="workspace-btn"
                                 style={{
-                                    flex: 1,
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '6px 4px',
-                                    fontSize: '11px',
+                                    border: activeWorkspace === 'FEES' ? '1px solid var(--primary-dark)' : '1px solid transparent',
+                                    borderRadius: '6px',
+                                    padding: '8px 4px',
+                                    fontSize: '11.5px',
                                     fontWeight: 700,
                                     cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
                                     background: activeWorkspace === 'FEES' ? 'var(--primary)' : 'transparent',
                                     color: activeWorkspace === 'FEES' ? 'white' : 'var(--text-muted)',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.15s ease'
                                 }}
+                                title="Fee Management"
                             >
-                                💰 Fees
+                                <span>💰</span>
+                                <span className="workspace-btn-label">Fees</span>
                             </button>
+
+                            {/* Row 1 Right: Donation */}
+                            <button
+                                onClick={() => handleSwitchWorkspace('DONATION')}
+                                className="workspace-btn"
+                                style={{
+                                    border: activeWorkspace === 'DONATION' ? '1px solid var(--primary-dark)' : '1px solid transparent',
+                                    borderRadius: '6px',
+                                    padding: '8px 4px',
+                                    fontSize: '11.5px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    background: activeWorkspace === 'DONATION' ? 'var(--primary)' : 'transparent',
+                                    color: activeWorkspace === 'DONATION' ? 'white' : 'var(--text-muted)',
+                                    transition: 'all 0.15s ease'
+                                }}
+                                title="Donation Management"
+                            >
+                                <span>🤝</span>
+                                <span className="workspace-btn-label">Donation</span>
+                            </button>
+
+                            {/* Row 2 Left: Store */}
                             <button
                                 onClick={() => handleSwitchWorkspace('STORE')}
+                                className="workspace-btn"
                                 style={{
-                                    flex: 1,
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '6px 4px',
-                                    fontSize: '11px',
+                                    border: activeWorkspace === 'STORE' ? '1px solid var(--primary-dark)' : '1px solid transparent',
+                                    borderRadius: '6px',
+                                    padding: '8px 4px',
+                                    fontSize: '11.5px',
                                     fontWeight: 700,
                                     cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
                                     background: activeWorkspace === 'STORE' ? 'var(--primary)' : 'transparent',
                                     color: activeWorkspace === 'STORE' ? 'white' : 'var(--text-muted)',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.15s ease'
                                 }}
+                                title="Store Management"
                             >
-                                📦 Store
+                                <span>📦</span>
+                                <span className="workspace-btn-label">Store</span>
                             </button>
+
+                            {/* Row 2 Right: Library */}
                             <button
                                 onClick={() => handleSwitchWorkspace('LIBRARY')}
+                                className="workspace-btn"
                                 style={{
-                                    flex: 1,
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '6px 4px',
-                                    fontSize: '11px',
+                                    border: activeWorkspace === 'LIBRARY' ? '1px solid var(--primary-dark)' : '1px solid transparent',
+                                    borderRadius: '6px',
+                                    padding: '8px 4px',
+                                    fontSize: '11.5px',
                                     fontWeight: 700,
                                     cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
                                     background: activeWorkspace === 'LIBRARY' ? 'var(--primary)' : 'transparent',
                                     color: activeWorkspace === 'LIBRARY' ? 'white' : 'var(--text-muted)',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.15s ease'
                                 }}
+                                title="Library Management"
                             >
-                                📚 Library
+                                <span>📚</span>
+                                <span className="workspace-btn-label">Library</span>
                             </button>
                         </div>
                     </div>
@@ -306,45 +421,84 @@ function SidebarInner() {
                     </div>
                 )}
 
-                {/* Navigation */}
-                <div className="sidebar-section">
-                    <div className="sidebar-section-label">
-                        {simulateParam ? `${simulateParam.toUpperCase()} MENU` : 'MENU'}
-                    </div>
-                    <nav>
-                        {visibleItems.map((item) => {
-                            // Append simulation param to links if currently simulating a role
-                            const targetHref = (simulateParam && !item.href.includes('simulate') && item.href !== '/system') 
-                                ? `${item.href}${item.href.includes('?') ? '&' : '?'}simulate=${simulateParam}` 
-                                : item.href;
+                {/* Categorized Navigation */}
+                {(() => {
+                    const isDev = user?.role === 'DEVELOPER';
+                    const moduleItems = visibleItems.filter(item => !item.href.includes('simulate') && item.href !== '/system' && item.href !== '/access');
+                    const simulationItems = isDev ? visibleItems.filter(item => item.href.includes('simulate')) : [];
+                    const devSystemItems = isDev ? visibleItems.filter(item => item.href === '/system' || item.href === '/access') : visibleItems.filter(item => item.href === '/access');
 
-                            let isActive = false;
-                            if (item.href.includes('?tab=')) {
-                                const tabVal = item.href.split('?tab=')[1];
-                                isActive = pathname.startsWith('/store') && searchParams.get('tab') === tabVal;
-                            } else if (item.href === '/store') {
-                                const currentTab = searchParams.get('tab');
-                                isActive = pathname === '/store' && (!currentTab || currentTab !== 'reports');
-                            } else if (item.href.includes('?simulate=')) {
-                                isActive = searchParams.get('simulate') === item.href.split('?simulate=')[1];
-                            } else {
-                                isActive = pathname === item.href;
-                            }
+                    const renderNavItem = (item: any) => {
+                        const targetHref = (simulateParam && !item.href.includes('simulate') && item.href !== '/system') 
+                            ? `${item.href}${item.href.includes('?') ? '&' : '?'}simulate=${simulateParam}` 
+                            : item.href;
 
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={targetHref}
-                                    className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                                    onClick={() => setMobileOpen(false)}
-                                >
-                                    <span style={{ fontSize: 18 }}>{item.icon}</span>
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-                </div>
+                        let isActive = false;
+                        if (item.href.includes('?tab=')) {
+                            const tabVal = item.href.split('?tab=')[1];
+                            isActive = pathname.startsWith('/store') && searchParams.get('tab') === tabVal;
+                        } else if (item.href === '/store') {
+                            const currentTab = searchParams.get('tab');
+                            isActive = pathname === '/store' && (!currentTab || currentTab !== 'reports');
+                        } else if (item.href.includes('?simulate=')) {
+                            isActive = searchParams.get('simulate') === item.href.split('?simulate=')[1];
+                        } else {
+                            isActive = pathname === item.href;
+                        }
+
+                        return (
+                            <Link
+                                key={item.href}
+                                href={targetHref}
+                                className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                                {item.label}
+                            </Link>
+                        );
+                    };
+
+                    return (
+                        <>
+                            {/* 1. Core Module Navigation */}
+                            <div className="sidebar-section">
+                                <div className="sidebar-section-label">
+                                    {activeWorkspace === 'FEES' ? '💰 FEE SYSTEM' : (activeWorkspace === 'STORE' ? '📦 STORE ERP' : (activeWorkspace === 'LIBRARY' ? '📚 LIBRARY ERP' : '🤝 DONATION MODULE'))}
+                                </div>
+                                <nav>
+                                    {moduleItems.map(renderNavItem)}
+                                </nav>
+                            </div>
+
+                            {/* 2. Role Simulation Perspectives (Developer Only) */}
+                            {simulationItems.length > 0 && (
+                                <div className="sidebar-section" style={{ marginTop: '12px', borderTop: '1px solid rgba(56, 189, 248, 0.25)', paddingTop: '10px' }}>
+                                    <div className="sidebar-section-label" style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span>👁️</span>
+                                        <span>ROLE PERSPECTIVES</span>
+                                    </div>
+                                    <nav>
+                                        {simulationItems.map(renderNavItem)}
+                                    </nav>
+                                </div>
+                            )}
+
+                            {/* 3. Developer & Permanent System Operations */}
+                            {devSystemItems.length > 0 && (
+                                <div className="sidebar-section" style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                                    <div className="sidebar-section-label" style={{ color: isDev ? '#f59e0b' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span>⚡</span>
+                                        <span>{isDev ? 'DEVELOPER OPERATIONS' : 'ADMINISTRATION'}</span>
+                                    </div>
+                                    <nav>
+                                        {devSystemItems.map(renderNavItem)}
+                                    </nav>
+                                </div>
+                            )}
+                        </>
+                    );
+                })()}
 
                 {/* User Profile Badge (Click to open Profile Modal) */}
                 {user && (

@@ -121,7 +121,7 @@ function DashboardContent() {
             api.get('/payments?limit=5').then(({ data }) => setRecentPayments(data.data || [])).catch(() => { });
             api.get('/reports/storage-stats').then(({ data }) => setStorageStats(data.data)).catch(() => { });
         }
-    }, [user, effectiveRole, router]);
+    }, [user?.id, effectiveRole]);
 
     if (loading || !user) {
         return (
@@ -422,7 +422,30 @@ function DashboardContent() {
                                 Welcome back, {user.name}
                             </div>
                         </div>
-                        <div className="header-actions">
+                        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <a
+                                href="/foundation"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-outline"
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '12.5px',
+                                    padding: '7px 14px',
+                                    borderRadius: '8px',
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                    background: 'rgba(14, 165, 233, 0.1)',
+                                    border: '1px solid var(--primary)',
+                                    color: 'var(--primary)'
+                                }}
+                                title="Launch Public Giving Portal & Foundation Website"
+                            >
+                                <span>🌐 Launch Public Portal</span>
+                                <span style={{ fontSize: '11px', opacity: 0.8 }}>↗</span>
+                            </a>
                             <span className={`badge ${effectiveRole === 'SUPERADMIN' ? 'badge-primary' : effectiveRole === 'ADMIN' ? 'badge-info' : 'badge-success'}`}>
                                 {effectiveRole}
                             </span>
@@ -487,13 +510,13 @@ function DashboardContent() {
                         {/* Chart + Recent Payments */}
                         <div className="grid-2 mb-6">
                             {/* Collection Chart */}
-                            <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="card">
                                 <div className="card-header">
                                     <div className="card-title">📈 Monthly Collection Trend</div>
                                     <span className="badge badge-info">Last 6 Months</span>
                                 </div>
-                                <div className="card-body" style={{ flex: 1, minHeight: 330, padding: '16px 12px 12px 12px', display: 'flex', flexDirection: 'column' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="card-body" style={{ height: 320, padding: '16px 12px 12px 12px' }}>
+                                    <ResponsiveContainer width="100%" height={280}>
                                         <BarChart data={chartData} margin={{ top: 12, right: 16, left: -4, bottom: 0 }}>
                                             <defs>
                                                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -545,6 +568,7 @@ function DashboardContent() {
                                         ] : []),
                                         { label: '💳 Record Payment', href: '/payments', color: 'var(--accent)' },
                                         { label: '🧾 View Receipts', href: '/receipts', color: '#2563eb' },
+                                        { label: '🌐 Launch Public Portal', href: '/foundation', target: '_blank', color: '#0284c7' },
                                     ].map((action: any) => {
                                         if (action.onClick) {
                                             return (

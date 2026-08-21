@@ -192,16 +192,6 @@ export default function LoginPage() {
                         >
                             🧾 Login as Accountant
                         </button>
-                        
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('teacher@saiiti.edu.in', 'Teacher@123')}
-                            className="btn btn-secondary w-full"
-                            disabled={loading}
-                            style={{ justifyContent: 'center' }}
-                        >
-                            👨‍🏫 Login as Teacher
-                        </button>
 
                         <button 
                             type="button"

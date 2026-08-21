@@ -6,7 +6,6 @@ const roleConfig: Record<string, { title: string, icon: string, bg: string }> = 
     SUPERADMIN: { title: 'College Director', icon: '🏛️', bg: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0284c7 100%)' },
     ADMIN: { title: 'Administrator', icon: '⚡', bg: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)' },
     ACCOUNTANT: { title: 'Accountant', icon: '🧾', bg: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f172a 100%)' },
-    TEACHER: { title: 'Teacher', icon: '👨‍🏫', bg: 'linear-gradient(135deg, #312e81 0%, #4338ca 50%, #0f172a 100%)' },
     STUDENT: { title: 'Student', icon: '🎓', bg: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #0f172a 100%)' },
     DEVELOPER: { title: 'Developer', icon: '💻', bg: 'linear-gradient(135deg, #000000, #111827)' },
     STORE_MANAGER: { title: 'Store Manager', icon: '📦', bg: 'linear-gradient(135deg, #581c87 0%, #701a75 50%, #0f172a 100%)' },

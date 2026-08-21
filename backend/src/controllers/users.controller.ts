@@ -77,6 +77,10 @@ export const usersController = {
     create: asyncHandler(async (req: Request, res: Response) => {
         const { name, email, password, role, branchId } = req.body;
 
+        if (!password || password.length < 8) {
+            throw new AppError(400, 'Password must be at least 8 characters long');
+        }
+
         const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
         if (existing) throw new AppError(409, 'A user with this email already exists');
 
@@ -106,6 +110,14 @@ export const usersController = {
         const target = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!target) throw new AppError(404, 'User not found');
 
+        if (target.role === 'DEVELOPER' && req.user?.role !== 'DEVELOPER') {
+            throw new AppError(403, 'Administrators cannot modify Developer accounts.');
+        }
+
+        if (target.id === req.user?.id && isActive === false) {
+            throw new AppError(400, 'You cannot deactivate your own account.');
+        }
+
         const updated = await prisma.user.update({
             where: { id: req.params.id },
             data: {
@@ -131,6 +143,12 @@ export const usersController = {
             throw new AppError(400, 'Password must be at least 8 characters');
         }
 
+        const target = await prisma.user.findUnique({ where: { id: req.params.id } });
+        if (!target) throw new AppError(404, 'User not found');
+        if (target.role === 'DEVELOPER' && req.user?.role !== 'DEVELOPER') {
+            throw new AppError(403, 'Administrators cannot reset Developer passwords.');
+        }
+
         const passwordHash = await authService.hashPassword(newPassword);
         await prisma.user.update({ where: { id: req.params.id }, data: { passwordHash } });
 
@@ -145,6 +163,10 @@ export const usersController = {
         const target = await prisma.user.findUnique({ where: { id: req.params.id } });
         if (!target) throw new AppError(404, 'User not found');
         if (target.id === req.user?.id) throw new AppError(400, 'Cannot revoke access for your own account');
+
+        if (target.role === 'DEVELOPER' && req.user?.role !== 'DEVELOPER') {
+            throw new AppError(403, 'Administrators cannot revoke Developer accounts.');
+        }
 
         try {
             // Attempt to hard delete user first

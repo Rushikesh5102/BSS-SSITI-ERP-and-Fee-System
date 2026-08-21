@@ -8,6 +8,8 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
 import Footer from '../../components/Footer';
+import AutoRecoverBanner from '../../components/AutoRecoverBanner';
+import { safeStorage } from '../../utils/safeStorage';
 
 function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam: string | null; simulateParam: string | null; tabParam: string | null }) {
     const { user, loading } = useAuth();
@@ -30,6 +32,45 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [form, setForm] = useState(initialFormState);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
+
+    // Auto-Recover Draft State for Admission Form
+    const [hasStudentDraft, setHasStudentDraft] = useState(false);
+    const [studentDraftTime, setStudentDraftTime] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (showModal) {
+            const saved = safeStorage.get<any>('draft_student_admission', null);
+            if (saved && (saved.name || saved.class)) {
+                setHasStudentDraft(true);
+                setStudentDraftTime(saved.savedAt);
+            }
+        }
+    }, [showModal]);
+
+    useEffect(() => {
+        if (showModal && (form.name || form.class)) {
+            const timer = setTimeout(() => {
+                safeStorage.set('draft_student_admission', {
+                    ...form,
+                    savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+    }, [form, showModal]);
+
+    const handleRestoreStudentDraft = () => {
+        const saved = safeStorage.get<any>('draft_student_admission', null);
+        if (saved) {
+            setForm(saved);
+            setHasStudentDraft(false);
+        }
+    };
+
+    const handleDiscardStudentDraft = () => {
+        safeStorage.remove('draft_student_admission');
+        setHasStudentDraft(false);
+    };
 
     // Image Viewer Modal State (Full-res viewing & downloading)
     const [viewImageModal, setViewImageModal] = useState<{ url: string; title: string; filename: string } | null>(null);
@@ -267,6 +308,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             } else {
                 showToast('✅ Student admitted successfully!');
             }
+            safeStorage.remove('draft_student_admission');
+            setHasStudentDraft(false);
             setForm(initialFormState);
             fetchStudents();
         } catch (err: any) {
@@ -529,6 +572,13 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                         </div>
                         <form onSubmit={handleCreate}>
                             <div className="modal-body">
+                                <AutoRecoverBanner
+                                    show={hasStudentDraft}
+                                    savedAt={studentDraftTime}
+                                    onRestore={handleRestoreStudentDraft}
+                                    onDiscard={handleDiscardStudentDraft}
+                                />
+
                                 <div className="grid grid-2">
                                     <div className="form-group">
                                         <label className="form-label">Full Name <span className="required">*</span></label>

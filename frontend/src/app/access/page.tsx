@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -21,7 +22,8 @@ interface UserRecord {
 interface RoleStats {
     ADMIN: number;
     ACCOUNTANT: number;
-    TEACHER: number;
+    STORE_MANAGER: number;
+    LIBRARIAN: number;
     STUDENT: number;
     DEVELOPER: number;
 }
@@ -35,7 +37,8 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const [stats, setStats] = useState<RoleStats>({
         ADMIN: 0,
         ACCOUNTANT: 0,
-        TEACHER: 0,
+        STORE_MANAGER: 0,
+        LIBRARIAN: 0,
         STUDENT: 0,
         DEVELOPER: 0,
     });
@@ -51,7 +54,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
     // Form states
-    const [addForm, setAddForm] = useState({ name: '', email: '', password: '', role: 'TEACHER' });
+    const [addForm, setAddForm] = useState({ name: '', email: '', password: '', role: 'ACCOUNTANT' });
     const [resetPasswordVal, setResetPasswordVal] = useState('');
     const [showAddPassword, setShowAddPassword] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(false);
@@ -83,7 +86,8 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
             setStats(statsRes.data.data || {
                 ADMIN: 0,
                 ACCOUNTANT: 0,
-                TEACHER: 0,
+                STORE_MANAGER: 0,
+                LIBRARIAN: 0,
                 STUDENT: 0,
                 DEVELOPER: 0
             });
@@ -107,7 +111,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
             await api.post('/users', addForm);
             showToast('✅ Access credentials successfully provisioned!');
             setShowAddModal(false);
-            setAddForm({ name: '', email: '', password: '', role: 'TEACHER' });
+            setAddForm({ name: '', email: '', password: '', role: 'ACCOUNTANT' });
             fetchData();
         } catch (err: any) {
             showToast(`❌ Error: ${err.response?.data?.message || 'Failed to create user'}`);
@@ -119,6 +123,10 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const handleToggleStatus = async (targetUser: UserRecord) => {
         if (targetUser.id === currentUser?.id) {
             return showToast('❌ You cannot deactivate your own administrative session!');
+        }
+
+        if (targetUser.role === 'DEVELOPER' && currentUser?.role !== 'DEVELOPER') {
+            return showToast('❌ Administrators cannot deactivate Developer accounts.');
         }
 
         const newStatus = !targetUser.isActive;
@@ -141,6 +149,9 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
         if (targetUser.id === currentUser?.id) {
             return showToast('❌ Self-demotion is locked to prevent locking yourself out.');
         }
+        if (targetUser.role === 'DEVELOPER' && currentUser?.role !== 'DEVELOPER') {
+            return showToast('❌ Administrators cannot modify Developer accounts.');
+        }
         try {
             await api.put(`/users/${targetUser.id}`, { role: newRole });
             showToast(`✅ Role upgraded to ${newRole} for ${targetUser.name}`);
@@ -153,6 +164,9 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedUser) return;
+        if (selectedUser.role === 'DEVELOPER' && currentUser?.role !== 'DEVELOPER') {
+            return showToast('❌ Administrators cannot reset Developer passwords.');
+        }
         setSaving(true);
         try {
             await api.put(`/users/${selectedUser.id}/reset-password`, { newPassword: resetPasswordVal });
@@ -170,6 +184,9 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const handleRevokeAccess = async (targetUser: UserRecord) => {
         if (targetUser.id === currentUser?.id) {
             return showToast('❌ You cannot revoke your own access session!');
+        }
+        if (targetUser.role === 'DEVELOPER' && currentUser?.role !== 'DEVELOPER') {
+            return showToast('❌ Administrators cannot revoke Developer accounts.');
         }
         if (window.confirm(`⚠️ CRITICAL: Revoking access will attempt to PERMANENTLY delete user ${targetUser.name} and all associated login credentials from the database. If they have historical financial records, their login access will be deactivated instead. Proceed?`)) {
             try {
@@ -229,8 +246,8 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                         </div>
                         <div className="card text-white" style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)', border: 'none', borderRadius: 12, padding: '20px 24px', boxShadow: 'var(--shadow-md)' }}>
                             <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>👩‍💼 Staff Access</div>
-                            <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8 }}>{stats.ADMIN + stats.ACCOUNTANT + stats.TEACHER}</div>
-                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Admins ({stats.ADMIN}) | Accountants ({stats.ACCOUNTANT}) | Teachers ({stats.TEACHER})</div>
+                            <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8 }}>{stats.ADMIN + stats.ACCOUNTANT + stats.STORE_MANAGER + stats.LIBRARIAN}</div>
+                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Admin ({stats.ADMIN}) | Accountant ({stats.ACCOUNTANT}) | Store ({stats.STORE_MANAGER}) | Library ({stats.LIBRARIAN})</div>
                         </div>
                         <div className="card text-white" style={{ background: 'linear-gradient(135deg, #4c1d95, #8b5cf6)', border: 'none', borderRadius: 12, padding: '20px 24px', boxShadow: 'var(--shadow-md)' }}>
                             <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>🔒 System Developers</div>
@@ -257,7 +274,8 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                     <option value="ALL">All Authorization Types</option>
                                     <option value="ADMIN">Administrator</option>
                                     <option value="ACCOUNTANT">Accountant</option>
-                                    <option value="TEACHER">Teacher</option>
+                                    <option value="STORE_MANAGER">Store Manager</option>
+                                    <option value="LIBRARIAN">Librarian</option>
                                     <option value="STUDENT">Student</option>
                                     <option value="DEVELOPER">Developer/System Health</option>
                                 </select>
@@ -298,7 +316,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                         <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>No matching credentials found.</td></tr>
                                     ) : (
                                         filteredUsers.map((u) => (
-                                            <tr key={u.id}>
+                                             <tr key={u.id}>
                                                 <td>
                                                     <b style={{ color: 'var(--text-primary)' }}>{u.name}</b>
                                                 </td>
@@ -316,6 +334,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                         <select
                                                             value={u.role}
                                                             onChange={(e) => handleRoleChange(u, e.target.value)}
+                                                            disabled={u.role === 'DEVELOPER' && currentUser.role !== 'DEVELOPER'}
                                                             style={{
                                                                 padding: '4px 8px',
                                                                 borderRadius: 6,
@@ -327,8 +346,9 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                             }}
                                                          >
                                                             <option value="STUDENT">STUDENT</option>
-                                                            <option value="TEACHER">TEACHER</option>
                                                             <option value="ACCOUNTANT">ACCOUNTANT</option>
+                                                            <option value="STORE_MANAGER">STORE_MANAGER</option>
+                                                            <option value="LIBRARIAN">LIBRARIAN</option>
                                                             <option value="ADMIN">ADMIN</option>
                                                             <option value="DEVELOPER">DEVELOPER</option>
                                                         </select>
@@ -346,7 +366,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                             border: '1px solid currentColor',
                                                             borderRadius: 4
                                                         }}
-                                                        disabled={u.id === currentUser.id}
+                                                        disabled={u.id === currentUser.id || (u.role === 'DEVELOPER' && currentUser.role !== 'DEVELOPER')}
                                                     >
                                                         {u.isActive ? '● Active' : '○ Suspended'}
                                                     </button>
@@ -362,6 +382,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                                 setSelectedUser(u);
                                                                 setShowResetModal(true);
                                                             }}
+                                                            disabled={u.role === 'DEVELOPER' && currentUser.role !== 'DEVELOPER'}
                                                             style={{ fontSize: 12 }}
                                                         >
                                                             🔑 Reset Pass
@@ -370,6 +391,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                             <button 
                                                                 className="btn btn-danger btn-sm"
                                                                 onClick={() => handleRevokeAccess(u)}
+                                                                disabled={u.role === 'DEVELOPER' && currentUser.role !== 'DEVELOPER'}
                                                                 style={{ fontSize: 12, padding: '4px 8px', color: 'var(--danger)', border: '1px solid var(--danger)', background: 'transparent' }}
                                                             >
                                                                 🗑️ Revoke
@@ -385,6 +407,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </div>
 
             {/* Modal: Provision User */}
@@ -434,11 +457,12 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                     <div className="form-group">
                                         <label className="form-label">Authority Policy</label>
                                         <select className="form-control" value={addForm.role} onChange={e => setAddForm(f => ({ ...f, role: e.target.value }))}>
-                                            <option value="STUDENT">Student</option>
-                                            <option value="TEACHER">Teacher</option>
                                             <option value="ACCOUNTANT">Accountant</option>
+                                            <option value="STORE_MANAGER">Store Manager</option>
+                                            <option value="LIBRARIAN">Librarian</option>
+                                            <option value="STUDENT">Student</option>
                                             <option value="ADMIN">Administrator</option>
-                                            {(currentUser.role === 'ADMIN' || currentUser.role === 'DEVELOPER') && <option value="DEVELOPER">Developer/Architect</option>}
+                                            {currentUser.role === 'DEVELOPER' && <option value="DEVELOPER">Developer/Architect</option>}
                                         </select>
                                     </div>
                                 </div>

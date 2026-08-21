@@ -3,9 +3,12 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import AutoRecoverBanner from '../../components/AutoRecoverBanner';
+import { safeStorage } from '../../utils/safeStorage';
 
 const PAYMENT_MODES = ['CASH', 'CHEQUE', 'BANK_TRANSFER', 'UPI', 'CARD', 'NET_BANKING', 'RAZORPAY', 'STRIPE'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
@@ -25,6 +28,49 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [studentSearch, setStudentSearch] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
 
+    // Auto-Recover Draft State for Payment Form
+    const [hasPaymentDraft, setHasPaymentDraft] = useState(false);
+    const [paymentDraftTime, setPaymentDraftTime] = useState<string | null>(null);
+
+    useEffect(() => {
+        const saved = safeStorage.get<any>('draft_fee_payment', null);
+        if (saved && (saved.amount || saved.transactionRef || saved.remarks)) {
+            setHasPaymentDraft(true);
+            setPaymentDraftTime(saved.savedAt);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (form.amount || form.transactionRef || form.remarks) {
+            const timer = setTimeout(() => {
+                safeStorage.set('draft_fee_payment', {
+                    ...form,
+                    savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                });
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+    }, [form]);
+
+    const handleRestorePaymentDraft = () => {
+        const saved = safeStorage.get<any>('draft_fee_payment', null);
+        if (saved) {
+            setForm({
+                amount: saved.amount || '',
+                mode: saved.mode || 'CASH',
+                transactionRef: saved.transactionRef || '',
+                bankName: saved.bankName || '',
+                remarks: saved.remarks || ''
+            });
+            setHasPaymentDraft(false);
+        }
+    };
+
+    const handleDiscardPaymentDraft = () => {
+        safeStorage.remove('draft_fee_payment');
+        setHasPaymentDraft(false);
+    };
+
     // Quick Add Student Modal State
     const [showQuickAddModal, setShowQuickAddModal] = useState(false);
     const [quickAddForm, setQuickAddForm] = useState({ name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', parentName: '', parentPhone: '', parentEmail: '' });
@@ -40,7 +86,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     };
 
     useEffect(() => {
-        if (!user || effectiveRole === 'TEACHER') return;
+        if (!user) return;
         fetchStudentsList(studentSearch);
     }, [user, effectiveRole, studentSearch]);
 
@@ -121,6 +167,8 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             });
             setResult(data.data);
             showToast('✅ Payment recorded! Receipt generated.');
+            safeStorage.remove('draft_fee_payment');
+            setHasPaymentDraft(false);
             setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
 
             // Refresh student fee data
@@ -137,16 +185,6 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     };
 
     if (loading || !user) return null;
-    if (effectiveRole === 'TEACHER') {
-        return (
-            <div className="layout"><Sidebar />
-                <div className="main-content">
-                    <header className="header"><div className="header-title">💳 Payments</div></header>
-                    <div className="page-content"><div className="card card-body text-center text-muted" style={{ padding: 40 }}>⛔ Teachers cannot record payments.</div></div>
-                </div>
-            </div>
-        );
-    }
 
     const pendingBalance = selectedFee ? selectedFee.totalAmount - selectedFee.paidAmount : 0;
     const inputAmountPaise = form.amount ? Math.round(parseFloat(form.amount) * 100) : 0;
@@ -261,6 +299,13 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                     <div className="card-header"><div className="card-title">Step 2: Payment Details</div></div>
                                     <form onSubmit={handleSubmit}>
                                         <div className="card-body">
+                                            <AutoRecoverBanner
+                                                show={hasPaymentDraft}
+                                                savedAt={paymentDraftTime}
+                                                onRestore={handleRestorePaymentDraft}
+                                                onDiscard={handleDiscardPaymentDraft}
+                                            />
+
                                             {/* Balance summary */}
                                             <div style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 16, marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, textAlign: 'center' }}>
                                                 {[
@@ -487,6 +532,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </div>
 
             {/* Quick Add Student Modal */}

@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '../../components/Sidebar';
+import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -137,6 +138,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </div>
         </div>
     );

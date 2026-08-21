@@ -23,6 +23,7 @@ import systemRoutes from './routes/system.routes';
 import storeRoutes from './routes/store.routes';
 import inquiriesRoutes from './routes/inquiries.routes';
 import libraryRoutes from './routes/library.routes';
+import { securityShield } from './middleware/securityShield';
 
 const app = express();
 
@@ -59,11 +60,12 @@ const authLimiter = rateLimit({
 
 app.use(generalLimiter);
 
-// ── Body Parsing ───────────────────────────────────────────────────────────────
+// ── Body Parsing & Input Security Shield ──────────────────────────────────────
 // Raw body needed for Stripe/Razorpay webhook signature verification
 app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(securityShield); // Deep payload sanitization & injection shield
 app.use(compression());
 
 // ── HTTP Request Logging ───────────────────────────────────────────────────────

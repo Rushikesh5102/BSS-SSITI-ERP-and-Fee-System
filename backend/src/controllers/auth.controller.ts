@@ -15,6 +15,7 @@ export const authController = {
     login: asyncHandler(async (req: Request, res: Response) => {
         const { email, password } = req.body;
         const result = await authService.login(email, password);
+        await createAuditLog(result.user.id, AuditAction.USER_UPDATED, 'User', result.user.id, { action: 'login', email: result.user.email }, req.ip);
         res.json({ success: true, data: result });
     }),
 
