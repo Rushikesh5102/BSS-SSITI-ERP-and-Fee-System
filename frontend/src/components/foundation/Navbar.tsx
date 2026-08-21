@@ -66,6 +66,26 @@ export default function Navbar({ onOpenDonate }: NavbarProps) {
             <a href="#faq" className="bss-dark-nav-link">
               FAQ
             </a>
+            <a
+              href="/login"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(56, 189, 248, 0.15)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: '#38bdf8',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+                transition: 'all 0.2s ease'
+              }}
+              className="bss-dark-nav-link"
+            >
+              🔐 Staff / ERP Login
+            </a>
           </nav>
 
           {/* Right Spacer for Header Alignment */}

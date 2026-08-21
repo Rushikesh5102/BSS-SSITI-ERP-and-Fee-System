@@ -42,6 +42,7 @@ export default function Footer({ onOpenDonate }: FooterProps) {
               <a href="#stories" className="bss-footer-link">Stories</a>
               <a href="#contact" className="bss-footer-link">Contact</a>
               <a href="#faq" className="bss-footer-link">FAQ</a>
+              <a href="/login" className="bss-footer-link" style={{ color: '#38bdf8', fontWeight: 600 }}>🔐 Staff / Admin ERP Portal</a>
             </div>
           </div>
 
