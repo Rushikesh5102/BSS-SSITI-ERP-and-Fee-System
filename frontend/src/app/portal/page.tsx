@@ -10,7 +10,23 @@ export default function PortalHubPage() {
     const { user, loading, logout } = useAuth();
     const router = useRouter();
     const [showWelcome, setShowWelcome] = useState(false);
-    const [isDark, setIsDark] = useState(true);
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        setIsDark(document.documentElement.classList.contains('dark'));
+    }, []);
+
+    const toggleTheme = () => {
+        if (isDark) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            setIsDark(false);
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            setIsDark(true);
+        }
+    };
 
     useEffect(() => {
         if (user && sessionStorage.getItem('showWelcomeAnimation')) {
@@ -46,9 +62,9 @@ export default function PortalHubPage() {
         return (
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh',
-                background: '#090514'
+                background: isDark ? '#0f172a' : '#1e3a8a'
             }}>
-                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, borderColor: '#a855f7' }} />
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, borderColor: '#38bdf8' }} />
             </div>
         );
     }
@@ -56,7 +72,9 @@ export default function PortalHubPage() {
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'radial-gradient(ellipse at top, #240d4a 0%, #13072e 45%, #080314 100%)',
+            background: isDark 
+                ? 'radial-gradient(ellipse at top, #0f172a 0%, #090d16 50%, #020617 100%)' 
+                : 'radial-gradient(ellipse at top, #1e3a8a 0%, #172554 45%, #0f172a 100%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -64,21 +82,24 @@ export default function PortalHubPage() {
             color: '#ffffff',
             padding: '40px 16px',
             fontFamily: "'Inter', sans-serif",
-            position: 'relative',
-            overflow: 'hidden'
+            position: 'relative'
         }}>
-            {/* Ambient Background Glow Spotlights */}
-            <div style={{
-                position: 'absolute',
-                top: '-100px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '600px',
-                height: '400px',
-                background: 'radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(99, 102, 241, 0.1) 60%, transparent 80%)',
-                filter: 'blur(60px)',
-                pointerEvents: 'none'
-            }} />
+            {/* Theme Toggle */}
+            <button 
+                onClick={toggleTheme}
+                style={{
+                    position: 'absolute', top: 20, right: 20, padding: '8px 16px',
+                    background: 'rgba(255, 255, 255, 0.12)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
+                    borderRadius: '100px', cursor: 'pointer', zIndex: 10,
+                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
+                }}
+            >
+                {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
 
             {showWelcome && <WelcomeOverlay role={user.role} />}
 
@@ -92,242 +113,238 @@ export default function PortalHubPage() {
                     from { opacity: 0; transform: translateY(16px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                .portal-hub-card {
-                    background: rgba(22, 12, 46, 0.7);
+                @keyframes pulseGlow {
+                    0% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12); }
+                    50% { box-shadow: 0 12px 40px rgba(56, 189, 248, 0.25), 0 0 0 1px rgba(56, 189, 248, 0.4); }
+                    100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12); }
+                }
+                .portal-card {
+                    background: rgba(15, 23, 42, 0.75);
                     backdrop-filter: blur(20px);
-                    border: 1px solid rgba(168, 85, 247, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
                     border-radius: 20px;
                     padding: 30px 24px;
-                    text-align: center;
-                    cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     display: flex;
                     flex-direction: column;
-                    align-items: center;
                     gap: 16px;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    text-align: left;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
                     position: relative;
                     overflow: hidden;
                 }
-                .portal-hub-card::before {
-                    content: '';
+                .portal-card:hover {
+                    transform: translateY(-6px);
+                    background: rgba(30, 41, 59, 0.9);
+                    border-color: rgba(56, 189, 248, 0.6);
+                    box-shadow: 0 16px 48px rgba(56, 189, 248, 0.3);
+                }
+                .portal-badge {
                     position: absolute;
-                    top: 0; left: 0; right: 0; height: 3px;
-                    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.8), transparent);
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                }
-                .portal-hub-card:hover {
-                    transform: translateY(-8px);
-                    background: rgba(35, 18, 74, 0.85);
-                    border-color: rgba(192, 132, 252, 0.6);
-                    box-shadow: 0 20px 45px rgba(124, 58, 237, 0.25);
-                }
-                .portal-hub-card:hover::before {
-                    opacity: 1;
+                    top: 14px;
+                    right: 14px;
+                    font-size: 10.5px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                    padding: 4px 10px;
+                    border-radius: 100px;
+                    text-transform: uppercase;
                 }
             `}</style>
 
-            {/* Hub Header */}
-            <div style={{
-                textAlign: 'center',
-                maxWidth: '680px',
-                marginBottom: '36px',
-                animation: 'fadeIn 0.8s ease forwards',
-                zIndex: 1
-            }}>
-                {/* Logo Frame */}
+            <div style={{ textAlign: 'center', marginBottom: '36px', animation: 'fadeIn 0.8s ease forwards' }}>
                 <div style={{
-                    width: '120px', height: '120px', margin: '0 auto 16px',
-                    background: 'transparent',
+                    width: '100px', height: '100px', margin: '0 auto 16px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    animation: 'float 6s ease-in-out infinite'
+                    animation: 'float 4s ease-in-out infinite'
                 }}>
                     <img
                         src="/sai_iti_logo.png"
-                        alt="Logo"
+                        alt="Shri Sai I.T.I Logo"
                         style={{
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: 'drop-shadow(0 0 24px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 45px rgba(99, 102, 241, 0.7))'
+                            filter: 'drop-shadow(0 0 18px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 36px rgba(56, 189, 248, 0.85))'
                         }}
                     />
                 </div>
-
-                <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: 'rgba(168, 85, 247, 0.18)',
-                    border: '1px solid rgba(168, 85, 247, 0.4)',
-                    padding: '4px 14px',
-                    borderRadius: '20px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    color: '#e9d5ff',
-                    letterSpacing: '1px',
-                    marginBottom: '12px',
-                    textTransform: 'uppercase'
-                }}>
-                    <span>✦</span> CENTRAL MISSION CONTROL & WORKSPACE HUB
-                </div>
-
                 <h1 style={{
-                    fontSize: 'clamp(28px, 6vw, 40px)',
+                    fontSize: 'clamp(28px, 6vw, 42px)',
                     fontWeight: 900,
                     letterSpacing: '-0.5px',
                     margin: '0 0 8px 0',
                     color: '#ffffff',
-                    textShadow: '0 4px 20px rgba(168, 85, 247, 0.4)'
+                    textShadow: '0 4px 20px rgba(0,0,0,0.3)'
                 }}>
-                    Bharat Shikshan Sanstha
+                    Shri Sai I.T.I
                 </h1>
                 <p style={{
-                    fontSize: 'clamp(14px, 3.5vw, 16px)',
-                    color: '#d8b4fe',
+                    fontSize: 'clamp(14px, 3.5vw, 17px)',
+                    color: '#e0f2fe',
                     fontWeight: 600,
                     margin: 0
                 }}>
-                    Shri Sai I.T.I Integrated ERP Platform
+                    Central Workspace Portal Hub
                 </p>
             </div>
 
-            {/* Workspace Modules Grid */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '20px',
+                gap: '24px',
                 width: '100%',
-                maxWidth: '1040px',
+                maxWidth: '1080px',
                 animation: 'fadeIn 1s ease 0.1s forwards',
-                marginBottom: '36px',
-                zIndex: 1
+                opacity: 0,
+                animationFillMode: 'forwards',
+                marginBottom: '40px'
             }}>
-                {/* Card 0: System Diagnostics / Dev Home */}
+                {/* Card 0: System Diagnostics / Dev Home (Developer access only) */}
                 {user.role === 'DEVELOPER' && (
-                    <div className="portal-hub-card" onClick={() => router.push('/system')}>
+                    <div className="portal-card" onClick={() => router.push('/system')} style={{
+                        animation: 'pulseGlow 4s infinite'
+                    }}>
+                        <div className="portal-badge" style={{ background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                            Core Control
+                        </div>
                         <div style={{
-                            width: '56px', height: '56px', borderRadius: '16px',
-                            background: 'rgba(245, 158, 11, 0.18)', color: '#fbbf24',
-                            border: '1px solid rgba(245, 158, 11, 0.4)',
+                            width: '60px', height: '60px', borderRadius: '16px',
+                            background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '28px'
+                            fontSize: '32px', marginBottom: '8px'
                         }}>
                             💻
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px 0', color: '#fef3c7' }}>Dev Control Center</h2>
-                            <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
-                                Live database vitals, incident blackbox ledger, self-healing station, and storage recovery.
+                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Dev Home & Diagnostics</h2>
+                            <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                                Monitor system uptime, check database vitals, configure global settings, and audit security events.
                             </p>
                         </div>
                         <div style={{
-                            marginTop: 'auto', fontSize: '12.5px', fontWeight: 800, color: '#fbbf24',
+                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#fbbf24',
                             display: 'flex', alignItems: 'center', gap: '6px'
                         }}>
-                            Open Terminal &rarr;
+                            Control Center &rarr;
                         </div>
                     </div>
                 )}
 
                 {/* Card 1: Fees */}
-                <div className="portal-hub-card" onClick={() => selectWorkspace('FEES')}>
+                <div className="portal-card" onClick={() => selectWorkspace('FEES')} style={{
+                    animation: user.role === 'DEVELOPER' ? 'pulseGlow 4s infinite 0.5s' : 'pulseGlow 4s infinite'
+                }}>
+                    <div className="portal-badge" style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                        Primary
+                    </div>
                     <div style={{
-                        width: '56px', height: '56px', borderRadius: '16px',
-                        background: 'rgba(16, 185, 129, 0.18)', color: '#34d399',
-                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                        width: '60px', height: '60px', borderRadius: '16px',
+                        background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '28px'
+                        fontSize: '32px', marginBottom: '8px'
                     }}>
                         💰
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px 0', color: '#ecfdf5' }}>Fee Management</h2>
-                        <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
-                            Student fee ledgers, multi-mode receipt collections, invoice generator, and dues analytics.
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Fee Management</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                            Track student fees, record collection payments, print invoices, and view financial reports.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '12.5px', fontWeight: 800, color: '#34d399',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#38bdf8',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
-                        Enter Fee Hub &rarr;
+                        Enter Workspace &rarr;
                     </div>
                 </div>
 
-                {/* Card 2: Store & Workshop */}
-                <div className="portal-hub-card" onClick={() => selectWorkspace('STORE')}>
+                {/* Card 2: Store */}
+                <div className="portal-card" onClick={() => selectWorkspace('STORE')} style={{
+                    animation: 'pulseGlow 4s infinite 1s'
+                }}>
+                    <div className="portal-badge" style={{ background: 'rgba(192, 132, 252, 0.2)', color: '#c084fc', border: '1px solid rgba(192, 132, 252, 0.3)' }}>
+                        Inventory
+                    </div>
                     <div style={{
-                        width: '56px', height: '56px', borderRadius: '16px',
-                        background: 'rgba(6, 182, 212, 0.18)', color: '#22d3ee',
-                        border: '1px solid rgba(6, 182, 212, 0.4)',
+                        width: '60px', height: '60px', borderRadius: '16px',
+                        background: 'rgba(192, 132, 252, 0.2)', color: '#c084fc',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '28px'
+                        fontSize: '32px', marginBottom: '8px'
                     }}>
                         📦
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px 0', color: '#ecfeff' }}>Store & Workshop</h2>
-                        <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
-                            Workshop tools registry, stock inward/outward transactions, supplier logs, and equipment issues.
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Store Management</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                            Manage inventory, track stock inward/outward transactions, handle suppliers, and monitor low stock alerts.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '12.5px', fontWeight: 800, color: '#22d3ee',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#c084fc',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
-                        Enter Inventory &rarr;
+                        Enter Workspace &rarr;
                     </div>
                 </div>
 
                 {/* Card 3: Library */}
-                <div className="portal-hub-card" onClick={() => selectWorkspace('LIBRARY')}>
+                <div className="portal-card" onClick={() => selectWorkspace('LIBRARY')} style={{
+                    animation: 'pulseGlow 4s infinite 1.5s'
+                }}>
+                    <div className="portal-badge" style={{ background: 'rgba(52, 211, 153, 0.2)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+                        Academics
+                    </div>
                     <div style={{
-                        width: '56px', height: '56px', borderRadius: '16px',
-                        background: 'rgba(168, 85, 247, 0.18)', color: '#c084fc',
-                        border: '1px solid rgba(168, 85, 247, 0.4)',
+                        width: '60px', height: '60px', borderRadius: '16px',
+                        background: 'rgba(52, 211, 153, 0.2)', color: '#34d399',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '28px'
+                        fontSize: '32px', marginBottom: '8px'
                     }}>
                         📚
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px 0', color: '#faf5ff' }}>Library Catalog</h2>
-                        <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
-                            Accession book registry, student/staff issue and return circulation, and overdue fine engine.
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Library Management</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                            Manage institute books catalog, student/staff issue & return registers, reservations, and overdue fines.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '12.5px', fontWeight: 800, color: '#c084fc',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#34d399',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
-                        Enter Library &rarr;
+                        Enter Workspace &rarr;
                     </div>
                 </div>
 
-                {/* Card 4: Donation & 80G Foundation */}
-                <div className="portal-hub-card" onClick={() => selectWorkspace('DONATION')}>
+                {/* Card 4: Foundation Donations */}
+                <div className="portal-card" onClick={() => selectWorkspace('DONATION')} style={{
+                    animation: 'pulseGlow 4s infinite 2s'
+                }}>
+                    <div className="portal-badge" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                        Philanthropy
+                    </div>
                     <div style={{
-                        width: '56px', height: '56px', borderRadius: '16px',
-                        background: 'rgba(244, 63, 94, 0.18)', color: '#fb7185',
-                        border: '1px solid rgba(244, 63, 94, 0.4)',
+                        width: '60px', height: '60px', borderRadius: '16px',
+                        background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '28px'
+                        fontSize: '32px', marginBottom: '8px'
                     }}>
-                        🎗️
+                        🤝
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px 0', color: '#fff1f2' }}>Donations & 80G</h2>
-                        <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
-                            BSS Foundation donor registry, 80G tax receipts, Form 10BD electronic return, and campaigns.
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: '#ffffff' }}>Donation & Foundation Admin</h2>
+                        <p style={{ fontSize: '13.5px', color: '#f8fafc', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                            Track 80G tax exemptions, manage BSS Foundation donor contributions, campaigns, and funds transparency.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '12.5px', fontWeight: 800, color: '#fb7185',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: '#f59e0b',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
-                        Enter Foundation &rarr;
+                        Enter Workspace &rarr;
                     </div>
                 </div>
             </div>
@@ -335,26 +352,28 @@ export default function PortalHubPage() {
             <button
                 onClick={logout}
                 style={{
-                    background: 'rgba(239, 68, 68, 0.12)',
-                    border: '1px solid rgba(239, 68, 68, 0.35)',
-                    color: '#f87171',
-                    padding: '8px 20px',
-                    borderRadius: '10px',
-                    fontSize: '13px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    color: '#fca5a5',
+                    padding: '10px 24px',
+                    borderRadius: '12px',
+                    fontSize: '13.5px',
                     fontWeight: 700,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     transition: 'all 0.2s ease',
-                    marginBottom: 24,
-                    zIndex: 1
+                    animation: 'fadeIn 1.2s ease forwards',
+                    boxShadow: '0 4px 16px rgba(239, 68, 68, 0.2)'
                 }}
             >
-                🚪 Sign Out of Session
+                🚪 Sign Out
             </button>
-
-            <Footer />
+            
+            <div style={{ marginTop: '30px', width: '100%', maxWidth: '960px' }}>
+                <Footer />
+            </div>
         </div>
     );
 }

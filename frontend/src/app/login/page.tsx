@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -10,32 +11,83 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // 30s Server Cold-Start Waking Up States
+    const [isWakingUp, setIsWakingUp] = useState(false);
+    const [countdown, setCountdown] = useState(30);
+    const [retryAttempt, setRetryAttempt] = useState(1);
+    const retryCredentialsRef = useRef<{ email: string; pass: string } | null>(null);
+
+    const performLogin = async (targetEmail: string, targetPass: string) => {
         setError('');
         setLoading(true);
         try {
-            await login(email, password);
+            await login(targetEmail, targetPass);
+            setIsWakingUp(false);
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed. Please try again.');
+            const isNetworkOrColdStart = 
+                !err.response || 
+                err.code === 'ECONNABORTED' || 
+                err.message?.includes('Network Error') ||
+                err.message?.includes('timeout') ||
+                [502, 503, 504].includes(err.response?.status);
+
+            if (isNetworkOrColdStart) {
+                // Cloud instance is spinning up — trigger 30s auto-retry timer
+                retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
+                setIsWakingUp(true);
+                setCountdown(30);
+            } else {
+                setIsWakingUp(false);
+                setError(err.response?.data?.message || err.message || 'Login failed. Please check credentials.');
+            }
         } finally {
             setLoading(false);
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await performLogin(email, password);
+    };
+
     const quickLogin = async (demoEmail: string, demoPass: string) => {
         setEmail(demoEmail);
         setPassword(demoPass);
-        setError('');
-        setLoading(true);
-        try {
-            await login(demoEmail, demoPass);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
+        await performLogin(demoEmail, demoPass);
     };
+
+    // Live 30s Countdown & Auto-Retry Loop
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (isWakingUp && countdown > 0) {
+            timer = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+        } else if (isWakingUp && countdown === 0) {
+            // Trigger auto-retry
+            if (retryCredentialsRef.current) {
+                setRetryAttempt((prev) => prev + 1);
+                performLogin(retryCredentialsRef.current.email, retryCredentialsRef.current.pass);
+            }
+        }
+        return () => clearInterval(timer);
+    }, [isWakingUp, countdown]);
+
+    // Active Health Probing every 5s during countdown
+    useEffect(() => {
+        if (isWakingUp && countdown > 0 && countdown % 5 === 0) {
+            api.get('/health', { timeout: 3500 })
+                .then(() => {
+                    // Server is alive! Trigger login immediately
+                    if (retryCredentialsRef.current) {
+                        performLogin(retryCredentialsRef.current.email, retryCredentialsRef.current.pass);
+                    }
+                })
+                .catch(() => {
+                    // Still booting up, continue countdown
+                });
+        }
+    }, [isWakingUp, countdown]);
 
     const [isDark, setIsDark] = useState(false);
     
@@ -53,6 +105,12 @@ export default function LoginPage() {
             localStorage.setItem('theme', 'dark');
             setIsDark(true);
         }
+    };
+
+    const cancelWakingUp = () => {
+        setIsWakingUp(false);
+        retryCredentialsRef.current = null;
+        setError('Connection attempt cancelled.');
     };
 
     return (
@@ -90,11 +148,66 @@ export default function LoginPage() {
                         />
                     </div>
                     <h1>Shri Sai I.T.I</h1>
-                    <p>Fee Management System</p>
+                    <p>Fee & Institutional Management System</p>
                 </div>
 
+                {/* 30s Server Cold-Start Waking Up Notice */}
+                {isWakingUp && (
+                    <div
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.15), rgba(56, 189, 248, 0.15))',
+                            border: '1px solid #38bdf8',
+                            borderRadius: '14px',
+                            padding: '16px',
+                            marginBottom: '20px',
+                            textAlign: 'left'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <span className="spinner" style={{ width: '18px', height: '18px', borderWidth: '2.5px', borderColor: '#38bdf8' }} />
+                            <strong style={{ color: '#0284c7', fontSize: '14px' }}>
+                                Cloud Server Starting Up (Attempt #{retryAttempt})
+                            </strong>
+                        </div>
+                        <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.5 }}>
+                            Free cloud instances sleep after inactivity and require ~25-30s to boot up. System will auto-connect in:
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#0284c7' }}>
+                                ⏳ Connecting in {countdown}s...
+                            </span>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (retryCredentialsRef.current) {
+                                            performLogin(retryCredentialsRef.current.email, retryCredentialsRef.current.pass);
+                                        }
+                                    }}
+                                    style={{
+                                        background: '#0284c7', color: '#fff', border: 'none',
+                                        padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer'
+                                    }}
+                                >
+                                    ⚡ Retry Now
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={cancelWakingUp}
+                                    style={{
+                                        background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)',
+                                        padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
-                    {error && (
+                    {error && !isWakingUp && (
                         <div
                             style={{
                                 background: '#fee2e2',
@@ -118,7 +231,7 @@ export default function LoginPage() {
                         <input
                             type="email"
                             className="form-control"
-                            placeholder="saiiti151@gmail.com"
+                            placeholder="admin@saiiti.edu.in"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -144,13 +257,13 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         className="btn btn-primary w-full btn-lg"
-                        disabled={loading}
+                        disabled={loading || isWakingUp}
                         style={{ justifyContent: 'center', marginTop: 12, background: 'var(--primary-dark)', borderColor: 'var(--primary-dark)' }}
                     >
-                        {loading ? (
+                        {loading || isWakingUp ? (
                             <>
                                 <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
-                                Signing In...
+                                Connecting to System...
                             </>
                         ) : (
                             '🔐 Sign In'
@@ -170,67 +283,57 @@ export default function LoginPage() {
                         textAlign: 'left'
                     }}
                 >
-                    <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 12, textAlign: 'center' }}>Test the Demo Instantly:</strong>
+                    <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 12, textAlign: 'center' }}>Direct 1-Click Role Logins:</strong>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button 
                             type="button"
                             onClick={() => quickLogin('admin@saiiti.edu.in', 'Admin@123')}
                             className="btn btn-secondary w-full"
-                            disabled={loading}
+                            disabled={loading || isWakingUp}
                             style={{ justifyContent: 'center' }}
                         >
-                            👨‍💼 Login as Branch Admin
+                            👨‍💼 Branch Administrator (Admin@123)
                         </button>
 
                         <button 
                             type="button"
                             onClick={() => quickLogin('accountant@saiiti.edu.in', 'Accountant@123')}
                             className="btn btn-secondary w-full"
-                            disabled={loading}
+                            disabled={loading || isWakingUp}
                             style={{ justifyContent: 'center' }}
                         >
-                            🧾 Login as Accountant
-                        </button>
-
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('sai-2024-001@student.saiiti.edu.in', 'SAI-2024-001')}
-                            className="btn btn-secondary w-full"
-                            disabled={loading}
-                            style={{ justifyContent: 'center' }}
-                        >
-                            🎓 Login as Student
+                            🧾 Fee Accountant (Accountant@123)
                         </button>
 
                         <button 
                             type="button"
                             onClick={() => quickLogin('storemanager@saiiti.edu.in', 'Store@123')}
                             className="btn btn-secondary w-full"
-                            disabled={loading}
+                            disabled={loading || isWakingUp}
                             style={{ justifyContent: 'center' }}
                         >
-                            📦 Login as Store Manager
+                            📦 Workshop Store Manager (Store@123)
                         </button>
 
                         <button 
                             type="button"
                             onClick={() => quickLogin('librarian@saiiti.edu.in', 'Library@123')}
                             className="btn btn-secondary w-full"
-                            disabled={loading}
+                            disabled={loading || isWakingUp}
                             style={{ justifyContent: 'center' }}
                         >
-                            📚 Login as Librarian
+                            📚 Chief Librarian (Library@123)
                         </button>
 
                         <button 
                             type="button"
                             onClick={() => quickLogin('pattiwarrushikesh5102@gmail.com', 'Rushikesh@5102')}
                             className="btn btn-primary w-full"
-                            disabled={loading}
+                            disabled={loading || isWakingUp}
                             style={{ justifyContent: 'center', marginTop: 4, background: '#0f172a', borderColor: '#0f172a' }}
                         >
-                            💻 Developer / System Health
+                            💻 Developer / System Health (Rushikesh@5102)
                         </button>
                     </div>
                 </div>
