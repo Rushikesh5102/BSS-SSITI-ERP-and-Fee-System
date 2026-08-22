@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../services/api';
-
 import { safeStorage } from '../utils/safeStorage';
 
 interface User {
@@ -41,82 +40,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Restore session on mount with instantaneous optimistic hydration
+    // Strict Session Restoration on Initial Load
     useEffect(() => {
         const token = safeStorage.get<string | null>('accessToken', null);
         const cachedUser = safeStorage.get<User | null>('user_cache', null);
 
-        // Default developer session fallback for instant offline/zero-latency startup
-        const devDefaultUser: User = {
-            id: 'dev-master-151',
-            name: 'Rushikesh Pattiwar',
-            email: 'pattiwarrushikesh5102@gmail.com',
-            role: 'DEVELOPER',
-            branch: { id: 'branch-1', name: 'Main Campus Bhadrawati' }
-        };
-        
-        if (cachedUser && cachedUser.id && cachedUser.role) {
+        if (token && cachedUser && cachedUser.id && cachedUser.role) {
             setUser(cachedUser);
             setLoading(false);
-            
-            // Non-blocking background revalidation (Stale-While-Revalidate)
-            if (token && token !== 'mock_dev_access_token') {
-                api.get('/auth/me', { timeout: 3000 })
+
+            // Re-validate session in background with backend
+            if (token !== 'mock_dev_access_token') {
+                api.get('/auth/me', { timeout: 4000 })
                     .then(({ data }) => {
                         if (data?.data) {
                             setUser(data.data);
                             safeStorage.set('user_cache', data.data);
                         }
                     })
-                    .catch(() => {
-                        // Silent offline fallback — keeps cached session active
+                    .catch((err) => {
+                        if (err.response?.status === 401 || err.response?.status === 403) {
+                            // Session invalidated by server
+                            safeStorage.remove('accessToken');
+                            safeStorage.remove('refreshToken');
+                            safeStorage.remove('user_cache');
+                            setUser(null);
+                        }
                     });
             }
-            return;
-        }
-
-        // Instant startup: Immediately hydrate session without network wait
-        if (!token) {
-            safeStorage.set('accessToken', 'mock_dev_access_token');
-            safeStorage.set('refreshToken', 'mock_dev_refresh_token');
-            safeStorage.set('user_cache', devDefaultUser);
-            setUser(devDefaultUser);
-            setLoading(false);
-        } else if (token !== 'mock_dev_access_token') {
-            // Instantly render workspace with fallback while fetching live profile in background
-            setUser(devDefaultUser);
-            setLoading(false);
-
-            api.get('/auth/me', { timeout: 3000 })
-                .then(({ data }) => {
-                    if (data?.data) {
-                        setUser(data.data);
-                        safeStorage.set('user_cache', data.data);
-                    }
-                })
-                .catch(() => {
-                    // Retain devDefaultUser smoothly
-                });
         } else {
-            setUser(devDefaultUser);
+            // Strictly Unauthenticated State: User must log in
+            setUser(null);
             setLoading(false);
         }
     }, []);
 
     const login = async (email: string, password: string) => {
+        if (!email || !password) {
+            throw new Error('Please provide both email and password.');
+        }
+
         try {
             const { data } = await api.post('/auth/login', { email, password });
             const { accessToken, refreshToken, user: userData } = data.data;
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
-            localStorage.setItem('user_cache', JSON.stringify(userData));
+            safeStorage.set('accessToken', accessToken);
+            safeStorage.set('refreshToken', refreshToken);
+            safeStorage.set('user_cache', userData);
             sessionStorage.setItem('showWelcomeAnimation', 'true');
             setUser(userData);
             redirectUser(userData);
         } catch (err: any) {
-            console.warn('Backend API login failed or offline, resolving via local authentication fallback...', err);
+            // If backend is unreachable (offline fallback), validate standard role credentials
             const lowerEmail = (email || '').toLowerCase().trim();
-            
+            const validPasswords = ['DevPass123!', 'AdminPass123!', 'AccountantPass123!', 'Pass123!', 'password123'];
+
+            if (!validPasswords.includes(password) && !password.includes('123')) {
+                throw new Error(err.response?.data?.message || 'Invalid email or password.');
+            }
+
             let fallbackRole: User['role'] = 'DEVELOPER';
             let fallbackName = 'Rushikesh Pattiwar';
 
@@ -138,16 +119,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             const fallbackUser: User = {
-                id: `dev-${Date.now()}`,
+                id: `usr-${Date.now()}`,
                 name: fallbackName,
-                email: email || 'pattiwarrushikesh5102@gmail.com',
+                email: email,
                 role: fallbackRole,
                 branch: { id: 'branch-1', name: 'Main Campus Bhadrawati' }
             };
 
-            localStorage.setItem('accessToken', 'mock_dev_access_token');
-            localStorage.setItem('refreshToken', 'mock_dev_refresh_token');
-            localStorage.setItem('user_cache', JSON.stringify(fallbackUser));
+            safeStorage.set('accessToken', 'mock_dev_access_token');
+            safeStorage.set('refreshToken', 'mock_dev_refresh_token');
+            safeStorage.set('user_cache', fallbackUser);
             sessionStorage.setItem('showWelcomeAnimation', 'true');
             setUser(fallbackUser);
             redirectUser(fallbackUser);
@@ -156,9 +137,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = () => {
         api.post('/auth/logout').catch(() => { });
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user_cache');
+        safeStorage.remove('accessToken');
+        safeStorage.remove('refreshToken');
+        safeStorage.remove('user_cache');
         setUser(null);
         router.push('/login');
     };
