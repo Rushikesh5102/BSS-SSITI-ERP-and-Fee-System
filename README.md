@@ -8,10 +8,13 @@
 
 An enterprise-grade, offline-resilient Institutional Resource Planning (ERP) platform built for **Bharat Shikshan Sanstha's Shri Sai Private Industrial Training Institute (ITI)**, Bhadrawati. Engineered for multi-module institutional governance, student fee collection, workshop inventory valuation, library circulation, and Section 80G / Form 10BD charitable donation tax compliance.
 
+> 📖 **Comprehensive User Guide Available**: For an exhaustive, step-by-step manual of every screen, button, workflow, and feature, consult the [Enterprise User Guide (USER_GUIDE.md)](./USER_GUIDE.md).
+
 ---
 
 ## 📑 Table of Contents
 
+0. [📖 Complete Operational User Guide (USER_GUIDE.md)](./USER_GUIDE.md)
 1. [System Architecture & Integrated Modules](#-system-architecture--integrated-modules)
 2. [Security, Offline Resilience & Autonomous Self-Healing](#-security-offline-resilience--autonomous-self-healing)
 3. [Recommended Production Naming Standards](#-recommended-production-naming-standards)
