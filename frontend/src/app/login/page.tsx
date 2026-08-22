@@ -50,12 +50,6 @@ export default function LoginPage() {
         await performLogin(email, password);
     };
 
-    const quickLogin = async (demoEmail: string, demoPass: string) => {
-        setEmail(demoEmail);
-        setPassword(demoPass);
-        await performLogin(demoEmail, demoPass);
-    };
-
     // Live 30s Countdown & Auto-Retry Loop
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -258,7 +252,7 @@ export default function LoginPage() {
                         type="submit"
                         className="btn btn-primary w-full btn-lg"
                         disabled={loading || isWakingUp}
-                        style={{ justifyContent: 'center', marginTop: 12, background: 'var(--primary-dark)', borderColor: 'var(--primary-dark)' }}
+                        style={{ justifyContent: 'center', marginTop: 16, background: 'var(--primary-dark)', borderColor: 'var(--primary-dark)', padding: '12px' }}
                     >
                         {loading || isWakingUp ? (
                             <>
@@ -271,71 +265,8 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                {/* Demo Logins */}
-                <div
-                    style={{
-                        marginTop: 24,
-                        padding: '16px',
-                        background: 'var(--surface-2)',
-                        borderRadius: 14,
-                        fontSize: 13,
-                        color: 'var(--text-muted)',
-                        textAlign: 'left'
-                    }}
-                >
-                    <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: 12, textAlign: 'center' }}>Direct 1-Click Role Logins:</strong>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('admin@saiiti.edu.in', 'Admin@123')}
-                            className="btn btn-secondary w-full"
-                            disabled={loading || isWakingUp}
-                            style={{ justifyContent: 'center' }}
-                        >
-                            👨‍💼 Branch Administrator (Admin@123)
-                        </button>
-
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('accountant@saiiti.edu.in', 'Accountant@123')}
-                            className="btn btn-secondary w-full"
-                            disabled={loading || isWakingUp}
-                            style={{ justifyContent: 'center' }}
-                        >
-                            🧾 Fee Accountant (Accountant@123)
-                        </button>
-
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('storemanager@saiiti.edu.in', 'Store@123')}
-                            className="btn btn-secondary w-full"
-                            disabled={loading || isWakingUp}
-                            style={{ justifyContent: 'center' }}
-                        >
-                            📦 Workshop Store Manager (Store@123)
-                        </button>
-
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('librarian@saiiti.edu.in', 'Library@123')}
-                            className="btn btn-secondary w-full"
-                            disabled={loading || isWakingUp}
-                            style={{ justifyContent: 'center' }}
-                        >
-                            📚 Chief Librarian (Library@123)
-                        </button>
-
-                        <button 
-                            type="button"
-                            onClick={() => quickLogin('pattiwarrushikesh5102@gmail.com', 'Rushikesh@5102')}
-                            className="btn btn-primary w-full"
-                            disabled={loading || isWakingUp}
-                            style={{ justifyContent: 'center', marginTop: 4, background: '#0f172a', borderColor: '#0f172a' }}
-                        >
-                            💻 Developer / System Health (Rushikesh@5102)
-                        </button>
-                    </div>
+                <div style={{ marginTop: 24, textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
+                    <span>Shri Sai Private ITI • Authorized Personnel Access Only</span>
                 </div>
             </div>
         </div>

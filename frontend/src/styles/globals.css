@@ -16,6 +16,7 @@
   /* Neutrals (Darker Beige) */
   --bg: #d8c3a5;           /* Solid Dark Beige */
   --surface: #e9dcc9;      /* Lighter Beige for cards */
+  --surface-card: #e9dcc9; /* Card Surface */
   --surface-2: #cbb493;    /* Deeper beige for secondary elements */
   --border: #ba9f7a;       /* Prominent Beige Border */
   --border-dark: #9e815b;  /* Deep khaki border */
@@ -64,6 +65,7 @@ html.dark {
   /* Neutrals */
   --bg: #0f172a;
   --surface: #1e293b;
+  --surface-card: #1e293b;
   --surface-2: #334155;
   --border: #334155;
   --border-dark: #475569;
