@@ -1,340 +1,569 @@
 # 📖 Bharat Shikshan Sanstha — Shri Sai Private ITI
-## Complete Enterprise User Guide & Role-Based Operational Manual (v2.0)
+# 🚀 First-Time User Onboarding Guide & Role-Based Operational Manual (v2.0)
 
-Welcome to the comprehensive **Role-by-Role Operational Handbook** for the **BSS Shri Sai ITI Unified ERP & Institutional Management Platform**. This guide is organized into dedicated operational chapters for each staff role: **Fee Accountant**, **Chief Librarian**, **Workshop Store Manager**, **Branch Administrator / Principal**, **Donations Officer**, **Class Teacher / Student**, and **System Developer**.
+Welcome to the official **First-Time User Manual** for the **BSS Shri Sai ITI Unified ERP & Institutional Management Platform**. This guide is structured role-by-role so that every staff member — from the Institute Administrator and Fee Accountant to the Workshop Store Manager, Chief Librarian, Donation Officer, and Student — can immediately master the system on Day 1.
 
 ---
 
 ## 📑 Role-Based Table of Contents
 
-- [Quick Start & Master Login Matrix](#-quick-start--master-login-matrix)
-- [Chapter 1: Fee Accountant & Cashier Handbook](#-chapter-1-fee-accountant--cashier-handbook)
-- [Chapter 2: Workshop Store Manager Handbook](#-chapter-2-workshop-store-manager-handbook)
-- [Chapter 3: Chief Librarian Handbook](#-chapter-3-chief-librarian-handbook)
-- [Chapter 4: Branch Administrator & Principal Handbook](#-chapter-4-branch-administrator--principal-handbook)
-- [Chapter 5: BSS Foundation & Donations Officer Handbook](#-chapter-5-bss-foundation--donations-officer-handbook)
-- [Chapter 6: Class Teacher & Student Self-Service Handbook](#-chapter-6-class-teacher--student-self-service-handbook)
-- [Chapter 7: Developer & System Health Handbook](#-chapter-7-developer--system-health-handbook)
-- [Chapter 8: Offline Operations & PWA Desktop Guide](#-chapter-8-offline-operations--pwa-desktop-guide)
+* [0. Universal Quick Start (For All Users)](#0-universal-quick-start-for-all-users)
+  * [Direct URL Access & Theme Toggle](#direct-url-access--theme-toggle)
+  * [30-Second Cloud Cold-Start Reconnection](#30-second-cloud-cold-start-reconnection)
+  * [Installing the Desktop / Mobile App (PWA)](#installing-the-desktop--mobile-app-pwa)
+* [1. 👨‍💼 First-Time Guide for Branch Administrators (Admin)](#1-first-time-guide-for-branch-administrators-admin)
+  * [Day 1 Checklist](#day-1-admin-checklist)
+  * [Navigating the Portal Mission Control Hub](#navigating-the-portal-mission-control-hub)
+  * [Registering a New Student Admission (Step-by-Step)](#registering-a-new-student-admission-step-by-step)
+  * [Configuring Fee Structures & Concessions](#configuring-fee-structures--concessions)
+  * [Monitoring Campus-Wide Vitals & Reports](#monitoring-campus-wide-vitals--reports)
+  * [Voiding / Cancelling Receipts (Security Protocol)](#voiding--cancelling-receipts-security-protocol)
+  * [Admin Button & Feature Directory](#admin-button--feature-directory)
+* [2. 🧾 First-Time Guide for Fee Accountants](#2-first-time-guide-for-fee-accountants)
+  * [Day 1 Checklist](#day-1-accountant-checklist)
+  * [Understanding the Dashboard Overview](#understanding-the-dashboard-overview)
+  * [Recording a Daily Fee Collection (Step-by-Step)](#recording-a-daily-fee-collection-step-by-step)
+  * [Printing Thermal Receipts (80mm) vs Standard A4 Receipts](#printing-thermal-receipts-80mm-vs-standard-a4-receipts)
+  * [Reprinting Past / Lost Receipts](#reprinting-past--lost-receipts)
+  * [Managing Fee Defaulters & Triggering Reminders](#managing-fee-defaulters--triggering-reminders)
+  * [End-of-Day Cash Reconciliation & CSV Export](#end-of-day-cash-reconciliation--csv-export)
+  * [Accountant Button & Feature Directory](#accountant-button--feature-directory)
+* [3. 📦 First-Time Guide for Workshop Store Managers](#3-first-time-guide-for-workshop-store-managers)
+  * [Day 1 Checklist](#day-1-store-manager-checklist)
+  * [Adding Tools, Machinery & Consumables to Catalog](#adding-tools-machinery--consumables-to-catalog)
+  * [Setting Low Stock Alert Thresholds](#setting-low-stock-alert-thresholds)
+  * [Issuing Workshop Equipment to Students/Faculty (Step-by-Step)](#issuing-workshop-equipment-to-studentsfaculty-step-by-step)
+  * [Processing Tool Returns & Damage Assessment](#processing-tool-returns--damage-assessment)
+  * [Logging Machinery Maintenance Schedules](#logging-machinery-maintenance-schedules)
+  * [Scrap & Disposal Register](#scrap--disposal-register)
+  * [Store Manager Button & Feature Directory](#store-manager-button--feature-directory)
+* [4. 📚 First-Time Guide for Chief Librarians](#4-first-time-guide-for-chief-librarians)
+  * [Day 1 Checklist](#day-1-librarian-checklist)
+  * [Cataloging New Books (ISBN, Shelf Location & Copies)](#cataloging-new-books-isbn-shelf-location--copies)
+  * [Issuing Books to Students / Staff (14-Day Cycle)](#issuing-books-to-students--staff-14-day-cycle)
+  * [Processing Book Returns & Overdue Fine Calculation (₹2/day)](#processing-book-returns--overdue-fine-calculation-2day)
+  * [Waiving Fines (With Audit Note)](#waiving-fines-with-audit-note)
+  * [Managing Book Reservations & Hold Queues](#managing-book-reservations--hold-queues)
+  * [Generating Student Library Clearance Certificates](#generating-student-library-clearance-certificates)
+  * [Librarian Button & Feature Directory](#librarian-button--feature-directory)
+* [5. 🤝 First-Time Guide for BSS Foundation & Donation Officers](#5-first-time-guide-for-bss-foundation--donation-officers)
+  * [Day 1 Checklist](#day-1-donation-officer-checklist)
+  * [Public Showcase Management (`/foundation`)](#public-showcase-management-foundation)
+  * [Recording Donor Contributions with PAN Details](#recording-donor-contributions-with-pan-details)
+  * [Generating Section 80G Tax Exemption PDF Certificates](#generating-section-80g-tax-exemption-pdf-certificates)
+  * [Tracking Campaign Funding Meters](#tracking-campaign-funding-meters)
+  * [Form 10BD Compliance & Audit Export](#form-10bd-compliance--audit-export)
+  * [Donation Admin Button & Feature Directory](#donation-admin-button--feature-directory)
+* [6. 💻 First-Time Guide for Developers & System Administrators](#6-first-time-guide-for-developers--system-administrators)
+  * [Developer Diagnostics Screen (`/system`)](#developer-diagnostics-screen-system)
+  * [Database Connection Pool & Latency Telemetry](#database-connection-pool--latency-telemetry)
+  * [Security Audit Logs & Live Error Streams](#security-audit-logs--live-error-streams)
+  * [Using the "⚡ 1-Click Database Self-Healing" Engine](#using-the--1-click-database-self-healing-engine)
+* [7. 🎓 First-Time Guide for Students & Parents](#7-first-time-guide-for-students--parents)
+  * [Logging in with Student Roll Number](#logging-in-with-student-roll-number)
+  * [Checking Pending Fee Dues & Installment Schedule](#checking-pending-fee-dues--installment-schedule)
+  * [Paying Fees Online via UPI / Card](#paying-fees-online-via-upi--card)
+  * [Viewing Issued Library Books & Return Dates](#viewing-issued-library-books--return-dates)
+* [8. ⚡ Offline Mode & PWA Synchronization Guide (All Staff)](#8--offline-mode--pwa-synchronization-guide-all-staff)
 
 ---
 
-## 🔑 Quick Start & Master Login Matrix
+## 0. Universal Quick Start (For All Users)
 
-| Institutional Role | Default Login Email | Password | Primary Workspace | Default Landing Route |
-| :--- | :--- | :--- | :--- | :--- |
-| **🧾 Fee Accountant** | `accountant@saiiti.edu.in` | `Accountant@123` | Fee Operations | `/dashboard` |
-| **📦 Store Manager** | `storemanager@saiiti.edu.in` | `Store@123` | Workshop Inventory | `/store` |
-| **📚 Chief Librarian** | `librarian@saiiti.edu.in` | `Library@123` | Library Circulation | `/library` |
-| **👨‍💼 Branch Admin / Principal** | `admin@saiiti.edu.in` | `Admin@123` | Portal Mission Control | `/portal` |
-| **🤝 Donation Officer** | `admin@saiiti.edu.in` | `Admin@123` | Foundation Donations | `/donation-admin` |
-| **💻 System Developer** | `pattiwarrushikesh5102@gmail.com` | `Rushikesh@5102` *(or `DevPass123!`)* | Full System + Telemetry | `/portal` ➔ `/system` |
-| **🎓 Enrolled Student** | `sai-2024-001@student.saiiti.edu.in` | `SAI-2024-001` | Student Self-Service | `/dashboard` |
+### Direct URL Access & Theme Toggle
+* **Access URL**: Open `https://your-domain.vercel.app` (or `http://localhost:3000` locally).
+* **Automatic Routing**: 
+  * If you are not logged in, the system opens **`/login`**.
+  * If you are an **Administrator** or **Developer**, you land on the **`/portal`** Mission Control Hub.
+  * If you are an **Accountant**, you land directly on the **`/dashboard`**.
+  * If you are a **Store Manager**, you land directly on **`/store`**.
+  * If you are a **Librarian**, you land directly on **`/library`**.
+* **☀️ Light / 🌙 Dark Mode**: Click the pill button in the top-right corner to toggle between the **Blue-Beige light theme** and the **Obsidian dark theme**.
 
-> 💡 **30-Second Cloud Waking Indicator**: If the backend was sleeping on cloud startup, the login page displays an animated 30s countdown timer and automatically logs you in the moment the server responds.
+### 30-Second Cloud Cold-Start Reconnection
+Free cloud servers go to sleep during idle periods. When launching the system for the first time:
+1. If the server is waking up, you will see a friendly **`⏳ Cloud Server Starting Up`** banner with a **30-second live countdown timer**.
+2. **Background Health Polling**: The frontend checks the server every 5 seconds. As soon as the server wakes up (e.g., at 12s), it **instantly logs you in** without waiting for the full 30 seconds.
+3. You can click **`⚡ Retry Now`** at any moment to force an immediate reconnection check.
+
+### Installing the Desktop / Mobile App (PWA)
+1. In the bottom-right corner of your screen, click the **`📲 Install App`** button.
+2. In the browser popup, click **Install**.
+3. A desktop icon labeled **"Shri Sai ITI ERP"** will be added to your Windows desktop taskbar or phone home screen.
+4. **Benefit**: Launches instantly in a clean standalone window with no URL bar, keeps you logged in, and works even during internet outages.
 
 ---
 
-## 🧾 Chapter 1: Fee Accountant & Cashier Handbook
+## 1. 👨‍💼 First-Time Guide for Branch Administrators (Admin)
 
-As the **Fee Accountant**, your primary responsibility is student fee collection, issuing legal tax/fee receipts, managing daily cash registers, tracking defaulters, and closing monthly financial ledgers.
+**Default Login**: `admin@saiiti.edu.in` / `Admin@123`
 
-```
-Fee Accountant Route Directory:
-├── /dashboard        (Daily Collection KPIs, Quick Action Buttons & Recent Invoices)
-├── /payments         (Student Payment Entry Desk & Instant Thermal Printing)
-├── /receipts         (Receipt Search, A4/Thermal Reprinting & Voiding)
-├── /students         (Student Directory, Admission Ledger & Fee Balance)
-└── /reports          (Daily Cashbook, Defaulter Ledgers & CSV Audit Export)
-```
+### Day 1 Admin Checklist
+- [ ] Log in and explore the **Portal Mission Control Hub (`/portal`)**.
+- [ ] Verify standard trade fee structures under **Fee Structures (`/fee-structures`)**.
+- [ ] Enroll your first student under **Student Directory (`/students`)**.
+- [ ] Review live dashboard metrics under **Dashboard (`/dashboard`)**.
+- [ ] Check workshop inventory under **Store (`/store`)** and book catalog under **Library (`/library`)**.
 
-### 1.1 Daily Morning Routine
-1. Log in with `accountant@saiiti.edu.in` / `Accountant@123`.
-2. Inspect the **Dashboard KPIs**:
-   * **Today's Collection**: Starts at ₹0 each morning and tallies all payments received throughout the day.
-   * **Pending Dues**: Real-time balance of outstanding student installments across all trades.
-   * **Total Revenue**: Cumulative revenue collected in the active academic session.
+---
 
-### 1.2 Step-by-Step Payment Collection Workflow (`/payments`)
-When a student or parent arrives at the fee counter to pay fees:
-1. Navigate to **Payment Entry (`/payments`)** or click **`💳 Record Payment`** from the dashboard.
-2. **Step 1: Locate Student**:
-   * Type the student's **Name**, **Enrollment ID** (e.g. `SAI-2024-001`), or **Mobile Number** in the search bar.
-   * Select the student from the autocomplete dropdown. The system automatically loads their Trade (*Electrician, Fitter, etc.*), Total Agreed Fee, Paid Amount, and Remaining Due Balance.
+### Navigating the Portal Mission Control Hub
+As an Administrator, logging in brings you to the **Portal Hub (`/portal`)** showcasing five glassmorphic cards:
+1. 💰 **Fee Management**: Opens the student billing, collection, and reporting suite.
+2. 📦 **Store Management**: Opens workshop inventory, equipment loans, and machinery logs.
+3. 📚 **Library Management**: Opens book cataloging, circulation desk, and clearance.
+4. 🤝 **Donation & Foundation Admin**: Opens 80G tax receipting and philanthropy ledger.
+5. 🚪 **Sign Out**: Clears session token and returns to login gate.
+
+---
+
+### Registering a New Student Admission (Step-by-Step)
+1. From the Portal Hub, click **Fee Management** ➔ Navigate to **Students (`/students`)** in the left sidebar.
+2. Click the blue **`➕ Add New Student`** button at the top-right.
+3. Complete the multi-tab admission form:
+   * **Personal Information**: Full Name, Father's Name, Mother's Name, Gender, Date of Birth, Aadhar Card Number.
+   * **Contact Details**: Primary Mobile Number, WhatsApp Number, Email Address, Residential Address.
+   * **Academic Allocation**:
+     * **Trade / Course**: Select from *Electrician (2 Years)*, *Fitter (2 Years)*, *Welder (1 Year)*, *COPA (1 Year)*, *Sewing Technology (1 Year)*.
+     * **Academic Batch**: e.g., `2024-2026`.
+     * **Roll Number / Admission ID**: Auto-generated or custom institutional number.
+   * **Fee Allocation**:
+     * **Agreed Total Course Fee**: Standard fee is auto-filled based on the trade.
+     * **Category / Merit Concession**: Select General, OBC, SC, ST, or Special Concession.
+4. Click **`💾 Save Admission & Generate Student File`**.
+5. The student is now enrolled, and their ledger is created with calculated installment due dates.
+
+---
+
+### Configuring Fee Structures & Concessions
+1. In the sidebar, click **Fee Structures (`/fee-structures`)**.
+2. **Editing Trade Fees**: Click **`✏️ Edit`** next to any trade (e.g. Electrician) to update annual tuition, exam fees, and workshop development charges.
+3. **Adding Custom Fee Heads**: Click **`➕ Add Fee Category`** to introduce new heads like *Workshop Uniform Fee*, *Safety Shoes & Kit*, or *Hostel Boarding*.
+4. **Installment Schedules**: Set default payment milestone percentages (e.g. 40% on admission, 30% before Semester 1 exams, 30% before Semester 2 exams).
+
+---
+
+### Monitoring Campus-Wide Vitals & Reports
+1. Go to **Reports (`/reports`)**.
+2. Set the date range (e.g. Current Month / Current Quarter).
+3. Review:
+   * **Total Revenue vs Outstanding Balances**.
+   * **Payment Mode Split**: Track Cash vs UPI vs Bank transfers for treasury audit.
+   * **Trade-Wise Performance**: Compare fee recovery across Electrician, Fitter, and Sewing trades.
+4. Click **`📊 Export Audit CSV`** to share the financial ledger with external chartered accountants.
+
+---
+
+### Voiding / Cancelling Receipts (Security Protocol)
+If an accountant makes an erroneous entry (e.g., wrong amount entered):
+1. Navigate to **Receipts & Invoices (`/receipts`)**.
+2. Locate the transaction using the search bar (by receipt number or student name).
+3. Click the red **`🚫 Void / Cancel`** button *(Admin privilege only)*.
+4. Enter the **Mandatory Cancellation Reason** (e.g., "Cheque bounced" or "Entered incorrect fee head").
+5. The receipt is marked `CANCELLED`, reversed from the ledger, and permanently logged in the audit trail.
+
+---
+
+### Admin Button & Feature Directory
+| Button / Control | Location | Function / Result |
+| :--- | :--- | :--- |
+| **`➕ Add New Student`** | `/students` | Opens student registration drawer with trade and fee setup. |
+| **`✏️ Edit Details`** | Student Table | Modifies student contact, address, or trade allocation. |
+| **`👁️ View Ledger`** | Student Table | Shows chronological history of all charges and payments for that student. |
+| **`📄 Fee Statement PDF`** | Student Table | Generates an official printable PDF statement of fees paid and dues. |
+| **`➕ Add Fee Category`** | `/fee-structures` | Creates a new institutional fee head. |
+| **`🚫 Void Receipt`** | `/receipts` | Reverses an erroneous payment with mandatory audit log reason. |
+| **`📊 Export Audit CSV`** | `/reports` | Downloads full database ledger in CSV format for accounting audits. |
+
+---
+
+## 2. 🧾 First-Time Guide for Fee Accountants
+
+**Default Login**: `accountant@saiiti.edu.in` / `Accountant@123`
+
+### Day 1 Accountant Checklist
+- [ ] Log in (automatically opens the **Dashboard**).
+- [ ] Perform a test payment entry for a student.
+- [ ] Test the **Thermal Print (80mm)** and **Standard A4 Print** formats.
+- [ ] Review the **Daily Collection Summary** widget.
+- [ ] Check the **Fee Defaulters** list.
+
+---
+
+### Understanding the Dashboard Overview
+Upon logging in, the accountant sees the live financial cockpit:
+* **Total Collected Today**: Running total of all cash and digital fees received since 00:00.
+* **Pending Institutional Dues**: Total unpaid balance across all active students.
+* **Quick Payment Button**: Prominent action to jump straight into payment recording.
+* **Recent Receipts Stream**: Chronological feed of the last 10 issued receipts.
+
+---
+
+### Recording a Daily Fee Collection (Step-by-Step)
+1. Click **`💳 Record Payment`** on the dashboard (or navigate to **`/payments`**).
+2. **Step 1: Search Student**:
+   * Type student's name, phone number, or roll number in the autocomplete box.
+   * Select the student. Their current outstanding balance will appear instantly.
 3. **Step 2: Allocate Fee Head**:
-   * Choose the fee head being paid: `Tuition Fee`, `Exam Fee`, `Uniform & Dress Material`, `Hostel Fee`, or `Miscellaneous Dues`.
+   * Select the target fee component: *Tuition Fee*, *Exam Fee*, *Uniform & Dress Material*, *Miscellaneous Dues*.
 4. **Step 3: Enter Payment Details**:
-   * **Amount (₹)**: Type the amount received (e.g. `5000`).
-   * **Payment Mode**:
-     * `💵 Cash`: For physical currency accepted at the counter.
-     * `📱 UPI / QR Code`: For PhonePe, Google Pay, Paytm, or BHIM payments (enter UPI Transaction ID / UTR).
-     * `🏦 Bank Transfer (NEFT/RTGS)`: Enter bank reference number.
-     * `📜 Cheque / Demand Draft`: Enter Cheque/DD number, Bank Name, and Date.
-   * **Remarks / Notes**: Optional notes (e.g., *"2nd installment for semester 1"*).
-5. **Step 4: Submit & Print Receipt**:
-   * Click **`💾 Submit & Print Receipt`**.
-   * The payment is instantly written to the cloud PostgreSQL database and an official receipt modal opens.
-
-### 1.3 Receipt Printing & Thermal Slip Generation (`/receipts`)
-* **Standard A4 Receipt (`🖨️ Print`)**: Prints a full-size institutional receipt featuring the Shri Sai ITI emblem, registration details, student breakdown, payment mode, cashier signature block, and official seal area.
-* **Thermal POS Receipt (`📱 Thermal Print`)**: Formats the receipt for standard 80mm / 2-inch thermal POS slip printers for fast counter dispatch.
-* **PDF Download (`⬇️ Download PDF`)**: Saves an offline digital copy to share with parents via WhatsApp or email.
-* **Reprinting Lost Receipts**: Go to `/receipts`, search the student's name or Receipt ID, and click **`🖨️ Print`**.
-
-### 1.4 Daily Closing & Defaulter Follow-up (`/reports`)
-* **Daily Cash Reconciliation**:
-  1. Open **Reports (`/reports`)**.
-  2. Select Date: **Today**.
-  3. Verify the **Cash Total** against the physical currency notes in the counter cash drawer.
-  4. Verify the **UPI / Digital Total** against the institutional bank statement.
-* **Defaulter Action**:
-  1. Click **Fee Defaulters** tab in `/reports`.
-  2. Filter by Trade (e.g. *Electrician 1st Year*).
-  3. Click **`📩 Send Defaulter Reminder`** next to a student's name to generate an automated reminder notice with pending dues.
-  4. Click **`📊 Export Audit CSV`** to download the complete ledger for the auditor.
+   * **Amount Paid (₹)**: Type the amount being collected.
+   * **Payment Mode**: Select `Cash`, `UPI / QR`, `Bank Transfer (NEFT/RTGS)`, `Cheque`, or `Demand Draft`.
+   * **Transaction / Reference ID**: If UPI/Bank/Cheque, enter the UTR or Cheque Number.
+   * **Cashier Remarks**: Optional notes (e.g. "Installment 2 of 3").
+5. **Step 4: Submit**:
+   * Click **`💾 Submit & Generate Receipt`**.
+   * The payment is committed to the database, student balance is updated, and the receipt modal opens automatically.
 
 ---
 
-## 📦 Chapter 2: Workshop Store Manager Handbook
+### Printing Thermal Receipts (80mm) vs Standard A4 Receipts
+After recording a payment, the receipt dialog offers two formats:
+* **📱 80mm Thermal Receipt**:
+  * Designed for POS thermal receipt printers.
+  * Contains Institute Name, Date, Receipt Number, Student Name, Trade, Amount Paid, Remaining Due, and Cashier signature code.
+  * Click **`📱 Print Thermal Slip`** ➔ Select 80mm printer.
+* **🖨️ Standard A4 Full Receipt**:
+  * Designed for standard inkjet/laser printers.
+  * Contains official institution header, fee component breakdown, stamp box, and student copy / office copy split.
+  * Click **`🖨️ Print Standard A4`**.
 
-As the **Workshop Store Manager**, you control all institutional equipment, heavy machinery, power tools, consumables, safety gear, stock inward procurement, and tool loans to trade students.
+---
 
-```
-Store Manager Route Directory:
-├── /store              (Store Overview, Low-Stock Alert Banners & Loan Vitals)
-├── /store/items        (Master Equipment Catalog, Barcodes & Procurement)
-├── /store/issue        (Tool & Equipment Loan Issue Desk)
-├── /store/returns      (Item Check-in Register & Damage Assessment)
-├── /store/damaged      (Scrap, Damaged Tools & Write-Off Approval)
-├── /store/maintenance  (Machinery Preventative Service Logs)
-├── /store/history      (Full Inward / Outward Stock Audit Trail)
-└── /store/reports      (Inventory Valuation & Monthly Consumption Analytics)
-```
+### Reprinting Past / Lost Receipts
+1. Navigate to **Receipts & Invoices (`/receipts`)**.
+2. Type the Student Name or Receipt Number in the search bar.
+3. Click **`🖨️ Print`** or **`⬇️ Download PDF`**.
+4. The exact original receipt is regenerated with its original timestamp and transaction ID.
 
-### 2.1 Managing Inventory & Adding New Assets (`/store/items`)
-1. Click **`➕ Add New Item`** on `/store/items`.
-2. Fill in the item specifications:
-   * **Item Name**: e.g., *Digital Multimeter 600V*, *Bench Vice 6 Inch*, *Welding Electrodes 3.15mm*.
-   * **Category**: Select `Consumables`, `Hand Tools`, `Power Tools`, `Heavy Machinery`, or `Safety Equipment`.
-   * **Unit of Measure**: `Pcs`, `Sets`, `Kg`, `Litres`, `Metres`, `Boxes`.
-   * **Initial Stock Quantity**: Physical count in the store room.
-   * **Minimum Alert Threshold**: When available stock falls below this number (e.g., 5 pcs), the system automatically triggers a red **Low Stock Alert**.
-   * **Unit Price (₹)**: Purchase cost per unit for inventory valuation.
-   * **Supplier / Vendor**: Vendor name and contact details.
-3. Click **`💾 Save Item`**.
+---
 
-### 2.2 Recording New Procurement / Stock Inward
-When new stock arrives from suppliers:
-1. In `/store/items`, locate the item and click **`➕ Stock Inward`**.
-2. Enter the **Quantity Received**, **Supplier Invoice Number**, **Batch / Delivery Date**, and **Total Invoice Cost**.
-3. Click **`Confirm Stock Inward`**. The system increments total stock and logs an entry in `/store/history`.
+### Managing Fee Defaulters & Triggering Reminders
+1. Go to **Reports (`/reports`)** and scroll down to **Fee Defaulters Register**.
+2. Filter by Trade (e.g. *Fitter 2nd Year*) to view students with overdue balances past the deadline.
+3. Click **`📩 Send WhatsApp Reminder`** next to the student's name.
+4. The system opens a pre-formatted message including student name, outstanding amount, and payment options.
 
-### 2.3 Issuing Tools to Students / Instructors (`/store/issue`)
-1. Open **Tool Issue Desk (`/store/issue`)**.
-2. **Select Tool**: Search item by name or scan barcode.
-3. **Select Borrower**: Choose the enrolled student or workshop trade instructor.
-4. **Quantity**: Enter number of units issued.
-5. **Expected Return Date**: Set due date (e.g., end of practical period or end of week).
-6. **Condition on Issue**: `Brand New` or `Good Condition`.
-7. Click **`📤 Issue Tool`**. The available quantity in store drops automatically.
+---
 
-### 2.4 Returning Tools & Damage Assessment (`/store/returns`)
-When a student returns an issued tool:
-1. Open **Item Return Register (`/store/returns`)**.
-2. Search active loan by Student Name or Tool Code.
-3. Inspect physical tool and select condition:
-   * `✅ Good Condition`: Tool returned in perfect working order. Stock count is restored.
-   * `⚠️ Damaged`: Tool returned broken/burned out. Prompts for **Damage Repair Fine (₹)** and logs entry into the Damaged Items register.
-   * `❌ Lost`: Tool not returned. Flags student account with replacement penalty.
-4. Click **`📥 Accept Return`**.
+### End-of-Day Cash Reconciliation & CSV Export
+At the close of each working day:
+1. Open **Reports (`/reports`)**.
+2. Set Date Filter to **"Today"**.
+3. Verify the **Cash In Hand** total against your physical cash drawer.
+4. Verify the **UPI / QR** total against your ICICI / UPI merchant terminal.
+5. Click **`⬇️ Export Daily Closing CSV`** to save the daily settlement sheet.
 
-### 2.5 Machinery Maintenance Scheduling (`/store/maintenance`)
-1. Navigate to `/store/maintenance` to inspect heavy workshop machines (*Lathe #1, Lathe #2, Milling Machine, Bench Grinders*).
+---
+
+### Accountant Button & Feature Directory
+| Button / Control | Location | Function / Result |
+| :--- | :--- | :--- |
+| **`💳 Record Payment`** | Dashboard / Sidebar | Opens the student payment collection form. |
+| **`💾 Submit & Generate Receipt`** | `/payments` | Saves payment to cloud database and opens receipt dialog. |
+| **`📱 Print Thermal Slip`** | Receipt Dialog | Formats receipt for 80mm thermal roll printers. |
+| **`🖨️ Print Standard A4`** | Receipt Dialog | Formats full-page receipt for laser/inkjet printers. |
+| **`⬇️ Download PDF`** | `/receipts` | Saves receipt as a digital PDF file on device. |
+| **`📩 Send Defaulter Reminder`** | `/reports` | Triggers pre-filled WhatsApp/SMS payment reminder. |
+| **`⬇️ Export Daily Closing CSV`** | `/reports` | Exports today's collection summary for cash reconciliation. |
+
+---
+
+## 3. 📦 First-Time Guide for Workshop Store Managers
+
+**Default Login**: `storemanager@saiiti.edu.in` / `Store@123`
+
+### Day 1 Store Manager Checklist
+- [ ] Log in (automatically opens the **Store Management Hub (`/store`)**).
+- [ ] Review existing workshop items under **Master Catalog (`/store/items`)**.
+- [ ] Add a new tool or consumable item.
+- [ ] Perform a test **Tool Issue (`/store/issue`)** to a student.
+- [ ] Perform a test **Tool Return (`/store/returns`)** with condition inspection.
+- [ ] Schedule a machine maintenance entry under **Maintenance (`/store/maintenance`)**.
+
+---
+
+### Adding Tools, Machinery & Consumables to Catalog
+1. Navigate to **Items Catalog (`/store/items`)**.
+2. Click **`➕ Add New Item`** at the top right.
+3. Fill in item specifications:
+   * **Item Name**: e.g., *Digital Vernier Caliper (0-150mm)* or *MIG Welding Wire Spool (0.8mm)*.
+   * **Item Code / Barcode**: Unique SKU (e.g. `TOOL-FIT-042`).
+   * **Category**: Choose from *Hand Tools*, *Power Tools*, *Heavy Machinery*, *Consumable Materials*, *Safety Equipment*.
+   * **Unit of Measure**: *Pieces*, *Sets*, *Kilograms*, *Litres*, *Meters*.
+   * **Current Stock Quantity**: Initial inventory count.
+   * **Unit Price (₹)**: Purchase cost per unit.
+   * **Supplier / Vendor**: Vendor name & contact.
+4. Click **`💾 Save Item to Inventory`**.
+
+---
+
+### Setting Low Stock Alert Thresholds
+In the item creation or edit modal:
+1. Locate the **"Minimum Alert Threshold"** field.
+2. Enter the safety limit (e.g., `5` for grinding wheels or `10` for safety goggles).
+3. Whenever inventory drops to or below this number, the item automatically appears in the **`⚠️ Low Stock Warnings`** banner on `/store`.
+
+---
+
+### Issuing Workshop Equipment to Students/Faculty (Step-by-Step)
+1. Go to **Issue Desk (`/store/issue`)**.
+2. **Step 1: Select Item**: Type item name or scan barcode. The system displays currently available stock.
+3. **Step 2: Select Borrower**: Search by Student Name, Roll Number, or Instructor Name.
+4. **Step 3: Quantity & Return Due Date**:
+   * Specify quantity being loaned (e.g. `1` Micrometer).
+   * Set the Expected Return Date (e.g. today by 5:00 PM for daily practicals, or a 7-day workshop loan).
+5. **Step 4: Issue Remarks**: Note condition (e.g. "Includes plastic case and calibration wrench").
+6. **Step 5: Click `📤 Confirm Issue`**: Stock is deducted and active loan record is created.
+
+---
+
+### Processing Tool Returns & Damage Assessment
+1. Navigate to **Returns Register (`/store/returns`)**.
+2. Search by Student Name or Tool Code in the active loans list.
+3. Click **`📥 Process Return`**.
+4. Select the physical condition:
+   * **`✅ Good Condition`**: Tool returned intact. Stock is automatically incremented.
+   * **`⚠️ Damaged`**: Prompts for damage description and optional repair charge.
+   * **`❌ Lost / Broken`**: Prompts for replacement fee and logs tool to Scrap Register.
+5. Click **`💾 Accept Return`**.
+
+---
+
+### Logging Machinery Maintenance Schedules
+1. Go to **Machinery Maintenance (`/store/maintenance`)**.
 2. Click **`➕ Schedule Service`**.
-3. Enter Service Details (*Routine Oiling, Blade Sharpening, Motor Rewinding*), Assigned Technician, and Due Date.
-4. Update status from `Scheduled` ➔ `In-Progress` ➔ `Completed`.
+3. Select the machine: e.g., *Lathe Machine #2 (Workshop A)*.
+4. Fill in:
+   * **Service Type**: *Routine Oiling*, *Belt Replacement*, *Motor Rewinding*, *Safety Guard Inspection*.
+   * **Service Technician**: Name & phone number.
+   * **Scheduled Date**: Target maintenance date.
+5. Update status from `Scheduled` ➔ `In-Progress` ➔ `Completed` once work is certified.
 
 ---
 
-## 📚 Chapter 3: Chief Librarian Handbook
-
-As the **Chief Librarian**, you govern the institutional library, technical syllabus book collections, barcode circulation, overdue fine calculations, reservations, and clearance certificates.
-
-```
-Chief Librarian Route Directory:
-├── /library              (Circulation Statistics, Active Loans & Overdue Counters)
-├── /library/books        (Technical Book Catalog, ISBNs & Shelf Coordinates)
-├── /library/issue        (Circulation Issue Desk)
-├── /library/return       (Return Desk & Overdue Fine Waiver/Collection)
-├── /library/reservations (Book Queue & Hold Management)
-├── /library/history      (Borrowing Audit Trail by Student or Book)
-└── /library/reports      (Overdue Ledgers & Student Clearance Certificates)
-```
-
-### 3.1 Adding Books to Library Catalog (`/library/books`)
-1. Open `/library/books` and click **`➕ Add New Book`**.
-2. Enter bibliographic details:
-   * **Book Title**: e.g., *Basic Electrical Engineering (NCVT/DGET Standard)*.
-   * **Author(s)**: Author name.
-   * **ISBN / Accession Number**: Unique identifier or barcode number.
-   * **Category / Trade**: `Electrical`, `Fitter`, `Electronics`, `Workshop Calculation & Science`, `Employability Skills`, `General Reference`.
-   * **Publisher & Edition**: e.g., *NIMI Publications / 4th Edition*.
-   * **Shelf / Rack Coordinate**: e.g., `RACK-E-02` (enables instant physical retrieval).
-   * **Total Copies Procured**: Total physical copies added to library.
-3. Click **`💾 Save Book`**.
-
-### 3.2 Issuing Books to Students / Staff (`/library/issue`)
-1. Open **Circulation Issue Desk (`/library/issue`)**.
-2. **Accession Number**: Scan barcode or enter book code.
-3. **Borrower**: Select student by name or enrollment ID.
-4. **Loan Duration**: Automatically sets 14 days standard lending window.
-5. Click **`📤 Issue Book`**. Available book count decrements by 1.
-
-### 3.3 Returning Books & Overdue Fine Management (`/library/return`)
-1. Open **Book Return Desk (`/library/return`)**.
-2. Scan book accession barcode. The system retrieves borrower name and due date.
-3. **Automatic Fine Calculation**:
-   * If returned within 14 days: **Fine = ₹0.00**.
-   * If overdue: The system calculates **₹2.00 per day** past the due date.
-4. **Action**:
-   * **`💰 Collect Fine & Return`**: Records collected fine in daily library revenue and checks in the book.
-   * **`🕊️ Waive Fine & Return`**: Waives fine for justified reasons (*medical leave, exam period*) with a mandatory waiver note.
-
-### 3.4 Student Clearance Certificates for Exams / Graduation (`/library/reports`)
-Before semester exams or final graduation:
-1. Open **Library Reports (`/library/reports`)**.
-2. Search student enrollment ID.
-3. Click **`🖨️ Generate Library Clearance Certificate`**.
-4. The system validates that the student has **0 unreturned books** and **₹0 unpaid fines**, printing an official stamped clearance slip for exam hall-ticket release.
+### Store Manager Button & Feature Directory
+| Button / Control | Location | Function / Result |
+| :--- | :--- | :--- |
+| **`➕ Add New Item`** | `/store/items` | Opens new inventory item creation modal. |
+| **`📦 Stock Inward`** | `/store/items` | Records new procurement batch with invoice number. |
+| **`📤 Confirm Issue`** | `/store/issue` | Deducts tool from stock and assigns borrower loan. |
+| **`📥 Process Return`** | `/store/returns` | Opens return dialog with Good/Damaged/Lost inspection options. |
+| **`➕ Schedule Service`** | `/store/maintenance` | Schedules preventative servicing for workshop machines. |
+| **`🗑️ Log to Scrap`** | `/store/damaged` | Writes off broken or obsolete items from balance sheet. |
+| **`📊 Export Store CSV`** | `/store/reports` | Downloads total inventory valuation and consumption ledger. |
 
 ---
 
-## 👨‍💼 Chapter 4: Branch Administrator & Principal Handbook
+## 4. 📚 First-Time Guide for Chief Librarians
 
-As the **Branch Administrator / Principal**, you have institutional executive control across all four modules (Fees, Store, Library, Donations) via the **Mission Control Portal Hub (`/portal`)**.
+**Default Login**: `librarian@saiiti.edu.in` / `Library@123`
 
-```
-Administrator Command Architecture:
-├── /portal             (Central Mission Control Workspace Hub)
-├── /dashboard          (Institution-wide Financial KPI Overview)
-├── /students           (Student Admissions, Profile Editing & Concessions)
-├── /fee-structures     (Base Course Fee & Installment Configuration)
-├── /store              (Store Audit & Maintenance Approvals)
-├── /library            (Library Policy & Circulation Audits)
-└── /donation-admin     (80G Philanthropy & Form 10BD Compliance)
-```
-
-### 4.1 Navigating the Mission Control Hub (`/portal`)
-1. Log in with `admin@saiiti.edu.in` / `Admin@123`.
-2. The **Central Workspace Portal Hub** opens with 4 interactive glassmorphic cards:
-   * Click **💰 Fee Management** ➔ Launches financial operations.
-   * Click **📦 Store Management** ➔ Launches workshop inventory.
-   * Click **📚 Library Management** ➔ Launches technical library.
-   * Click **🤝 Donation Admin** ➔ Launches 80G foundation philanthropy.
-3. To switch workspaces at any time, click **`Portal Hub`** in the top navigation bar.
-
-### 4.2 New Student Admission & Fee Concession Approval (`/students`)
-1. Open **Student Directory (`/students`)** and click **`➕ Add New Student`**.
-2. Enter student demographic details and select trade (*Electrician 2-Yr, Fitter 2-Yr, Welder 1-Yr, COPA 1-Yr, Sewing Technology 1-Yr*).
-3. **Fee Concession / Scholarship Assignment**:
-   * Set Base Course Fee (e.g. `₹25,000`).
-   * Apply Category Concession (*SC/ST Welfare Scheme, Merit Discount, Staff Dependent*).
-   * Enter Net Agreed Annual Fee (e.g. `₹18,000`).
-4. Click **`Submit Admission`**. The student profile and fee ledger are created simultaneously.
-
-### 4.3 Configuring Base Fee Structures (`/fee-structures`)
-1. Open **Fee Structures (`/fee-structures`)**.
-2. Review annual fees per trade.
-3. Click **`➕ Add Fee Head`** to introduce institutional fee heads (*Workshop Maintenance Fee, Practical Exam Fee, Uniform Fee*).
-4. Define standard installment schedules (e.g., *50% on Admission, 25% by Term 1, 25% by Term 2*).
+### Day 1 Librarian Checklist
+- [ ] Log in (automatically opens the **Library Management Hub (`/library`)**).
+- [ ] Check the **Books Catalog (`/library/books`)**.
+- [ ] Catalog a new textbook with its ISBN and Rack location.
+- [ ] Perform a test **Book Issue (`/library/issue`)** to a student.
+- [ ] Test the **Book Return & Fine Calculator (`/library/return`)**.
+- [ ] Generate a **Student Library Clearance Certificate**.
 
 ---
 
-## 🤝 Chapter 5: BSS Foundation & Donations Officer Handbook
-
-As the **Donations Officer**, you govern charitable gifts received by the **Bharat Shikshan Sanstha**, issue tax-exempt receipts under **Section 80G**, and prepare annual filings for **Form 10BD**.
-
-```
-Donation Officer Route Directory:
-├── /foundation                  (Public Philanthropy Portal & 12 Campus Photos)
-├── /donation-admin              (Donation Dashboard & Campaign Progress)
-├── /donation-admin/donors       (Donor Directory & PAN Compliance)
-├── /donation-admin/transactions (Transaction Ledger & Payment Status)
-└── /donation-admin/reports      (Section 80G Certificates & Form 10BD Export)
-```
-
-### 5.1 Public Foundation Portal Maintenance (`/foundation`)
-The public portal at `/foundation` is the external face of the institution:
-* Features the **12 Geotagged Campus Photographs** showing library, classrooms, trade workshops, fire safety, and CCTV security.
-* Features the **Section 80G Tax Exemption Notice** explaining the 50% tax benefit for Indian taxpayers.
-* Features the **`💖 Contribute Now`** modal supporting instant digital donations.
-
-### 5.2 Recording Offline / Direct Bank Donations (`/donation-admin`)
-When alumni, philanthropists, or corporate CSR partners donate via Cheque or NEFT:
-1. Open **Donation Admin (`/donation-admin`)**.
-2. Click **`➕ Record Donation`**.
-3. Enter Donor Name, PAN Number *(Mandatory for 80G tax benefit)*, Mobile, Email, and Address.
-4. Enter Amount (₹), Payment Mode, Bank Reference Number, and Purpose (*Student Scholarship, Workshop Modernization, Library Books*).
-5. Click **`💾 Save & Generate 80G Receipt`**.
-
-### 5.3 Issuing Section 80G Tax Certificates (`/donation-admin/reports`)
-1. Locate the donor in `/donation-admin/reports`.
-2. Click **`📄 Generate 80G Certificate PDF`**.
-3. The system compiles an official certificate including BSS Trust Registration Number, 80G Approval Reference, Donor PAN, and Donated Amount.
-4. Click **`📊 Export Form 10BD CSV`** at the end of the financial year to upload directly to the Income Tax Department e-filing portal.
+### Cataloging New Books (ISBN, Shelf Location & Copies)
+1. Navigate to **Book Catalog (`/library/books`)**.
+2. Click the green **`➕ Add New Book`** button.
+3. Fill in book metadata:
+   * **Book Title**: e.g., *Basic Electrical Engineering (NCVT Trade Theory)*.
+   * **Author(s)**: e.g., *B.L. Theraja / A.K. Theraja*.
+   * **ISBN / Accession Number**: e.g., `978-81-219-2440-5`.
+   * **Category**: *Electrical*, *Fitter*, *Electronics*, *Workshop Calculation & Science*, *Engineering Drawing*, *Employability Skills*, *General Reference*.
+   * **Edition & Publisher**: e.g., *12th Edition, S. Chand Publishing*.
+   * **Rack / Shelf Location Code**: e.g., `RACK-E-02` (Shelf 2 in Electrical section).
+   * **Total Procured Copies**: Number of physical books placed in the library.
+4. Click **`💾 Save Book to Catalog`**.
 
 ---
 
-## 🎓 Chapter 6: Class Teacher & Student Self-Service Handbook
-
-### 6.1 Class Teacher Workflow
-* Class instructors can check active student rosters, verify fee clearance status before practical exams, and ensure workshop tool returns before semester sign-offs.
-
-### 6.2 Student Portal Self-Service
-Students log in using their enrollment credentials (e.g. `sai-2024-001@student.saiiti.edu.in` / `SAI-2024-001`):
-1. **View Fee Statement**: Check total fees paid, upcoming installment due dates, and outstanding balance.
-2. **Download Receipts**: Download duplicate PDF fee receipts for parents or scholarship reimbursement.
-3. **Library & Tool Loans**: View books currently checked out and their scheduled return due dates.
+### Issuing Books to Students / Staff (14-Day Cycle)
+1. Go to **Issue Desk (`/library/issue`)**.
+2. **Step 1: Enter Accession Number**: Type or scan the book's accession barcode. Title and available copy count appear.
+3. **Step 2: Select Borrower**: Search by Student Name or Roll Number.
+4. **Step 3: Loan Period**: The system automatically computes the standard **14-day return due date**.
+5. **Step 4: Click `📤 Issue Book`**: Available copies count is decremented by 1, and the loan is recorded under the student's profile.
 
 ---
 
-## 💻 Chapter 7: Developer & System Health Handbook
-
-Exclusive access for **System Developer** (`pattiwarrushikesh5102@gmail.com`).
-
-```
-Developer Route: /system
-```
-
-### 7.1 Real-Time Telemetry & Vitals
-* **Database Engine**: PostgreSQL with Supabase pool status (`ONLINE / HEALTHY`).
-* **Connection Pool Utilization**: Monitored active pool workers and query latency meter.
-* **API Uptime**: Real-time server responsiveness telemetry.
-
-### 7.2 Security Audit Trail & Error Logs
-* Stream of live system exceptions, failed login attempts, privilege escalations, and database transaction locks.
-
-### 7.3 ⚡ 1-Click Database Self-Healing
-Clicking the **`⚡ 1-Click Database Self-Healing`** button triggers an automated maintenance routine:
-1. Terminates idle database connections and resolves deadlock states.
-2. Flushes cached query plans and runs `VACUUM ANALYZE` on core tables.
-3. Revalidates Prisma schema constraints and resets in-memory offline sync queues.
+### Processing Book Returns & Overdue Fine Calculation (₹2/day)
+1. Navigate to **Return Desk (`/library/return`)**.
+2. Scan the book accession number or search the student's name.
+3. **Automatic Fine Computation**:
+   * If returned on or before due date: **Fine = ₹0.00**.
+   * If overdue: The system automatically computes overdue days × **₹2.00 / day** (e.g. 5 days overdue = ₹10.00 fine).
+4. Click **`💰 Collect Fine & Return`**: Marks fine as paid and restores book to available stock.
 
 ---
 
-## 📱 Chapter 8: Offline Operations & PWA Desktop Guide
+### Waiving Fines (With Audit Note)
+If the student had an approved medical leave or special exemption:
+1. On the return screen, click **`🕊️ Waive Fine & Return`**.
+2. Enter the **Waiver Justification** (e.g., "Approved medical leave by Principal").
+3. The book is checked in with ₹0 fine collected, and the waiver reason is logged in the library audit trail.
 
-### 8.1 How to Install on Desktop / Android / iOS
-* **Windows / Mac**: Open Chrome or Edge ➔ Click **`📲 Install App`** button at bottom right ➔ Click **Install**.
-* **Android**: Open Chrome ➔ Tap `(⋮)` ➔ **"Add to Home Screen"**.
-* **iPhone**: Open Safari ➔ Tap `(⎋)` ➔ **"Add to Home Screen"**.
+---
 
-### 8.2 Working Without Internet (Offline Resilience)
-1. If the internet connection drops during counter operations, the system continues functioning smoothly.
-2. Staff can record payments, issue tools, and check in books.
-3. Transactions are stored in the secure **IndexedDB Local Storage Queue**.
-4. An offline indicator displays at the bottom: **`⚡ Offline Mode (X items pending sync)`**.
-5. As soon as connectivity returns, the system **automatically transmits all queued records to the cloud database** without data loss.
+### Managing Book Reservations & Hold Queues
+1. If all copies of a popular textbook are checked out, go to **Reservations (`/library/reservations`)**.
+2. Click **`➕ Add Reservation`** ➔ Select Book and Student.
+3. When any student returns that book, the system places a hold on it and flags it for the waiting student.
+
+---
+
+### Generating Student Library Clearance Certificates
+Before final exams or graduation:
+1. Go to **Reports & Clearance (`/library/reports`)**.
+2. Search for the graduating student.
+3. The system verifies:
+   * `0` unreturned books.
+   * `₹0.00` unpaid library fines.
+4. Click **`🖨️ Generate Clearance Certificate`**.
+5. Prints a signed digital clearance slip for the student's exam hall-ticket or certificate handover.
+
+---
+
+### Librarian Button & Feature Directory
+| Button / Control | Location | Function / Result |
+| :--- | :--- | :--- |
+| **`➕ Add New Book`** | `/library/books` | Adds a new book title, ISBN, and rack location to catalog. |
+| **`📤 Issue Book`** | `/library/issue` | Issues book to student/staff for standard 14-day period. |
+| **`💰 Collect Fine & Return`** | `/library/return` | Collects computed overdue fine and returns book to stock. |
+| **`🕊️ Waive Fine & Return`** | `/library/return` | Checks in book and waives fine with mandatory justification. |
+| **`➕ Add Reservation`** | `/library/reservations` | Places a hold queue on currently checked-out books. |
+| **`🖨️ Generate Clearance Slip`** | `/library/reports` | Verifies zero dues and prints student library clearance certificate. |
+| **`📊 Export Library CSV`** | `/library/reports` | Downloads circulation statistics and overdue borrower registers. |
+
+---
+
+## 5. 🤝 First-Time Guide for BSS Foundation & Donation Officers
+
+**Default Login**: `admin@saiiti.edu.in` or via Mission Control Hub
+
+### Day 1 Donation Officer Checklist
+- [ ] Review the **Public Foundation Showcase (`/foundation`)**.
+- [ ] Verify the 12 campus photographs and descriptions.
+- [ ] Access the **Donation Admin Center (`/donation-admin`)**.
+- [ ] Record a test donor contribution with PAN details.
+- [ ] Generate an **Official Section 80G Tax Exemption PDF Certificate**.
+
+---
+
+### Public Showcase Management (`/foundation`)
+The public portal is accessible to all outside visitors and donors:
+* **Campus Tour Gallery**: Displays 12 verified geotagged photographs of the Bhadrawati campus (Library, Workshops, Administration, Safety Stations).
+* **Section 80G Tax Exemption Badge**: Clarifies 50% income tax deductions under the Income Tax Act.
+* **`💖 Contribute Now` Modal**: Enables instant contributions via UPI QR, Debit/Credit Card, or NetBanking.
+
+---
+
+### Recording Donor Contributions with PAN Details
+1. Go to **Donation Admin (`/donation-admin`)** ➔ **Donors & Receipts**.
+2. Click **`➕ Record New Donation`**.
+3. Fill in donor tax information:
+   * **Donor Name**: Individual or Corporate Entity.
+   * **PAN Number**: Required for 80G and Form 10BD income tax filing.
+   * **Email & Phone Number**: For digital certificate dispatch.
+   * **Amount (₹)**: Contribution amount.
+   * **Campaign Allocation**: *Student Merit Scholarships*, *Workshop Machinery Fund*, *Library Modernization*, *General Trust Fund*.
+   * **Payment Mode & Transaction ID**: Bank NEFT, Cheque, or Online Gateway UTR.
+4. Click **`💾 Save & Issue 80G Receipt`**.
+
+---
+
+### Generating Section 80G Tax Exemption PDF Certificates
+1. In the donations table, locate the donor's record.
+2. Click **`📄 Generate 80G Certificate`**.
+3. The system compiles an official PDF document containing:
+   * Trust Registration Number & 80G Order Number.
+   * Unique Donation Serial Number.
+   * Donor PAN, Date, and Amount in words.
+   * Authorized Signatory digital signature.
+4. Click **`⬇️ Download PDF`** or **`✉️ Email to Donor`**.
+
+---
+
+### Form 10BD Compliance & Audit Export
+At the end of the financial year:
+1. Open **Donation Reports (`/donation-admin/reports`)**.
+2. Click **`📑 Export Form 10BD CSV`**.
+3. Exports data perfectly formatted to the Income Tax Department's Form 10BD electronic filing specifications (Donor PAN, Address, Mode, Amount).
+
+---
+
+### Donation Admin Button & Feature Directory
+| Button / Control | Location | Function / Result |
+| :--- | :--- | :--- |
+| **`➕ Record New Donation`** | `/donation-admin` | Opens donor entry form with PAN and campaign fields. |
+| **`📄 Generate 80G Certificate`**| Donor Table | Generates official 80G tax exemption receipt PDF. |
+| **`📑 Export Form 10BD CSV`** | `/donation-admin/reports` | Exports annual donation ledger formatted for Income Tax filing. |
+| **`📊 Campaign Progress`** | `/donation-admin` | Tracks funding meters for student scholarships and workshop upgrades. |
+
+---
+
+## 6. 💻 First-Time Guide for Developers & System Administrators
+
+**Default Login**: `pattiwarrushikesh5102@gmail.com` / `Rushikesh@5102` *(or `DevPass123!`)*
+
+### Developer Diagnostics Screen (`/system`)
+Direct access to core infrastructure health, accessible only by Developer accounts:
+* **Database Vitals**: Shows active PostgreSQL connection pool utilization, query response time, and storage engine status.
+* **Uptime & Latency Telemetry**: Real-time server latency meter (e.g. `24ms`).
+* **Environment Configuration**: Safe inspector showing active environment modes (`production`), API endpoints, and Supabase RLS policies.
+
+### Security Audit Logs & Live Error Streams
+* Real-time stream tracking failed authentication attempts, permission violations, and system exceptions.
+* Searchable by IP address, User Email, or Error Code.
+
+### Using the "⚡ 1-Click Database Self-Healing" Engine
+If database connection timeouts or query locks occur:
+1. Click the prominent **`⚡ 1-Click Database Self-Healing`** button on `/system`.
+2. The autonomous engine executes a 4-step recovery protocol:
+   * Step 1: Clears idle/stale connection pool handles.
+   * Step 2: Flushes in-memory cache and temporary query plan buffers.
+   * Step 3: Re-establishes healthy PostgreSQL connection socket.
+   * Step 4: Revalidates table foreign key constraints and schema health.
+3. Returns a confirmation report: `"✅ System Diagnostics Healthy — 0 Locks Active"`.
+
+---
+
+## 7. 🎓 First-Time Guide for Students & Parents
+
+**Default Login**: `sai-2024-001@student.saiiti.edu.in` / `SAI-2024-001`
+
+### Student Portal Features:
+1. **Fee Status & Balance**: View total course fee, total fees paid, and remaining installment balance with due dates.
+2. **`💳 Pay Dues Online`**: Pay upcoming installments securely via UPI or Card from home.
+3. **`🧾 Download Fee Receipts`**: Access and print receipts for all past payments for scholarship applications.
+4. **`📚 My Issued Books`**: View currently checked-out library books, issue dates, and return deadlines to avoid overdue fines.
+
+---
+
+## 8. ⚡ Offline Mode & PWA Synchronization Guide (All Staff)
+
+The software is engineered with **Zero-Downtime Offline Resilience**:
+
+```
+No Internet Connection ──► Staff Records Payment / Issues Tool
+                                    │
+                                    ▼
+                         [IndexedDB Local Queue]
+                                    │
+       Internet Restored ───────────┴──────────► [Automatic Cloud Sync]
+```
+
+### How to Work When Internet Drops:
+1. Continue using the software normally — you can record fee payments, issue workshop tools, and check in library books.
+2. A floating badge at the bottom-right will display: **`⚡ Offline Mode: X items pending sync`**.
+3. **Automatic Synchronization**: The moment Wi-Fi or mobile data reconnects, the system automatically transmits all pending records to the cloud database.
+4. You will see a green confirmation: **`✅ Successfully synced X items to Cloud Database!`**.
 
 ---
 
