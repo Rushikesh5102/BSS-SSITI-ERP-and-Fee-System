@@ -19,9 +19,22 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [students, setStudents] = useState<any[]>([]);
+    const [feeStructures, setFeeStructures] = useState<any[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [selectedFee, setSelectedFee] = useState<any>(null);
-    const [form, setForm] = useState({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
+    
+    // Payment Form state with Fee Head Selection & Auto-fill / Custom on-the-spot creation
+    const [form, setForm] = useState({ 
+        feeHeadType: 'FULL_BALANCE',
+        feeHeadLabel: 'Academic Course Fee',
+        customFeeHeadName: '',
+        amount: '', 
+        mode: 'CASH', 
+        transactionRef: '', 
+        bankName: '', 
+        remarks: '' 
+    });
+    
     const [saving, setSaving] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [toast, setToast] = useState('');
@@ -34,14 +47,14 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
     useEffect(() => {
         const saved = safeStorage.get<any>('draft_fee_payment', null);
-        if (saved && (saved.amount || saved.transactionRef || saved.remarks)) {
+        if (saved && (saved.amount || saved.transactionRef || saved.remarks || saved.feeHeadType)) {
             setHasPaymentDraft(true);
             setPaymentDraftTime(saved.savedAt);
         }
     }, []);
 
     useEffect(() => {
-        if (form.amount || form.transactionRef || form.remarks) {
+        if (form.amount || form.transactionRef || form.remarks || form.customFeeHeadName) {
             const timer = setTimeout(() => {
                 safeStorage.set('draft_fee_payment', {
                     ...form,
@@ -56,6 +69,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         const saved = safeStorage.get<any>('draft_fee_payment', null);
         if (saved) {
             setForm({
+                feeHeadType: saved.feeHeadType || 'FULL_BALANCE',
+                feeHeadLabel: saved.feeHeadLabel || 'Academic Course Fee',
+                customFeeHeadName: saved.customFeeHeadName || '',
                 amount: saved.amount || '',
                 mode: saved.mode || 'CASH',
                 transactionRef: saved.transactionRef || '',
@@ -85,9 +101,14 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         api.get(`/students?search=${query}&limit=30`).then(({ data }) => setStudents(data.data || [])).catch(() => { });
     };
 
+    const fetchFeeStructures = () => {
+        api.get('/fee-structures').then(({ data }) => setFeeStructures(data.data || [])).catch(() => { });
+    };
+
     useEffect(() => {
         if (!user) return;
         fetchStudentsList(studentSearch);
+        fetchFeeStructures();
     }, [user, effectiveRole, studentSearch]);
 
     const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
@@ -96,11 +117,124 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         const student = students.find((s) => s.id === studentId);
         setSelectedStudent(student || null);
         if (student && student.studentFees && student.studentFees.length > 0) {
-            setSelectedFee(student.studentFees[0]);
+            const sf = student.studentFees[0];
+            setSelectedFee(sf);
+            const due = (sf.totalAmount - sf.paidAmount) / 100;
+            setForm(f => ({
+                ...f,
+                feeHeadType: 'FULL_BALANCE',
+                feeHeadLabel: 'Academic Course Fee',
+                amount: due > 0 ? due.toString() : '',
+                remarks: 'Paid towards Academic Course Fee'
+            }));
         } else {
             setSelectedFee(null);
         }
         setResult(null);
+    };
+
+    // ─── Intelligent Fee Amount Resolvers (Admission vs Fee Structure vs Master Template) ──
+    const getTuitionAmount = (): number => {
+        if (!selectedStudent) return 15000;
+        if (selectedStudent.tuitionFee && parseFloat(selectedStudent.tuitionFee) > 0) {
+            return parseFloat(selectedStudent.tuitionFee);
+        }
+        if (selectedStudent.educationDetails?.tuitionFee && parseFloat(selectedStudent.educationDetails.tuitionFee) > 0) {
+            return parseFloat(selectedStudent.educationDetails.tuitionFee);
+        }
+        const assignedItems = selectedFee?.feeStructure?.items || [];
+        const tuitionItem = assignedItems.find((i: any) => (i.feeCategory?.name || '').toLowerCase().includes('tuition'));
+        if (tuitionItem && tuitionItem.amount > 0) return tuitionItem.amount / 100;
+
+        for (const fs of feeStructures) {
+            if (fs.class === selectedStudent.class || fs.name?.toLowerCase().includes(selectedStudent.class?.toLowerCase())) {
+                const item = (fs.items || []).find((i: any) => (i.feeCategory?.name || '').toLowerCase().includes('tuition'));
+                if (item && item.amount > 0) return item.amount / 100;
+            }
+        }
+        return 15000;
+    };
+
+    const getExamAmount = (): number => {
+        if (!selectedStudent) return 2000;
+        if (selectedStudent.examFee && parseFloat(selectedStudent.examFee) > 0) {
+            return parseFloat(selectedStudent.examFee);
+        }
+        if (selectedStudent.educationDetails?.examFee && parseFloat(selectedStudent.educationDetails.examFee) > 0) {
+            return parseFloat(selectedStudent.educationDetails.examFee);
+        }
+        const assignedItems = selectedFee?.feeStructure?.items || [];
+        const examItem = assignedItems.find((i: any) => (i.feeCategory?.name || '').toLowerCase().includes('exam'));
+        if (examItem && examItem.amount > 0) return examItem.amount / 100;
+
+        for (const fs of feeStructures) {
+            if (fs.class === selectedStudent.class || fs.name?.toLowerCase().includes(selectedStudent.class?.toLowerCase())) {
+                const item = (fs.items || []).find((i: any) => (i.feeCategory?.name || '').toLowerCase().includes('exam'));
+                if (item && item.amount > 0) return item.amount / 100;
+            }
+        }
+        return 2000;
+    };
+
+    const getDressMaterialAmount = (): number => {
+        if (!selectedStudent) return 3000;
+        if (selectedStudent.dressMaterialFee && parseFloat(selectedStudent.dressMaterialFee) > 0) {
+            return parseFloat(selectedStudent.dressMaterialFee);
+        }
+        if (selectedStudent.educationDetails?.dressMaterialFee && parseFloat(selectedStudent.educationDetails.dressMaterialFee) > 0) {
+            return parseFloat(selectedStudent.educationDetails.dressMaterialFee);
+        }
+        const assignedItems = selectedFee?.feeStructure?.items || [];
+        const dressItem = assignedItems.find((i: any) => {
+            const n = (i.feeCategory?.name || '').toLowerCase();
+            return n.includes('dress') || n.includes('material') || n.includes('uniform');
+        });
+        if (dressItem && dressItem.amount > 0) return dressItem.amount / 100;
+
+        for (const fs of feeStructures) {
+            if (fs.class === selectedStudent.class || fs.name?.toLowerCase().includes(selectedStudent.class?.toLowerCase())) {
+                const item = (fs.items || []).find((i: any) => {
+                    const n = (i.feeCategory?.name || '').toLowerCase();
+                    return n.includes('dress') || n.includes('material') || n.includes('uniform');
+                });
+                if (item && item.amount > 0) return item.amount / 100;
+            }
+        }
+        return 3000;
+    };
+
+    const handleFeeHeadChange = (type: string) => {
+        let resolvedAmt = '';
+        let headLabel = 'Academic Course Fee';
+        const pendingRupees = selectedFee ? (selectedFee.totalAmount - selectedFee.paidAmount) / 100 : 0;
+
+        if (type === 'TUITION') {
+            headLabel = 'Tuition Fees';
+            const val = getTuitionAmount();
+            resolvedAmt = (pendingRupees > 0 ? Math.min(val, pendingRupees) : val).toString();
+        } else if (type === 'EXAM') {
+            headLabel = 'Exam Fees';
+            const val = getExamAmount();
+            resolvedAmt = (pendingRupees > 0 ? Math.min(val, pendingRupees) : val).toString();
+        } else if (type === 'DRESS_MATERIAL') {
+            headLabel = 'Dress & Material Fees';
+            const val = getDressMaterialAmount();
+            resolvedAmt = (pendingRupees > 0 ? Math.min(val, pendingRupees) : val).toString();
+        } else if (type === 'FULL_BALANCE') {
+            headLabel = 'Academic Course Fee';
+            resolvedAmt = pendingRupees > 0 ? pendingRupees.toString() : '';
+        } else if (type === 'CUSTOM') {
+            headLabel = form.customFeeHeadName || 'Custom Fee';
+            resolvedAmt = '';
+        }
+
+        setForm(f => ({
+            ...f,
+            feeHeadType: type,
+            feeHeadLabel: headLabel,
+            amount: resolvedAmt,
+            remarks: `Paid towards ${headLabel}`
+        }));
     };
 
     const handleQuickAddStudent = async (e: React.FormEvent) => {
@@ -157,19 +291,24 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         setSaving(true);
         try {
             const amountPaise = Math.round(parseFloat(form.amount) * 100);
+            const effectiveFeesFor = form.feeHeadType === 'CUSTOM' 
+                ? (form.customFeeHeadName || 'Custom Fee')
+                : form.feeHeadLabel;
+
             const { data } = await api.post('/payments', {
                 studentFeeId: selectedFee.id,
                 amount: amountPaise,
                 mode: form.mode,
                 transactionRef: form.transactionRef || undefined,
                 bankName: form.bankName || undefined,
-                remarks: form.remarks || undefined,
+                remarks: form.remarks || `Paid towards ${effectiveFeesFor}`,
+                feesFor: effectiveFeesFor,
             });
             setResult(data.data);
             showToast('✅ Payment recorded! Receipt generated.');
             safeStorage.remove('draft_fee_payment');
             setHasPaymentDraft(false);
-            setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
+            setForm({ feeHeadType: 'FULL_BALANCE', feeHeadLabel: 'Academic Course Fee', customFeeHeadName: '', amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
 
             // Refresh student fee data
             if (selectedStudent) {
@@ -196,7 +335,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 <header className="header">
                     <div>
                         <div className="header-title">💳 Record Payment</div>
-                        <div className="header-subtitle">Search/Select student, accept fees, and issue live receipts</div>
+                        <div className="header-subtitle">Select student, choose fee component (Tuition, Exam, Dress, Custom), and issue live receipt</div>
                     </div>
                     <button className="btn btn-primary btn-sm" onClick={() => setShowQuickAddModal(true)}>
                         ➕ Quick Add Student
@@ -285,7 +424,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             >
                                                 {(selectedStudent.studentFees || []).map((f: any) => (
                                                     <option key={f.id} value={f.id}>
-                                                        {f.feeStructure?.name || 'School Fee'} ({f.academicYear}) — Pending: {formatRupees(f.totalAmount - f.paidAmount)}
+                                                        {f.feeStructure?.name || 'Trade Fee'} ({f.academicYear}) — Pending: {formatRupees(f.totalAmount - f.paidAmount)}
                                                     </option>
                                                 ))}
                                             </select>
@@ -296,7 +435,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                             {selectedFee && (
                                 <div className="card">
-                                    <div className="card-header"><div className="card-title">Step 2: Payment Details</div></div>
+                                    <div className="card-header"><div className="card-title">Step 2: Payment & Fee Component Details</div></div>
                                     <form onSubmit={handleSubmit}>
                                         <div className="card-body">
                                             <AutoRecoverBanner
@@ -309,9 +448,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             {/* Balance summary */}
                                             <div style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 16, marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, textAlign: 'center' }}>
                                                 {[
-                                                    { label: 'Total Fee', value: formatRupees(selectedFee.totalAmount) },
-                                                    { label: 'Paid', value: formatRupees(selectedFee.paidAmount), color: 'var(--accent)' },
-                                                    { label: 'Pending', value: formatRupees(pendingBalance), color: pendingBalance > 0 ? 'var(--danger)' : 'var(--accent)' },
+                                                    { label: 'Total Agreed Fee', value: formatRupees(selectedFee.totalAmount) },
+                                                    { label: 'Paid Till Date', value: formatRupees(selectedFee.paidAmount), color: 'var(--accent)' },
+                                                    { label: 'Remaining Balance', value: formatRupees(pendingBalance), color: pendingBalance > 0 ? 'var(--danger)' : 'var(--accent)' },
                                                 ].map((item) => (
                                                     <div key={item.label}>
                                                         <div className="text-sm text-muted">{item.label}</div>
@@ -320,13 +459,71 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 ))}
                                             </div>
 
+                                            {/* ─── NEW: Select What Fee Student is Paying (Tuition, Exam, Dress, Custom) ── */}
+                                            <div className="form-group mb-3" style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, border: '1.5px solid var(--border)' }}>
+                                                <label className="form-label font-bold" style={{ color: 'var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span>🎯 Select Fee Component Paid For</span>
+                                                    <span className="badge badge-primary" style={{ fontSize: 11 }}>Auto-Prefill & Custom</span>
+                                                </label>
+                                                <div className="text-xs text-muted mb-2">
+                                                    Select the specific fee component. Decided amount from admission / fee structure will automatically be populated, or you can create a custom fee head right here!
+                                                </div>
+                                                <select 
+                                                    className="form-control"
+                                                    value={form.feeHeadType}
+                                                    onChange={(e) => handleFeeHeadChange(e.target.value)}
+                                                    style={{ fontSize: 13, fontWeight: 700 }}
+                                                >
+                                                    <option value="FULL_BALANCE">🏢 Full / General Academic Course Fee (Total Pending: ₹{(pendingBalance / 100).toLocaleString('en-IN')})</option>
+                                                    <option value="TUITION">🎓 Tuition Fees (Standard: ₹{getTuitionAmount().toLocaleString('en-IN')})</option>
+                                                    <option value="EXAM">📝 Exam Fees (Standard: ₹{getExamAmount().toLocaleString('en-IN')})</option>
+                                                    <option value="DRESS_MATERIAL">🥼 Dress & Material Fees (Standard: ₹{getDressMaterialAmount().toLocaleString('en-IN')})</option>
+                                                    <option value="CUSTOM">➕ Custom / Other Fee Head (Create On The Spot...)</option>
+                                                </select>
+
+                                                {/* On-The-Spot Custom Fee Head Inputs */}
+                                                {form.feeHeadType === 'CUSTOM' && (
+                                                    <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10, background: 'var(--surface)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div>
+                                                            <label className="form-label" style={{ fontSize: 12 }}>Custom Fee Head Name <span className="required">*</span></label>
+                                                            <input 
+                                                                className="form-control"
+                                                                placeholder="e.g. Workshop Tool Kit, Caution Deposit, Late Fine..."
+                                                                value={form.customFeeHeadName}
+                                                                onChange={(e) => {
+                                                                    const name = e.target.value;
+                                                                    setForm(f => ({
+                                                                        ...f,
+                                                                        customFeeHeadName: name,
+                                                                        feeHeadLabel: name || 'Custom Fee',
+                                                                        remarks: name ? `Paid towards ${name}` : 'Fee Payment Received'
+                                                                    }));
+                                                                }}
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="form-label" style={{ fontSize: 12 }}>Custom Amount (₹) <span className="required">*</span></label>
+                                                            <input 
+                                                                type="number"
+                                                                step="1"
+                                                                className="form-control"
+                                                                placeholder="Enter amount ₹"
+                                                                value={form.amount}
+                                                                onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             <div className="grid grid-2">
                                                 <div className="form-group">
-                                                    <label className="form-label">Amount (₹ INR) <span className="required">*</span></label>
+                                                    <label className="form-label">Payment Amount (₹ INR) <span className="required">*</span></label>
                                                     <input className="form-control" type="number" step="1" min="1"
-                                                        max={pendingBalance / 100} required value={form.amount}
+                                                        required value={form.amount}
                                                         onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
-                                                        placeholder={`e.g. 5000 (Max: ₹${(pendingBalance / 100).toLocaleString('en-IN')})`} />
+                                                        placeholder="Amount in Rupees" />
                                                 </div>
                                                 <div className="form-group">
                                                     <label className="form-label">Payment Mode <span className="required">*</span></label>
@@ -349,9 +546,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                     </div>
                                                 )}
                                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                                    <label className="form-label">Remarks / Note</label>
+                                                    <label className="form-label">Remarks / Note (Printed on Receipt)</label>
                                                     <input className="form-control" value={form.remarks}
-                                                        onChange={(e) => setForm(f => ({ ...f, remarks: e.target.value }))} placeholder="Optional note for receipt" />
+                                                        onChange={(e) => setForm(f => ({ ...f, remarks: e.target.value }))} placeholder="Note for receipt" />
                                                 </div>
                                             </div>
                                         </div>
@@ -362,7 +559,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             <button
                                                 type="button"
                                                 className="btn btn-secondary btn-lg"
-                                                disabled={saving || !selectedFee || pendingBalance <= 0}
+                                                disabled={saving || !selectedFee || (!form.amount && pendingBalance <= 0)}
                                                 onClick={async () => {
                                                     const amountPaise = form.amount ? Math.round(parseFloat(form.amount) * 100) : pendingBalance;
                                                     if (amountPaise <= 0) return alert('Please enter a valid payment amount');
@@ -386,21 +583,24 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                             amount: order.amount,
                                                             currency: order.currency,
                                                             name: 'Shri Sai I.T.I',
-                                                            description: `Fee Payment - ${selectedStudent.name}`,
+                                                            description: `Fee Payment (${form.feeHeadType === 'CUSTOM' ? (form.customFeeHeadName || 'Custom Fee') : form.feeHeadLabel}) - ${selectedStudent.name}`,
                                                             order_id: order.id,
                                                             handler: async function (response: any) {
                                                                 try {
+                                                                    const effectiveFeesFor = form.feeHeadType === 'CUSTOM' ? (form.customFeeHeadName || 'Custom Fee') : form.feeHeadLabel;
                                                                     const { data: verifyRes } = await api.post('/payments/razorpay/verify', {
                                                                         razorpayOrderId: response.razorpay_order_id || order.id,
                                                                         razorpayPaymentId: response.razorpay_payment_id || 'pay_mock_' + Math.random().toString(36).substring(2, 12),
                                                                         razorpaySignature: response.razorpay_signature || 'mock_signature',
                                                                         studentFeeId: selectedFee.id,
-                                                                        amount: order.amount
+                                                                        amount: order.amount,
+                                                                        feesFor: effectiveFeesFor,
+                                                                        remarks: form.remarks || `Paid towards ${effectiveFeesFor}`
                                                                     });
                                                                     if (verifyRes.success) {
                                                                         setResult(verifyRes.data);
                                                                         showToast('✅ Razorpay Payment Successful! Receipt generated.');
-                                                                        setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
+                                                                        setForm({ feeHeadType: 'FULL_BALANCE', feeHeadLabel: 'Academic Course Fee', customFeeHeadName: '', amount: '', mode: 'CASH', transactionRef: '', bankName: '', remarks: '' });
                                                                     }
                                                                 } catch (err: any) {
                                                                     showToast(`❌ Verification error: ${err.message}`);
@@ -411,7 +611,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         };
 
                                                         if (order.id.startsWith('order_mock_')) {
-                                                            const confirmPay = window.confirm(`[SANDBOX GATEWAY] Pay ₹${(amountPaise / 100).toLocaleString('en-IN')} via Razorpay?`);
+                                                             const confirmPay = window.confirm(`[SANDBOX GATEWAY] Pay ₹${(amountPaise / 100).toLocaleString('en-IN')} towards ${form.feeHeadType === 'CUSTOM' ? (form.customFeeHeadName || 'Custom Fee') : form.feeHeadLabel} via Razorpay?`);
                                                             if (confirmPay) {
                                                                 await (options.handler as any)({
                                                                     razorpay_order_id: order.id,
@@ -469,7 +669,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                         {selectedFee && (
                                             <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 8, fontSize: 13 }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span className="text-muted">Total Course Fee:</span>
+                                                    <span className="text-muted">Total Agreed Course Fee:</span>
                                                     <b>{formatRupees(selectedFee.totalAmount)}</b>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -529,6 +729,10 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 <b>{selectedStudent.class}</b>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                                <span className="text-muted">Fee Head:</span>
+                                                <span className="badge badge-primary">{form.feeHeadType === 'CUSTOM' ? (form.customFeeHeadName || 'Custom Fee') : form.feeHeadLabel}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                                                 <span className="text-muted">Payment Mode:</span>
                                                 <span className="badge badge-info">{form.mode}</span>
                                             </div>
@@ -539,7 +743,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                         </div>
                                     ) : (
                                         <div className="text-center text-muted text-sm" style={{ padding: '20px 0' }}>
-                                            Select a student on the left to view live receipt calculation preview.
+                                            Select a student on the left to view live fee component breakdown & receipt calculation preview.
                                         </div>
                                     )}
 
@@ -580,70 +784,47 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                 <div className="form-group mb-3">
                                     <label className="form-label">Full Name <span className="required">*</span></label>
                                     <input className="form-control" required value={quickAddForm.name}
-                                        onChange={(e) => setQuickAddForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Amit Patil" />
+                                        onChange={(e) => setQuickAddForm(f => ({ ...f, name: e.target.value }))}
+                                        placeholder="e.g. Rahul Sharma" />
                                 </div>
-                                <div className="form-group mb-3">
-                                    <label className="form-label">Trade / Course <span className="required">*</span></label>
-                                    <select className="form-control" value={quickAddForm.class}
-                                        onChange={(e) => setQuickAddForm(f => ({ ...f, class: e.target.value }))}>
-                                        <option>Electrician</option>
-                                        <option>Fitter</option>
-                                        <option>Welder</option>
-                                        <option>Mechanic</option>
-                                        <option>COPA</option>
-                                    </select>
-                                </div>
-                                <div className="form-group mb-3">
-                                    <label className="form-label">Student Photo Upload</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        {quickAddForm.photo ? (
-                                            <img src={quickAddForm.photo} alt="Preview" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
-                                        ) : (
-                                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📷</div>
-                                        )}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="form-control"
-                                            style={{ padding: '6px 10px', fontSize: 13, height: 'auto', background: 'var(--surface-2)', border: '1px dashed var(--primary)' }}
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    const reader = new FileReader();
-                                                    reader.onloadend = () => {
-                                                        setQuickAddForm(f => ({ ...f, photo: reader.result as string }));
-                                                    };
-                                                    reader.readAsDataURL(file);
-                                                }
-                                            }}
-                                        />
+                                <div className="grid grid-2 mb-3">
+                                    <div className="form-group">
+                                        <label className="form-label">Class / Trade <span className="required">*</span></label>
+                                        <select className="form-control" value={quickAddForm.class}
+                                            onChange={(e) => setQuickAddForm(f => ({ ...f, class: e.target.value }))}>
+                                            <option value="Electrician">Electrician</option>
+                                            <option value="Fitter">Fitter</option>
+                                            <option value="Welder">Welder</option>
+                                            <option value="Mechanic">Mechanic</option>
+                                            <option value="COPA">COPA</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Section</label>
+                                        <input className="form-control" value={quickAddForm.section}
+                                            onChange={(e) => setQuickAddForm(f => ({ ...f, section: e.target.value }))} placeholder="e.g. A" />
                                     </div>
                                 </div>
-                                <div className="form-group mb-3" style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, fontSize: 12, color: 'var(--primary)' }}>
-                                    ℹ️ <b>Auto-Assigned:</b> Roll Number and Student ID are generated automatically per trade (e.g. SITI-2026-E01).
+                                <div className="form-group mb-3">
+                                    <label className="form-label">Roll Number (Optional)</label>
+                                    <input className="form-control" value={quickAddForm.rollNumber}
+                                        onChange={(e) => setQuickAddForm(f => ({ ...f, rollNumber: e.target.value }))} placeholder="e.g. 101" />
                                 </div>
                                 <div className="form-group mb-3">
                                     <label className="form-label">Parent / Guardian Name</label>
                                     <input className="form-control" value={quickAddForm.parentName}
-                                        onChange={(e) => setQuickAddForm(f => ({ ...f, parentName: e.target.value }))} placeholder="e.g. Suresh Patil" />
+                                        onChange={(e) => setQuickAddForm(f => ({ ...f, parentName: e.target.value }))} placeholder="e.g. Suresh Sharma" />
                                 </div>
-                                <div className="grid grid-2">
-                                    <div className="form-group">
-                                        <label className="form-label">Parent Phone</label>
-                                        <input className="form-control" value={quickAddForm.parentPhone}
-                                            onChange={(e) => setQuickAddForm(f => ({ ...f, parentPhone: e.target.value }))} placeholder="e.g. +919876543210" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Parent Email</label>
-                                        <input className="form-control" type="email" value={quickAddForm.parentEmail}
-                                            onChange={(e) => setQuickAddForm(f => ({ ...f, parentEmail: e.target.value }))} placeholder="parent@gmail.com" />
-                                    </div>
+                                <div className="form-group mb-3">
+                                    <label className="form-label">Parent Phone</label>
+                                    <input className="form-control" type="tel" value={quickAddForm.parentPhone}
+                                        onChange={(e) => setQuickAddForm(f => ({ ...f, parentPhone: e.target.value }))} placeholder="e.g. 9876543210" />
                                 </div>
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowQuickAddModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" disabled={quickAdding}>
-                                    {quickAdding ? 'Admitting...' : '💾 Admit Student & Select'}
+                                    {quickAdding ? 'Admitting...' : '✅ Save & Select Student'}
                                 </button>
                             </div>
                         </form>
@@ -651,27 +832,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 </div>
             )}
 
-            {/* Full-Res Image & QR Viewer Modal */}
-            {viewImageModal && (
-                <div className="modal-overlay" onClick={() => setViewImageModal(null)}>
-                    <div className="modal" style={{ maxWidth: 480, padding: 24, textAlign: 'center', background: 'var(--surface)' }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header" style={{ marginBottom: 16 }}>
-                            <div className="modal-title" style={{ fontSize: 16, fontWeight: 700 }}>{viewImageModal.title}</div>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setViewImageModal(null)}>✕</button>
-                        </div>
-                        <div style={{ background: '#ffffff', padding: 16, borderRadius: 12, border: '2px solid #0284c7', display: 'inline-block', marginBottom: 16 }}>
-                            <img src={viewImageModal.url} alt={viewImageModal.title} style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 8, display: 'block' }} />
-                        </div>
-                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                            <a href={viewImageModal.url} download={viewImageModal.filename} className="btn btn-primary" style={{ textDecoration: 'none' }}>
-                                📥 Download Image / QR
-                            </a>
-                            <button className="btn btn-secondary" onClick={() => setViewImageModal(null)}>Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
+            {/* Toast */}
             {toast && (
                 <div className="toast-wrap">
                     <div className={`toast ${toast.startsWith('✅') ? 'toast-success' : 'toast-error'}`}>{toast}</div>
@@ -689,10 +850,8 @@ function SearchParamsLoader() {
 
 export default function PaymentsPage() {
     return (
-        <Suspense fallback={<div className="layout"><Sidebar /><div className="main-content"><div className="page-content text-center text-muted" style={{ padding: 40 }}><span className="spinner" /> Loading payments...</div></div></div>}>
+        <Suspense fallback={<div className="layout-loading"><div className="spinner" /></div>}>
             <SearchParamsLoader />
         </Suspense>
     );
 }
-
-

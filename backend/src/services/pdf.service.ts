@@ -117,15 +117,16 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         if (data.parentName) {
             y -= 26;
             drawField("Parent's Name", data.parentName, leftX, y);
-            if (data.parentPhone) {
-                drawField("Parent's Phone", data.parentPhone, rightX, y);
-            }
+            drawField("Fees Paid Towards", data.feesFor || 'Academic Fee', rightX, y);
+        } else {
+            y -= 26;
+            drawField("Fees Paid Towards", data.feesFor || 'Academic Fee', leftX, y);
         }
 
         // ─── FEE BREAKDOWN & BALANCE BREAKDOWN TABLE ─────────────────────────────
         y -= 30;
         page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 18, color: primary });
-        page.drawText('FEE BREAKDOWN & ACCOUNT LEDGER', { x: leftX + 10, y: y + 1, font: boldFont, size: 7.5, color: white });
+        page.drawText(`FEE BREAKDOWN & ACCOUNT LEDGER — ${(data.feesFor || 'ACADEMIC FEE').toUpperCase()}`, { x: leftX + 10, y: y + 1, font: boldFont, size: 7.5, color: white });
 
         // Total Course Fee Row
         y -= 18;

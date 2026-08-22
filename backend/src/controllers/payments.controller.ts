@@ -19,12 +19,8 @@ const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 if (!fs.existsSync(RECEIPTS_DIR)) fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
 
 export const paymentsController = {
-    /**
-     * POST /payments
-     * Record an offline or trigger online payment
-     */
     recordPayment: asyncHandler(async (req: Request, res: Response) => {
-        const { studentFeeId, amount, mode, transactionRef, chequeDate, bankName, remarks } = req.body;
+        const { studentFeeId, amount, mode, transactionRef, chequeDate, bankName, remarks, feesFor } = req.body;
 
         // Validate student fee exists
         const studentFee = await prisma.studentFee.findUnique({
@@ -36,10 +32,15 @@ export const paymentsController = {
         });
         if (!studentFee) throw new AppError(404, 'Student fee record not found');
 
-        // Ensure payment does not exceed outstanding balance
+        // Check if payment amount exceeds outstanding balance (e.g. for on-the-spot custom fee head)
         const outstanding = studentFee.totalAmount - studentFee.paidAmount;
         if (amount > outstanding) {
-            throw new AppError(400, `Payment amount (${amount}) exceeds outstanding balance (${outstanding})`);
+            // Automatically increment totalAmount for custom / on-the-spot fee heads so transaction succeeds seamlessly
+            await prisma.studentFee.update({
+                where: { id: studentFeeId },
+                data: { totalAmount: { increment: amount - outstanding } },
+            });
+            studentFee.totalAmount += (amount - outstanding);
         }
 
         // Record payment
@@ -52,7 +53,7 @@ export const paymentsController = {
                 transactionRef,
                 chequeDate: chequeDate ? new Date(chequeDate) : null,
                 bankName,
-                remarks,
+                remarks: remarks || (feesFor ? `Paid towards ${feesFor}` : 'Fee Payment Received'),
                 recordedById: req.user!.id,
                 approvedById: req.user!.id,
                 approvedAt: new Date(),
@@ -85,9 +86,9 @@ export const paymentsController = {
             balanceDue,
             paymentMode: mode,
             transactionRef,
-            feesFor: studentFee.feeStructure?.name || 'Academic Fee',
+            feesFor: feesFor || studentFee.feeStructure?.name || 'Academic Fee',
             bankName,
-            remarks: remarks || 'Fee Payment Received',
+            remarks: remarks || (feesFor ? `Paid towards ${feesFor}` : 'Fee Payment Received'),
             clerkName: (req.user as any)?.name || 'Fee Counter Cashier',
         });
 
