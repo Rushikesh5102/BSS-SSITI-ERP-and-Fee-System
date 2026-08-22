@@ -69,196 +69,242 @@ export async function generateAdmissionFormPdf(student: any) {
 
     // ─── Header: Imperial Gold & Deep Navy (Matching Logo Colors) ────────────
     doc.setFillColor(15, 23, 42); // Deep Navy (#0f172a)
-    doc.rect(0, 0, pageWidth, 30, 'F');
+    doc.rect(0, 0, pageWidth, 28, 'F');
 
     doc.setFillColor(217, 119, 6); // Imperial Gold Accent (#d97706)
-    doc.rect(0, 28, pageWidth, 2, 'F');
+    doc.rect(0, 26, pageWidth, 2, 'F');
 
     // Logo on Top Left of Header
     if (logoDataUrl) {
         try {
-            doc.addImage(logoDataUrl, 'PNG', 10, 3, 24, 24);
+            doc.addImage(logoDataUrl, 'PNG', 8, 2, 24, 24);
         } catch {}
     }
 
     // Header Title
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12.5);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text("SHRI SAI PRIVATE INDUSTRIAL TRAINING INSTITUTE, BHADRAWATI", pageWidth / 2 + 8, 9, { align: 'center' });
+    doc.text("SHRI SAI PRIVATE INDUSTRIAL TRAINING INSTITUTE, BHADRAWATI", pageWidth / 2 + 8, 8, { align: 'center' });
     
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(254, 243, 199); // Light Warm Gold
-    doc.text("RUN BY - BHARAT SHIKSHAN SANSTHA, BHADRAWATI | Affiliated by DGET New Delhi & NCVT New Delhi", pageWidth / 2 + 8, 15, { align: 'center' });
+    doc.text("RUN BY - BHARAT SHIKSHAN SANSTHA | Affiliated by DGET New Delhi & NCVT New Delhi", pageWidth / 2 + 8, 14, { align: 'center' });
     doc.setTextColor(226, 232, 240);
-    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9529054868 | Email: saiiti151@gmail.com", pageWidth / 2 + 8, 21, { align: 'center' });
+    doc.text("Jain Mandir Rd, Ramnagar, Bhadravati, Maharashtra 442902 | Helpline: +91 9529054868 | Email: saiiti151@gmail.com", pageWidth / 2 + 8, 20, { align: 'center' });
 
     // Document Sub-Header Banner
     doc.setFillColor(254, 243, 199); // Soft Gold Bar
-    doc.rect(10, 33, pageWidth - 20, 8, 'F');
+    doc.rect(10, 30, pageWidth - 20, 7, 'F');
     doc.setDrawColor(217, 119, 6);
     doc.setLineWidth(0.4);
-    doc.rect(10, 33, pageWidth - 20, 8, 'S');
+    doc.rect(10, 30, pageWidth - 20, 7, 'S');
 
     doc.setTextColor(180, 83, 9); // Deep Gold-Amber
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
-    doc.text('Student Information & Application Form - I.T.I. Details', pageWidth / 2, 38.5, { align: 'center' });
+    doc.text('OFFICIAL STUDENT ADMISSION & REGISTRATION APPLICATION FORM', pageWidth / 2, 35, { align: 'center' });
 
     // Photo Box (Top Right)
-    const photoX = pageWidth - 42;
-    const photoY = 44;
+    const photoX = pageWidth - 40;
+    const photoY = 40;
     doc.setDrawColor(217, 119, 6);
     doc.setLineWidth(0.5);
-    doc.rect(photoX, photoY, 32, 38);
+    doc.rect(photoX, photoY, 30, 36);
     if (student.photo && student.photo.startsWith('data:image/')) {
-        try { doc.addImage(student.photo, 'PNG', photoX, photoY, 32, 38); } catch {}
+        try { doc.addImage(student.photo, 'PNG', photoX, photoY, 30, 36); } catch {}
     } else {
-        doc.setFontSize(7.5);
+        doc.setFontSize(7);
         doc.setTextColor(100, 116, 139);
-        doc.text('PASSPORT PHOTO', photoX + 16, photoY + 20, { align: 'center' });
+        doc.text('PASSPORT PHOTO', photoX + 15, photoY + 18, { align: 'center' });
     }
 
-    // ─── 1. Institute Details (Confirmed Registration & G.R. Numbers) ────────
-    let y = 44;
-    doc.setFontSize(9);
+    // ─── 1. Institute & Session Details ─────────────────────────────────────
+    let y = 40;
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(180, 83, 9);
-    doc.text('Institute Registration Details', 10, y);
-    y += 3;
+    doc.text('1. Institute Registration & Academic Session', 10, y);
+    y += 2.5;
 
     doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.3);
     doc.setFillColor(248, 250, 252);
-    doc.rect(10, y, pageWidth - 55, 30, 'S');
+    doc.rect(10, y, pageWidth - 53, 24, 'S');
 
     doc.setFontSize(7.5);
     doc.setTextColor(15, 23, 42);
     
-    // Exact confirmed numbers matching user's official document image
+    const startYear = student.createdAt ? new Date(student.createdAt).getFullYear() : 2024;
+    const sessionText = `${startYear} - ${startYear + 2} (2-Year ITI Program)`;
+
     const instDetails = [
-        ['1. Application No', student.studentId || 'SSITI-2026-E01'],
-        ['2. Name of the I.T.I.', 'SHRI SAI INDUSTRIAL TRAINING CENTER, BHADRAWATI'],
-        ['3. I.T.I. Registration No', 'I.T.I.- 2011/P.K.11/V.S.-03  DGET-06/13/2/2013-TC'],
-        ['4. Registration Date', '01/07/2013'],
-        ['5. G.R. No.', 'I.T.I.- 2011/P.K.11/V.S.-03'],
-        ['6. G.R. Date', '25/03/2011'],
+        ['Application / Roll No:', student.studentId || 'SSITI-2024-001', 'Academic Session:', sessionText],
+        ['I.T.I. Registration No:', 'I.T.I.- 2011/P.K.11/V.S.-03', 'Affiliation Authority:', 'NCVT / DGET New Delhi'],
+        ['G.R. No. & Date:', 'I.T.I.- 2011/P.K.11/V.S.-03 (25/03/2011)', 'Institute Location:', 'Bhadrawati, Dist. Chandrapur'],
     ];
 
     let rowY = y + 4.5;
-    instDetails.forEach(([lbl, val]) => {
-        doc.setFont('helvetica', 'bold');
-        doc.text(lbl, 12, rowY);
-        doc.setFont('helvetica', 'normal');
-        doc.text(val, 50, rowY);
-        rowY += 4.5;
+    instDetails.forEach(([l1, v1, l2, v2]) => {
+        doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v1, 48, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 102, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v2, 134, rowY);
+        rowY += 6.5;
     });
 
-    // ─── 2. Basic Details Grid ───────────────────────────────────────────────
-    y = y + 33;
-    doc.setFontSize(9);
+    // ─── 2. Basic Student & Caste Details Grid ───────────────────────────────
+    y = y + 27;
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(180, 83, 9);
-    doc.text('Basic Student Details', 10, y);
-    y += 3;
+    doc.text('2. Student Personal & Caste Demographics', 10, y);
+    y += 2.5;
 
-    doc.rect(10, y, pageWidth - 20, 32, 'S');
+    doc.rect(10, y, pageWidth - 20, 30, 'S');
+    const categoryDisplay = student.subcaste 
+        ? `${student.category || 'OPEN'} (${student.subcaste})`
+        : (student.category || 'OPEN / General');
+
     const basicDetails = [
-        ['7. Name of Student', student.name || '', '11. Mobile No', student.parent?.phone || '—'],
-        ['8. Course / Trade', `${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, '12. Landline / Alt', student.landline || '—'],
-        ['9. Date of Birth', student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN') : '—', '13. E-mail', student.email || '—'],
-        ['10. Category & Blood', `${student.category || 'OPEN'} | ${student.bloodGroup || 'O+'}`, '14. Enrollment No', student.studentId || 'SSITI-2026-E01'],
+        ['Student Full Name:', student.name || '', 'Contact Phone:', student.parent?.phone || student.phone || '—'],
+        ['Enrolled Trade / Class:', `${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, 'Alt Phone / Landline:', student.landline || '—'],
+        ['Date of Birth & Blood:', `${student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN') : '—'}  |  Blood: ${student.bloodGroup || 'O+'}`, 'Category & Subcaste:', categoryDisplay],
+        ['Residential Address:', student.address || 'Bhadrawati, Dist. Chandrapur, Maharashtra', 'Email ID:', student.email || 'saiiti151@gmail.com'],
     ];
 
-    rowY = y + 6;
+    rowY = y + 5;
     basicDetails.forEach(([l1, v1, l2, v2]) => {
         doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(String(v1), 45, rowY);
-        doc.setFont('helvetica', 'bold'); doc.text(l2, 110, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(String(v2), 148, rowY);
-        rowY += 7;
+        doc.setFont('helvetica', 'normal'); doc.text(String(v1).substring(0, 42), 48, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 108, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v2).substring(0, 38), 146, rowY);
+        rowY += 6.5;
     });
 
     // ─── 3. Class X Education Details ───────────────────────────────────────
-    y = y + 36;
-    doc.setFontSize(9);
+    y = y + 33;
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(180, 83, 9);
-    doc.text('Education Details - Class X', 10, y);
-    y += 3;
+    doc.text('3. Prior Educational Background Details', 10, y);
+    y += 2.5;
 
     const edu = student.educationDetails || {};
-    doc.rect(10, y, pageWidth - 20, 26, 'S');
+    doc.rect(10, y, pageWidth - 20, 20, 'S');
     const eduRows = [
-        ['39. Board', edu.board || 'Maharashtra State Board', '43. Aggregate %', edu.percentage || '—'],
-        ['40. School', edu.school || 'High School', '44. City / District', edu.city || 'Bhadravati'],
-        ['41. Passing Year', edu.passingYear || '2023', '45. Roll No', edu.rollNo || '—'],
-        ['42. Medium', edu.medium || 'English', '46. Result Status', edu.result || 'PASSED'],
+        ['Class X Board:', edu.board || 'Maharashtra State Board', 'Passing Year & %:', `${edu.passingYear || '2023'}  |  ${edu.percentage || '—'}`],
+        ['School Name:', edu.school || 'High School, Bhadravati', 'Roll No & Medium:', `${edu.rollNo || '—'}  |  ${edu.medium || 'Marathi / English'}`],
+        ['Other Qualifications:', `${edu.higherEducation || '12th / Degree / Domicile verified'}`, 'Result Status:', 'PASSED (Eligible for ITI)'],
     ];
 
-    rowY = y + 5.5;
+    rowY = y + 4.5;
     eduRows.forEach(([l1, v1, l2, v2]) => {
         doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(String(v1), 45, rowY);
-        doc.setFont('helvetica', 'bold'); doc.text(l2, 110, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(String(v2), 148, rowY);
-        rowY += 6;
+        doc.setFont('helvetica', 'normal'); doc.text(String(v1).substring(0, 42), 46, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 108, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v2).substring(0, 38), 146, rowY);
+        rowY += 5.5;
     });
 
-    // ─── 4. Submitted Original Documents Checklist ──────────────────────────
-    y = y + 30;
-    doc.setFontSize(9);
+    // ─── 4. Submitted Original Documents Checklist (Updated with Domicile, 12th, BA, BCom, BTech) ─
+    y = y + 23;
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(180, 83, 9);
-    doc.text('Submitted Original Documents Checklist', 10, y);
-    y += 3;
+    doc.text('4. Original Documents Submitted Checklist (Verified at Admission Desk)', 10, y);
+    y += 2.5;
 
     doc.rect(10, y, pageWidth - 20, 32, 'S');
     const docs = student.submittedDocuments || {};
     const docChecklist = [
-        ['TC (Transfer Certificate)', docs.tc ? '[X] Submitted' : '[  ] Pending', 'Income Certificate', docs.income ? '[X] Submitted' : '[  ] Pending'],
-        ['Mark list (Class X)', docs.marklist ? '[X] Submitted' : '[  ] Pending', 'Affidavit', docs.affidavit ? '[X] Submitted' : '[  ] Pending'],
-        ['Caste Certificate', docs.caste ? '[X] Submitted' : '[  ] Pending', 'Gap Certificate', docs.gap ? '[X] Submitted' : '[  ] Pending'],
-        ['Non-Creamy Layer', docs.nonCreamy ? '[X] Submitted' : '[  ] Pending', 'Aadhaar Card', docs.aadhar ? '[X] Submitted' : '[  ] Pending'],
-        ['Photos (4 Passport)', docs.photo4 ? '[X] Submitted' : '[  ] Pending', 'Bank Pass Book Xerox', docs.bankPassbook ? '[X] Submitted' : '[  ] Pending'],
+        ['Domicile Certificate', docs.domicile ? '[X] Submitted' : '[  ] Pending', 'Caste Certificate', docs.caste ? '[X] Submitted' : '[  ] Pending', 'B.A. Marksheet / Degree', docs.baDegree ? '[X] Submitted' : '[  ] Pending'],
+        ['Class X (10th) Marksheet', docs.marklist ? '[X] Submitted' : '[  ] Pending', 'Non-Creamy Layer', docs.nonCreamy ? '[X] Submitted' : '[  ] Pending', 'B.Com Marksheet / Degree', docs.bcomDegree ? '[X] Submitted' : '[  ] Pending'],
+        ['Class XII (12th / HSC)', docs.marksheet12th ? '[X] Submitted' : '[  ] Pending', 'Income Certificate', docs.income ? '[X] Submitted' : '[  ] Pending', 'B.Tech / B.E. Marksheet', docs.btechDegree ? '[X] Submitted' : '[  ] Pending'],
+        ['TC (Transfer Certificate)', docs.tc ? '[X] Submitted' : '[  ] Pending', 'Aadhaar Card', docs.aadhar ? '[X] Submitted' : '[  ] Pending', 'Affidavit / Gap Cert.', docs.affidavit ? '[X] Submitted' : '[  ] Pending'],
+        ['Photos (4 Passport)', docs.photo4 ? '[X] Submitted' : '[  ] Pending', 'Bank Passbook Xerox', docs.bankPassbook ? '[X] Submitted' : '[  ] Pending', 'Other Documents', docs.otherDocs ? `[X] ${docs.otherDocsText || 'Submitted'}` : '[  ] Pending'],
     ];
 
-    rowY = y + 5.5;
-    docChecklist.forEach(([l1, v1, l2, v2]) => {
+    rowY = y + 4.5;
+    docChecklist.forEach(([l1, v1, l2, v2, l3, v3]) => {
         doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(v1, 60, rowY);
-        doc.setFont('helvetica', 'bold'); doc.text(l2, 110, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(v2, 155, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v1, 48, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 76, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v2, 110, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l3, 138, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v3, 178, rowY);
         rowY += 5.5;
     });
 
-    // ─── Declarations & Signatures ──────────────────────────────────────────
-    y = y + 36;
-    doc.setFontSize(7.5);
+    // ─── 5. Admission Fee Breakdown & Agreed Total ───────────────────────────
+    y = y + 35;
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(180, 83, 9);
+    doc.text('5. Admission Fee Structure & Assigned Dues', 10, y);
+    y += 2.5;
+
+    doc.rect(10, y, pageWidth - 20, 16, 'S');
+    const feeAssigned = student.feeAssignment || {};
+    const totalAssignedPaise = feeAssigned.totalAmount || 0;
+    const paidPaise = feeAssigned.paidAmount || 0;
+    const pendingPaise = feeAssigned.pendingAmount || Math.max(0, totalAssignedPaise - paidPaise);
+
+    const feeBreakdownText = [
+        ['Tuition Fee:', `Rs. ${(student.tuitionFee || (totalAssignedPaise ? (totalAssignedPaise / 100 * 0.7) : 15000)).toLocaleString('en-IN')}`, 'Exam Fee:', `Rs. ${(student.examFee || 2000).toLocaleString('en-IN')}`, 'Dress & Material:', `Rs. ${(student.dressMaterialFee || 3000).toLocaleString('en-IN')}`],
+        ['Total Course Fee:', `Rs. ${(totalAssignedPaise ? totalAssignedPaise / 100 : 20000).toLocaleString('en-IN')}`, 'Fee Paid So Far:', `Rs. ${(paidPaise / 100).toLocaleString('en-IN')}`, 'Remaining Balance:', `Rs. ${(pendingPaise / 100).toLocaleString('en-IN')}`],
+    ];
+
+    rowY = y + 4.5;
+    feeBreakdownText.forEach(([l1, v1, l2, v2, l3, v3]) => {
+        doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v1, 46, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 78, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v2, 114, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l3, 142, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(v3, 178, rowY);
+        rowY += 6;
+    });
+
+    // ─── 6. Declarations & 4 Signature Sections ─────────────────────────────
+    y = y + 19;
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(71, 85, 105);
-    doc.text('I hereby declare that all information & original documents submitted are true and correct to the best of my knowledge.', 10, y);
+    doc.text('Declaration: I hereby declare that all particulars & certificates submitted are genuine and I agree to abide by all rules of Shri Sai I.T.I.', 10, y);
 
-    y += 18;
+    y += 16;
     if (student.signature && student.signature.startsWith('data:image/')) {
-        try { doc.addImage(student.signature, 'PNG', 12, y - 16, 32, 14); } catch {}
+        try { doc.addImage(student.signature, 'PNG', 12, y - 14, 28, 12); } catch {}
+    }
+    
+    // 1. Student Signature
+    doc.setDrawColor(217, 119, 6);
+    doc.line(10, y, 48, y);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(15, 23, 42);
+    doc.text('Student Signature', 10, y + 3.5);
+
+    // 2. Parent Signature
+    doc.line(56, y, 96, y);
+    doc.text('Parent Signature', 56, y + 3.5);
+
+    // 3. Clerk / Cashier Signature Section
+    doc.line(104, y, 146, y);
+    doc.text('Clerk / Cashier Signature', 104, y + 3.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6); doc.setTextColor(100, 116, 139);
+    doc.text('Accounts Verified', 104, y + 7);
+
+    // 4. Principal Seal & Signature
+    if (stampDataUrl) {
+        try { doc.addImage(stampDataUrl, 'JPEG', pageWidth - 55, y - 18, 45, 16); } catch {}
+    } else if (logoDataUrl) {
+        try { doc.addImage(logoDataUrl, 'PNG', pageWidth - 45, y - 14, 14, 14); } catch {}
     }
     doc.setDrawColor(217, 119, 6);
-    doc.line(10, y, 60, y);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(15, 23, 42);
-    doc.text('Student Signature', 10, y + 4);
-
-    doc.line(pageWidth / 2 - 25, y, pageWidth / 2 + 25, y);
-    doc.text('Parent / Guardian Signature', pageWidth / 2 - 25, y + 4);
-
-    if (stampDataUrl) {
-        try { doc.addImage(stampDataUrl, 'JPEG', pageWidth - 65, y - 20, 52, 18); } catch {}
-    } else if (logoDataUrl) {
-        try { doc.addImage(logoDataUrl, 'PNG', pageWidth - 50, y - 16, 15, 15); } catch {}
-    }
-    doc.line(pageWidth - 60, y, pageWidth - 10, y);
-    doc.text('Principal Seal & Signature', pageWidth - 60, y + 4);
+    doc.line(pageWidth - 56, y, pageWidth - 10, y);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(15, 23, 42);
+    doc.text('Principal Seal & Sign', pageWidth - 56, y + 3.5);
 
     doc.save(`${student.studentId || 'Admission'}_Application_Form.pdf`);
 }
@@ -342,7 +388,7 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(180, 83, 9);
-    doc.text(student.studentId || 'SSITI-2026-E01', cardW / 2, y, { align: 'center' });
+    doc.text(student.studentId || 'SSITI-2024-001', cardW / 2, y, { align: 'center' });
 
     y += 5.5;
     doc.setFontSize(8.5);
@@ -354,11 +400,12 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(71, 85, 105);
-    doc.text(`Enrollment Year - ${new Date(student.createdAt || Date.now()).getFullYear()}`, cardW / 2, y, { align: 'center' });
+    const startYr = student.createdAt ? new Date(student.createdAt).getFullYear() : 2024;
+    doc.text(`Academic Session: ${startYr} - ${startYr + 2} (2-Year Program)`, cardW / 2, y, { align: 'center' });
 
     y += 4.5;
     doc.setFontSize(6.5);
-    doc.text('(Valid till the end of trade programme)', cardW / 2, y, { align: 'center' });
+    doc.text('(Valid till the end of 2-year trade programme)', cardW / 2, y, { align: 'center' });
 
     // Footer Info Box
     y += 5;
@@ -396,10 +443,20 @@ export async function generateStudentIdCardPdf(student: any) {
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 23, 42);
-    doc.text(`Blood Group: ${student.bloodGroup || 'O+'}`, 7, y);
+    doc.text(`Blood Group: ${student.bloodGroup || 'O+'}  |  Category: ${student.category || 'OPEN'}`, 7, y);
+
+    if (student.address) {
+        y += 6;
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(51, 65, 85);
+        const splitAddr = doc.splitTextToSize(`Res. Address: ${student.address}`, cardW - 14);
+        doc.text(splitAddr, 7, y);
+        y += splitAddr.length * 3.5;
+    }
 
     // Rules & Terms
-    y += 7;
+    y += 6;
     doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 65, 85);
@@ -414,7 +471,7 @@ export async function generateStudentIdCardPdf(student: any) {
     rules.forEach(rule => {
         const splitText = doc.splitTextToSize(rule, cardW - 14);
         doc.text(splitText, 7, y);
-        y += splitText.length * 3.8 + 2.5;
+        y += splitText.length * 3.8 + 2;
     });
 
     // Principal Signature & Official Seal Stamp

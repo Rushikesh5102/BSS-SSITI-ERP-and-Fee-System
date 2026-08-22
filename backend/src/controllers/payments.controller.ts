@@ -68,6 +68,9 @@ export const paymentsController = {
         // Generate receipt
         const receiptCount = await prisma.receipt.count();
         const receiptNumber = generateReceiptNumber(receiptCount + 1);
+        const newPaidAmount = studentFee.paidAmount + amount;
+        const balanceDue = Math.max(0, studentFee.totalAmount - newPaidAmount);
+
         const pdfBuffer = await generateReceiptPdf({
             receiptNumber,
             studentName: studentFee.student.name,
@@ -77,11 +80,15 @@ export const paymentsController = {
             parentPhone: studentFee.student.parent?.phone,
             paymentDate: new Date(),
             amount,
+            totalFee: studentFee.totalAmount,
+            totalPaid: newPaidAmount,
+            balanceDue,
             paymentMode: mode,
             transactionRef,
-            feesFor: studentFee.feeStructure.name,
+            feesFor: studentFee.feeStructure?.name || 'Academic Fee',
             bankName,
-            remarks,
+            remarks: remarks || 'Fee Payment Received',
+            clerkName: (req.user as any)?.name || 'Fee Counter Cashier',
         });
 
         // Save PDF to disk

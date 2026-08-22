@@ -423,29 +423,6 @@ function DashboardContent() {
                             </div>
                         </div>
                         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <a
-                                href="/foundation"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-outline"
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    fontSize: '12.5px',
-                                    padding: '7px 14px',
-                                    borderRadius: '8px',
-                                    fontWeight: 700,
-                                    textDecoration: 'none',
-                                    background: 'rgba(14, 165, 233, 0.1)',
-                                    border: '1px solid var(--primary)',
-                                    color: 'var(--primary)'
-                                }}
-                                title="Launch Public Giving Portal & Foundation Website"
-                            >
-                                <span>🌐 Launch Public Portal</span>
-                                <span style={{ fontSize: '11px', opacity: 0.8 }}>↗</span>
-                            </a>
                             <span className={`badge ${effectiveRole === 'SUPERADMIN' ? 'badge-primary' : effectiveRole === 'ADMIN' ? 'badge-info' : 'badge-success'}`}>
                                 {effectiveRole}
                             </span>
@@ -568,7 +545,6 @@ function DashboardContent() {
                                         ] : []),
                                         { label: '💳 Record Payment', href: '/payments', color: 'var(--accent)' },
                                         { label: '🧾 View Receipts', href: '/receipts', color: '#2563eb' },
-                                        { label: '🌐 Launch Public Portal', href: '/foundation', target: '_blank', color: '#0284c7' },
                                     ].map((action: any) => {
                                         if (action.onClick) {
                                             return (

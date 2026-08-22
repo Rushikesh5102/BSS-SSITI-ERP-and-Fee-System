@@ -164,6 +164,8 @@ export default function DonationModuleContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const simulateParam = searchParams ? searchParams.get('simulate') : null;
+  const currentRole = propEffectiveRole || (user?.role === 'DEVELOPER' && simulateParam ? simulateParam.toUpperCase() : user?.role);
+  const isAdminOrDev = currentRole === 'ADMIN' || currentRole === 'DEVELOPER' || currentRole === 'SUPERADMIN' || currentRole === 'BRANCH_ADMIN';
 
   // Master State pre-initialized for instant SSR and fast hydration
   const [transactions, setTransactions] = useState<DonationRecord[]>(INITIAL_TRANSACTIONS_SEED);
@@ -684,6 +686,31 @@ export default function DonationModuleContent({
           </div>
 
           <div className="header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {isAdminOrDev && (
+              <a
+                href="/foundation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  background: 'rgba(14, 165, 233, 0.1)',
+                  border: '1px solid var(--primary)',
+                  color: 'var(--primary)'
+                }}
+                title="Launch Public Giving Portal & Foundation Website (Admin & Developer Exclusive)"
+              >
+                <span>🌐 Launch Public Portal</span>
+                <span style={{ fontSize: '11px', opacity: 0.8 }}>↗</span>
+              </a>
+            )}
             <button
               onClick={() => setShowAddModal(true)}
               className="btn btn-primary"

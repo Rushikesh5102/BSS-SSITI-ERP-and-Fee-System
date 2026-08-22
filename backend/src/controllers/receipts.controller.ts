@@ -102,6 +102,9 @@ export const receiptsController = {
             }
 
             const studentFee = receipt.payment.studentFee;
+            const totalPaid = studentFee.paidAmount;
+            const balanceDue = Math.max(0, studentFee.totalAmount - totalPaid);
+
             pdfBuffer = await generateReceiptPdf({
                 receiptNumber: receipt.receiptNumber,
                 studentName: studentFee.student.name,
@@ -111,11 +114,15 @@ export const receiptsController = {
                 parentPhone: studentFee.student.parent?.phone,
                 paymentDate: receipt.createdAt,
                 amount: receipt.payment.amount,
+                totalFee: studentFee.totalAmount,
+                totalPaid: totalPaid,
+                balanceDue: balanceDue,
                 paymentMode: receipt.payment.mode,
                 transactionRef: receipt.payment.transactionRef || undefined,
-                feesFor: studentFee.feeStructure?.name || 'School Fee',
+                feesFor: studentFee.feeStructure?.name || 'Academic Fee',
                 bankName: receipt.payment.bankName || undefined,
                 remarks: receipt.payment.remarks || undefined,
+                clerkName: (receipt as any).generatedBy?.name || 'Fee Counter Cashier',
             });
 
             try {

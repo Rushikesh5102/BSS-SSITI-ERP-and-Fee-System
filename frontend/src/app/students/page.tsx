@@ -11,6 +11,16 @@ import Footer from '../../components/Footer';
 import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
 
+const INDIAN_SUBCASTES: Record<string, string[]> = {
+    OBC: ['Mali', 'Kunbi', 'Teli', 'Dhangar', 'Nhavi', 'Kumbhar', 'Sutar', 'Koshti', 'Shimpi', 'Lohar', 'Vani', 'Sonar', 'Gurav', 'Bhavsar', 'Koli', 'Tambat', 'Gawali', 'Yadav', 'Other (Write-in)'],
+    SC: ['Mahar', 'Matang (Mang)', 'Chambhar', 'Valmiki', 'Bhangi', 'Holiya', 'Dhor', 'Khatik', 'Meghwal', 'Pasi', 'Other (Write-in)'],
+    ST: ['Gond', 'Bhil', 'Kolam', 'Korku', 'Andh', 'Pardhan', 'Halba', 'Pawara', 'Warli', 'Thakur', 'Gowari', 'Other (Write-in)'],
+    VJNT: ['Banjara (Laman)', 'Vanjari', 'Dhangar', 'Gosavi', 'Nath', 'Beldar', 'Ramoshi', 'Kaikadi', 'Wadar', 'Bhamta', 'Golla', 'Other (Write-in)'],
+    SBC: ['Koli', 'Koshti', 'Agri', 'Gabit', 'Sonkoli', 'Machhimar', 'Other (Write-in)'],
+    EWS: ['Maratha', 'Brahmin', 'Rajput', 'Jain', 'Lingayat', 'Komti', 'Vaishya', 'Kshatriya', 'Other (Write-in)'],
+    OPEN: ['General / Open', 'Maratha', 'Brahmin', 'Rajput', 'Jain', 'Lingayat', 'Komti', 'Vaishya', 'Kshatriya', 'Sindhi', 'Punjabi', 'Muslim General', 'Christian', 'Other (Write-in)']
+};
+
 function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam: string | null; simulateParam: string | null; tabParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
@@ -21,13 +31,26 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
     const [showModal, setShowModal] = useState(false);
+
+    const currentYear = new Date().getFullYear();
+    const defaultSession = `${currentYear} - ${currentYear + 2}`;
+
     const initialFormState = {
-        name: '', class: '', section: '', rollNumber: '', photo: '', signature: '', email: '',
-        category: 'OPEN', bloodGroup: 'O+', landline: '', parentName: '', parentPhone: '', parentEmail: '',
+        name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', signature: '', email: '',
+        category: 'OPEN', subcaste: '', isOtherSubcaste: false, otherSubcaste: '',
+        address: '', bloodGroup: 'O+', landline: '', parentName: '', parentPhone: '', parentEmail: '',
+        academicSession: defaultSession,
         feeStructureId: '', customAmountRupees: '',
-        tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: '',
-        educationDetails: { board: 'Maharashtra State Board', school: '', passingYear: '2023', medium: 'English', percentage: '', city: 'Bhadravati', rollNo: '', result: 'PASSED' },
-        submittedDocuments: { tc: false, marklist: false, caste: false, nonCreamy: false, photo4: true, income: false, affidavit: false, gap: false, aadhar: true, bankPassbook: false }
+        tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: '', otherFeeLabel: 'Other Dues / Charges',
+        educationDetails: { 
+            board: 'Maharashtra State Board', school: '', passingYear: '2023', medium: 'English', 
+            percentage: '', city: 'Bhadravati', rollNo: '', result: 'PASSED', higherEducation: '' 
+        },
+        submittedDocuments: { 
+            domicile: false, marksheet12th: false, baDegree: false, bcomDegree: false, btechDegree: false,
+            tc: false, marklist: false, caste: false, nonCreamy: false, photo4: true, income: false, 
+            affidavit: false, gap: false, aadhar: true, bankPassbook: false, otherDocs: false, otherDocsText: ''
+        }
     };
     const [form, setForm] = useState(initialFormState);
     const [saving, setSaving] = useState(false);
@@ -76,8 +99,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [viewImageModal, setViewImageModal] = useState<{ url: string; title: string; filename: string } | null>(null);
     // User Guide Modal State for Admin & Accountant
     const [showUserGuide, setShowUserGuide] = useState(false);
-    // Storage Lifespan Breakdown Modal State
-    const [showStorageCalc, setShowStorageCalc] = useState(false);
 
     // Fee Assignment / Update Modal State
     const [showFeeModal, setShowFeeModal] = useState(false);
@@ -85,7 +106,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [feeStructures, setFeeStructures] = useState<any[]>([]);
     const [feeForm, setFeeForm] = useState({
         feeStructureId: '', customAmountRupees: '', dueDate: '',
-        tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: ''
+        tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: '', otherFeeLabel: 'Other Charges'
     });
     const [assigningFee, setAssigningFee] = useState(false);
 
@@ -119,79 +140,56 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             showToast('✅ Inquiry rejected and deleted.');
             fetchInquiries();
         } catch (err: any) {
-            showToast(`❌ Failed to reject inquiry: ${err.response?.data?.message || 'Server error'}`);
+            showToast(`❌ ${err.response?.data?.message || 'Failed to reject inquiry'}`);
         }
     };
 
-    const handleAcceptInquiry = (inq: any) => {
-        setForm({
-            ...initialFormState,
-            name: inq.name,
-            class: inq.class,
-            email: inq.email || '',
-            parentPhone: inq.phone || '',
-            parentName: inq.parentName || ''
-        });
-        setAcceptingInquiryId(inq.id);
+    const handleAcceptInquiry = (inquiry: any) => {
+        setAcceptingInquiryId(inquiry.id);
+        setForm(f => ({
+            ...f,
+            name: inquiry.name || '',
+            class: inquiry.trade || 'Electrician',
+            parentName: inquiry.parentName || '',
+            parentPhone: inquiry.phone || '',
+            parentEmail: inquiry.email || '',
+            address: inquiry.address || '',
+            category: inquiry.category || 'OPEN',
+            educationDetails: {
+                ...f.educationDetails,
+                percentage: inquiry.tenthPercentage ? `${inquiry.tenthPercentage}%` : '',
+                passingYear: inquiry.tenthPassingYear || '2023',
+            }
+        }));
         setShowModal(true);
     };
 
-    useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
-
     useEffect(() => {
-        if (actionParam === 'new') {
-            setShowModal(true);
-        }
-    }, [actionParam]);
+        if (!loading && !user) router.push('/login');
+    }, [user, loading, router]);
 
     const fetchStudents = async () => {
-        // Load fast cached student list first if available
-        if (students.length === 0 && typeof window !== 'undefined') {
-            try {
-                const cached = localStorage.getItem('sai_iti_students_cache');
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    setStudents(parsed.students || []);
-                    setTotal(parsed.total || 0);
-                }
-            } catch {}
-        }
-        setFetching(students.length === 0);
+        setFetching(true);
         try {
-            const { data } = await api.get(`/students?page=${page}&limit=15&search=${search}`);
+            const { data } = await api.get(`/students?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
             setStudents(data.data || []);
             setTotal(data.pagination?.total || 0);
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('sai_iti_students_cache', JSON.stringify({ students: data.data || [], total: data.pagination?.total || 0 }));
-            }
-        } catch (err: any) {
-            showToast(`❌ ${err.response?.data?.message || 'Failed to fetch students'}`);
-        } finally {
-            setFetching(false);
-        }
+        } catch { } finally { setFetching(false); }
     };
 
     const fetchFeeStructures = async () => {
         try {
             const { data } = await api.get('/fee-structures');
             setFeeStructures(data.data || []);
-        } catch {}
+        } catch { }
     };
 
     useEffect(() => {
         if (!user) return;
-        const delayDebounceFn = setTimeout(() => {
-            fetchStudents();
-        }, 300);
-        return () => clearTimeout(delayDebounceFn);
-    }, [search]);
-
-    useEffect(() => {
-        if (user) {
-            fetchStudents();
-            fetchFeeStructures();
-        }
-    }, [user, page]);
+        fetchStudents();
+        fetchFeeStructures();
+        if (actionParam === 'new') setShowModal(true);
+    }, [user, page, search, actionParam]);
 
     useEffect(() => {
         if (user && activeTab === 'inquiries') {
@@ -211,7 +209,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             feeStructureId: currentFee?.feeStructureId || (feeStructures[0]?.id || ''),
             customAmountRupees: currentFee?.totalAmount ? (currentFee.totalAmount / 100).toString() : '',
             dueDate: currentFee?.dueDate ? currentFee.dueDate.split('T')[0] : '',
-            tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: ''
+            tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: '', otherFeeLabel: 'Other Charges'
         });
         setShowFeeModal(true);
     };
@@ -225,9 +223,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 (parseFloat(feeForm.tuitionFee) || 0) +
                 (parseFloat(feeForm.examFee) || 0) +
                 (parseFloat(feeForm.dressMaterialFee) || 0) +
-                (parseFloat(feeForm.transportFee) || 0) +
-                (parseFloat(feeForm.hostelFee) || 0) +
-                (parseFloat(feeForm.miscellaneousFee) || 0) +
                 (parseFloat(feeForm.otherFee) || 0)
             );
             const rawAmount = calcTotal > 0 ? calcTotal.toString() : feeForm.customAmountRupees;
@@ -275,19 +270,20 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 (parseFloat(form.tuitionFee) || 0) +
                 (parseFloat(form.examFee) || 0) +
                 (parseFloat(form.dressMaterialFee) || 0) +
-                (parseFloat(form.transportFee) || 0) +
-                (parseFloat(form.hostelFee) || 0) +
-                (parseFloat(form.miscellaneousFee) || 0) +
                 (parseFloat(form.otherFee) || 0)
             );
             const rawAmount = calcTotal > 0 ? calcTotal.toString() : form.customAmountRupees;
             const amountInPaise = rawAmount ? Math.round(parseFloat(rawAmount) * 100) : undefined;
 
+            const effectiveSubcaste = form.isOtherSubcaste ? form.otherSubcaste : form.subcaste;
+
             const { data } = await api.post('/students', {
                 name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber,
                 photo: form.photo || undefined, signature: form.signature || undefined, email: form.email,
-                category: form.category, bloodGroup: form.bloodGroup, landline: form.landline || undefined,
-                educationDetails: form.educationDetails, submittedDocuments: form.submittedDocuments,
+                category: form.category, subcaste: effectiveSubcaste, address: form.address,
+                bloodGroup: form.bloodGroup, landline: form.landline || undefined,
+                educationDetails: { ...form.educationDetails, subcaste: effectiveSubcaste, address: form.address, academicSession: form.academicSession },
+                submittedDocuments: form.submittedDocuments,
                 feeStructureId: form.feeStructureId || (feeStructures[0]?.id || undefined),
                 customTotalAmount: amountInPaise,
                 parent: form.parentName ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
@@ -339,7 +335,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 <header className="header">
                     <div>
                         <div className="header-title">👨‍🎓 Student Management</div>
-                        <div className="header-subtitle">{total} total students</div>
+                        <div className="header-subtitle">{total} total students enrolled</div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <button className="btn btn-secondary" onClick={() => setShowUserGuide(true)} style={{ fontSize: 13 }}>
@@ -354,45 +350,45 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 </header>
 
                 <div className="page-content">
-                    {/* Tab Navigation */}
-                    <div style={{ display: 'flex', gap: 16, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                    {/* Navigation Tabs */}
+                    <div className="tabs-nav" style={{ display: 'flex', gap: 12, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
                         <button 
+                            className={`tab-btn ${activeTab === 'students' ? 'active' : ''}`}
                             onClick={() => setActiveTab('students')}
-                            style={{
-                                background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer',
-                                fontSize: 14, fontWeight: 700,
-                                color: activeTab === 'students' ? 'var(--primary)' : 'var(--text-secondary)',
-                                borderBottom: activeTab === 'students' ? '2.5px solid var(--primary)' : 'none',
-                                transition: 'all 0.2s'
-                            }}
+                            style={{ padding: '8px 16px', fontWeight: 700, border: 'none', background: 'transparent', borderBottom: activeTab === 'students' ? '2px solid var(--primary)' : 'none', color: activeTab === 'students' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
                         >
-                            👨‍🎓 Active Students
+                            👨‍🎓 Enrolled Students ({total})
                         </button>
                         <button 
+                            className={`tab-btn ${activeTab === 'inquiries' ? 'active' : ''}`}
                             onClick={() => setActiveTab('inquiries')}
-                            style={{
-                                background: 'none', border: 'none', padding: '8px 12px', cursor: 'pointer',
-                                fontSize: 14, fontWeight: 700,
-                                color: activeTab === 'inquiries' ? 'var(--primary)' : 'var(--text-secondary)',
-                                borderBottom: activeTab === 'inquiries' ? '2.5px solid var(--primary)' : 'none',
-                                transition: 'all 0.2s'
-                            }}
+                            style={{ padding: '8px 16px', fontWeight: 700, border: 'none', background: 'transparent', borderBottom: activeTab === 'inquiries' ? '2px solid var(--primary)' : 'none', color: activeTab === 'inquiries' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                         >
-                            📋 Inquiry Pipeline
+                            📋 Admissions Inquiries
+                            {inquiries.filter(i => i.status === 'PENDING').length > 0 && (
+                                <span className="badge badge-warning" style={{ fontSize: 11, padding: '2px 6px' }}>
+                                    {inquiries.filter(i => i.status === 'PENDING').length}
+                                </span>
+                            )}
                         </button>
                     </div>
 
                     {activeTab === 'inquiries' ? (
+                        /* Inquiries Table */
                         <div className="card">
+                            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="card-title">Prospective Student Admissions Inquiries</div>
+                                <button className="btn btn-secondary btn-sm" onClick={fetchInquiries}>🔄 Refresh</button>
+                            </div>
                             <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent' }}>
                                 <table className="table responsive-table">
                                     <thead>
                                         <tr>
-                                            <th>Date</th>
-                                            <th>Name</th>
-                                            <th>Class/Trade</th>
-                                            <th>Phone</th>
-                                            <th>Parent Name</th>
+                                            <th>Applicant Name</th>
+                                            <th>Interested Trade</th>
+                                            <th>Contact / Phone</th>
+                                            <th>Email</th>
+                                            <th>Class X Marks</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
@@ -401,39 +397,31 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                         {fetchingInquiries ? (
                                             <tr><td colSpan={7} className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
                                         ) : inquiries.length === 0 ? (
-                                            <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No inquiries found in pipeline</td></tr>
+                                            <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No prospective student inquiries logged yet.</td></tr>
                                         ) : inquiries.map((inq) => (
                                             <tr key={inq.id}>
-                                                <td data-label="Date" style={{ fontSize: 13 }}>{new Date(inq.createdAt).toLocaleDateString('en-IN')}</td>
-                                                <td data-label="Name"><b>{inq.name}</b></td>
-                                                <td data-label="Class/Trade"><span className="badge badge-secondary">{inq.class}</span></td>
-                                                <td data-label="Phone">{inq.phone}</td>
-                                                <td data-label="Parent Name">{inq.parentName || '—'}</td>
+                                                <td data-label="Applicant Name"><b>{inq.name}</b><br /><span className="text-sm text-muted">Parent: {inq.parentName || '—'}</span></td>
+                                                <td data-label="Interested Trade"><span className="badge badge-primary">{inq.trade}</span></td>
+                                                <td data-label="Contact / Phone">{inq.phone}</td>
+                                                <td data-label="Email">{inq.email || <span className="text-muted">—</span>}</td>
+                                                <td data-label="Class X Marks">{inq.tenthPercentage ? `${inq.tenthPercentage}%` : '—'}</td>
                                                 <td data-label="Status">
-                                                    <span className={`badge ${inq.status === 'ACCEPTED' ? 'badge-success' : 'badge-warning'}`}>
+                                                    <span className={`badge ${inq.status === 'ACCEPTED' ? 'badge-success' : inq.status === 'REJECTED' ? 'badge-danger' : 'badge-warning'}`}>
                                                         {inq.status}
                                                     </span>
                                                 </td>
-                                                <td data-label="Actions" className="cell-actions">
+                                                <td data-label="Actions">
                                                     {inq.status === 'PENDING' ? (
-                                                        <div style={{ display: 'flex', gap: 8 }}>
-                                                            <button 
-                                                                className="btn btn-primary btn-sm"
-                                                                onClick={() => handleAcceptInquiry(inq)}
-                                                                style={{ padding: '6px 12px', fontSize: 12 }}
-                                                            >
-                                                                ✓ Accept & Admit
+                                                        <div style={{ display: 'flex', gap: 6 }}>
+                                                            <button className="btn btn-primary btn-sm" onClick={() => handleAcceptInquiry(inq)}>
+                                                                ✅ Admit
                                                             </button>
-                                                            <button 
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() => handleRejectInquiry(inq.id)}
-                                                                style={{ padding: '6px 12px', fontSize: 12 }}
-                                                            >
-                                                                ✕ Reject
+                                                            <button className="btn btn-danger btn-sm" onClick={() => handleRejectInquiry(inq.id)}>
+                                                                ✕
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-muted text-xs">Admitted &rarr;</span>
+                                                        <span className="text-muted text-sm">{inq.status === 'ACCEPTED' ? 'Admitted' : 'Closed'}</span>
                                                     )}
                                                 </td>
                                             </tr>
@@ -443,120 +431,130 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                             </div>
                         </div>
                     ) : (
+                        /* Enrolled Students Table */
                         <>
-                            {/* Search */}
-                            <div className="card mb-4">
-                                <div className="card-body" style={{ padding: '12px 16px' }}>
-                            <input
-                                type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or year..."
-                                value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                            />
+                        <div className="card mb-4">
+                            <div className="card-body" style={{ padding: '12px 16px' }}>
+                                <input
+                                    type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or subcaste..."
+                                    value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Table */}
-                    <div className="card">
-                        <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent' }}>
-                            <table className="table responsive-table">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Student</th>
-                                        <th>Trade & Year</th>
-                                        <th>Parent Name</th>
-                                        <th>Contact</th>
-                                        <th>Fee Status</th>
-                                        <th style={{ minWidth: 210 }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {loading ? (
-                                        <tr><td colSpan={7} className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
-                                    ) : students.length === 0 ? (
-                                        <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No students found</td></tr>
-                                    ) : students.map((s) => {
-                                        const pending = s.feeAssignment?.pendingAmount ?? 0;
-                                        const totalFee = s.feeAssignment?.totalAmount ?? 0;
-                                        const feeAlreadyAssigned = Boolean(s.feeAssignment);
-                                        const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
+                        <div className="card">
+                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent' }}>
+                                <table className="table responsive-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Student</th>
+                                            <th>Trade & Session</th>
+                                            <th>Category / Subcaste</th>
+                                            <th>Parent & Contact</th>
+                                            <th>Fee Status</th>
+                                            <th style={{ minWidth: 210 }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {fetching ? (
+                                            <tr><td colSpan={7} className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
+                                        ) : students.length === 0 ? (
+                                            <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No students found</td></tr>
+                                        ) : students.map((s) => {
+                                            const pending = s.feeAssignment?.pendingAmount ?? 0;
+                                            const totalFee = s.feeAssignment?.totalAmount ?? 0;
+                                            const feeAlreadyAssigned = Boolean(s.feeAssignment);
+                                            const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
+                                            const startYr = s.createdAt ? new Date(s.createdAt).getFullYear() : currentYear;
 
-                                        return (
-                                            <tr key={s.id}>
-                                                <td data-label="Student ID"><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2026-${s.rollNumber || '01'}` : s.studentId}</span></td>
-                                                <td data-label="Student">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                        {s.photo ? (
-                                                            <img
-                                                                src={s.photo}
-                                                                alt={s.name}
-                                                                style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', cursor: 'pointer' }}
-                                                                title="Click to view & download photo"
-                                                                onClick={() => setViewImageModal({ url: s.photo, title: `${s.name} - Profile Photo`, filename: `${s.studentId}_photo.png` })}
-                                                            />
-                                                        ) : (
-                                                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: 'var(--primary)' }}>
-                                                                {s.name[0]}
-                                                            </div>
-                                                        )}
-                                                        <div>
-                                                            <b>{s.name}</b>
-                                                            {s.rollNumber && !s.rollNumber.includes('e+') && !s.rollNumber.includes('E+') && (
-                                                                <><br /><span className="text-sm text-muted">Roll: {s.rollNumber}</span></>
+                                            return (
+                                                <tr key={s.id}>
+                                                    <td data-label="Student ID"><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2024-${s.rollNumber || '01'}` : s.studentId}</span></td>
+                                                    <td data-label="Student">
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                            {s.photo ? (
+                                                                <img
+                                                                    src={s.photo}
+                                                                    alt={s.name}
+                                                                    style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', cursor: 'pointer' }}
+                                                                    title="Click to view photo"
+                                                                    onClick={() => setViewImageModal({ url: s.photo, title: `${s.name} - Profile Photo`, filename: `${s.studentId}_photo.png` })}
+                                                                />
+                                                            ) : (
+                                                                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: 'var(--primary)' }}>
+                                                                    {s.name[0]}
+                                                                </div>
                                                             )}
+                                                            <div>
+                                                                <b>{s.name}</b>
+                                                                {s.rollNumber && !s.rollNumber.includes('e+') && !s.rollNumber.includes('E+') && (
+                                                                    <><br /><span className="text-sm text-muted">Roll: {s.rollNumber}</span></>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td data-label="Trade & Year">{s.class}{s.section ? ` - ${s.section}` : ''}</td>
-                                                <td data-label="Parent Name">{s.parent?.name || <span className="text-muted">—</span>}</td>
-                                                <td data-label="Contact">{s.parent?.phone || <span className="text-muted">—</span>}</td>
-                                                <td data-label="Fee Status">
-                                                    {totalFee > 0 ? (
-                                                        <>
+                                                    </td>
+                                                    <td data-label="Trade & Session">
+                                                        <b>{s.class}{s.section ? ` - ${s.section}` : ''}</b>
+                                                        <br />
+                                                        <span className="text-sm text-muted">{startYr} - {startYr + 2} (2-Yr)</span>
+                                                    </td>
+                                                    <td data-label="Category / Subcaste">
+                                                        <span className="badge badge-neutral" style={{ fontWeight: 600 }}>
+                                                            {s.category || 'OPEN'}
+                                                            {s.subcaste ? ` (${s.subcaste})` : (s.educationDetails?.subcaste ? ` (${s.educationDetails.subcaste})` : '')}
+                                                        </span>
+                                                    </td>
+                                                    <td data-label="Parent & Contact">
+                                                        <div><b>{s.parent?.name || '—'}</b></div>
+                                                        <div className="text-sm text-muted">{s.parent?.phone || '—'}</div>
+                                                    </td>
+                                                    <td data-label="Fee Status">
+                                                        {totalFee > 0 ? (
                                                             <span className={`badge ${pending > 0 ? 'badge-warning' : 'badge-success'}`}>
                                                                 {pending > 0 ? `₹${(pending / 100).toLocaleString('en-IN')} due` : 'Paid'}
                                                             </span>
-                                                        </>
-                                                    ) : <span className="badge badge-neutral">Not Assigned</span>}
-                                                </td>
-                                                <td data-label="Actions" className="cell-actions">
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 210 }}>
-                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
-                                                            📜 History
-                                                        </button>
-                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
-                                                            🪪 ID Card
-                                                        </button>
-                                                        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
-                                                            📄 Form PDF
-                                                        </button>
-                                                        {canShowFeeBtn && (
-                                                            <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openAssignFeeModal(s)}>
-                                                                💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
+                                                        ) : <span className="badge badge-neutral">Not Assigned</span>}
+                                                    </td>
+                                                    <td data-label="Actions" className="cell-actions">
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 210 }}>
+                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
+                                                                📜 History
                                                             </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: 16 }}>
-                                <div className="pagination">
-                                    <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
-                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((p) => (
-                                        <button key={p} className={`pagination-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
-                                    ))}
-                                    <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
-                                </div>
+                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
+                                                                🪪 ID Card
+                                                            </button>
+                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
+                                                                📄 Form PDF
+                                                            </button>
+                                                            {canShowFeeBtn && (
+                                                                <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openAssignFeeModal(s)}>
+                                                                    💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
-                        )}
-                    </div>
-                    </>
-                )}
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: 16 }}>
+                                    <div className="pagination">
+                                        <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((p) => (
+                                            <button key={p} className={`pagination-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+                                        ))}
+                                        <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        </>
+                    )}
                 </div>
 
                 <Footer />
@@ -565,13 +563,13 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             {/* Add Student Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal" style={{ maxWidth: 720 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <div className="modal-title">➕ New Admission Form</div>
+                            <div className="modal-title">➕ New Student Admission Form</div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleCreate}>
-                            <div className="modal-body">
+                            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
                                 <AutoRecoverBanner
                                     show={hasStudentDraft}
                                     savedAt={studentDraftTime}
@@ -585,11 +583,115 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                         <input className="form-control" required value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Student full name" />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Class/Trade <span className="required">*</span></label>
-                                        <input className="form-control" required value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))} placeholder="e.g. Electrician" />
+                                        <label className="form-label">Enrolled Trade <span className="required">*</span></label>
+                                        <select className="form-control" required value={form.class} onChange={(e) => setForm(f => ({ ...f, class: e.target.value }))}>
+                                            <option value="Electrician">Electrician (2-Year)</option>
+                                            <option value="Fitter">Fitter (2-Year)</option>
+                                            <option value="Welder">Welder</option>
+                                            <option value="Mechanic">Mechanic (Motor Vehicle)</option>
+                                            <option value="COPA">COPA (Computer Operator)</option>
+                                            <option value="Wireman">Wireman</option>
+                                        </select>
                                     </div>
-                                    {/* Fee Breakdown Assignment */}
-                                    <div className="form-group" style={{ gridColumn: '1 / -1', background: 'var(--surface-2)', padding: 16, borderRadius: 12, border: '1.5px solid var(--primary-light)' }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Academic Session (2 Years)</label>
+                                        <input 
+                                            className="form-control" 
+                                            value={form.academicSession} 
+                                            onChange={(e) => setForm(f => ({ ...f, academicSession: e.target.value }))} 
+                                            placeholder="e.g. 2024 - 2026" 
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Date of Birth</label>
+                                        <input className="form-control" type="date" value={form.educationDetails?.passingYear ? '' : ''} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, dateOfBirth: e.target.value } }))} />
+                                    </div>
+
+                                    {/* ─── Category & Subcaste (Indian Caste System) ───────────────────── */}
+                                    <div className="form-group">
+                                        <label className="form-label">Category</label>
+                                        <select 
+                                            className="form-control" 
+                                            value={form.category} 
+                                            onChange={(e) => {
+                                                const cat = e.target.value;
+                                                setForm(f => ({ ...f, category: cat, subcaste: '', isOtherSubcaste: false, otherSubcaste: '' }));
+                                            }}
+                                        >
+                                            <option value="OPEN">OPEN / General</option>
+                                            <option value="OBC">OBC (Other Backward Class)</option>
+                                            <option value="SC">SC (Scheduled Caste)</option>
+                                            <option value="ST">ST (Scheduled Tribe)</option>
+                                            <option value="VJNT">VJ / NT (Vimukta Jati / Nomadic Tribe)</option>
+                                            <option value="SBC">SBC (Special Backward Class)</option>
+                                            <option value="EWS">EWS (Economically Weaker Section)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Subcaste (Indian Caste System)</label>
+                                        {!form.isOtherSubcaste ? (
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <select 
+                                                    className="form-control"
+                                                    value={form.subcaste}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === 'Other (Write-in)') {
+                                                            setForm(f => ({ ...f, isOtherSubcaste: true, subcaste: '' }));
+                                                        } else {
+                                                            setForm(f => ({ ...f, subcaste: val }));
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">-- Select Subcaste or Choose Other --</option>
+                                                    {(INDIAN_SUBCASTES[form.category] || INDIAN_SUBCASTES['OPEN']).map((sub) => (
+                                                        <option key={sub} value={sub}>{sub}</option>
+                                                    ))}
+                                                </select>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-secondary btn-sm"
+                                                    title="Directly write custom subcaste"
+                                                    onClick={() => setForm(f => ({ ...f, isOtherSubcaste: true }))}
+                                                >
+                                                    ✏️ Type
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <input
+                                                    className="form-control"
+                                                    placeholder="Type subcaste name directly..."
+                                                    value={form.otherSubcaste}
+                                                    onChange={(e) => setForm(f => ({ ...f, otherSubcaste: e.target.value, subcaste: e.target.value }))}
+                                                    autoFocus
+                                                />
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-ghost btn-sm"
+                                                    title="Switch back to dropdown list"
+                                                    onClick={() => setForm(f => ({ ...f, isOtherSubcaste: false, otherSubcaste: '' }))}
+                                                >
+                                                    📋 List
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* ─── Address in Admission Form ──────────────────────────────────── */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label">Permanent / Residential Address</label>
+                                        <input 
+                                            className="form-control" 
+                                            value={form.address} 
+                                            onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} 
+                                            placeholder="House No, Street, Village/City, Taluka, District, Pincode" 
+                                        />
+                                    </div>
+
+                                    {/* ─── Admission Fee Breakdown (Tuition, Exam, Material, Other) ───── */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', background: 'var(--surface-2)', padding: 16, borderRadius: 12, border: '1.5px solid var(--border)' }}>
                                         <div className="form-label font-bold mb-2" style={{ fontSize: 13, color: 'var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span>💰 ADMISSION FEE BREAKDOWN</span>
                                             <span className="badge badge-success" style={{ fontSize: 12, padding: '4px 10px' }}>
@@ -597,145 +699,103 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                      (parseFloat(form.tuitionFee) || 0) +
                                                      (parseFloat(form.examFee) || 0) +
                                                      (parseFloat(form.dressMaterialFee) || 0) +
-                                                     (parseFloat(form.transportFee) || 0) +
-                                                     (parseFloat(form.hostelFee) || 0) +
-                                                     (parseFloat(form.miscellaneousFee) || 0) +
                                                      (parseFloat(form.otherFee) || 0)
                                                  ).toLocaleString('en-IN')}
-                                             </span>
-                                         </div>
-                                         <div className="text-xs text-muted mb-3">
-                                             Enter individual amounts assigned for Tuition, Exam, Material, Transport, Hostel, Miscellaneous, and Other Dues for this student.
-                                         </div>
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-muted mb-3">
+                                            Specify individual fee components (Tuition, Exam, Dress & Material, Other Dues).
+                                        </div>
 
-                                         <div className="form-group mb-3">
-                                             <label className="form-label" style={{ fontSize: 12 }}>Base Fee Structure Template (Optional)</label>
-                                             <select
-                                                 className="form-control"
-                                                 style={{ fontSize: 13 }}
-                                                 value={form.feeStructureId}
-                                                 onChange={(e) => {
-                                                     const id = e.target.value;
-                                                     const sel = feeStructures.find(f => f.id === id);
-                                                     if (sel && sel.items) {
-                                                         let t = 0, ex = 0, dr = 0, tr = 0, hs = 0, ms = 0, ot = 0;
-                                                         sel.items.forEach((item: any) => {
-                                                             const catName = (item.feeCategory?.name || '').toLowerCase();
-                                                             const val = item.amount / 100;
-                                                             if (catName.includes('tuition')) t += val;
-                                                             else if (catName.includes('exam')) ex += val;
-                                                             else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) dr += val;
-                                                             else if (catName.includes('transport')) tr += val;
-                                                             else if (catName.includes('hostel')) hs += val;
-                                                             else if (catName.includes('misc')) ms += val;
-                                                             else ot += val;
-                                                         });
-                                                         setForm(f => ({
-                                                             ...f,
-                                                             feeStructureId: id,
-                                                             tuitionFee: t ? t.toString() : '',
-                                                             examFee: ex ? ex.toString() : '',
-                                                             dressMaterialFee: dr ? dr.toString() : '',
-                                                             transportFee: tr ? tr.toString() : '',
-                                                             hostelFee: hs ? hs.toString() : '',
-                                                             miscellaneousFee: ms ? ms.toString() : '',
-                                                             otherFee: ot ? ot.toString() : '',
-                                                             customAmountRupees: (sel.totalAmount / 100).toString()
-                                                         }));
-                                                     } else {
-                                                         setForm(f => ({ ...f, feeStructureId: id }));
-                                                     }
-                                                 }}
-                                             >
-                                                 <option value="">-- Custom Fee Breakdown (Or Select Master Template) --</option>
-                                                 {feeStructures.map((fs) => (
-                                                     <option key={fs.id} value={fs.id}>
-                                                         {fs.name} (AY: {fs.academicYear}) — Standard: ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
-                                                     </option>
-                                                 ))}
-                                             </select>
-                                         </div>
+                                        <div className="form-group mb-3">
+                                            <label className="form-label" style={{ fontSize: 12 }}>Master Fee Structure Template (Optional)</label>
+                                            <select
+                                                className="form-control"
+                                                style={{ fontSize: 13 }}
+                                                value={form.feeStructureId}
+                                                onChange={(e) => {
+                                                    const id = e.target.value;
+                                                    const sel = feeStructures.find(f => f.id === id);
+                                                    if (sel && sel.items) {
+                                                        let t = 0, ex = 0, dr = 0, ot = 0;
+                                                        sel.items.forEach((item: any) => {
+                                                            const catName = (item.feeCategory?.name || '').toLowerCase();
+                                                            const val = item.amount / 100;
+                                                            if (catName.includes('tuition')) t += val;
+                                                            else if (catName.includes('exam')) ex += val;
+                                                            else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) dr += val;
+                                                            else ot += val;
+                                                        });
+                                                        setForm(f => ({
+                                                            ...f,
+                                                            feeStructureId: id,
+                                                            tuitionFee: t ? t.toString() : '',
+                                                            examFee: ex ? ex.toString() : '',
+                                                            dressMaterialFee: dr ? dr.toString() : '',
+                                                            otherFee: ot ? ot.toString() : '',
+                                                            customAmountRupees: (sel.totalAmount / 100).toString()
+                                                        }));
+                                                    } else {
+                                                        setForm(f => ({ ...f, feeStructureId: id }));
+                                                    }
+                                                }}
+                                            >
+                                                <option value="">-- Custom Fee Breakdown (Or Select Master Template) --</option>
+                                                {feeStructures.map((fs) => (
+                                                    <option key={fs.id} value={fs.id}>
+                                                        {fs.name} (AY: {fs.academicYear}) — Standard: ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                         <div className="grid grid-2" style={{ gap: 12 }}>
-                                             <div>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 15000"
-                                                     value={form.tuitionFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, tuitionFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                             <div>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>📝 Exam Fees (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 2000"
-                                                     value={form.examFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, examFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                             <div>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material Fees (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 3000"
-                                                     value={form.dressMaterialFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, dressMaterialFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                             <div>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>🚌 Transport Fees (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 5000"
-                                                     value={form.transportFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, transportFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                             <div>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>🏢 Hostel Fees (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 12000"
-                                                     value={form.hostelFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, hostelFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                             <div>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>🛠️ Miscellaneous Fees (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 1500"
-                                                     value={form.miscellaneousFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, miscellaneousFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                             <div style={{ gridColumn: 'span 2' }}>
-                                                 <label className="form-label" style={{ fontSize: 12 }}>📦 Other Dues / Charges (₹)</label>
-                                                 <input
-                                                     type="number"
-                                                     className="form-control"
-                                                     style={{ fontSize: 13 }}
-                                                     placeholder="e.g. 1000"
-                                                     value={form.otherFee}
-                                                     onChange={(e) => setForm(f => ({ ...f, otherFee: e.target.value }))}
-                                                 />
-                                             </div>
-                                         </div>
-                                     </div>
+                                        <div className="grid grid-2" style={{ gap: 12 }}>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    style={{ fontSize: 13 }}
+                                                    placeholder="e.g. 15000"
+                                                    value={form.tuitionFee}
+                                                    onChange={(e) => setForm(f => ({ ...f, tuitionFee: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>📝 Exam Fees (₹)</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    style={{ fontSize: 13 }}
+                                                    placeholder="e.g. 2000"
+                                                    value={form.examFee}
+                                                    onChange={(e) => setForm(f => ({ ...f, examFee: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material Fees (₹)</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    style={{ fontSize: 13 }}
+                                                    placeholder="e.g. 3000"
+                                                    value={form.dressMaterialFee}
+                                                    onChange={(e) => setForm(f => ({ ...f, dressMaterialFee: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: 12 }}>📦 Other Dues / Charges (₹)</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    style={{ fontSize: 13 }}
+                                                    placeholder="e.g. 1000"
+                                                    value={form.otherFee}
+                                                    onChange={(e) => setForm(f => ({ ...f, otherFee: e.target.value }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {/* Drag & Drop Photo Upload */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -824,18 +884,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Category</label>
-                                        <select className="form-control" value={form.category} onChange={(e) => setForm(f => ({ ...f, category: e.target.value }))}>
-                                            <option value="OPEN">OPEN / General</option>
-                                            <option value="OBC">OBC</option>
-                                            <option value="SC">SC</option>
-                                            <option value="ST">ST</option>
-                                            <option value="VJNT">VJ / NT</option>
-                                            <option value="SBC">SBC</option>
-                                            <option value="EWS">EWS</option>
-                                        </select>
-                                    </div>
+
                                     <div className="form-group">
                                         <label className="form-label">Blood Group 🩸</label>
                                         <select className="form-control" value={form.bloodGroup} onChange={(e) => setForm(f => ({ ...f, bloodGroup: e.target.value }))}>
@@ -854,52 +903,26 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                         <input className="form-control" value={form.landline} onChange={(e) => setForm(f => ({ ...f, landline: e.target.value }))} placeholder="Optional alternate number" />
                                     </div>
 
-                                    {/* Class X Educational Details Section (Image 3) */}
-                                    <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                                        <div className="form-label font-bold mb-3" style={{ fontSize: 13, color: 'var(--primary)' }}>🎓 CLASS X EDUCATION DETAILS</div>
-                                        <div className="grid grid-2" style={{ gap: 10 }}>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>Board</label>
-                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.board} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, board: e.target.value } }))} placeholder="e.g. Maharashtra State Board" />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>School Name</label>
-                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.school} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, school: e.target.value } }))} placeholder="High School Name" />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>Passing Year</label>
-                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.passingYear} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, passingYear: e.target.value } }))} placeholder="e.g. 2023" />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>Medium</label>
-                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.medium} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, medium: e.target.value } }))} placeholder="e.g. English / Marathi" />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>Aggregate %</label>
-                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.percentage} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, percentage: e.target.value } }))} placeholder="e.g. 78.50%" />
-                                            </div>
-                                            <div>
-                                                <label className="form-label" style={{ fontSize: 12 }}>Class X Roll No</label>
-                                                <input className="form-control" style={{ fontSize: 13 }} value={form.educationDetails.rollNo} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, rollNo: e.target.value } }))} placeholder="Class 10 Roll No" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Submitted Original Documents Checklist (Image 4) */}
+                                    {/* ─── Submitted Original Documents Checklist (Updated) ───────── */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
                                         <div className="form-label font-bold mb-3" style={{ fontSize: 13, color: 'var(--primary)' }}>📁 ORIGINAL DOCUMENTS SUBMITTED CHECKLIST</div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 10, background: 'var(--surface-2)', padding: 12, borderRadius: 8 }}>
                                             {[
-                                                { key: 'tc', label: 'TC (Transfer Cert)' },
-                                                { key: 'marklist', label: 'Class X Mark list' },
+                                                { key: 'domicile', label: 'Domicile Certificate' },
+                                                { key: 'marksheet12th', label: 'Class XII (12th / HSC)' },
+                                                { key: 'marklist', label: 'Class X (10th) Marklist' },
+                                                { key: 'tc', label: 'TC (Transfer Cert / Leaving)' },
+                                                { key: 'baDegree', label: 'B.A. Marksheet / Degree' },
+                                                { key: 'bcomDegree', label: 'B.Com Marksheet / Degree' },
+                                                { key: 'btechDegree', label: 'B.Tech / B.E. Marksheet' },
                                                 { key: 'caste', label: 'Caste Certificate' },
                                                 { key: 'nonCreamy', label: 'Non-Creamy Layer' },
-                                                { key: 'photo4', label: 'Photo - 4 Copies' },
                                                 { key: 'income', label: 'Income Certificate' },
-                                                { key: 'affidavit', label: 'Affidavit' },
-                                                { key: 'gap', label: 'Gap Certificate' },
+                                                { key: 'affidavit', label: 'Affidavit / Gap Cert.' },
                                                 { key: 'aadhar', label: 'Aadhaar Card' },
                                                 { key: 'bankPassbook', label: 'Bank Passbook Xerox' },
+                                                { key: 'photo4', label: 'Photo - 4 Passport Copies' },
+                                                { key: 'otherDocs', label: 'Other Document' },
                                             ].map((docItem) => (
                                                 <label key={docItem.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
                                                     <input
@@ -917,10 +940,22 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                 </label>
                                             ))}
                                         </div>
+                                        {form.submittedDocuments.otherDocs && (
+                                            <div style={{ marginTop: 8 }}>
+                                                <input 
+                                                    className="form-control"
+                                                    style={{ fontSize: 12 }}
+                                                    placeholder="Specify other document name (e.g. Diploma, Migration Certificate, etc.)..."
+                                                    value={form.submittedDocuments.otherDocsText || ''}
+                                                    onChange={(e) => setForm(f => ({ ...f, submittedDocuments: { ...f.submittedDocuments, otherDocsText: e.target.value } }))}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
+
                                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                                    <div className="form-label font-bold mb-4" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>PARENT / GUARDIAN</div>
+                                    <div className="form-label font-bold mb-4" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>PARENT / GUARDIAN CONTACT</div>
                                     <div className="grid grid-2">
                                         <div className="form-group">
                                             <label className="form-label">Parent Name</label>
@@ -972,16 +1007,13 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             const id = e.target.value;
                                             const sel = feeStructures.find(f => f.id === id);
                                             if (sel && sel.items) {
-                                                let t = 0, ex = 0, dr = 0, tr = 0, hs = 0, ms = 0, ot = 0;
+                                                let t = 0, ex = 0, dr = 0, ot = 0;
                                                 sel.items.forEach((item: any) => {
                                                     const catName = (item.feeCategory?.name || '').toLowerCase();
                                                     const val = item.amount / 100;
                                                     if (catName.includes('tuition')) t += val;
                                                     else if (catName.includes('exam')) ex += val;
                                                     else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) dr += val;
-                                                    else if (catName.includes('transport')) tr += val;
-                                                    else if (catName.includes('hostel')) hs += val;
-                                                    else if (catName.includes('misc')) ms += val;
                                                     else ot += val;
                                                 });
                                                 setFeeForm(f => ({
@@ -990,47 +1022,24 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                     tuitionFee: t ? t.toString() : '',
                                                     examFee: ex ? ex.toString() : '',
                                                     dressMaterialFee: dr ? dr.toString() : '',
-                                                    transportFee: tr ? tr.toString() : '',
-                                                    hostelFee: hs ? hs.toString() : '',
-                                                    miscellaneousFee: ms ? ms.toString() : '',
                                                     otherFee: ot ? ot.toString() : '',
                                                     customAmountRupees: (sel.totalAmount / 100).toString()
                                                 }));
                                             } else {
-                                                setFeeForm(f => ({
-                                                    ...f,
-                                                    feeStructureId: id,
-                                                    tuitionFee: '', examFee: '', dressMaterialFee: '', transportFee: '', hostelFee: '', miscellaneousFee: '', otherFee: ''
-                                                }));
+                                                setFeeForm(f => ({ ...f, feeStructureId: id }));
                                             }
                                         }}
-                                        required
                                     >
-                                        <option value="">-- Choose Fee Structure --</option>
                                         {feeStructures.map((fs) => (
                                             <option key={fs.id} value={fs.id}>
-                                                {fs.name} (Academic Year: {fs.academicYear}) — ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
+                                                {fs.name} (AY: {fs.academicYear}) — Standard: ₹{(fs.totalAmount / 100).toLocaleString('en-IN')}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div className="form-group mb-3">
-                                    <label className="form-label">Total Fee Amount (₹ INR)</label>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        placeholder="e.g. 25000"
-                                        value={feeForm.customAmountRupees}
-                                        onChange={(e) => setFeeForm(f => ({ ...f, customAmountRupees: e.target.value }))}
-                                    />
-                                    <small className="text-muted" style={{ fontSize: 11, display: 'block', marginTop: 4 }}>
-                                        Specify a custom fee amount or leave default from the selected fee structure.
-                                    </small>
-                                </div>
-
-                                <div className="form-group mb-3">
-                                    <label className="form-label">Due Date</label>
+                                    <label className="form-label">Payment Due Date</label>
                                     <input
                                         type="date"
                                         className="form-control"
@@ -1039,23 +1048,17 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     />
                                 </div>
 
-                                {/* Custom Breakdown Grid */}
-                                <div className="form-group mb-0" style={{ background: 'var(--surface-2)', padding: 16, borderRadius: 12, border: '1.5px solid var(--primary-light)' }}>
-                                    <div className="form-label font-bold mb-2" style={{ fontSize: 13, color: 'var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>💰 OVERRIDE ITEM VALUES (OPTIONAL)</span>
-                                        <span className="badge badge-success" style={{ fontSize: 12, padding: '4px 10px' }}>
-                                            Total: ₹{(
-                                                (parseFloat(feeForm.tuitionFee) || 0) +
-                                                (parseFloat(feeForm.examFee) || 0) +
-                                                (parseFloat(feeForm.dressMaterialFee) || 0) +
-                                                (parseFloat(feeForm.transportFee) || 0) +
-                                                (parseFloat(feeForm.hostelFee) || 0) +
-                                                (parseFloat(feeForm.miscellaneousFee) || 0) +
-                                                (parseFloat(feeForm.otherFee) || 0)
-                                            ).toLocaleString('en-IN')}
-                                        </span>
+                                <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
+                                    <div className="form-label font-bold mb-2" style={{ fontSize: 12, color: 'var(--primary)', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span>Custom Fee Components (Optional)</span>
+                                        <span>Total: ₹{(
+                                            (parseFloat(feeForm.tuitionFee) || 0) +
+                                            (parseFloat(feeForm.examFee) || 0) +
+                                            (parseFloat(feeForm.dressMaterialFee) || 0) +
+                                            (parseFloat(feeForm.otherFee) || 0)
+                                        ).toLocaleString('en-IN')}</span>
                                     </div>
-                                    <div className="grid grid-2" style={{ gap: 12 }}>
+                                    <div className="grid grid-2" style={{ gap: 10 }}>
                                         <div>
                                             <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
                                             <input
@@ -1079,7 +1082,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             />
                                         </div>
                                         <div>
-                                            <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material Fees (₹)</label>
+                                            <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material (₹)</label>
                                             <input
                                                 type="number"
                                                 className="form-control"
@@ -1090,40 +1093,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             />
                                         </div>
                                         <div>
-                                            <label className="form-label" style={{ fontSize: 12 }}>🚌 Transport Fees (₹)</label>
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                style={{ fontSize: 13 }}
-                                                placeholder="e.g. 5000"
-                                                value={feeForm.transportFee}
-                                                onChange={(e) => setFeeForm(f => ({ ...f, transportFee: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="form-label" style={{ fontSize: 12 }}>🏢 Hostel Fees (₹)</label>
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                style={{ fontSize: 13 }}
-                                                placeholder="e.g. 12000"
-                                                value={feeForm.hostelFee}
-                                                onChange={(e) => setFeeForm(f => ({ ...f, hostelFee: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="form-label" style={{ fontSize: 12 }}>🛠️ Miscellaneous Fees (₹)</label>
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                style={{ fontSize: 13 }}
-                                                placeholder="e.g. 1500"
-                                                value={feeForm.miscellaneousFee}
-                                                onChange={(e) => setFeeForm(f => ({ ...f, miscellaneousFee: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div style={{ gridColumn: 'span 2' }}>
-                                            <label className="form-label" style={{ fontSize: 12 }}>📦 Other Dues / Charges (₹)</label>
+                                            <label className="form-label" style={{ fontSize: 12 }}>📦 Other Charges (₹)</label>
                                             <input
                                                 type="number"
                                                 className="form-control"
@@ -1173,8 +1143,13 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <div>
                                                 <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
                                                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                                                    ID: <b>{historyStudentDetail.studentId}</b> | Class: <b>{historyStudentDetail.class} {historyStudentDetail.section && `(${historyStudentDetail.section})`}</b> {historyStudentDetail.rollNumber && `| Roll: ${historyStudentDetail.rollNumber}`}
+                                                    ID: <b>{historyStudentDetail.studentId}</b> | Trade: <b>{historyStudentDetail.class}</b> | Category: <b>{historyStudentDetail.category || 'OPEN'} {historyStudentDetail.subcaste && `(${historyStudentDetail.subcaste})`}</b>
                                                 </div>
+                                                {historyStudentDetail.address && (
+                                                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+                                                        📍 {historyStudentDetail.address}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -1207,7 +1182,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             return (
                                                 <div key={sf.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                                                     <div>
-                                                        <b>{sf.feeStructure?.name || 'School Fee'}</b> ({sf.academicYear})
+                                                        <b>{sf.feeStructure?.name || 'Trade Fee'}</b> ({sf.academicYear})
                                                         {sf.dueDate && <div className="text-sm text-muted">Due Date: {new Date(sf.dueDate).toLocaleDateString('en-IN')}</div>}
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>
@@ -1350,35 +1325,19 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     <p className="text-muted mb-4">Complete management guide for Branch Administrators with full administrative privileges.</p>
 
                                     <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>1. Full Student Admissions & Fee Customization</h4>
+                                        <h4 style={{ color: 'var(--primary)' }}>1. Student Admission & Fee Allocation</h4>
                                         <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Click <b>➕ New Admission</b> to register students with trade, photo, signature, Class X education details, and submitted document checklist.</li>
-                                            <li>System auto-generates Roll Number and Student ID (e.g. <code>SSITI-2026-E01</code>).</li>
-                                            <li><b>Admin Privilege</b>: Assign or customize custom admission fee amounts directly during student registration.</li>
+                                            <li>Admit new students with complete caste demographics, residential address, and Class X credentials.</li>
+                                            <li>Configure 2-year trade academic session (e.g. 2024-2026).</li>
+                                            <li>Set customized fee components: <b>Tuition</b>, <b>Exam</b>, <b>Dress & Material</b>, and <b>Other Dues</b>.</li>
                                         </ul>
                                     </div>
 
                                     <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>2. Fee Structure Creation & Unrestricted Fee Modifications</h4>
+                                        <h4 style={{ color: 'var(--primary)' }}>2. ID Cards & Form PDF Generation</h4>
                                         <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Navigate to <b>⚙️ Fee Structures</b> to create master trade fee templates.</li>
-                                            <li><b>Admin Privilege</b>: As Branch Admin, you can edit and update established fee amounts even after they have been assigned to students.</li>
-                                            <li>Accountant accounts are locked from changing assigned fee structures for security.</li>
-                                        </ul>
-                                    </div>
-
-                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>3. Payment Collection & PDF Generation</h4>
-                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Collect offline payments (Cash, UPI, Cheque, Bank Transfer) or launch live <b>💳 Razorpay Checkout</b>.</li>
-                                            <li>Instantly generate 2-Page Front & Back Student ID Cards and Official Admission Application PDFs with institute logo.</li>
-                                        </ul>
-                                    </div>
-
-                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>4. Revenue Analytics & Branch Reports</h4>
-                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Use <b>📈 Reports</b> to track collected vs outstanding dues, monthly revenue trends, and export financial summaries to Excel/PDF.</li>
+                                            <li>Instant generation of <b>🪪 2-Page Front & Back Official ID Cards</b>.</li>
+                                            <li>Official <b>📄 Admission Application PDFs</b> with college seal and clerk signature lines.</li>
                                         </ul>
                                     </div>
                                 </>
@@ -1387,54 +1346,22 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                             {/* ACCOUNTANT GUIDE */}
                             {effectiveRole === 'ACCOUNTANT' && (
                                 <>
-                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🧾 Accountant Operational Capabilities</h3>
-                                    <p className="text-muted mb-4">Daily workflow guide for fee collection, receipt issuing, and student document downloads.</p>
+                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🧾 Fee Accountant Operational Guide</h3>
+                                    <p className="text-muted mb-4">Step-by-step instructions for cashiers and fee collection staff.</p>
 
                                     <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>1. Recording Payments & Razorpay Online Checkout</h4>
+                                        <h4 style={{ color: 'var(--primary)' }}>1. Fee Collection & Instant Receipts</h4>
                                         <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Navigate to <b>💳 Record Payment</b>. Select student by ID, Roll No, or Name.</li>
-                                            <li>Record offline payments (Cash, UPI, Cheque, Bank Transfer) or click <b>💳 Pay via Razorpay</b> for instant online checkout!</li>
-                                            <li>Live receipt preview and official PDF receipt generation with institute logo are auto-created upon payment.</li>
+                                            <li>Search students by Name, ID, or Roll Number to record fee payments.</li>
+                                            <li>Receipts automatically show total agreed fee, amount paid, total collected, and remaining balance.</li>
                                         </ul>
                                     </div>
 
                                     <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
                                         <h4 style={{ color: 'var(--primary)' }}>2. Student Admission & ID Card Downloads</h4>
                                         <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Click <b>➕ New Admission</b> to enroll new students with photo, signature, and Class X details.</li>
-                                            <li>Single-click download for <b>🪪 2-Page Front & Back ID Cards</b> and <b>📄 Admission Application PDFs</b>.</li>
-                                        </ul>
-                                    </div>
-
-                                    <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', padding: 14, borderRadius: 10 }}>
-                                        <h4 style={{ color: '#b45309' }}>🔒 Fee Structure Security Lock Notice</h4>
-                                        <p style={{ marginTop: 6, fontSize: 13, color: '#92400e' }}>
-                                            As an Accountant, you can collect fee payments and assign initial fee structures. However, established fee amounts cannot be modified once set. Fee structure adjustments require <b>Branch Admin</b> authorization.
-                                        </p>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* STUDENT GUIDE */}
-                            {effectiveRole === 'STUDENT' && (
-                                <>
-                                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>🎓 Student Self-Service Portal Guide</h3>
-                                    <p className="text-muted mb-4">Instructions for viewing fee status, paying online via Razorpay, and downloading documents.</p>
-
-                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, marginBottom: 16 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>1. Online Fee Payment via Razorpay</h4>
-                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>View total assigned trade fees, total paid, and pending balance.</li>
-                                            <li>Click <b>💳 Pay via Razorpay</b> to pay online using GPay, PhonePe, Paytm, UPI, Cards, or NetBanking.</li>
-                                        </ul>
-                                    </div>
-
-                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10 }}>
-                                        <h4 style={{ color: 'var(--primary)' }}>2. Digital Receipts & ID Card Download</h4>
-                                        <ul style={{ marginLeft: 20, marginTop: 6 }}>
-                                            <li>Download official fee payment receipts for your records anytime.</li>
-                                            <li>Download your official <b>🪪 2-Page Front & Back Student ID Card PDF</b> with college seal and emergency contacts.</li>
+                                            <li>Click <b>➕ New Admission</b> to enroll new students with photo, signature, and documents checklist.</li>
+                                            <li>Download <b>🪪 2-Page ID Cards</b> and <b>📄 Admission Application PDFs</b>.</li>
                                         </ul>
                                     </div>
                                 </>
@@ -1487,5 +1414,3 @@ export default function StudentsPage() {
         </Suspense>
     );
 }
-
-

@@ -458,17 +458,49 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             ['Amount Paid', formatRupees(result.payment?.amount || 0)],
                                             ['Payment Mode', result.payment?.mode],
                                             ['Date', new Date(result.payment?.createdAt || Date.now()).toLocaleDateString('en-IN')],
+                                            ['Remarks / Notes', result.payment?.remarks || 'Fee Payment Received'],
                                         ].map(([label, value]) => (
-                                            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                                                 <span className="text-muted">{label}</span>
                                                 <b>{value}</b>
                                             </div>
                                         ))}
-                                        <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
-                                            <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${result.receipt?.pdfUrl}`}
-                                                target="_blank" rel="noopener noreferrer"
-                                                className="btn btn-primary w-full" style={{ justifyContent: 'center' }}>
-                                                📄 Download Receipt PDF
+
+                                        {selectedFee && (
+                                            <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 8, fontSize: 13 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span className="text-muted">Total Course Fee:</span>
+                                                    <b>{formatRupees(selectedFee.totalAmount)}</b>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                                    <span className="text-muted">Total Paid Till Date:</span>
+                                                    <b style={{ color: 'var(--accent)' }}>{formatRupees((selectedFee.paidAmount || 0) + (result.payment?.amount || 0))}</b>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                                    <span className="text-muted">Remaining Balance:</span>
+                                                    <b style={{ color: Math.max(0, selectedFee.totalAmount - (selectedFee.paidAmount || 0) - (result.payment?.amount || 0)) > 0 ? 'var(--danger)' : 'var(--accent)' }}>
+                                                        {formatRupees(Math.max(0, selectedFee.totalAmount - (selectedFee.paidAmount || 0) - (result.payment?.amount || 0)))}
+                                                    </b>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                            <button 
+                                                onClick={() => window.print()}
+                                                className="btn btn-secondary" 
+                                                style={{ justifyContent: 'center' }}
+                                            >
+                                                🖨️ Print Slip
+                                            </button>
+                                            <a 
+                                                href={`${typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://bss-ssiti-erp-and-fee-system.onrender.com' : 'http://localhost:4000'}${result.receipt?.pdfUrl?.startsWith('/api') ? result.receipt.pdfUrl : `/api${result.receipt?.pdfUrl}`}`}
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="btn btn-primary" 
+                                                style={{ justifyContent: 'center' }}
+                                            >
+                                                📄 PDF Receipt
                                             </a>
                                         </div>
                                     </div>
