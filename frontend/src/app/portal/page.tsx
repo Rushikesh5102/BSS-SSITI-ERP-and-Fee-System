@@ -62,9 +62,9 @@ export default function PortalHubPage() {
         return (
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh',
-                background: isDark ? '#0f172a' : '#1e3a8a'
+                background: isDark ? 'var(--bg, #0f172a)' : 'var(--primary-dark, #0284c7)'
             }}>
-                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, borderColor: '#38bdf8' }} />
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, borderColor: '#7dd3fc' }} />
             </div>
         );
     }
@@ -74,7 +74,7 @@ export default function PortalHubPage() {
             minHeight: '100vh',
             background: isDark 
                 ? 'radial-gradient(ellipse at top, #0f172a 0%, #090d16 50%, #020617 100%)' 
-                : 'radial-gradient(ellipse at top, #1e40af 0%, #1e3a8a 45%, #0f172a 100%)',
+                : 'radial-gradient(ellipse at top, #0ea5e9 0%, #0284c7 45%, #0369a1 100%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -90,8 +90,8 @@ export default function PortalHubPage() {
                 onClick={toggleTheme}
                 style={{
                     position: 'absolute', top: 20, right: 20, padding: '8px 16px',
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.18)',
+                    border: '1px solid rgba(255, 255, 255, 0.35)',
                     color: '#ffffff',
                     borderRadius: '100px', cursor: 'pointer', zIndex: 10,
                     display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
@@ -120,15 +120,15 @@ export default function PortalHubPage() {
                     100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12); }
                 }
                 @keyframes pulseGlowBeige {
-                    0% { box-shadow: 0 10px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.4); }
-                    50% { box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(233, 220, 201, 0.8); }
-                    100% { box-shadow: 0 10px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.4); }
+                    0% { box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(186, 159, 122, 0.6); }
+                    50% { box-shadow: 0 14px 44px rgba(0, 0, 0, 0.35), 0 0 0 1.5px rgba(233, 220, 201, 0.95); }
+                    100% { box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(186, 159, 122, 0.6); }
                 }
-                .portal-card-beige-glass {
-                    background: ${isDark ? 'rgba(15, 23, 42, 0.82)' : 'rgba(237, 226, 209, 0.94)'};
+                .system-portal-card {
+                    background: ${isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(233, 220, 201, 0.95)'};
                     backdrop-filter: blur(20px);
                     -webkit-backdrop-filter: blur(20px);
-                    border: 1px solid ${isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.65)'};
+                    border: 1px solid ${isDark ? 'rgba(51, 65, 85, 0.8)' : 'rgba(186, 159, 122, 0.75)'};
                     border-radius: 20px;
                     padding: 30px 24px;
                     display: flex;
@@ -137,15 +137,15 @@ export default function PortalHubPage() {
                     cursor: pointer;
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     text-align: left;
-                    box-shadow: ${isDark ? '0 8px 32px rgba(0, 0, 0, 0.4)' : '0 10px 36px rgba(0, 0, 0, 0.25)'};
+                    box-shadow: ${isDark ? '0 8px 32px rgba(0, 0, 0, 0.4)' : '0 10px 36px rgba(0, 0, 0, 0.22)'};
                     position: relative;
                     overflow: hidden;
                     animation: ${isDark ? 'pulseGlowDark 4s infinite' : 'pulseGlowBeige 4s infinite'};
                 }
-                .portal-card-beige-glass:hover {
+                .system-portal-card:hover {
                     transform: translateY(-6px);
-                    background: ${isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(247, 238, 224, 0.98)'};
-                    border-color: ${isDark ? 'rgba(56, 189, 248, 0.6)' : 'rgba(216, 195, 165, 0.9)'};
+                    background: ${isDark ? 'rgba(51, 65, 85, 0.95)' : '#f3ebd9'};
+                    border-color: ${isDark ? '#38bdf8' : '#9e815b'};
                     box-shadow: ${isDark ? '0 16px 48px rgba(56, 189, 248, 0.3)' : '0 18px 48px rgba(0, 0, 0, 0.35)'};
                 }
                 .portal-badge {
@@ -174,7 +174,7 @@ export default function PortalHubPage() {
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: 'drop-shadow(0 0 18px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 36px rgba(56, 189, 248, 0.85))'
+                            filter: 'drop-shadow(0 0 18px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 36px rgba(125, 211, 252, 0.85))'
                         }}
                     />
                 </div>
@@ -212,17 +212,17 @@ export default function PortalHubPage() {
             }}>
                 {/* Card 0: System Diagnostics / Dev Home (Developer access only) */}
                 {user.role === 'DEVELOPER' && (
-                    <div className="portal-card-beige-glass" onClick={() => router.push('/system')}>
+                    <div className="system-portal-card" onClick={() => router.push('/system')}>
                         <div className="portal-badge" style={{ 
-                            background: isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(217, 119, 6, 0.15)', 
-                            color: isDark ? '#fbbf24' : '#b45309', 
-                            border: `1px solid ${isDark ? 'rgba(251, 191, 36, 0.3)' : 'rgba(217, 119, 6, 0.35)'}` 
+                            background: isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)', 
+                            color: isDark ? '#fbbf24' : '#92400e', 
+                            border: `1px solid ${isDark ? 'rgba(251, 191, 36, 0.4)' : '#ba9f7a'}` 
                         }}>
                             Core Control
                         </div>
                         <div style={{
                             width: '60px', height: '60px', borderRadius: '16px',
-                            background: isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(217, 119, 6, 0.15)',
+                            background: isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(245, 158, 11, 0.2)',
                             color: isDark ? '#fbbf24' : '#d97706',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '32px', marginBottom: '8px'
@@ -230,15 +230,15 @@ export default function PortalHubPage() {
                             💻
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#ffffff' : '#0f172a' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#f8fafc' : '#0f172a' }}>
                                 Dev Home & Diagnostics
                             </h2>
-                            <p style={{ fontSize: '13.5px', color: isDark ? '#f8fafc' : '#334155', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                            <p style={{ fontSize: '13.5px', color: isDark ? '#cbd5e1' : '#334155', lineHeight: '1.5', margin: 0, fontWeight: 500 }}>
                                 Monitor system uptime, check database vitals, configure global settings, and audit security events.
                             </p>
                         </div>
                         <div style={{
-                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: isDark ? '#fbbf24' : '#b45309',
+                            marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: isDark ? '#fbbf24' : '#92400e',
                             display: 'flex', alignItems: 'center', gap: '6px'
                         }}>
                             Control Center &rarr;
@@ -247,17 +247,17 @@ export default function PortalHubPage() {
                 )}
 
                 {/* Card 1: Fees */}
-                <div className="portal-card-beige-glass" onClick={() => selectWorkspace('FEES')}>
+                <div className="system-portal-card" onClick={() => selectWorkspace('FEES')}>
                     <div className="portal-badge" style={{ 
-                        background: isDark ? 'rgba(56, 189, 248, 0.2)' : 'rgba(2, 132, 199, 0.15)', 
+                        background: isDark ? 'rgba(56, 189, 248, 0.2)' : 'rgba(2, 132, 199, 0.18)', 
                         color: isDark ? '#38bdf8' : '#0369a1', 
-                        border: `1px solid ${isDark ? 'rgba(56, 189, 248, 0.3)' : 'rgba(2, 132, 199, 0.3)'}` 
+                        border: `1px solid ${isDark ? 'rgba(56, 189, 248, 0.4)' : '#ba9f7a'}` 
                     }}>
                         Primary
                     </div>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
-                        background: isDark ? 'rgba(56, 189, 248, 0.2)' : 'rgba(2, 132, 199, 0.15)',
+                        background: isDark ? 'rgba(56, 189, 248, 0.2)' : 'rgba(14, 165, 233, 0.18)',
                         color: isDark ? '#38bdf8' : '#0284c7',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '32px', marginBottom: '8px'
@@ -265,10 +265,10 @@ export default function PortalHubPage() {
                         💰
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#ffffff' : '#0f172a' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#f8fafc' : '#0f172a' }}>
                             Fee Management
                         </h2>
-                        <p style={{ fontSize: '13.5px', color: isDark ? '#f8fafc' : '#334155', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                        <p style={{ fontSize: '13.5px', color: isDark ? '#cbd5e1' : '#334155', lineHeight: '1.5', margin: 0, fontWeight: 500 }}>
                             Track student fees, record collection payments, print invoices, and view financial reports.
                         </p>
                     </div>
@@ -281,17 +281,17 @@ export default function PortalHubPage() {
                 </div>
 
                 {/* Card 2: Store */}
-                <div className="portal-card-beige-glass" onClick={() => selectWorkspace('STORE')}>
+                <div className="system-portal-card" onClick={() => selectWorkspace('STORE')}>
                     <div className="portal-badge" style={{ 
-                        background: isDark ? 'rgba(192, 132, 252, 0.2)' : 'rgba(147, 51, 234, 0.15)', 
-                        color: isDark ? '#c084fc' : '#7e22ce', 
-                        border: `1px solid ${isDark ? 'rgba(192, 132, 252, 0.3)' : 'rgba(147, 51, 234, 0.3)'}` 
+                        background: isDark ? 'rgba(192, 132, 252, 0.2)' : 'rgba(147, 51, 234, 0.18)', 
+                        color: isDark ? '#c084fc' : '#6b21a8', 
+                        border: `1px solid ${isDark ? 'rgba(192, 132, 252, 0.4)' : '#ba9f7a'}` 
                     }}>
                         Inventory
                     </div>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
-                        background: isDark ? 'rgba(192, 132, 252, 0.2)' : 'rgba(147, 51, 234, 0.15)',
+                        background: isDark ? 'rgba(192, 132, 252, 0.2)' : 'rgba(147, 51, 234, 0.18)',
                         color: isDark ? '#c084fc' : '#9333ea',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '32px', marginBottom: '8px'
@@ -299,10 +299,10 @@ export default function PortalHubPage() {
                         📦
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#ffffff' : '#0f172a' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#f8fafc' : '#0f172a' }}>
                             Store Management
                         </h2>
-                        <p style={{ fontSize: '13.5px', color: isDark ? '#f8fafc' : '#334155', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                        <p style={{ fontSize: '13.5px', color: isDark ? '#cbd5e1' : '#334155', lineHeight: '1.5', margin: 0, fontWeight: 500 }}>
                             Manage inventory, track stock inward/outward transactions, handle suppliers, and monitor low stock alerts.
                         </p>
                     </div>
@@ -315,17 +315,17 @@ export default function PortalHubPage() {
                 </div>
 
                 {/* Card 3: Library */}
-                <div className="portal-card-beige-glass" onClick={() => selectWorkspace('LIBRARY')}>
+                <div className="system-portal-card" onClick={() => selectWorkspace('LIBRARY')}>
                     <div className="portal-badge" style={{ 
-                        background: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.15)', 
-                        color: isDark ? '#34d399' : '#047857', 
-                        border: `1px solid ${isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)'}` 
+                        background: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.18)', 
+                        color: isDark ? '#34d399' : '#065f46', 
+                        border: `1px solid ${isDark ? 'rgba(52, 211, 153, 0.4)' : '#ba9f7a'}` 
                     }}>
                         Academics
                     </div>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
-                        background: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.15)',
+                        background: isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.18)',
                         color: isDark ? '#34d399' : '#059669',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '32px', marginBottom: '8px'
@@ -333,10 +333,10 @@ export default function PortalHubPage() {
                         📚
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#ffffff' : '#0f172a' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#f8fafc' : '#0f172a' }}>
                             Library Management
                         </h2>
-                        <p style={{ fontSize: '13.5px', color: isDark ? '#f8fafc' : '#334155', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                        <p style={{ fontSize: '13.5px', color: isDark ? '#cbd5e1' : '#334155', lineHeight: '1.5', margin: 0, fontWeight: 500 }}>
                             Manage institute books catalog, student/staff issue & return registers, reservations, and overdue fines.
                         </p>
                     </div>
@@ -349,17 +349,17 @@ export default function PortalHubPage() {
                 </div>
 
                 {/* Card 4: Foundation Donations */}
-                <div className="portal-card-beige-glass" onClick={() => selectWorkspace('DONATION')}>
+                <div className="system-portal-card" onClick={() => selectWorkspace('DONATION')}>
                     <div className="portal-badge" style={{ 
-                        background: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(217, 119, 6, 0.15)', 
-                        color: isDark ? '#f59e0b' : '#b45309', 
-                        border: `1px solid ${isDark ? 'rgba(245, 158, 11, 0.3)' : 'rgba(217, 119, 6, 0.3)'}` 
+                        background: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(217, 119, 6, 0.18)', 
+                        color: isDark ? '#f59e0b' : '#92400e', 
+                        border: `1px solid ${isDark ? 'rgba(245, 158, 11, 0.4)' : '#ba9f7a'}` 
                     }}>
                         Philanthropy
                     </div>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '16px',
-                        background: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(217, 119, 6, 0.15)',
+                        background: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(217, 119, 6, 0.18)',
                         color: isDark ? '#f59e0b' : '#d97706',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '32px', marginBottom: '8px'
@@ -367,15 +367,15 @@ export default function PortalHubPage() {
                         🤝
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#ffffff' : '#0f172a' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 8px 0', color: isDark ? '#f8fafc' : '#0f172a' }}>
                             Donation & Foundation Admin
                         </h2>
-                        <p style={{ fontSize: '13.5px', color: isDark ? '#f8fafc' : '#334155', lineHeight: '1.5', margin: 0, opacity: 0.95 }}>
+                        <p style={{ fontSize: '13.5px', color: isDark ? '#cbd5e1' : '#334155', lineHeight: '1.5', margin: 0, fontWeight: 500 }}>
                             Track 80G tax exemptions, manage BSS Foundation donor contributions, campaigns, and funds transparency.
                         </p>
                     </div>
                     <div style={{
-                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: isDark ? '#f59e0b' : '#b45309',
+                        marginTop: 'auto', fontSize: '13px', fontWeight: 800, color: isDark ? '#f59e0b' : '#92400e',
                         display: 'flex', alignItems: 'center', gap: '6px'
                     }}>
                         Enter Workspace &rarr;
@@ -386,8 +386,8 @@ export default function PortalHubPage() {
             <button
                 onClick={logout}
                 style={{
-                    background: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.18)',
-                    border: isDark ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)',
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    border: '1px solid rgba(239, 68, 68, 0.5)',
                     color: '#fca5a5',
                     padding: '10px 24px',
                     borderRadius: '12px',
