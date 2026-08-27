@@ -14,14 +14,13 @@ export default function LoginPage() {
     // 30s Server Cold-Start Waking Up States
     const [isWakingUp, setIsWakingUp] = useState(false);
     const [countdown, setCountdown] = useState(30);
-    const [retryAttempt, setRetryAttempt] = useState(1);
     const retryCredentialsRef = useRef<{ email: string; pass: string } | null>(null);
 
-    const performLogin = async (targetEmail: string, targetPass: string) => {
+    const performLogin = async (targetEmail: string, targetPass: string, isAutoRetry: boolean = false) => {
         setError('');
         setLoading(true);
         try {
-            await login(targetEmail, targetPass);
+            await login(targetEmail, targetPass, isAutoRetry);
             setIsWakingUp(false);
         } catch (err: any) {
             const isNetworkOrColdStart = 
@@ -31,8 +30,8 @@ export default function LoginPage() {
                 err.message?.includes('timeout') ||
                 [502, 503, 504].includes(err.response?.status);
 
-            if (isNetworkOrColdStart) {
-                // Cloud instance is spinning up — trigger 30s auto-retry timer
+            if (isNetworkOrColdStart && !isAutoRetry) {
+                // Cloud server is waking up — trigger 30s auto-login countdown
                 retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
                 setIsWakingUp(true);
                 setCountdown(30);
@@ -47,10 +46,10 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await performLogin(email, password);
+        await performLogin(email, password, false);
     };
 
-    // Live 30s Countdown & Auto-Retry Loop
+    // Live 30s Countdown & Auto-Login on Timer Completion
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isWakingUp && countdown > 0) {
@@ -58,23 +57,24 @@ export default function LoginPage() {
                 setCountdown((prev) => prev - 1);
             }, 1000);
         } else if (isWakingUp && countdown === 0) {
-            // Trigger auto-retry
+            // Timer completed! Automatically log the user in after verified credential check
             if (retryCredentialsRef.current) {
-                setRetryAttempt((prev) => prev + 1);
-                performLogin(retryCredentialsRef.current.email, retryCredentialsRef.current.pass);
+                const creds = retryCredentialsRef.current;
+                performLogin(creds.email, creds.pass, true);
             }
         }
         return () => clearInterval(timer);
     }, [isWakingUp, countdown]);
 
-    // Active Health Probing every 5s during countdown
+    // Active Health Probing every 4s during countdown to wake up early if server comes online
     useEffect(() => {
-        if (isWakingUp && countdown > 0 && countdown % 5 === 0) {
-            api.get('/health', { timeout: 3500 })
+        if (isWakingUp && countdown > 0 && countdown % 4 === 0) {
+            api.get('/health', { timeout: 3000 })
                 .then(() => {
                     // Server is alive! Trigger login immediately
                     if (retryCredentialsRef.current) {
-                        performLogin(retryCredentialsRef.current.email, retryCredentialsRef.current.pass);
+                        const creds = retryCredentialsRef.current;
+                        performLogin(creds.email, creds.pass, false);
                     }
                 })
                 .catch(() => {
@@ -145,7 +145,7 @@ export default function LoginPage() {
                     <p>Fee & Institutional Management System</p>
                 </div>
 
-                {/* 30s Server Cold-Start Waking Up Notice */}
+                {/* 30s Server Cold-Start Waking Up Notice with Auto-Login */}
                 {isWakingUp && (
                     <div
                         style={{
@@ -154,43 +154,53 @@ export default function LoginPage() {
                             borderRadius: '14px',
                             padding: '16px',
                             marginBottom: '20px',
-                            textAlign: 'left'
+                            textAlign: 'center',
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                            <span className="spinner" style={{ width: '18px', height: '18px', borderWidth: '2.5px', borderColor: '#38bdf8' }} />
-                            <strong style={{ color: '#0284c7', fontSize: '14px' }}>
-                                Cloud Server Starting Up (Attempt #{retryAttempt})
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span className="spinner" style={{ width: '18px', height: '18px', borderWidth: '2px' }} />
+                            <strong style={{ color: 'var(--primary)', fontSize: '14px' }}>
+                                Cloud Server is Waking Up...
                             </strong>
                         </div>
-                        <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.5 }}>
-                            Free cloud instances sleep after inactivity and require ~25-30s to boot up. System will auto-connect in:
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.4 }}>
+                            Free-tier cloud servers sleep during inactivity. Automatically verifying credentials and logging you in:
                         </p>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#0284c7' }}>
-                                ⏳ Connecting in {countdown}s...
-                            </span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (retryCredentialsRef.current) {
-                                            performLogin(retryCredentialsRef.current.email, retryCredentialsRef.current.pass);
-                                        }
-                                    }}
-                                    style={{
-                                        background: '#0284c7', color: '#fff', border: 'none',
-                                        padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer'
-                                    }}
-                                >
-                                    ⚡ Retry Now
-                                </button>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                            <div
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '54px',
+                                    height: '54px',
+                                    borderRadius: '50%',
+                                    background: 'var(--primary)',
+                                    color: '#ffffff',
+                                    fontSize: '20px',
+                                    fontWeight: '800',
+                                    boxShadow: '0 0 16px rgba(56, 189, 248, 0.5)',
+                                }}
+                            >
+                                {countdown}s
+                            </div>
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    Auto-Connecting...
+                                </div>
                                 <button
                                     type="button"
                                     onClick={cancelWakingUp}
                                     style={{
-                                        background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)',
-                                        padding: '4px 10px', borderRadius: '6px', fontSize: '11.5px', cursor: 'pointer'
+                                        marginTop: 4,
+                                        fontSize: '11px',
+                                        color: 'var(--danger)',
+                                        textDecoration: 'underline',
+                                        cursor: 'pointer',
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0
                                     }}
                                 >
                                     Cancel

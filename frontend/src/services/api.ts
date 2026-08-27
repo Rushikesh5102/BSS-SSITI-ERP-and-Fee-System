@@ -35,10 +35,10 @@ export const api = axios.create({
     timeout: 10000,
 });
 
-// ── Request Interceptor: Attach JWT Token & Dynamically Resolve Base URL ─
 api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('accessToken');
+        const rawToken = localStorage.getItem('accessToken');
+        const token = rawToken ? rawToken.replace(/^"(.*)"$/, '$1') : null;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

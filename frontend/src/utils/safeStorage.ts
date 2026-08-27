@@ -9,13 +9,18 @@ export const safeStorage = {
     if (typeof window === 'undefined') return fallback;
     try {
       const item = localStorage.getItem(key);
-      if (!item || item === 'undefined' || item === 'null') return fallback;
-      return JSON.parse(item) as T;
-    } catch (err) {
-      console.warn(`[SafeStorage] Corrupted data detected for key "${key}". Auto-healing...`, err);
+      if (item === null || item === undefined || item === 'undefined' || item === 'null') {
+        return fallback;
+      }
       try {
-        localStorage.removeItem(key);
-      } catch {}
+        const parsed = JSON.parse(item);
+        return parsed as T;
+      } catch {
+        // If it's a plain string (like a raw token or theme name) that isn't JSON-quoted, return it directly!
+        return item as unknown as T;
+      }
+    } catch (err) {
+      console.warn(`[SafeStorage] Error reading key "${key}":`, err);
       return fallback;
     }
   },
