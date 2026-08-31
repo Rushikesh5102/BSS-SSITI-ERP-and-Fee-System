@@ -572,7 +572,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleCreate}>
-                            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+                            <div className="modal-body">
                                 <AutoRecoverBanner
                                     show={hasStudentDraft}
                                     savedAt={studentDraftTime}
@@ -1134,7 +1134,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                             <div className="modal-title">📜 Student Complete History & Profile</div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowHistoryModal(false)}>✕</button>
                         </div>
-                        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+                        <div className="modal-body">
                             {loadingHistory ? (
                                 <div className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
                             ) : historyStudentDetail ? (
@@ -1328,7 +1328,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                             </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowUserGuide(false)}>✕</button>
                         </div>
-                        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto', fontSize: 14, lineHeight: 1.6 }}>
+                        <div className="modal-body" style={{ fontSize: 14, lineHeight: 1.6 }}>
                             
                             {/* BRANCH ADMIN GUIDE */}
                             {effectiveRole === 'ADMIN' && (

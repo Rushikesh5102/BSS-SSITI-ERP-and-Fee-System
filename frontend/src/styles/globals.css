@@ -606,7 +606,16 @@ input[type="file"]::file-selector-button:hover {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ─── Dedicated Login Page Styling ─────────────────────────────────────────── */
@@ -679,6 +688,7 @@ html.dark .footer {
   to { opacity: 0; transform: scale(1) translateY(0); }
 }
 .modal-header {
+  flex-shrink: 0;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
@@ -687,12 +697,17 @@ html.dark .footer {
 .modal-body {
   padding: 20px;
   overflow-y: auto;
-  max-height: calc(90vh - 130px);
+  flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-footer {
-  padding: 14px 20px;
+  flex-shrink: 0;
+  padding: 16px 20px;
   border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  min-height: 64px;
 }
 
 /* ─── Developer System Dashboard Grid ──────────────────────────────────────── */
@@ -893,11 +908,16 @@ html.dark .footer {
   }
   .modal-body {
     padding: 16px !important;
-    max-height: calc(90vh - 120px) !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    max-height: none !important;
   }
   .modal-footer {
+    flex-shrink: 0 !important;
     flex-wrap: wrap !important;
     gap: 8px !important;
+    padding: 14px 16px !important;
+    min-height: 60px !important;
   }
   .modal-footer .btn { flex: 1 !important; min-width: 120px !important; justify-content: center !important; }
 

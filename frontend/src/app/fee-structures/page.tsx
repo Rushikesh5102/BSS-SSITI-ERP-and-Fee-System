@@ -286,7 +286,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleSave}>
-                            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+                            <div className="modal-body">
                                 <AutoRecoverBanner
                                     show={hasDraft}
                                     savedAt={draftTime}
