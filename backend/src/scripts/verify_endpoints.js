@@ -9,8 +9,8 @@ async function runVerification() {
         // 1. Try to login as Store Manager
         console.log('\n🔐 1. Attempting login as Store Manager (storemanager@saiiti.edu.in)...');
         const loginRes = await axios.post(`${API_URL}/auth/login`, {
-            email: 'storemanager@saiiti.edu.in',
-            password: 'Store@123'
+            email: process.env.TEST_STORE_EMAIL || 'storemanager@saiiti.edu.in',
+            password: process.env.TEST_STORE_PASSWORD || 'Store@123'
         });
         
         if (loginRes.status === 200 && loginRes.data.success) {
@@ -74,8 +74,8 @@ async function runVerification() {
                 // Log in as Admin to delete
                 console.log('🔐 Logging in as Branch Admin to delete the item...');
                 const adminLogin = await axios.post(`${API_URL}/auth/login`, {
-                    email: 'admin@saiiti.edu.in',
-                    password: 'Admin@123'
+                    email: process.env.TEST_ADMIN_EMAIL || 'admin@saiiti.edu.in',
+                    password: process.env.TEST_ADMIN_PASSWORD || 'Admin@123'
                 });
                 const adminHeaders = {
                     Authorization: `Bearer ${adminLogin.data.data.accessToken}`

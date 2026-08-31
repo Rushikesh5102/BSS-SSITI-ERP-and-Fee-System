@@ -449,6 +449,65 @@ textarea { height: auto; min-height: 90px; }
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
 }
 
+/* ─── Date Picker & Calendar System Theme Styling ───────────────────────────── */
+input[type="date"] {
+  accent-color: var(--primary);
+  color-scheme: light;
+  cursor: pointer;
+  position: relative;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+
+html.dark input[type="date"] {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 6px;
+  margin-right: -4px;
+  background-color: rgba(14, 165, 233, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  background-color: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background-color: var(--primary);
+  border-color: var(--primary-dark);
+  filter: brightness(1.1);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+  transform: scale(1.08);
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  padding: 2px 4px;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-day-field:focus,
+input[type="date"]::-webkit-datetime-edit-month-field:focus,
+input[type="date"]::-webkit-datetime-edit-year-field:focus {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-radius: 3px;
+  outline: none;
+}
+
+.date-picker-custom {
+  font-weight: 500;
+}
+
 /* Custom Blendable File Upload Input Styling */
 input[type="file"]::file-selector-button {
   background: var(--surface-2);

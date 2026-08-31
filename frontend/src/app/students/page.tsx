@@ -37,6 +37,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
     const initialFormState = {
         name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', signature: '', email: '',
+        dateOfBirth: '',
         category: 'OPEN', subcaste: '', isOtherSubcaste: false, otherSubcaste: '',
         address: '', bloodGroup: 'O+', landline: '', parentName: '', parentPhone: '', parentEmail: '',
         academicSession: defaultSession,
@@ -155,6 +156,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             parentEmail: inquiry.email || '',
             address: inquiry.address || '',
             category: inquiry.category || 'OPEN',
+            dateOfBirth: inquiry.dateOfBirth ? (inquiry.dateOfBirth.includes('T') ? inquiry.dateOfBirth.split('T')[0] : inquiry.dateOfBirth) : '',
             educationDetails: {
                 ...f.educationDetails,
                 percentage: inquiry.tenthPercentage ? `${inquiry.tenthPercentage}%` : '',
@@ -280,9 +282,10 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             const { data } = await api.post('/students', {
                 name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber,
                 photo: form.photo || undefined, signature: form.signature || undefined, email: form.email,
+                dateOfBirth: form.dateOfBirth || undefined,
                 category: form.category, subcaste: effectiveSubcaste, address: form.address,
                 bloodGroup: form.bloodGroup, landline: form.landline || undefined,
-                educationDetails: { ...form.educationDetails, subcaste: effectiveSubcaste, address: form.address, academicSession: form.academicSession },
+                educationDetails: { ...form.educationDetails, dateOfBirth: form.dateOfBirth || undefined, subcaste: effectiveSubcaste, address: form.address, academicSession: form.academicSession },
                 submittedDocuments: form.submittedDocuments,
                 feeStructureId: form.feeStructureId || (feeStructures[0]?.id || undefined),
                 customTotalAmount: amountInPaise,
@@ -603,8 +606,14 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Date of Birth</label>
-                                        <input className="form-control" type="date" value={form.educationDetails?.passingYear ? '' : ''} onChange={(e) => setForm(f => ({ ...f, educationDetails: { ...f.educationDetails, dateOfBirth: e.target.value } }))} />
+                                        <label className="form-label">Date of Birth 📅</label>
+                                        <input 
+                                            className="form-control date-picker-custom" 
+                                            type="date" 
+                                            value={form.dateOfBirth || ''} 
+                                            onChange={(e) => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+                                            max={new Date().toISOString().split('T')[0]}
+                                        />
                                     </div>
 
                                     {/* ─── Category & Subcaste (Indian Caste System) ───────────────────── */}
@@ -1144,6 +1153,9 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                 <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
                                                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                                                     ID: <b>{historyStudentDetail.studentId}</b> | Trade: <b>{historyStudentDetail.class}</b> | Category: <b>{historyStudentDetail.category || 'OPEN'} {historyStudentDetail.subcaste && `(${historyStudentDetail.subcaste})`}</b>
+                                                </div>
+                                                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>
+                                                    📅 DOB: <b>{historyStudentDetail.dateOfBirth ? new Date(historyStudentDetail.dateOfBirth).toLocaleDateString('en-IN') : '—'}</b> | 🩸 Blood Group: <b>{historyStudentDetail.bloodGroup || '—'}</b>
                                                 </div>
                                                 {historyStudentDetail.address && (
                                                     <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>

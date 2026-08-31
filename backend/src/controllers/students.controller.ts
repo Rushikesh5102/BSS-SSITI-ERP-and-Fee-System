@@ -88,9 +88,19 @@ export const studentsController = {
             }
         }
 
+        // Handle dateOfBirth formatting for Prisma DateTime
+        let dateOfBirth: Date | undefined = undefined;
+        if (studentData.dateOfBirth) {
+            const parsed = new Date(studentData.dateOfBirth);
+            if (!isNaN(parsed.getTime())) {
+                dateOfBirth = parsed;
+            }
+        }
+
         const student = await prisma.student.create({
             data: {
                 ...studentData,
+                dateOfBirth,
                 class: tradeClass,
                 rollNumber: studentData.rollNumber || autoRollNumber,
                 studentId,
@@ -187,9 +197,19 @@ export const studentsController = {
     update: asyncHandler(async (req: Request, res: Response) => {
         const { parent, ...updateData } = req.body;
 
+        const dataToUpdate: any = { ...updateData };
+        if ('dateOfBirth' in updateData) {
+            if (updateData.dateOfBirth) {
+                const parsed = new Date(updateData.dateOfBirth);
+                dataToUpdate.dateOfBirth = !isNaN(parsed.getTime()) ? parsed : null;
+            } else {
+                dataToUpdate.dateOfBirth = null;
+            }
+        }
+
         const student = await prisma.student.update({
             where: { id: req.params.id },
-            data: updateData,
+            data: dataToUpdate,
         });
 
         await createAuditLog(req.user!.id, AuditAction.STUDENT_UPDATED, 'Student', student.id, updateData, req.ip);
