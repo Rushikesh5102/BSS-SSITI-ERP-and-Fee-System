@@ -100,6 +100,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [viewImageModal, setViewImageModal] = useState<{ url: string; title: string; filename: string } | null>(null);
     // User Guide Modal State for Admin & Accountant
     const [showUserGuide, setShowUserGuide] = useState(false);
+    // Admission Success Celebratory Modal State
+    const [admissionSuccessData, setAdmissionSuccessData] = useState<any | null>(null);
 
     // Fee Assignment / Update Modal State
     const [showFeeModal, setShowFeeModal] = useState(false);
@@ -312,7 +314,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                     email: form.parentEmail && form.parentEmail.trim() ? form.parentEmail.trim() : undefined
                 } : undefined,
             });
-            const loginDetails = data.data?.loginDetails;
+            const createdStudent = data.data;
             setShowModal(false);
             if (acceptingInquiryId) {
                 try {
@@ -323,15 +325,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 }
                 setAcceptingInquiryId(null);
             }
-            if (loginDetails) {
-                alert(`✅ Admission Successful!\n\nStudent Login Credentials:\nEmail / ID: ${loginDetails.email}\nPassword: ${loginDetails.defaultPassword}\n\nPlease share these credentials with the student to access the portal.`);
-            } else {
-                showToast('✅ Student admitted successfully!');
-            }
             safeStorage.remove('draft_student_admission');
             setHasStudentDraft(false);
             setForm(initialFormState);
             fetchStudents();
+            setAdmissionSuccessData(createdStudent);
+            showToast('🎉 Student admitted successfully!');
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to add student'}`);
         } finally { setSaving(false); }
@@ -1417,6 +1416,129 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-primary" onClick={() => setShowUserGuide(false)}>Got It!</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Admission Success Celebratory Modal */}
+            {admissionSuccessData && (
+                <div className="modal-overlay" onClick={() => setAdmissionSuccessData(null)}>
+                    <div className="admission-success-modal" onClick={(e) => e.stopPropagation()}>
+                        {/* Decorative floating celebration items */}
+                        <div className="confetti-decoration" style={{ top: 16, left: 24 }}>✨</div>
+                        <div className="confetti-decoration" style={{ top: 20, right: 30, animationDelay: '1s' }}>🎉</div>
+                        <div className="confetti-decoration" style={{ bottom: 30, left: 20, animationDelay: '1.5s' }}>🎓</div>
+                        <div className="confetti-decoration" style={{ bottom: 35, right: 25, animationDelay: '0.5s' }}>📜</div>
+
+                        {/* Glowing Animated Success Badge */}
+                        <div className="success-badge-circle">
+                            ✓
+                        </div>
+
+                        <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
+                            Admission Confirmed! 🎉
+                        </h2>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
+                            Student enrollment has been officially registered and saved into the system.
+                        </p>
+
+                        {/* Student Details Summary Card */}
+                        <div style={{
+                            background: 'var(--surface-2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-lg)',
+                            padding: '16px 18px',
+                            textAlign: 'left',
+                            marginBottom: 22,
+                            display: 'flex',
+                            gap: 14,
+                            alignItems: 'center'
+                        }}>
+                            {admissionSuccessData.photo ? (
+                                <img
+                                    src={admissionSuccessData.photo}
+                                    alt={admissionSuccessData.name}
+                                    style={{ width: 54, height: 54, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
+                                />
+                            ) : (
+                                <div style={{
+                                    width: 54,
+                                    height: 54,
+                                    borderRadius: '50%',
+                                    background: 'var(--primary)',
+                                    color: '#fff',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: 22,
+                                    fontWeight: 700,
+                                    flexShrink: 0
+                                }}>
+                                    {admissionSuccessData.name?.charAt(0)?.toUpperCase() || 'S'}
+                                </div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {admissionSuccessData.name}
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                    <span className="badge badge-primary" style={{ fontWeight: 700, fontSize: 11 }}>
+                                        🆔 {admissionSuccessData.studentId}
+                                    </span>
+                                    <span className="badge badge-secondary" style={{ fontSize: 11 }}>
+                                        ⚡ {admissionSuccessData.class} {admissionSuccessData.section ? `(${admissionSuccessData.section})` : ''}
+                                    </span>
+                                    {admissionSuccessData.rollNumber && (
+                                        <span className="badge badge-ghost" style={{ fontSize: 11 }}>
+                                            Roll #{admissionSuccessData.rollNumber}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quick Document Download Actions */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                            <button
+                                className="btn btn-secondary"
+                                style={{ justifyContent: 'center', padding: '10px 12px', fontSize: 13, fontWeight: 600 }}
+                                onClick={async () => await generateStudentIdCardPdf(admissionSuccessData)}
+                            >
+                                🪪 Download ID Card
+                            </button>
+                            <button
+                                className="btn btn-secondary"
+                                style={{ justifyContent: 'center', padding: '10px 12px', fontSize: 13, fontWeight: 600 }}
+                                onClick={async () => await generateAdmissionFormPdf(admissionSuccessData)}
+                            >
+                                📄 Admission Form PDF
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button
+                                className="btn btn-outline"
+                                style={{ flex: 1, justifyContent: 'center', padding: '10px', fontSize: 13 }}
+                                onClick={() => {
+                                    const s = admissionSuccessData;
+                                    setAdmissionSuccessData(null);
+                                    if (s?.id) openHistoryModal(s.id);
+                                }}
+                            >
+                                📜 View Profile & History
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                style={{ flex: 1, justifyContent: 'center', padding: '10px', fontSize: 13, fontWeight: 700 }}
+                                onClick={() => setAdmissionSuccessData(null)}
+                            >
+                                Done
+                            </button>
+                        </div>
+
+                        <div style={{ marginTop: 14, fontSize: 11, color: 'var(--text-muted)' }}>
+                            🔒 Login credentials can be shared with the student anytime via the <b>Access Control</b> management page.
                         </div>
                     </div>
                 </div>
