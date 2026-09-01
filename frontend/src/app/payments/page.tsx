@@ -13,6 +13,14 @@ import { safeStorage } from '../../utils/safeStorage';
 const PAYMENT_MODES = ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'DD', 'CARD', 'NET_BANKING', 'RAZORPAY', 'OTHER'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
+// Dynamic Fee Head Items with Dropdowns (matching Fee Structure style)
+interface PaymentFeeItem {
+    type: 'TUITION' | 'DRESS_MATERIAL' | 'EXAM' | 'SUPPLEMENTARY' | 'BALANCE' | 'OTHER' | 'CUSTOM';
+    name?: string;
+    subject?: string;
+    amount: string;
+}
+
 function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
@@ -23,26 +31,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [selectedFee, setSelectedFee] = useState<any>(null);
     
-    // Allocation Mode: 'MULTI' (Component Breakdown) | 'SUPPLEMENTARY' (Back Paper Exam Fee) | 'LUMP_SUM' (Quick General Balance)
-    const [allocationMode, setAllocationMode] = useState<'MULTI' | 'SUPPLEMENTARY' | 'LUMP_SUM'>('MULTI');
-
-    // Multi-Component Fee Heads Breakdown State
-    const [multiBreakdown, setMultiBreakdown] = useState({
-        tuition: '',
-        exam: '',
-        dressMaterial: '',
-        other: '',
-        otherName: 'Other ITI / Workshop Dues',
-        custom: '',
-        customName: ''
-    });
-
-    // Supplementary / Back Paper Exam State
-    const [supplementaryForm, setSupplementaryForm] = useState({
-        subject: '',
-        examSession: 'Winter 2026 / Regular Supplementary',
-        amount: ''
-    });
+    const [feeItems, setFeeItems] = useState<PaymentFeeItem[]>([
+        { type: 'TUITION', amount: '' }
+    ]);
 
     // Main Payment Form state
     const [form, setForm] = useState({ 
@@ -65,41 +56,37 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [paymentDraftTime, setPaymentDraftTime] = useState<string | null>(null);
 
     useEffect(() => {
-        const saved = safeStorage.get<any>('draft_fee_payment_v2', null);
-        if (saved && (saved.form?.amount || saved.form?.transactionRef || saved.multiBreakdown?.tuition || saved.supplementaryForm?.subject)) {
+        const saved = safeStorage.get<any>('draft_fee_payment_v3', null);
+        if (saved && (saved.form?.amount || saved.form?.transactionRef || (saved.feeItems && saved.feeItems.length > 0))) {
             setHasPaymentDraft(true);
             setPaymentDraftTime(saved.savedAt);
         }
     }, []);
 
     useEffect(() => {
-        if (form.amount || form.transactionRef || multiBreakdown.tuition || multiBreakdown.dressMaterial || supplementaryForm.amount) {
+        if (form.amount || form.transactionRef || feeItems.some(i => i.amount)) {
             const timer = setTimeout(() => {
-                safeStorage.set('draft_fee_payment_v2', {
-                    allocationMode,
-                    multiBreakdown,
-                    supplementaryForm,
+                safeStorage.set('draft_fee_payment_v3', {
+                    feeItems,
                     form,
                     savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
                 });
             }, 400);
             return () => clearTimeout(timer);
         }
-    }, [form, allocationMode, multiBreakdown, supplementaryForm]);
+    }, [form, feeItems]);
 
     const handleRestorePaymentDraft = () => {
-        const saved = safeStorage.get<any>('draft_fee_payment_v2', null);
+        const saved = safeStorage.get<any>('draft_fee_payment_v3', null);
         if (saved) {
-            if (saved.allocationMode) setAllocationMode(saved.allocationMode);
-            if (saved.multiBreakdown) setMultiBreakdown(saved.multiBreakdown);
-            if (saved.supplementaryForm) setSupplementaryForm(saved.supplementaryForm);
+            if (saved.feeItems) setFeeItems(saved.feeItems);
             if (saved.form) setForm(saved.form);
             setHasPaymentDraft(false);
         }
     };
 
     const handleDiscardPaymentDraft = () => {
-        safeStorage.remove('draft_fee_payment_v2');
+        safeStorage.remove('draft_fee_payment_v3');
         setHasPaymentDraft(false);
     };
 
@@ -199,29 +186,80 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         return 3000;
     };
 
-    // Calculate Multi-Component Total and Update Form Amount & Remarks
-    const updateMultiTotal = (nextBreakdown: typeof multiBreakdown) => {
-        const t = parseFloat(nextBreakdown.tuition) || 0;
-        const ex = parseFloat(nextBreakdown.exam) || 0;
-        const dr = parseFloat(nextBreakdown.dressMaterial) || 0;
-        const ot = parseFloat(nextBreakdown.other) || 0;
-        const cs = parseFloat(nextBreakdown.custom) || 0;
-        const sum = t + ex + dr + ot + cs;
-
+    // Calculate Dynamic Fee Heads Total and Update Form Amount & Remarks
+    const updatePaymentTotals = (items: PaymentFeeItem[]) => {
+        let sum = 0;
         const parts: string[] = [];
-        if (t > 0) parts.push(`Tuition: ₹${t.toLocaleString('en-IN')}`);
-        if (ex > 0) parts.push(`Exam: ₹${ex.toLocaleString('en-IN')}`);
-        if (dr > 0) parts.push(`Dress Material: ₹${dr.toLocaleString('en-IN')}`);
-        if (ot > 0) parts.push(`${nextBreakdown.otherName || 'Other'}: ₹${ot.toLocaleString('en-IN')}`);
-        if (cs > 0) parts.push(`${nextBreakdown.customName || 'Custom Fee'}: ₹${cs.toLocaleString('en-IN')}`);
 
-        const generatedRemarks = parts.length > 0 ? parts.join(' | ') : 'Fee Payment Received';
+        items.forEach(item => {
+            const amt = parseFloat(item.amount) || 0;
+            sum += amt;
+            if (amt > 0) {
+                let label = 'Fee';
+                if (item.type === 'TUITION') label = 'Tuition';
+                else if (item.type === 'DRESS_MATERIAL') label = 'Dress Material';
+                else if (item.type === 'EXAM') label = 'Exam Fee';
+                else if (item.type === 'SUPPLEMENTARY') label = `Supp. Exam (${item.subject?.trim() || 'Back Paper'})`;
+                else if (item.type === 'BALANCE') label = 'Course Balance';
+                else if (item.type === 'OTHER') label = item.name?.trim() || 'Other ITI Dues';
+                else if (item.type === 'CUSTOM') label = item.name?.trim() || 'Custom Fee';
+
+                parts.push(`${label}: ₹${amt.toLocaleString('en-IN')}`);
+            }
+        });
 
         setForm(f => ({
             ...f,
             amount: sum > 0 ? sum.toString() : '',
-            remarks: generatedRemarks
+            remarks: parts.length > 0 ? parts.join(' | ') : 'Fee Payment Received'
         }));
+    };
+
+    const addFeeItem = () => {
+        const usedTypes = feeItems.map(i => i.type);
+        let nextType: PaymentFeeItem['type'] = 'DRESS_MATERIAL';
+        if (!usedTypes.includes('DRESS_MATERIAL')) nextType = 'DRESS_MATERIAL';
+        else if (!usedTypes.includes('EXAM')) nextType = 'EXAM';
+        else if (!usedTypes.includes('SUPPLEMENTARY')) nextType = 'SUPPLEMENTARY';
+        else if (!usedTypes.includes('OTHER')) nextType = 'OTHER';
+        else nextType = 'CUSTOM';
+
+        let defaultAmt = '';
+        if (nextType === 'DRESS_MATERIAL') defaultAmt = getDressMaterialAmount().toString();
+        else if (nextType === 'EXAM') defaultAmt = getExamAmount().toString();
+
+        const updated: PaymentFeeItem[] = [...feeItems, { type: nextType, amount: defaultAmt, name: '', subject: '' }];
+        setFeeItems(updated);
+        updatePaymentTotals(updated);
+    };
+
+    const removeFeeItem = (idx: number) => {
+        if (feeItems.length <= 1) return;
+        const updated = feeItems.filter((_, i) => i !== idx);
+        setFeeItems(updated);
+        updatePaymentTotals(updated);
+    };
+
+    const updateFeeItem = (idx: number, field: keyof PaymentFeeItem, val: string) => {
+        const updated = feeItems.map((item, i) => {
+            if (i !== idx) return item;
+            const next = { ...item, [field]: val };
+            if (field === 'type') {
+                if (!item.amount || item.amount === '0') {
+                    if (val === 'TUITION') {
+                        const due = selectedFee ? (selectedFee.totalAmount - selectedFee.paidAmount) / 100 : getTuitionAmount();
+                        next.amount = due > 0 ? due.toString() : '';
+                    } else if (val === 'DRESS_MATERIAL') {
+                        next.amount = getDressMaterialAmount().toString();
+                    } else if (val === 'EXAM') {
+                        next.amount = getExamAmount().toString();
+                    }
+                }
+            }
+            return next;
+        });
+        setFeeItems(updated);
+        updatePaymentTotals(updated);
     };
 
     const handleStudentSelect = (studentId: string) => {
@@ -232,18 +270,11 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             setSelectedFee(sf);
             const due = (sf.totalAmount - sf.paidAmount) / 100;
             
-            // Set default multi-breakdown prefill
-            const initialMulti = {
-                tuition: due > 0 ? due.toString() : '',
-                exam: '',
-                dressMaterial: '',
-                other: '',
-                otherName: 'Other ITI / Workshop Dues',
-                custom: '',
-                customName: ''
-            };
-            setMultiBreakdown(initialMulti);
-            updateMultiTotal(initialMulti);
+            const initial: PaymentFeeItem[] = [
+                { type: 'TUITION', amount: due > 0 ? due.toString() : '' }
+            ];
+            setFeeItems(initial);
+            updatePaymentTotals(initial);
         } else {
             setSelectedFee(null);
         }
@@ -308,30 +339,31 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 throw new Error('Please enter a valid payment amount greater than 0');
             }
 
-            let effectiveFeesFor = selectedFee.feeStructure?.name || 'Academic Fee';
-            let isSupplementary = false;
-            let supplementarySubject = '';
-            let feeBreakdown: Array<{ name: string; amount: number }> = [];
+            const isSupplementary = feeItems.some(i => i.type === 'SUPPLEMENTARY');
+            const suppItems = feeItems.filter(i => i.type === 'SUPPLEMENTARY');
+            const supplementarySubject = suppItems.map(i => i.subject?.trim() || 'Back Paper / Supplementary Exam').join(', ');
 
-            if (allocationMode === 'SUPPLEMENTARY') {
-                isSupplementary = true;
-                supplementarySubject = supplementaryForm.subject.trim() || 'Back Paper / Supplementary Exam';
-                effectiveFeesFor = `Supplementary / Back Paper Exam Fee: ${supplementarySubject}`;
-            } else if (allocationMode === 'MULTI') {
-                const t = parseFloat(multiBreakdown.tuition) || 0;
-                const ex = parseFloat(multiBreakdown.exam) || 0;
-                const dr = parseFloat(multiBreakdown.dressMaterial) || 0;
-                const ot = parseFloat(multiBreakdown.other) || 0;
-                const cs = parseFloat(multiBreakdown.custom) || 0;
+            const feeBreakdown = feeItems
+                .filter(i => (parseFloat(i.amount) || 0) > 0)
+                .map(i => {
+                    let name = 'Fee';
+                    if (i.type === 'TUITION') name = 'Tuition Fees';
+                    else if (i.type === 'DRESS_MATERIAL') name = 'Dress Material & Uniform Fees';
+                    else if (i.type === 'EXAM') name = 'Regular Examination Fees';
+                    else if (i.type === 'SUPPLEMENTARY') name = `Supplementary Exam (${i.subject?.trim() || 'Back Paper'})`;
+                    else if (i.type === 'BALANCE') name = 'General Course Balance';
+                    else if (i.type === 'OTHER') name = i.name?.trim() || 'Other ITI Dues';
+                    else if (i.type === 'CUSTOM') name = i.name?.trim() || 'Custom Fee Head';
 
-                if (t > 0) feeBreakdown.push({ name: 'Tuition Fees', amount: Math.round(t * 100) });
-                if (ex > 0) feeBreakdown.push({ name: 'Exam Fees', amount: Math.round(ex * 100) });
-                if (dr > 0) feeBreakdown.push({ name: 'Dress Material & Uniform Fees', amount: Math.round(dr * 100) });
-                if (ot > 0) feeBreakdown.push({ name: multiBreakdown.otherName || 'Other ITI Dues', amount: Math.round(ot * 100) });
-                if (cs > 0) feeBreakdown.push({ name: multiBreakdown.customName || 'Custom Fee Head', amount: Math.round(cs * 100) });
+                    return {
+                        name,
+                        amount: Math.round((parseFloat(i.amount) || 0) * 100)
+                    };
+                });
 
-                effectiveFeesFor = feeBreakdown.map(b => `${b.name} (₹${(b.amount / 100).toLocaleString('en-IN')})`).join(', ') || 'Academic Course Fee';
-            }
+            const effectiveFeesFor = isSupplementary && feeItems.length === 1
+                ? `Supplementary / Back Paper Exam Fee: ${supplementarySubject}`
+                : feeBreakdown.map(b => `${b.name} (₹${(b.amount / 100).toLocaleString('en-IN')})`).join(', ') || selectedFee.feeStructure?.name || 'Academic Course Fee';
 
             const { data } = await api.post('/payments', {
                 studentFeeId: selectedFee.id,
@@ -349,13 +381,12 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             
             setResult(data.data);
             showToast('✅ Payment recorded! Receipt generated.');
-            safeStorage.remove('draft_fee_payment_v2');
+            safeStorage.remove('draft_fee_payment_v3');
             setHasPaymentDraft(false);
             
             // Reset form
             setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', chequeDate: '', remarks: '' });
-            setMultiBreakdown({ tuition: '', exam: '', dressMaterial: '', other: '', otherName: 'Other ITI / Workshop Dues', custom: '', customName: '' });
-            setSupplementaryForm({ subject: '', examSession: 'Winter 2026 / Regular Supplementary', amount: '' });
+            setFeeItems([{ type: 'TUITION', amount: '' }]);
 
             // Refresh student fee data
             if (selectedStudent) {
@@ -506,274 +537,147 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 ))}
                                             </div>
 
-                                            {/* ─── 3 ALLOCATION MODE SWITCHER TABS ───────────────────────── */}
-                                            <div style={{ marginBottom: 16 }}>
-                                                <label className="form-label font-bold" style={{ color: 'var(--primary)', marginBottom: 8, display: 'block' }}>
-                                                    🎯 Fee Allocation Method
-                                                </label>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.3fr 1fr', gap: 8 }}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setAllocationMode('MULTI');
-                                                            updateMultiTotal(multiBreakdown);
-                                                        }}
-                                                        style={{
-                                                            padding: '10px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                                                            border: allocationMode === 'MULTI' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                                                            background: allocationMode === 'MULTI' ? 'var(--surface)' : 'var(--surface-2)',
-                                                            color: allocationMode === 'MULTI' ? 'var(--primary)' : 'var(--text-secondary)',
-                                                            cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
-                                                        }}
-                                                    >
-                                                        <span>🧩 Multi-Component Fee</span>
-                                                        <span style={{ fontSize: 10, opacity: 0.8 }}>Split (Tuition, Dress, Exam)</span>
-                                                    </button>
+                                            {/* ─── DYNAMIC FEE HEAD ITEMS LIST (DROPDOWN + CUSTOMIZATION) ─── */}
+                                            <div style={{ marginBottom: 18 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                                    <label className="form-label font-bold" style={{ color: 'var(--primary)', margin: 0, fontSize: 13 }}>
+                                                        📋 Fee Heads & Component Allocation
+                                                    </label>
+                                                    <span className="text-xs text-muted">Select fee type & amount for each head</span>
+                                                </div>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setAllocationMode('SUPPLEMENTARY');
-                                                            const amt = parseFloat(supplementaryForm.amount) || 0;
-                                                            setForm(f => ({
-                                                                ...f,
-                                                                amount: amt > 0 ? amt.toString() : '',
-                                                                remarks: `Supplementary Exam Fee - ${supplementaryForm.subject || 'Back Paper'}`
-                                                            }));
-                                                        }}
-                                                        style={{
-                                                            padding: '10px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                                                            border: allocationMode === 'SUPPLEMENTARY' ? '2px solid #d97706' : '1px solid var(--border)',
-                                                            background: allocationMode === 'SUPPLEMENTARY' ? '#fffbeb' : 'var(--surface-2)',
-                                                            color: allocationMode === 'SUPPLEMENTARY' ? '#b45309' : 'var(--text-secondary)',
-                                                            cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
-                                                        }}
-                                                    >
-                                                        <span>📋 Back Paper / Supp. Fee</span>
-                                                        <span style={{ fontSize: 10, color: '#d97706', fontWeight: 800 }}>⚡ Independent (No Deduction)</span>
-                                                    </button>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                    {feeItems.map((item, idx) => (
+                                                        <div 
+                                                            key={idx} 
+                                                            style={{ 
+                                                                background: item.type === 'SUPPLEMENTARY' ? '#fffbeb' : 'var(--surface-2)', 
+                                                                border: item.type === 'SUPPLEMENTARY' ? '1.5px solid #f59e0b' : '1px solid var(--border)',
+                                                                borderRadius: 8, 
+                                                                padding: '12px 14px',
+                                                                transition: 'all 0.15s ease'
+                                                            }}
+                                                        >
+                                                            <div style={{ display: 'grid', gridTemplateColumns: feeItems.length > 1 ? '1.3fr 1fr auto' : '1.3fr 1fr', gap: 10, alignItems: 'center' }}>
+                                                                {/* Dropdown for Fee Head */}
+                                                                <div>
+                                                                    <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>
+                                                                        Fee Category / Head #{idx + 1}
+                                                                    </label>
+                                                                    <select
+                                                                        className="form-control"
+                                                                        style={{ 
+                                                                            fontSize: 13, fontWeight: 600,
+                                                                            borderColor: item.type === 'SUPPLEMENTARY' ? '#f59e0b' : undefined 
+                                                                        }}
+                                                                        value={item.type}
+                                                                        onChange={(e) => updateFeeItem(idx, 'type', e.target.value as any)}
+                                                                    >
+                                                                        <option value="TUITION">🎓 Tuition Fees</option>
+                                                                        <option value="DRESS_MATERIAL">🥼 Dress Material & Uniform</option>
+                                                                        <option value="EXAM">📝 Regular Examination Fees</option>
+                                                                        <option value="SUPPLEMENTARY">📋 Supplementary / Back Paper Exam Fee</option>
+                                                                        <option value="BALANCE">🏢 General Course Balance</option>
+                                                                        <option value="OTHER">📦 Other ITI / Workshop Dues</option>
+                                                                        <option value="CUSTOM">➕ Custom Fee Head (Write-in...)</option>
+                                                                    </select>
+                                                                </div>
 
+                                                                {/* Amount Input */}
+                                                                <div>
+                                                                    <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>
+                                                                        Amount (₹) <span className="required">*</span>
+                                                                    </label>
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        className="form-control"
+                                                                        style={{ 
+                                                                            fontSize: 13, fontWeight: 700,
+                                                                            borderColor: item.type === 'SUPPLEMENTARY' ? '#f59e0b' : undefined 
+                                                                        }}
+                                                                        placeholder="₹ Amount"
+                                                                        value={item.amount}
+                                                                        onChange={(e) => updateFeeItem(idx, 'amount', e.target.value)}
+                                                                    />
+                                                                </div>
+
+                                                                {/* Remove Button */}
+                                                                {feeItems.length > 1 && (
+                                                                    <div style={{ paddingTop: 18 }}>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-secondary btn-sm"
+                                                                            style={{ color: 'var(--danger)', padding: '6px 10px', fontSize: 13 }}
+                                                                            onClick={() => removeFeeItem(idx)}
+                                                                            title="Remove Fee Head"
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Supplementary Back Paper Subject Input & Guarantee */}
+                                                            {item.type === 'SUPPLEMENTARY' && (
+                                                                <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed #fcd34d' }}>
+                                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6 }}>
+                                                                        <div>
+                                                                            <label className="form-label" style={{ fontSize: 11, color: '#92400e', marginBottom: 2 }}>
+                                                                                Back Paper / Subject Name(s) <span className="required">*</span>
+                                                                            </label>
+                                                                            <input
+                                                                                className="form-control"
+                                                                                style={{ fontSize: 12, borderColor: '#fcd34d', background: '#ffffff' }}
+                                                                                placeholder="e.g. Theory Paper II, Practical, Workshop Calc..."
+                                                                                value={item.subject || ''}
+                                                                                onChange={(e) => updateFeeItem(idx, 'subject', e.target.value)}
+                                                                            />
+                                                                        </div>
+                                                                        <div style={{ fontSize: 11, color: '#b45309', fontWeight: 600 }}>
+                                                                            ⚡ <b>Non-Deductible Guarantee:</b> Back paper fee is recorded independently and will <b>NOT</b> reduce the student's regular course tuition balance.
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Custom / Other Fee Head Name Input */}
+                                                            {(item.type === 'CUSTOM' || item.type === 'OTHER') && (
+                                                                <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+                                                                    <label className="form-label" style={{ fontSize: 11, marginBottom: 2 }}>
+                                                                        {item.type === 'CUSTOM' ? 'Specify Custom Fee Head Name' : 'Specify Other ITI Dues Name'}
+                                                                    </label>
+                                                                    <input
+                                                                        className="form-control"
+                                                                        style={{ fontSize: 12 }}
+                                                                        placeholder="e.g. Caution Deposit, Tool Kit, ID Card Reissue..."
+                                                                        value={item.name || ''}
+                                                                        onChange={(e) => updateFeeItem(idx, 'name', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+
+                                                    {/* ➕ Add Fee Component Button (Like in Fee Structures) */}
                                                     <button
                                                         type="button"
-                                                        onClick={() => {
-                                                            setAllocationMode('LUMP_SUM');
-                                                            const due = (selectedFee.totalAmount - selectedFee.paidAmount) / 100;
-                                                            setForm(f => ({
-                                                                ...f,
-                                                                amount: due > 0 ? due.toString() : '',
-                                                                remarks: 'Paid towards Academic Course Fee'
-                                                            }));
+                                                        className="btn btn-secondary btn-sm"
+                                                        style={{ 
+                                                            border: '1.5px dashed var(--border)', 
+                                                            justifyContent: 'center', 
+                                                            padding: '8px 12px',
+                                                            fontWeight: 700,
+                                                            color: 'var(--primary)',
+                                                            background: 'var(--surface)'
                                                         }}
-                                                        style={{
-                                                            padding: '10px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                                                            border: allocationMode === 'LUMP_SUM' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                                                            background: allocationMode === 'LUMP_SUM' ? 'var(--surface)' : 'var(--surface-2)',
-                                                            color: allocationMode === 'LUMP_SUM' ? 'var(--primary)' : 'var(--text-secondary)',
-                                                            cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4
-                                                        }}
+                                                        onClick={addFeeItem}
                                                     >
-                                                        <span>🏢 Lump-Sum Balance</span>
-                                                        <span style={{ fontSize: 10, opacity: 0.8 }}>General Course Balance</span>
+                                                        ➕ Add Another Fee Component
                                                     </button>
                                                 </div>
                                             </div>
-
-                                            {/* ─── OPTION 1: MULTI-COMPONENT SPLIT ALLOCATION ────────────── */}
-                                            {allocationMode === 'MULTI' && (
-                                                <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, border: '1.5px solid var(--border)', marginBottom: 16 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                                                        <span className="font-bold" style={{ fontSize: 13, color: 'var(--primary)' }}>
-                                                            🧩 Itemized Fee Breakdown (Enter Amounts to Auto-Sum)
-                                                        </span>
-                                                        <div style={{ display: 'flex', gap: 6 }}>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-secondary btn-sm"
-                                                                style={{ fontSize: 11, padding: '2px 8px' }}
-                                                                onClick={() => {
-                                                                    const stdDress = getDressMaterialAmount().toString();
-                                                                    const updated = { ...multiBreakdown, dressMaterial: stdDress };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            >
-                                                                + Add Dress (₹{getDressMaterialAmount().toLocaleString('en-IN')})
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-secondary btn-sm"
-                                                                style={{ fontSize: 11, padding: '2px 8px' }}
-                                                                onClick={() => {
-                                                                    const stdExam = getExamAmount().toString();
-                                                                    const updated = { ...multiBreakdown, exam: stdExam };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            >
-                                                                + Add Exam (₹{getExamAmount().toLocaleString('en-IN')})
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-2" style={{ gap: 10 }}>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control"
-                                                                style={{ fontSize: 13 }}
-                                                                placeholder={`e.g. ${getTuitionAmount()}`}
-                                                                value={multiBreakdown.tuition}
-                                                                onChange={(e) => {
-                                                                    const updated = { ...multiBreakdown, tuition: e.target.value };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress Material / Uniform (₹)</label>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control"
-                                                                style={{ fontSize: 13 }}
-                                                                placeholder={`e.g. ${getDressMaterialAmount()}`}
-                                                                value={multiBreakdown.dressMaterial}
-                                                                onChange={(e) => {
-                                                                    const updated = { ...multiBreakdown, dressMaterial: e.target.value };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 12 }}>📝 Regular Examination Fees (₹)</label>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control"
-                                                                style={{ fontSize: 13 }}
-                                                                placeholder={`e.g. ${getExamAmount()}`}
-                                                                value={multiBreakdown.exam}
-                                                                onChange={(e) => {
-                                                                    const updated = { ...multiBreakdown, exam: e.target.value };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 12 }}>📦 Other ITI / Workshop Dues (₹)</label>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control"
-                                                                style={{ fontSize: 13 }}
-                                                                placeholder="e.g. 500"
-                                                                value={multiBreakdown.other}
-                                                                onChange={(e) => {
-                                                                    const updated = { ...multiBreakdown, other: e.target.value };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Custom Fee Head in Multi-Mode */}
-                                                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 10 }}>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 11 }}>➕ Add Custom Fee Head (Optional)</label>
-                                                            <input
-                                                                className="form-control"
-                                                                style={{ fontSize: 12 }}
-                                                                placeholder="e.g. Tool Kit, Caution Deposit..."
-                                                                value={multiBreakdown.customName}
-                                                                onChange={(e) => {
-                                                                    const updated = { ...multiBreakdown, customName: e.target.value };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 11 }}>Custom Amount (₹)</label>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control"
-                                                                style={{ fontSize: 12 }}
-                                                                placeholder="₹ Amount"
-                                                                value={multiBreakdown.custom}
-                                                                onChange={(e) => {
-                                                                    const updated = { ...multiBreakdown, custom: e.target.value };
-                                                                    setMultiBreakdown(updated);
-                                                                    updateMultiTotal(updated);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* ─── OPTION 2: SUPPLEMENTARY / BACK PAPER EXAM FEE ──────────── */}
-                                            {allocationMode === 'SUPPLEMENTARY' && (
-                                                <div style={{ background: '#fffbeb', padding: 14, borderRadius: 10, border: '1.5px solid #f59e0b', marginBottom: 16 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                                        <span style={{ fontSize: 18 }}>🛡️</span>
-                                                        <div>
-                                                            <div style={{ fontSize: 13, fontWeight: 800, color: '#b45309' }}>
-                                                                Supplementary / Back Paper Exam Fee
-                                                            </div>
-                                                            <div style={{ fontSize: 11, color: '#78350f' }}>
-                                                                ⚡ <b>Non-Deductible Guarantee:</b> This examination fee is tracked independently. It will <b>NOT</b> reduce or deduct from the student's regular tuition/course fee balance.
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-2" style={{ gap: 10, marginTop: 10 }}>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 12, color: '#92400e' }}>Back Paper / Subject Name(s) <span className="required">*</span></label>
-                                                            <input
-                                                                className="form-control"
-                                                                style={{ fontSize: 13, borderColor: '#fcd34d' }}
-                                                                placeholder="e.g. Theory Paper II, Practical, Workshop Calc"
-                                                                value={supplementaryForm.subject}
-                                                                onChange={(e) => {
-                                                                    const subj = e.target.value;
-                                                                    setSupplementaryForm(s => ({ ...s, subject: subj }));
-                                                                    setForm(f => ({ ...f, remarks: `Supplementary Exam Fee - ${subj || 'Back Paper'}` }));
-                                                                }}
-                                                                autoFocus
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="form-label" style={{ fontSize: 12, color: '#92400e' }}>Supplementary Exam Fee (₹) <span className="required">*</span></label>
-                                                            <input
-                                                                type="number"
-                                                                className="form-control"
-                                                                style={{ fontSize: 13, borderColor: '#fcd34d' }}
-                                                                placeholder="e.g. 1200"
-                                                                value={supplementaryForm.amount}
-                                                                onChange={(e) => {
-                                                                    const amt = e.target.value;
-                                                                    setSupplementaryForm(s => ({ ...s, amount: amt }));
-                                                                    setForm(f => ({ ...f, amount: amt }));
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* ─── OPTION 3: LUMP-SUM BALANCE ───────────────────────────── */}
-                                            {allocationMode === 'LUMP_SUM' && (
-                                                <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 10, border: '1.5px solid var(--border)', marginBottom: 16 }}>
-                                                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)', marginBottom: 6 }}>
-                                                        🏢 General Academic Course Balance Payment
-                                                    </div>
-                                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                                                        Enter any direct lump sum amount to be applied towards the student's overall outstanding course fee balance.
-                                                    </div>
-                                                </div>
-                                            )}
 
                                             {/* ─── PAYMENT TRANSACTION DETAILS & MODES ──────────────────── */}
                                             <div className="grid grid-2">
@@ -894,8 +798,10 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         if (!orderRes.success || !orderRes.data) throw new Error('Order creation failed');
                                                         const order = orderRes.data;
 
-                                                        const effectiveFeesFor = allocationMode === 'SUPPLEMENTARY'
-                                                            ? `Supplementary / Back Paper Exam Fee: ${supplementaryForm.subject || 'Back Paper'}`
+                                                        const isSupp = feeItems.some(i => i.type === 'SUPPLEMENTARY');
+                                                        const suppSubj = feeItems.filter(i => i.type === 'SUPPLEMENTARY').map(i => i.subject?.trim() || 'Back Paper').join(', ');
+                                                        const effectiveFeesFor = isSupp && feeItems.length === 1
+                                                            ? `Supplementary / Back Paper Exam Fee: ${suppSubj}`
                                                             : form.remarks || 'Academic Fee';
 
                                                         const options = {
@@ -915,8 +821,8 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                         amount: order.amount,
                                                                         feesFor: effectiveFeesFor,
                                                                         remarks: form.remarks || `Paid towards ${effectiveFeesFor}`,
-                                                                        isSupplementary: allocationMode === 'SUPPLEMENTARY',
-                                                                        supplementarySubject: allocationMode === 'SUPPLEMENTARY' ? supplementaryForm.subject : undefined
+                                                                        isSupplementary: isSupp,
+                                                                        supplementarySubject: isSupp ? suppSubj : undefined
                                                                     });
                                                                     if (verifyRes.success) {
                                                                         setResult(verifyRes.data);
@@ -1049,71 +955,36 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 <span className="text-muted">Trade / Class:</span>
                                                 <b>{selectedStudent.class}</b>
                                             </div>
-                                            
-                                            {/* Allocation Mode Preview */}
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                                <span className="text-muted">Allocation Mode:</span>
-                                                <span className="badge" style={{
-                                                    background: allocationMode === 'SUPPLEMENTARY' ? '#fef3c7' : 'var(--surface-2)',
-                                                    color: allocationMode === 'SUPPLEMENTARY' ? '#b45309' : 'var(--primary)',
-                                                    fontWeight: 700
-                                                }}>
-                                                    {allocationMode === 'MULTI' && '🧩 Multi-Component'}
-                                                    {allocationMode === 'SUPPLEMENTARY' && '📋 Supplementary Exam'}
-                                                    {allocationMode === 'LUMP_SUM' && '🏢 General Balance'}
-                                                </span>
-                                            </div>
 
-                                            {/* Multi-Component Breakdown List in Preview */}
-                                            {allocationMode === 'MULTI' && (
+                                            {/* Itemized Fee Breakdown List in Preview */}
+                                            {feeItems.some(i => (parseFloat(i.amount) || 0) > 0) && (
                                                 <div style={{ margin: '8px 0', padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 6 }}>
                                                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Fee Heads Itemized:</div>
-                                                    {parseFloat(multiBreakdown.tuition) > 0 && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                                                            <span>🎓 Tuition Fee:</span>
-                                                            <b>₹{parseFloat(multiBreakdown.tuition).toLocaleString('en-IN')}</b>
-                                                        </div>
-                                                    )}
-                                                    {parseFloat(multiBreakdown.dressMaterial) > 0 && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                                                            <span>🥼 Dress Material:</span>
-                                                            <b>₹{parseFloat(multiBreakdown.dressMaterial).toLocaleString('en-IN')}</b>
-                                                        </div>
-                                                    )}
-                                                    {parseFloat(multiBreakdown.exam) > 0 && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                                                            <span>📝 Exam Fee:</span>
-                                                            <b>₹{parseFloat(multiBreakdown.exam).toLocaleString('en-IN')}</b>
-                                                        </div>
-                                                    )}
-                                                    {parseFloat(multiBreakdown.other) > 0 && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                                                            <span>📦 {multiBreakdown.otherName || 'Other Dues'}:</span>
-                                                            <b>₹{parseFloat(multiBreakdown.other).toLocaleString('en-IN')}</b>
-                                                        </div>
-                                                    )}
-                                                    {parseFloat(multiBreakdown.custom) > 0 && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                                                            <span>➕ {multiBreakdown.customName || 'Custom Fee'}:</span>
-                                                            <b>₹{parseFloat(multiBreakdown.custom).toLocaleString('en-IN')}</b>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
+                                                    {feeItems.map((item, idx) => {
+                                                        const amt = parseFloat(item.amount) || 0;
+                                                        if (amt <= 0) return null;
+                                                        let icon = '💳';
+                                                        let label = 'Fee';
+                                                        if (item.type === 'TUITION') { icon = '🎓'; label = 'Tuition Fee'; }
+                                                        else if (item.type === 'DRESS_MATERIAL') { icon = '🥼'; label = 'Dress Material'; }
+                                                        else if (item.type === 'EXAM') { icon = '📝'; label = 'Exam Fee'; }
+                                                        else if (item.type === 'SUPPLEMENTARY') { icon = '🛡️'; label = `Supplementary (${item.subject || 'Back Paper'})`; }
+                                                        else if (item.type === 'BALANCE') { icon = '🏢'; label = 'Course Balance'; }
+                                                        else if (item.type === 'OTHER') { icon = '📦'; label = item.name || 'Other Dues'; }
+                                                        else if (item.type === 'CUSTOM') { icon = '➕'; label = item.name || 'Custom Fee'; }
 
-                                            {/* Supplementary Exam Details in Preview */}
-                                            {allocationMode === 'SUPPLEMENTARY' && (
-                                                <div style={{ margin: '8px 0', padding: '8px 10px', background: '#fffbeb', borderRadius: 6, border: '1px solid #fcd34d' }}>
-                                                    <div style={{ fontSize: 11, fontWeight: 800, color: '#b45309', textTransform: 'uppercase' }}>
-                                                        🛡️ Back Paper / Supplementary Exam
-                                                    </div>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                                                        <span style={{ color: '#78350f' }}>Paper / Subject:</span>
-                                                        <b style={{ color: '#78350f' }}>{supplementaryForm.subject || 'Not specified'}</b>
-                                                    </div>
-                                                    <div style={{ fontSize: 10, color: '#92400e', marginTop: 4 }}>
-                                                        * Regular course tuition balance remains unchanged.
-                                                    </div>
+                                                        return (
+                                                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontSize: 12 }}>
+                                                                <span>{icon} {label}:</span>
+                                                                <b>₹{amt.toLocaleString('en-IN')}</b>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {feeItems.some(i => i.type === 'SUPPLEMENTARY') && (
+                                                        <div style={{ fontSize: 10, color: '#b45309', marginTop: 4, fontStyle: 'italic' }}>
+                                                            * Supplementary exam fee will not deduct from course tuition balance.
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 
