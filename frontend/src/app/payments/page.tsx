@@ -832,6 +832,49 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 </div>
             )}
 
+            {/* Full-Screen Interactive QR Code & Image Viewer Modal */}
+            {viewImageModal && (
+                <div className="modal-overlay" onClick={() => setViewImageModal(null)} style={{ backdropFilter: 'blur(8px)', background: 'rgba(15, 23, 42, 0.85)', zIndex: 9999 }}>
+                    <div className="modal" style={{ maxWidth: 460, textAlign: 'center', background: 'var(--surface)', border: '2px solid var(--primary)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header" style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', padding: '14px 20px' }}>
+                            <div className="modal-title" style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
+                                🔍 {viewImageModal.title}
+                            </div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setViewImageModal(null)} style={{ fontSize: 18 }}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ background: '#ffffff', padding: 16, borderRadius: 16, border: '2px solid #0284c7', boxShadow: '0 10px 30px rgba(2, 132, 199, 0.25)', display: 'inline-block', marginBottom: 16 }}>
+                                <img
+                                    src={viewImageModal.url}
+                                    alt={viewImageModal.title}
+                                    style={{ width: '100%', maxWidth: 300, height: 'auto', display: 'block', borderRadius: 8 }}
+                                />
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary-dark, #0369a1)', marginBottom: 4 }}>
+                                M/S. SHREE SAI KHAJAGI AUDYOGIK PRASHIKSHAN SANSTHA
+                            </div>
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                                Scan with any UPI app: Google Pay, PhonePe, Paytm, BHIM, Amazon Pay
+                            </div>
+                            <div style={{ fontSize: 11, background: 'var(--surface-2)', padding: '6px 12px', borderRadius: 20, color: 'var(--text-muted)' }}>
+                                💡 Tip: Keep phone camera steady over the QR code to auto-detect payment amount
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ justifyContent: 'center', gap: 10, background: 'var(--surface-2)', borderTop: '1px solid var(--border)', padding: '12px 20px' }}>
+                            <a
+                                href={viewImageModal.url}
+                                download={viewImageModal.filename}
+                                className="btn btn-primary"
+                                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                            >
+                                📥 Download QR Code
+                            </a>
+                            <button className="btn btn-secondary" onClick={() => setViewImageModal(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Toast */}
             {toast && (
                 <div className="toast-wrap">
