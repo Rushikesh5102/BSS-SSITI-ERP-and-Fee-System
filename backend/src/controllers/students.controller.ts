@@ -74,17 +74,51 @@ export const studentsController = {
             where: { class: tradeClass }
         });
         const autoRollNumber = String(countInTrade + 1).padStart(2, '0');
-        const studentId = studentData.studentId || generateStudentId(tradeClass, autoRollNumber);
+        
+        let studentId = studentData.studentId;
+        if (!studentId) {
+            let candidate = generateStudentId(tradeClass, autoRollNumber);
+            let offset = 0;
+            while (await prisma.student.findUnique({ where: { studentId: candidate } })) {
+                offset++;
+                candidate = generateStudentId(tradeClass, countInTrade + 1 + offset);
+            }
+            studentId = candidate;
+        }
 
         // Create or find parent
         let parentId: string | undefined;
-        if (parent?.phone) {
-            const existingParent = await prisma.parent.findFirst({ where: { phone: parent.phone } });
+        if (parent && parent.phone && String(parent.phone).trim()) {
+            const cleanPhone = String(parent.phone).trim();
+            const cleanEmail = parent.email && String(parent.email).trim() ? String(parent.email).trim().toLowerCase() : undefined;
+            const cleanName = parent.name && String(parent.name).trim() ? String(parent.name).trim() : 'Parent / Guardian';
+
+            const existingParent = await prisma.parent.findFirst({ where: { phone: cleanPhone } });
             if (existingParent) {
                 parentId = existingParent.id;
             } else {
-                const newParent = await prisma.parent.create({ data: parent });
+                const newParent = await prisma.parent.create({
+                    data: {
+                        name: cleanName,
+                        phone: cleanPhone,
+                        email: cleanEmail,
+                    }
+                });
                 parentId = newParent.id;
+            }
+        }
+
+        // Resolve branchId with fallback
+        let branchId = studentData.branchId || req.user?.branchId;
+        if (!branchId) {
+            const firstBranch = await prisma.branch.findFirst();
+            if (firstBranch) {
+                branchId = firstBranch.id;
+            } else {
+                const newBranch = await prisma.branch.create({
+                    data: { name: 'Main Campus', address: 'Bhadrawati' }
+                });
+                branchId = newBranch.id;
             }
         }
 
@@ -97,15 +131,28 @@ export const studentsController = {
             }
         }
 
+        // Explicitly build the Prisma student payload without unknown properties
+        const cleanEmail = studentData.email && String(studentData.email).trim() ? String(studentData.email).trim().toLowerCase() : undefined;
+
         const student = await prisma.student.create({
             data: {
-                ...studentData,
-                dateOfBirth,
+                name: String(studentData.name || '').trim(),
                 class: tradeClass,
-                rollNumber: studentData.rollNumber || autoRollNumber,
+                section: studentData.section ? String(studentData.section).trim() : undefined,
+                rollNumber: studentData.rollNumber ? String(studentData.rollNumber).trim() : autoRollNumber,
                 studentId,
-                email: studentData.email || undefined,
-                branchId: studentData.branchId || req.user!.branchId,
+                email: cleanEmail,
+                gender: studentData.gender ? String(studentData.gender).trim() : undefined,
+                dateOfBirth,
+                address: studentData.address ? String(studentData.address).trim() : undefined,
+                photo: studentData.photo || undefined,
+                signature: studentData.signature || undefined,
+                category: studentData.category ? String(studentData.category).trim() : undefined,
+                bloodGroup: studentData.bloodGroup ? String(studentData.bloodGroup).trim() : undefined,
+                landline: studentData.landline ? String(studentData.landline).trim() : undefined,
+                educationDetails: studentData.educationDetails ? studentData.educationDetails : undefined,
+                submittedDocuments: studentData.submittedDocuments ? studentData.submittedDocuments : undefined,
+                branchId,
                 parentId,
             },
             include: { parent: true, branch: { select: { name: true } } },
@@ -113,44 +160,54 @@ export const studentsController = {
 
         // ─── Auto Assign Fee Structure if Selected During Admission ──────────────
         if (feeStructureId) {
-            const feeStruct = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
-            if (feeStruct) {
-                const finalAmount = customTotalAmount ? Number(customTotalAmount) : feeStruct.totalAmount;
-                await prisma.studentFee.upsert({
-                    where: {
-                        studentId_feeStructureId_academicYear: {
+            try {
+                const feeStruct = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
+                if (feeStruct) {
+                    const finalAmount = customTotalAmount ? Number(customTotalAmount) : feeStruct.totalAmount;
+                    await prisma.studentFee.upsert({
+                        where: {
+                            studentId_feeStructureId_academicYear: {
+                                studentId: student.id,
+                                feeStructureId,
+                                academicYear: feeStruct.academicYear,
+                            }
+                        },
+                        update: { totalAmount: finalAmount },
+                        create: {
                             studentId: student.id,
                             feeStructureId,
+                            totalAmount: finalAmount,
+                            paidAmount: 0,
                             academicYear: feeStruct.academicYear,
                         }
-                    },
-                    update: { totalAmount: finalAmount },
-                    create: {
-                        studentId: student.id,
-                        feeStructureId,
-                        totalAmount: finalAmount,
-                        paidAmount: 0,
-                        academicYear: feeStruct.academicYear,
-                    }
-                });
+                    });
+                }
+            } catch (feeErr) {
+                console.warn('Auto assign fee structure notice:', feeErr);
             }
         }
 
         // ─── Generate Student Login Account ────────────────────────────────────
-        const passwordHash = await bcrypt.hash(studentId, 12); // Default password is the generated Student ID
-        const generatedEmail = `${studentId.toLowerCase()}@student.saiiti.edu.in`;
-        const primaryEmail = studentData.email ? studentData.email.toLowerCase().trim() : generatedEmail;
+        const passwordHash = await bcrypt.hash(studentId, 12);
+        const generatedEmail = `${studentId.toLowerCase().replace(/[^a-z0-9]/g, '')}@student.saiiti.edu.in`;
+        const primaryEmail = cleanEmail || generatedEmail;
 
-        // Create the user role for the student so they can log in
-        await prisma.user.create({
-            data: {
-                name: student.name,
-                email: primaryEmail,
-                passwordHash,
-                role: 'STUDENT',
-                branchId: student.branchId,
+        try {
+            const existingUser = await prisma.user.findUnique({ where: { email: primaryEmail } });
+            if (!existingUser) {
+                await prisma.user.create({
+                    data: {
+                        name: student.name,
+                        email: primaryEmail,
+                        passwordHash,
+                        role: 'STUDENT',
+                        branchId: student.branchId,
+                    }
+                });
             }
-        });
+        } catch (userErr) {
+            console.warn('Student login creation notice:', userErr);
+        }
         
         // Return login credentials to frontend
         const loginDetails = {
@@ -159,7 +216,9 @@ export const studentsController = {
             defaultPassword: studentId
         };
 
-        await createAuditLog(req.user!.id, AuditAction.STUDENT_CREATED, 'Student', student.id, { studentId }, req.ip);
+        try {
+            await createAuditLog(req.user!.id, AuditAction.STUDENT_CREATED, 'Student', student.id, { studentId }, req.ip);
+        } catch {}
 
         res.status(201).json({ success: true, data: { ...student, loginDetails } });
     }),
@@ -197,22 +256,40 @@ export const studentsController = {
     update: asyncHandler(async (req: Request, res: Response) => {
         const { parent, ...updateData } = req.body;
 
-        const dataToUpdate: any = { ...updateData };
+        let dateOfBirth: Date | null | undefined = undefined;
         if ('dateOfBirth' in updateData) {
             if (updateData.dateOfBirth) {
                 const parsed = new Date(updateData.dateOfBirth);
-                dataToUpdate.dateOfBirth = !isNaN(parsed.getTime()) ? parsed : null;
+                dateOfBirth = !isNaN(parsed.getTime()) ? parsed : null;
             } else {
-                dataToUpdate.dateOfBirth = null;
+                dateOfBirth = null;
             }
+        }
+
+        const validFields = [
+            'name', 'class', 'section', 'rollNumber', 'email', 'gender',
+            'address', 'photo', 'signature', 'category', 'bloodGroup',
+            'landline', 'educationDetails', 'submittedDocuments', 'isActive', 'branchId'
+        ];
+
+        const sanitizedUpdate: any = {};
+        for (const field of validFields) {
+            if (field in updateData) {
+                sanitizedUpdate[field] = updateData[field] === '' ? null : updateData[field];
+            }
+        }
+        if (dateOfBirth !== undefined) {
+            sanitizedUpdate.dateOfBirth = dateOfBirth;
         }
 
         const student = await prisma.student.update({
             where: { id: req.params.id },
-            data: dataToUpdate,
+            data: sanitizedUpdate,
         });
 
-        await createAuditLog(req.user!.id, AuditAction.STUDENT_UPDATED, 'Student', student.id, updateData, req.ip);
+        try {
+            await createAuditLog(req.user!.id, AuditAction.STUDENT_UPDATED, 'Student', student.id, updateData, req.ip);
+        } catch {}
         res.json({ success: true, data: student });
     }),
 

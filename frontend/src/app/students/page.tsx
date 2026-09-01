@@ -280,16 +280,37 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             const effectiveSubcaste = form.isOtherSubcaste ? form.otherSubcaste : form.subcaste;
 
             const { data } = await api.post('/students', {
-                name: form.name, class: form.class, section: form.section, rollNumber: form.rollNumber,
-                photo: form.photo || undefined, signature: form.signature || undefined, email: form.email,
+                name: form.name.trim(),
+                class: form.class,
+                section: form.section ? form.section.trim() : undefined,
+                rollNumber: form.rollNumber ? form.rollNumber.trim() : undefined,
+                photo: form.photo || undefined,
+                signature: form.signature || undefined,
+                email: form.email && form.email.trim() ? form.email.trim() : undefined,
                 dateOfBirth: form.dateOfBirth || undefined,
-                category: form.category, subcaste: effectiveSubcaste, address: form.address,
-                bloodGroup: form.bloodGroup, landline: form.landline || undefined,
-                educationDetails: { ...form.educationDetails, dateOfBirth: form.dateOfBirth || undefined, subcaste: effectiveSubcaste, address: form.address, academicSession: form.academicSession },
+                category: form.category || 'OPEN',
+                address: form.address ? form.address.trim() : undefined,
+                bloodGroup: form.bloodGroup || undefined,
+                landline: form.landline ? form.landline.trim() : undefined,
+                educationDetails: {
+                    ...form.educationDetails,
+                    dateOfBirth: form.dateOfBirth || undefined,
+                    subcaste: effectiveSubcaste,
+                    address: form.address,
+                    academicSession: form.academicSession,
+                    tuitionFee: form.tuitionFee,
+                    examFee: form.examFee,
+                    dressMaterialFee: form.dressMaterialFee,
+                    otherFee: form.otherFee,
+                },
                 submittedDocuments: form.submittedDocuments,
                 feeStructureId: form.feeStructureId || (feeStructures[0]?.id || undefined),
                 customTotalAmount: amountInPaise,
-                parent: form.parentName ? { name: form.parentName, phone: form.parentPhone, email: form.parentEmail } : undefined,
+                parent: (form.parentName && form.parentName.trim()) || (form.parentPhone && form.parentPhone.trim()) ? {
+                    name: form.parentName.trim() || 'Parent / Guardian',
+                    phone: form.parentPhone ? form.parentPhone.trim() : undefined,
+                    email: form.parentEmail && form.parentEmail.trim() ? form.parentEmail.trim() : undefined
+                } : undefined,
             });
             const loginDetails = data.data?.loginDetails;
             setShowModal(false);

@@ -6,10 +6,12 @@ import { jsPDF } from 'jspdf';
 async function getLogoDataUrl(): Promise<string | null> {
     if (typeof window === 'undefined') return null;
     return new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(null), 1200);
         const img = new Image();
         img.crossOrigin = 'Anonymous';
         img.src = '/sai_iti_logo.png';
         img.onload = () => {
+            clearTimeout(timer);
             try {
                 const canvas = document.createElement('canvas');
                 canvas.width = img.naturalWidth || img.width;
@@ -23,7 +25,10 @@ async function getLogoDataUrl(): Promise<string | null> {
             } catch {}
             resolve(null);
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => {
+            clearTimeout(timer);
+            resolve(null);
+        };
     });
 }
 
@@ -33,10 +38,12 @@ async function getLogoDataUrl(): Promise<string | null> {
 async function getPrincipalStampDataUrl(): Promise<string | null> {
     if (typeof window === 'undefined') return null;
     return new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(null), 1200);
         const img = new Image();
         img.crossOrigin = 'Anonymous';
         img.src = '/sai_iti_principal_sign_stamp.jpg';
         img.onload = () => {
+            clearTimeout(timer);
             try {
                 const canvas = document.createElement('canvas');
                 canvas.width = img.naturalWidth || img.width;
@@ -50,7 +57,10 @@ async function getPrincipalStampDataUrl(): Promise<string | null> {
             } catch {}
             resolve(null);
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => {
+            clearTimeout(timer);
+            resolve(null);
+        };
     });
 }
 
