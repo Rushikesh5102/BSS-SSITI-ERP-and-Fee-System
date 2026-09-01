@@ -20,57 +20,143 @@ if (!fs.existsSync(RECEIPTS_DIR)) fs.mkdirSync(RECEIPTS_DIR, { recursive: true }
 
 export const paymentsController = {
     recordPayment: asyncHandler(async (req: Request, res: Response) => {
-        const { studentFeeId, amount, mode, transactionRef, chequeDate, bankName, remarks, feesFor } = req.body;
+        const {
+            studentFeeId,
+            amount,
+            mode,
+            transactionRef,
+            chequeDate,
+            bankName,
+            remarks,
+            feesFor,
+            isSupplementary,
+            supplementarySubject,
+            feeBreakdown
+        } = req.body;
 
         // Validate student fee exists
         const studentFee = await prisma.studentFee.findUnique({
             where: { id: studentFeeId },
             include: {
                 student: { include: { parent: true } },
-                feeStructure: { select: { name: true } },
+                feeStructure: { select: { name: true, branchId: true } },
             },
         });
         if (!studentFee) throw new AppError(404, 'Student fee record not found');
 
-        // Check if payment amount exceeds outstanding balance (e.g. for on-the-spot custom fee head)
-        const outstanding = studentFee.totalAmount - studentFee.paidAmount;
-        if (amount > outstanding) {
-            // Automatically increment totalAmount for custom / on-the-spot fee heads so transaction succeeds seamlessly
+        let targetStudentFeeId = studentFeeId;
+        let effectiveFeesFor = feesFor || studentFee.feeStructure?.name || 'Academic Fee';
+        let effectiveRemarks = remarks || (feesFor ? `Paid towards ${feesFor}` : 'Fee Payment Received');
+        let pdfTotalFee = studentFee.totalAmount;
+        let pdfTotalPaid = studentFee.paidAmount + amount;
+        let pdfBalanceDue = Math.max(0, studentFee.totalAmount - (studentFee.paidAmount + amount));
+
+        // ─── 1. SPECIAL CASE: INDEPENDENT SUPPLEMENTARY / BACK PAPER EXAM FEE ─────────
+        // If Supplementary Fee is selected, we MUST NOT deduct from the student's regular tuition/course fee balance!
+        if (isSupplementary) {
+            const student = studentFee.student;
+            const branchId = student.branchId || studentFee.feeStructure.branchId || '00000000-0000-0000-0000-000000000001';
+            const academicYear = studentFee.academicYear || '2024-2026';
+
+            // Find or create a dedicated Supplementary Fee Structure
+            let suppFeeStructure = await prisma.feeStructure.findFirst({
+                where: {
+                    name: { contains: 'Supplementary' },
+                    branchId,
+                }
+            });
+
+            if (!suppFeeStructure) {
+                suppFeeStructure = await prisma.feeStructure.create({
+                    data: {
+                        name: 'Supplementary / Back Paper Exam Fee',
+                        academicYear,
+                        class: student.class,
+                        totalAmount: amount,
+                        branchId,
+                    }
+                });
+            }
+
+            // Find or create dedicated Supplementary StudentFee assignment
+            let suppStudentFee = await prisma.studentFee.findFirst({
+                where: {
+                    studentId: student.id,
+                    feeStructureId: suppFeeStructure.id,
+                    academicYear,
+                }
+            });
+
+            if (!suppStudentFee) {
+                suppStudentFee = await prisma.studentFee.create({
+                    data: {
+                        studentId: student.id,
+                        feeStructureId: suppFeeStructure.id,
+                        academicYear,
+                        totalAmount: amount,
+                        paidAmount: amount,
+                    }
+                });
+            } else {
+                suppStudentFee = await prisma.studentFee.update({
+                    where: { id: suppStudentFee.id },
+                    data: {
+                        totalAmount: { increment: amount },
+                        paidAmount: { increment: amount },
+                    }
+                });
+            }
+
+            targetStudentFeeId = suppStudentFee.id;
+            effectiveFeesFor = `Supplementary / Back Paper Exam Fee: ${supplementarySubject || 'All Subjects'}`;
+            effectiveRemarks = remarks || `Supplementary Exam Fee - ${supplementarySubject || 'Exam Back Paper'}`;
+            pdfTotalFee = suppStudentFee.totalAmount;
+            pdfTotalPaid = suppStudentFee.paidAmount;
+            pdfBalanceDue = 0;
+        } else {
+            // ─── 2. REGULAR / MULTI-COMPONENT COURSE FEE PAYMENT ────────────────────────
+            // Check if payment amount exceeds outstanding balance (e.g. for on-the-spot custom fee head)
+            const outstanding = studentFee.totalAmount - studentFee.paidAmount;
+            if (amount > outstanding) {
+                // Automatically increment totalAmount for custom / on-the-spot fee heads so transaction succeeds seamlessly
+                await prisma.studentFee.update({
+                    where: { id: studentFeeId },
+                    data: { totalAmount: { increment: amount - outstanding } },
+                });
+                studentFee.totalAmount += (amount - outstanding);
+            }
+
+            // Update paid amount for regular student fee
             await prisma.studentFee.update({
                 where: { id: studentFeeId },
-                data: { totalAmount: { increment: amount - outstanding } },
+                data: { paidAmount: { increment: amount } },
             });
-            studentFee.totalAmount += (amount - outstanding);
+
+            pdfTotalFee = studentFee.totalAmount;
+            pdfTotalPaid = studentFee.paidAmount + amount;
+            pdfBalanceDue = Math.max(0, studentFee.totalAmount - pdfTotalPaid);
         }
 
         // Record payment
         const payment = await prisma.payment.create({
             data: {
-                studentFeeId,
+                studentFeeId: targetStudentFeeId,
                 amount,
                 mode,
                 status: PaymentStatus.VERIFIED, // Offline payments are auto-verified
                 transactionRef,
                 chequeDate: chequeDate ? new Date(chequeDate) : null,
                 bankName,
-                remarks: remarks || (feesFor ? `Paid towards ${feesFor}` : 'Fee Payment Received'),
+                remarks: effectiveRemarks,
                 recordedById: req.user!.id,
                 approvedById: req.user!.id,
                 approvedAt: new Date(),
             },
         });
 
-        // Update paid amount
-        await prisma.studentFee.update({
-            where: { id: studentFeeId },
-            data: { paidAmount: { increment: amount } },
-        });
-
         // Generate receipt
         const receiptCount = await prisma.receipt.count();
         const receiptNumber = generateReceiptNumber(receiptCount + 1);
-        const newPaidAmount = studentFee.paidAmount + amount;
-        const balanceDue = Math.max(0, studentFee.totalAmount - newPaidAmount);
 
         const pdfBuffer = await generateReceiptPdf({
             receiptNumber,
@@ -81,15 +167,18 @@ export const paymentsController = {
             parentPhone: studentFee.student.parent?.phone,
             paymentDate: new Date(),
             amount,
-            totalFee: studentFee.totalAmount,
-            totalPaid: newPaidAmount,
-            balanceDue,
+            totalFee: pdfTotalFee,
+            totalPaid: pdfTotalPaid,
+            balanceDue: pdfBalanceDue,
             paymentMode: mode,
             transactionRef,
-            feesFor: feesFor || studentFee.feeStructure?.name || 'Academic Fee',
+            feesFor: effectiveFeesFor,
             bankName,
-            remarks: remarks || (feesFor ? `Paid towards ${feesFor}` : 'Fee Payment Received'),
+            remarks: effectiveRemarks,
             clerkName: (req.user as any)?.name || 'Fee Counter Cashier',
+            isSupplementary: Boolean(isSupplementary),
+            supplementarySubject: supplementarySubject || undefined,
+            feeBreakdown: Array.isArray(feeBreakdown) ? feeBreakdown : undefined,
         });
 
         // Save PDF to disk
@@ -108,7 +197,7 @@ export const paymentsController = {
 
         // Audit log
         await createAuditLog(req.user!.id, AuditAction.PAYMENT_RECORDED, 'Payment', payment.id, {
-            amount, mode, studentFeeId, receiptNumber,
+            amount, mode, studentFeeId: targetStudentFeeId, receiptNumber, isSupplementary: Boolean(isSupplementary),
         }, req.ip);
 
         await createAuditLog(req.user!.id, AuditAction.RECEIPT_GENERATED, 'Receipt', receipt.id, { receiptNumber }, req.ip);

@@ -22,6 +22,9 @@ interface ReceiptData {
     bankName?: string;
     remarks?: string;
     clerkName?: string;
+    isSupplementary?: boolean;
+    supplementarySubject?: string;
+    feeBreakdown?: Array<{ name: string; amount: number }>;
 }
 
 /**
@@ -60,6 +63,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
     const primary = rgb(0.07, 0.17, 0.35);    // Premium Navy Blue (#122b59)
     const accent = rgb(0.02, 0.52, 0.78);     // Brand Sky Blue (#0284c7)
+    const gold = rgb(0.85, 0.65, 0.13);       // Supplementary Gold (#d97706)
     const gray = rgb(0.35, 0.40, 0.48);
     const lightGray = rgb(0.95, 0.96, 0.98);
     const black = rgb(0.06, 0.09, 0.16);
@@ -87,9 +91,11 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         page.drawText(`Ph: ${config.school.phone} | Email: ${config.school.email}`, { x: textX, y: height - 72, font: regularFont, size: 7.5, color: rgb(0.8, 0.8, 0.9) });
         page.drawText(copyLabel.toUpperCase(), { x: textX, y: height - 86, font: boldFont, size: 8, color: accent });
 
-        page.drawRectangle({ x: xOffset + 235, y: height - 130, width: 140, height: 26, color: accent });
-        page.drawText('OFFICIAL FEE RECEIPT', { x: xOffset + 242, y: height - 116, font: boldFont, size: 8, color: white });
-        page.drawText(data.receiptNumber, { x: xOffset + 242, y: height - 126, font: regularFont, size: 7, color: white });
+        const headerBadgeColor = data.isSupplementary ? gold : accent;
+        const headerBadgeTitle = data.isSupplementary ? 'SUPPLEMENTARY EXAM RECEIPT' : 'OFFICIAL FEE RECEIPT';
+        page.drawRectangle({ x: xOffset + 215, y: height - 130, width: 160, height: 26, color: headerBadgeColor });
+        page.drawText(headerBadgeTitle, { x: xOffset + 222, y: height - 116, font: boldFont, size: 7.5, color: white });
+        page.drawText(data.receiptNumber, { x: xOffset + 222, y: height - 126, font: regularFont, size: 7, color: white });
 
         page.drawLine({ start: { x: leftX, y: height - 142 }, end: { x: xOffset + 375, y: height - 142 }, thickness: 0.75, color: primary });
 
@@ -114,44 +120,63 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             drawField('Bank Name', data.bankName, rightX, y);
         }
 
-        if (data.parentName) {
+        if (data.isSupplementary) {
+            y -= 26;
+            drawField('Back Paper / Subject', data.supplementarySubject || 'NCVT / DVET Back Paper Exam', leftX, y);
+            drawField('Fees Paid Towards', 'Supplementary / Back Paper Exam Fee', rightX, y);
+        } else if (data.parentName) {
             y -= 26;
             drawField("Parent's Name", data.parentName, leftX, y);
-            drawField("Fees Paid Towards", data.feesFor || 'Academic Fee', rightX, y);
+            drawField("Fees Paid Towards", data.feesFor || 'Academic Course Fee', rightX, y);
         } else {
             y -= 26;
-            drawField("Fees Paid Towards", data.feesFor || 'Academic Fee', leftX, y);
+            drawField("Fees Paid Towards", data.feesFor || 'Academic Course Fee', leftX, y);
         }
 
         // ─── FEE BREAKDOWN & BALANCE BREAKDOWN TABLE ─────────────────────────────
         y -= 30;
+        const tableTitle = data.isSupplementary
+            ? 'SUPPLEMENTARY EXAM LEDGER (INDEPENDENT CHARGE)'
+            : `FEE BREAKDOWN & ACCOUNT LEDGER — ${(data.feesFor || 'ACADEMIC FEE').substring(0, 32).toUpperCase()}`;
         page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 18, color: primary });
-        page.drawText(`FEE BREAKDOWN & ACCOUNT LEDGER — ${(data.feesFor || 'ACADEMIC FEE').toUpperCase()}`, { x: leftX + 10, y: y + 1, font: boldFont, size: 7.5, color: white });
+        page.drawText(tableTitle, { x: leftX + 10, y: y + 1, font: boldFont, size: 7.5, color: white });
 
-        // Total Course Fee Row
+        // Total Course Fee / Supplementary Notice Row
         y -= 18;
         const totalFeePaise = data.totalFee || data.amount;
         const totalPaidPaise = data.totalPaid || data.amount;
         const balanceDuePaise = data.balanceDue !== undefined ? data.balanceDue : Math.max(0, totalFeePaise - totalPaidPaise);
 
         page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 16, color: lightGray });
-        page.drawText(`Total Agreed Course Fee (${data.feesFor || 'Trade Fee'}):`, { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-        page.drawText(formatCurrencyForPdf(totalFeePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
+        if (data.isSupplementary) {
+            page.drawText('Charge Type: Independent Supplementary Exam Fee (Tuition Balance Unaffected)', { x: leftX + 10, y: y - 2, font: boldFont, size: 7, color: primary });
+            page.drawText(formatCurrencyForPdf(data.amount), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
+        } else {
+            page.drawText(`Total Agreed Course Fee (${data.feesFor?.substring(0, 28) || 'Trade Fee'}):`, { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(totalFeePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
+        }
 
         // Amount Paid In This Receipt
         y -= 20;
-        page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 20, color: accent });
-        page.drawText('AMOUNT PAID IN THIS RECEIPT:', { x: leftX + 10, y: y + 1, font: boldFont, size: 8, color: white });
+        page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 20, color: data.isSupplementary ? gold : accent });
+        page.drawText(data.isSupplementary ? 'SUPPLEMENTARY EXAM AMOUNT PAID:' : 'AMOUNT PAID IN THIS RECEIPT:', { x: leftX + 10, y: y + 1, font: boldFont, size: 8, color: white });
         page.drawText(formatCurrencyForPdf(data.amount), { x: xOffset + 290, y: y + 1, font: boldFont, size: 9.5, color: white });
 
         // Total Paid & Balance Due Summary
         y -= 18;
         page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 16, color: lightGray });
-        page.drawText('Total Fee Paid Till Date:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-        page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 130, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+        if (data.isSupplementary) {
+            page.drawText('Status:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText('✅ Supplementary Exam Fee Cleared', { x: leftX + 50, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+            page.drawText('Regular Course Dues:', { x: leftX + 205, y: y - 2, font: regularFont, size: 7.5, color: gray });
+            page.drawText('Maintained Separately', { x: xOffset + 285, y: y - 2, font: boldFont, size: 7, color: primary });
+        } else {
+            page.drawText('Total Fee Paid Till Date:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 130, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
 
-        page.drawText('Remaining Balance Due:', { x: leftX + 195, y: y - 2, font: boldFont, size: 7.5, color: black });
-        page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
+            page.drawText('Remaining Balance Due:', { x: leftX + 195, y: y - 2, font: boldFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
+        }
 
         // Amount in Words
         y -= 16;

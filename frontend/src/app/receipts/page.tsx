@@ -202,19 +202,32 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                 )}
                             </div>
 
-                            {/* ─── Remarks / Notes Box (Requirement 1) ────────────────────── */}
-                            <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
-                                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: '#b45309', marginBottom: 2 }}>
-                                    📝 Payment Remarks / Notes:
+                            {/* ─── Remarks / Notes & Itemized Breakdown ──────────────────── */}
+                            <div style={{
+                                background: viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') ? '#fffbeb' : '#fef3c7',
+                                border: `1px solid ${viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') ? '#f59e0b' : '#f59e0b'}`,
+                                borderRadius: 8, padding: '10px 14px', marginBottom: 16
+                            }}>
+                                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: '#b45309', marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>{viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') ? '🛡️ Supplementary / Back Paper Exam Details:' : '📝 Payment Fee Breakdown & Notes:'}</span>
+                                    {viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') && (
+                                        <span className="badge" style={{ background: '#d97706', color: '#ffffff', fontSize: 10 }}>Independent Exam Fee</span>
+                                    )}
                                 </div>
                                 <div style={{ fontSize: 13, color: '#78350f', fontWeight: 600 }}>
                                     {viewReceipt.payment?.remarks || 'Fee Payment Received with Thanks.'}
                                 </div>
+                                {viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') && (
+                                    <div style={{ fontSize: 11, color: '#92400e', marginTop: 4 }}>
+                                        * Note: Back Paper Examination Fee is an independent assessment charge and does not reduce or affect standard course tuition dues.
+                                    </div>
+                                )}
                             </div>
 
-                            {/* ─── Total and Balance Breakdown (Requirement 3) ─────────────── */}
+                            {/* ─── Total and Balance Breakdown ─────────────── */}
                             {(() => {
                                 const sf = viewReceipt.payment?.studentFee || {};
+                                const isSupp = viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') || sf.feeStructure?.name?.toLowerCase().includes('supplementary');
                                 const totalPaise = sf.totalAmount || (viewReceipt.payment?.amount || 0);
                                 const paidPaise = sf.paidAmount || (viewReceipt.payment?.amount || 0);
                                 const currentPaise = viewReceipt.payment?.amount || 0;
@@ -223,26 +236,40 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                 return (
                                     <div style={{ background: 'var(--surface-2)', borderRadius: 10, padding: 14, marginBottom: 20 }}>
                                         <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 8, borderBottom: '1px solid var(--border)', paddingBottom: 4 }}>
-                                            💰 Account Ledger Breakdown
+                                            💰 {isSupp ? 'Supplementary Exam Fee Ledger' : 'Account Ledger Breakdown'}
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
-                                            <span className="text-muted">Total Agreed Course Fee:</span>
-                                            <b>{formatRupees(totalPaise)}</b>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14, color: 'var(--primary)', fontWeight: 800, borderTop: '1px dashed var(--border)', borderBottom: '1px dashed var(--border)', margin: '4px 0' }}>
-                                            <span>Amount Paid in this Receipt:</span>
+                                        
+                                        {!isSupp && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
+                                                <span className="text-muted">Total Agreed Course Fee:</span>
+                                                <b>{formatRupees(totalPaise)}</b>
+                                            </div>
+                                        )}
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14, color: isSupp ? '#b45309' : 'var(--primary)', fontWeight: 800, borderTop: '1px dashed var(--border)', borderBottom: '1px dashed var(--border)', margin: '4px 0' }}>
+                                            <span>{isSupp ? 'Supplementary Exam Amount Paid:' : 'Amount Paid in this Receipt:'}</span>
                                             <span>{formatRupees(currentPaise)}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
-                                            <span className="text-muted">Total Fee Paid Till Date:</span>
-                                            <b style={{ color: '#10b981' }}>{formatRupees(paidPaise)}</b>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
-                                            <span className="text-muted">Remaining Balance Due:</span>
-                                            <b style={{ color: balancePaise > 0 ? '#ef4444' : '#10b981', fontSize: 14 }}>
-                                                {balancePaise > 0 ? formatRupees(balancePaise) : '✅ Fully Cleared (₹0)'}
-                                            </b>
-                                        </div>
+
+                                        {isSupp ? (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
+                                                <span className="text-muted">Supplementary Exam Status:</span>
+                                                <b style={{ color: '#10b981' }}>✅ Fully Paid & Cleared</b>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
+                                                    <span className="text-muted">Total Course Fee Paid Till Date:</span>
+                                                    <b style={{ color: '#10b981' }}>{formatRupees(paidPaise)}</b>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
+                                                    <span className="text-muted">Remaining Course Balance:</span>
+                                                    <b style={{ color: balancePaise > 0 ? '#ef4444' : '#10b981', fontSize: 14 }}>
+                                                        {balancePaise > 0 ? formatRupees(balancePaise) : '✅ Fully Cleared (₹0)'}
+                                                    </b>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 );
                             })()}
