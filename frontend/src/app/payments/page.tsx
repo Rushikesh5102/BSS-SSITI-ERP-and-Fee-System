@@ -7,7 +7,6 @@ import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
 
 const PAYMENT_MODES = ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'DD', 'CARD', 'NET_BANKING', 'RAZORPAY', 'OTHER'];
@@ -40,11 +39,12 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [selectedFee, setSelectedFee] = useState<any>(null);
     
+    // Clean initial fee items - strictly no pre-filled amounts
     const [feeItems, setFeeItems] = useState<PaymentFeeItem[]>([
         { type: 'TUITION', amount: '' }
     ]);
 
-    // Split / Multi-Mode Payment State
+    // Split / Multi-Mode Payment State - clean empty amounts
     const [isSplitPayment, setIsSplitPayment] = useState(false);
     const [splitItems, setSplitItems] = useState<SplitPaymentItem[]>([
         { mode: 'CASH', amount: '', transactionRef: '' },
@@ -67,44 +67,10 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [studentSearch, setStudentSearch] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
 
-    // Auto-Recover Draft State for Payment Form
-    const [hasPaymentDraft, setHasPaymentDraft] = useState(false);
-    const [paymentDraftTime, setPaymentDraftTime] = useState<string | null>(null);
-
+    // Ensure any legacy draft cache is purged on load
     useEffect(() => {
-        const saved = safeStorage.get<any>('draft_fee_payment_v3', null);
-        if (saved && (saved.form?.amount || saved.form?.transactionRef || (saved.feeItems && saved.feeItems.length > 0))) {
-            setHasPaymentDraft(true);
-            setPaymentDraftTime(saved.savedAt);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (form.amount || form.transactionRef || feeItems.some(i => i.amount)) {
-            const timer = setTimeout(() => {
-                safeStorage.set('draft_fee_payment_v3', {
-                    feeItems,
-                    form,
-                    savedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                });
-            }, 400);
-            return () => clearTimeout(timer);
-        }
-    }, [form, feeItems]);
-
-    const handleRestorePaymentDraft = () => {
-        const saved = safeStorage.get<any>('draft_fee_payment_v3', null);
-        if (saved) {
-            if (saved.feeItems) setFeeItems(saved.feeItems);
-            if (saved.form) setForm(saved.form);
-            setHasPaymentDraft(false);
-        }
-    };
-
-    const handleDiscardPaymentDraft = () => {
         safeStorage.remove('draft_fee_payment_v3');
-        setHasPaymentDraft(false);
-    };
+    }, []);
 
     // Quick Add Student Modal State
     const [showQuickAddModal, setShowQuickAddModal] = useState(false);
@@ -240,11 +206,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         else if (!usedTypes.includes('OTHER')) nextType = 'OTHER';
         else nextType = 'CUSTOM';
 
-        let defaultAmt = '';
-        if (nextType === 'DRESS_MATERIAL') defaultAmt = getDressMaterialAmount().toString();
-        else if (nextType === 'EXAM') defaultAmt = getExamAmount().toString();
-
-        const updated: PaymentFeeItem[] = [...feeItems, { type: nextType, amount: defaultAmt, name: '', subject: '' }];
+        const updated: PaymentFeeItem[] = [...feeItems, { type: nextType, amount: '', name: '', subject: '' }];
         setFeeItems(updated);
         updatePaymentTotals(updated);
     };
@@ -259,20 +221,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const updateFeeItem = (idx: number, field: keyof PaymentFeeItem, val: string) => {
         const updated = feeItems.map((item, i) => {
             if (i !== idx) return item;
-            const next = { ...item, [field]: val };
-            if (field === 'type') {
-                if (!item.amount || item.amount === '0') {
-                    if (val === 'TUITION') {
-                        const due = selectedFee ? (selectedFee.totalAmount - selectedFee.paidAmount) / 100 : getTuitionAmount();
-                        next.amount = due > 0 ? due.toString() : '';
-                    } else if (val === 'DRESS_MATERIAL') {
-                        next.amount = getDressMaterialAmount().toString();
-                    } else if (val === 'EXAM') {
-                        next.amount = getExamAmount().toString();
-                    }
-                }
-            }
-            return next;
+            return { ...item, [field]: val };
         });
         setFeeItems(updated);
         updatePaymentTotals(updated);
@@ -314,15 +263,21 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         if (student && student.studentFees && student.studentFees.length > 0) {
             const sf = student.studentFees[0];
             setSelectedFee(sf);
-            const due = (sf.totalAmount - sf.paidAmount) / 100;
             
+            // Clean initial state with zero prefilled numbers
             const initial: PaymentFeeItem[] = [
-                { type: 'TUITION', amount: due > 0 ? due.toString() : '' }
+                { type: 'TUITION', amount: '' }
             ];
             setFeeItems(initial);
-            updatePaymentTotals(initial);
+            setForm(f => ({ ...f, amount: '', remarks: '' }));
+            setSplitItems([
+                { mode: 'CASH', amount: '', transactionRef: '' },
+                { mode: 'UPI', amount: '', transactionRef: '' }
+            ]);
         } else {
             setSelectedFee(null);
+            setFeeItems([{ type: 'TUITION', amount: '' }]);
+            setForm(f => ({ ...f, amount: '', remarks: '' }));
         }
         setResult(null);
     };
@@ -454,7 +409,6 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             setResult(data.data);
             showToast('✅ Payment recorded! Receipt generated.');
             safeStorage.remove('draft_fee_payment_v3');
-            setHasPaymentDraft(false);
             
             // Reset form
             setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', chequeDate: '', remarks: '' });
@@ -588,13 +542,6 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                     <div className="card-header"><div className="card-title">Step 2: Payment Allocation & Fee Head Breakdown</div></div>
                                     <form onSubmit={handleSubmit}>
                                         <div className="card-body">
-                                            <AutoRecoverBanner
-                                                show={hasPaymentDraft}
-                                                savedAt={paymentDraftTime}
-                                                onRestore={handleRestorePaymentDraft}
-                                                onDiscard={handleDiscardPaymentDraft}
-                                            />
-
                                             {/* Balance summary */}
                                             <div style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 14, marginBottom: 16, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, textAlign: 'center' }}>
                                                 {[
@@ -780,12 +727,10 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                             type="button"
                                                             onClick={() => {
                                                                 setIsSplitPayment(true);
-                                                                if (!splitItems[0].amount && form.amount) {
-                                                                    setSplitItems([
-                                                                        { mode: 'CASH', amount: form.amount, transactionRef: '' },
-                                                                        { mode: 'UPI', amount: '', transactionRef: '' }
-                                                                    ]);
-                                                                }
+                                                                setSplitItems([
+                                                                    { mode: 'CASH', amount: '', transactionRef: '' },
+                                                                    { mode: 'UPI', amount: '', transactionRef: '' }
+                                                                ]);
                                                             }}
                                                             style={{
                                                                 padding: '5px 12px',
@@ -804,11 +749,16 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                     </div>
                                                 </div>
 
-                                                {/* Total Payment Amount Header Field */}
+                                                {/* Total Payment Amount Header Field - Synchronized with Fee Components */}
                                                 <div className="form-group" style={{ marginBottom: 14 }}>
-                                                    <label className="form-label font-bold" style={{ color: 'var(--primary)', fontSize: 12 }}>
-                                                        Total Payment Amount (₹ INR) <span className="required">*</span>
-                                                    </label>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                        <label className="form-label font-bold" style={{ color: 'var(--primary)', fontSize: 12, margin: 0 }}>
+                                                            {isSplitPayment ? 'Total Amount to Split (from Component Allocation above) (₹ INR)' : 'Total Payment Amount (₹ INR)'} <span className="required">*</span>
+                                                        </label>
+                                                        <span className="text-xs text-muted">
+                                                            {isSplitPayment ? '🔒 Auto-synced from Fee Heads' : 'Derived from Fee Heads above'}
+                                                        </span>
+                                                    </div>
                                                     <input 
                                                         className="form-control" 
                                                         type="number" 
@@ -816,9 +766,16 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         min="1"
                                                         required 
                                                         value={form.amount}
+                                                        readOnly={isSplitPayment}
                                                         onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
-                                                        placeholder="Total Amount in ₹" 
-                                                        style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent)', background: 'var(--surface)' }}
+                                                        placeholder="Enter fee component amount(s) above" 
+                                                        style={{ 
+                                                            fontSize: 16, 
+                                                            fontWeight: 800, 
+                                                            color: 'var(--accent)', 
+                                                            background: isSplitPayment ? 'var(--surface-2)' : 'var(--surface)',
+                                                            cursor: isSplitPayment ? 'not-allowed' : 'text'
+                                                        }}
                                                     />
                                                 </div>
 
@@ -891,13 +848,33 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 {/* SPLIT / MULTI-MODE PAYMENT VIEW */}
                                                 {isSplitPayment && (
                                                     <div style={{ background: 'var(--surface-2)', border: '1.5px solid var(--accent)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>
-                                                                🔀 Multi-Mode Split Breakdown ({splitItems.length} Modes)
-                                                            </span>
-                                                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                                                Specify how much was paid in Cash vs Online/UPI
-                                                            </span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+                                                            <div>
+                                                                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    🔀 Multi-Mode Split Breakdown ({splitItems.length} Modes)
+                                                                </span>
+                                                                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+                                                                    Split the total <b>₹{(parseFloat(form.amount) || 0).toLocaleString('en-IN')}</b> across payment modes in your own way.
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                {(() => {
+                                                                    const targetTotal = parseFloat(form.amount) || 0;
+                                                                    const currentSplitSum = splitItems.reduce((acc, sp) => acc + (parseFloat(sp.amount) || 0), 0);
+                                                                    const diff = targetTotal - currentSplitSum;
+
+                                                                    if (targetTotal <= 0) {
+                                                                        return <span className="badge badge-warning">⚠️ Enter fee component amounts above</span>;
+                                                                    }
+                                                                    if (Math.abs(diff) <= 0.01 && currentSplitSum > 0) {
+                                                                        return <span className="badge badge-success" style={{ fontWeight: 700 }}>✅ Split matches total (₹{currentSplitSum.toLocaleString('en-IN')})</span>;
+                                                                    }
+                                                                    if (diff > 0) {
+                                                                        return <span className="badge badge-warning" style={{ fontWeight: 700 }}>⚠️ ₹{diff.toLocaleString('en-IN')} remaining to split</span>;
+                                                                    }
+                                                                    return <span className="badge badge-danger" style={{ fontWeight: 700 }}>❌ Exceeds by ₹{Math.abs(diff).toLocaleString('en-IN')}</span>;
+                                                                })()}
+                                                            </div>
                                                         </div>
 
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1100,7 +1077,17 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                         </div>
 
                                         <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }}>
-                                            <button type="submit" className="btn btn-primary btn-lg" disabled={saving || !form.amount} style={{ width: '100%', justifyContent: 'center' }}>
+                                            <button 
+                                                type="submit" 
+                                                className="btn btn-primary btn-lg" 
+                                                disabled={
+                                                    saving || 
+                                                    !form.amount || 
+                                                    (parseFloat(form.amount) <= 0) ||
+                                                    (isSplitPayment && Math.abs(splitItems.reduce((acc, sp) => acc + (parseFloat(sp.amount) || 0), 0) - (parseFloat(form.amount) || 0)) > 0.01)
+                                                } 
+                                                style={{ width: '100%', justifyContent: 'center' }}
+                                            >
                                                 {saving ? '⏳ Processing & Generating Receipt...' : `✅ Record Payment (₹${(parseFloat(form.amount) || 0).toLocaleString('en-IN')})`}
                                             </button>
 

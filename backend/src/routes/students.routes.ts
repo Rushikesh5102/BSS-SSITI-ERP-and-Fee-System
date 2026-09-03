@@ -20,7 +20,7 @@ router.post('/', authorize(Role.ADMIN, Role.ACCOUNTANT), studentsController.crea
 // PUT /students/:id - Admin and Accountant only
 router.put('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT), studentsController.update);
 
-// DELETE /students/:id - Admin, SuperAdmin, and Developer
-router.delete('/:id', authorize(Role.ADMIN, Role.SUPERADMIN, Role.DEVELOPER), studentsController.delete);
+// DELETE /students/:id - Admin, SuperAdmin, Developer, and Accountant
+router.delete('/:id', authorize(Role.ADMIN, Role.SUPERADMIN, Role.DEVELOPER, Role.ACCOUNTANT), studentsController.delete);
 
 export default router;

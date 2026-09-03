@@ -1334,7 +1334,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                 </div>
                             </div>
                             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
+                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT'].includes(effectiveRole || '') && (
                                     <button 
                                         type="button" 
                                         className="btn btn-danger btn-sm" 
