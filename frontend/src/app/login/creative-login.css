@@ -20,7 +20,7 @@ html.dark .creative-login-wrapper {
 /* Unboxed Majestic Brand Header */
 .unboxed-brand-header {
     position: fixed;
-    top: 24px;
+    top: 18px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -33,9 +33,9 @@ html.dark .creative-login-wrapper {
 }
 
 .unboxed-brand-header .free-logo {
-    width: 82px;
-    height: 82px;
-    margin-bottom: 6px;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -54,7 +54,7 @@ html.dark .creative-login-wrapper {
 }
 
 .unboxed-brand-header .brand-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: 0.5px;
@@ -63,18 +63,18 @@ html.dark .creative-login-wrapper {
 }
 
 .unboxed-brand-header .brand-subtitle {
-    font-size: 13px;
+    font-size: 12.5px;
     color: #bae6fd;
     font-weight: 700;
-    margin: 3px 0 0;
+    margin: 2px 0 0;
     letter-spacing: 0.4px;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 
-/* Main Machine Stage Container */
+/* Main Machine Stage Container (Anchored at 40% so the entire machine and bottom car track stay completely visible) */
 .machine-container {
     position: fixed;
-    top: 54%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 1000px;

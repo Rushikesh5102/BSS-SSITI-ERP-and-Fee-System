@@ -73,18 +73,16 @@ export default function LoginPage() {
     // Responsive scaling to fit viewports
     const scaleToFit = () => {
         if (!containerRef.current || !window.gsap) return;
-        const h = 860;
-        if (window.innerHeight < h) {
-            window.gsap.set(containerRef.current, {
-                scale: Math.max(0.58, window.innerHeight / h),
-                transformOrigin: "50% 50%"
-            });
-        } else {
-            window.gsap.set(containerRef.current, {
-                scale: 1,
-                transformOrigin: "50% 50%"
-            });
-        }
+        const totalNeededHeight = 880;
+        const totalNeededWidth = 1020;
+        const scaleH = window.innerHeight / totalNeededHeight;
+        const scaleW = window.innerWidth / totalNeededWidth;
+        const targetScale = Math.min(1, scaleH, scaleW);
+
+        window.gsap.set(containerRef.current, {
+            scale: Math.max(0.52, targetScale),
+            transformOrigin: "50% 50%"
+        });
     };
 
     // Pulling Wire Timeline Creator (Calculates fluid physics and wire attachment)
