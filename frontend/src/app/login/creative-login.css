@@ -1,26 +1,29 @@
-/* Clean, Premium Beige-Blue & Royal Blue Creative Mechanical Login Form */
+/* Exact, Pixel-Perfect Creative Mechanical Login Form Styles */
+html,
+body {
+    padding: 0;
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #FAF9F6;
+}
+
 .creative-login-wrapper {
     min-height: 100vh;
     width: 100vw;
     position: relative;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #0f172a 100%);
-    transition: background 0.3s ease;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #FAF9F6;
+    transition: background-color 0.3s ease;
 }
 
 html.dark .creative-login-wrapper {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%);
+    background-color: #0f172a;
 }
 
 /* Unboxed Majestic Brand Header */
 .unboxed-brand-header {
     position: fixed;
-    top: 24px;
+    top: 16px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -33,9 +36,9 @@ html.dark .creative-login-wrapper {
 }
 
 .unboxed-brand-header .free-logo {
-    width: 82px;
-    height: 82px;
-    margin-bottom: 6px;
+    width: 68px;
+    height: 68px;
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -50,84 +53,87 @@ html.dark .creative-login-wrapper {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 30px rgba(56, 189, 248, 0.85));
+    filter: drop-shadow(0 2px 10px rgba(56, 189, 248, 0.5));
 }
 
 .unboxed-brand-header .brand-title {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 800;
-    color: #ffffff;
+    color: #0f172a;
     letter-spacing: 0.5px;
     margin: 0;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+html.dark .unboxed-brand-header .brand-title {
+    color: #f8fafc;
 }
 
 .unboxed-brand-header .brand-subtitle {
-    font-size: 13px;
-    color: #bae6fd;
-    font-weight: 700;
-    margin: 3px 0 0;
-    letter-spacing: 0.4px;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    margin: 1px 0 0;
+    letter-spacing: 0.3px;
 }
 
-/* Main Machine Stage Container */
-.machine-container {
+html.dark .unboxed-brand-header .brand-subtitle {
+    color: #94a3b8;
+}
+
+/* Stage Container (Positioned at 38% exactly matching reference) */
+.stage-container {
     position: fixed;
-    top: 54%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 1000px;
-    height: 1000px;
-    pointer-events: none;
+    width: 0;
+    height: 0;
 }
 
-/* SVG Line Art Layer (Crisp White against Blue background) */
-.machine-svg {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 1000px;
-    height: 1000px;
-    pointer-events: none;
-    stroke-width: 1.5px;
-    stroke: #ffffff;
-    fill: none;
-    transition: stroke 0.3s ease;
-    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.3));
-}
-
-html.dark .machine-svg {
-    stroke: #e2e8f0;
-}
-
-.machine-svg [fill="#000"],
-.machine-svg [fill="#000000"],
-.machine-svg [fill="#231f20"] {
-    fill: #38bdf8 !important;
-}
-
-.machine-svg [fill="#fff"],
-.machine-svg [fill="#ffffff"] {
-    fill: #ffffff !important;
-}
-
-.machine-svg [fill="#cccccc"] {
-    fill: #94a3b8 !important;
-}
-
-/* Exact Form Geometry (270px width, 60px row intervals) with Warm Beige Inputs */
+/* SVG Line Art Layer & Form Alignment */
+svg.machine-svg,
 .form-container {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+.form-container {
     width: 270px;
     pointer-events: auto;
     z-index: 10;
 }
 
+svg.machine-svg {
+    width: 1000px;
+    pointer-events: none;
+    stroke-width: 1.2px;
+    stroke: #000000;
+    fill: none;
+    transition: stroke 0.3s ease;
+}
+
+html.dark svg.machine-svg {
+    stroke: #e2e8f0;
+}
+
+html.dark svg.machine-svg [fill="#000"],
+html.dark svg.machine-svg [fill="#000000"],
+html.dark svg.machine-svg [fill="#231f20"] {
+    fill: #38bdf8 !important;
+}
+
+html.dark svg.machine-svg [fill="#fff"],
+html.dark svg.machine-svg [fill="#ffffff"] {
+    fill: #1e293b !important;
+}
+
+html.dark svg.machine-svg [fill="#cccccc"] {
+    fill: #475569 !important;
+}
+
+/* Exact Form Geometry (270px width, 60px row intervals) */
 .form-container .form-row {
     width: 100%;
     height: 60px;
@@ -141,123 +147,109 @@ html.dark .machine-svg {
 }
 
 .form-container .form-row input[type="text"],
-.form-container .form-row input[type="email"],
 .form-container .form-row input[type="password"] {
     width: 100%;
-    height: 38px;
+    height: 30px;
     margin: 0;
-    padding: 6px 14px;
+    padding: 5px 8px;
     outline: none;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    background: #FAF7F2;
-    color: #0f172a;
-    font-size: 13.5px;
-    font-weight: 600;
+    border: 2px solid #dddddd;
+    background: #ffffff;
+    color: #000000;
+    font-size: 14px;
     font-family: inherit;
     box-sizing: border-box;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease;
 }
 
 html.dark .form-container .form-row input[type="text"],
-html.dark .form-container .form-row input[type="email"],
 html.dark .form-container .form-row input[type="password"] {
     background: #1e293b;
-    border-color: #334155;
+    border-color: #475569;
     color: #f8fafc;
 }
 
-.form-container .form-row input:focus {
-    border-color: #38bdf8;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35);
-}
-
-html.dark .form-container .form-row input:focus {
-    background: #0f172a;
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35);
-}
-
 .form-container .form-row input.valid {
-    border-color: #34d399;
+    border-color: #000000;
 }
 
 html.dark .form-container .form-row input.valid {
-    border-color: #34d399;
+    border-color: #38bdf8;
 }
 
 .form-container .form-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     margin: 0 10px 0 0;
     padding: 0;
+    border: 2px solid #dddddd;
     cursor: pointer;
-    accent-color: #38bdf8;
 }
 
 .form-container .form-row label.checkbox-label {
     display: flex;
     align-items: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: #ffffff;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+    color: #000000;
     cursor: pointer;
     user-select: none;
 }
 
 html.dark .form-container .form-row label.checkbox-label {
-    color: #e2e8f0;
+    color: #f8fafc;
 }
 
-/* Submit Button styled with Royal Blue Theme & connected to the GSAP pulley */
+/* Submit Button (GSAP starts at rotation: -90deg and reveals color/opacity via spray) */
+.form-container .form-row input[type="submit"],
 .form-container .form-row .submit-btn {
     width: 100%;
-    height: 42px;
+    height: 40px;
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-    color: #ffffff !important;
-    font-size: 13.5px;
+    border: none;
+    background-color: #eeeeee;
+    font-size: 14px;
     font-weight: 700;
     font-family: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    gap: 6px;
     transform-origin: 100% 0%;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
 }
 
+.form-container .form-row input[type="submit"]:hover,
 .form-container .form-row .submit-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    background-color: #dddddd;
 }
 
-.form-container .form-row .submit-btn:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
+html.dark .form-container .form-row input[type="submit"],
+html.dark .form-container .form-row .submit-btn {
+    background-color: #334155;
+    color: #f8fafc;
 }
 
-/* Floating Alerts at Top of Screen */
+html.dark .form-container .form-row input[type="submit"]:hover,
+html.dark .form-container .form-row .submit-btn:hover:not(:disabled) {
+    background-color: #475569;
+}
+
+/* Floating Alerts at Top */
 .floating-alert {
     position: fixed;
-    top: 135px;
+    top: 90px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
-    padding: 9px 18px;
-    border-radius: 30px;
-    font-size: 12.5px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     animation: fadeInFloating 0.25s ease;
 }
 
@@ -267,13 +259,11 @@ html.dark .form-container .form-row label.checkbox-label {
 }
 
 .floating-alert-waking {
-    background: rgba(14, 165, 233, 0.95);
+    background: #0284c7;
     color: #ffffff;
-    border: 1px solid rgba(56, 189, 248, 0.5);
 }
 
 .floating-alert-error {
-    background: rgba(239, 68, 68, 0.95);
+    background: #ef4444;
     color: #ffffff;
-    border: 1px solid rgba(248, 113, 113, 0.5);
 }

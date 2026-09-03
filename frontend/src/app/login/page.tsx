@@ -16,7 +16,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // 30s Server Cold-Start Waking Up States
+    // 30s Server Cold-Start States
     const [isWakingUp, setIsWakingUp] = useState(false);
     const [countdown, setCountdown] = useState(30);
     const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +42,7 @@ export default function LoginPage() {
         passValid: false
     });
 
-    // 1. Remember Me & Saved Email initialization
+    // Theme and Remembered Email initialization
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
         try {
@@ -70,24 +70,24 @@ export default function LoginPage() {
         }
     };
 
-    // Responsive scaling to fit viewports
+    // Responsive scaling to prevent any bottom cut-off
     const scaleToFit = () => {
         if (!containerRef.current || !window.gsap) return;
-        const h = 860;
+        const h = 820;
         if (window.innerHeight < h) {
             window.gsap.set(containerRef.current, {
-                scale: Math.max(0.58, window.innerHeight / h),
-                transformOrigin: "50% 50%"
+                scale: Math.max(0.55, window.innerHeight / h),
+                transformOrigin: "50% 65%"
             });
         } else {
             window.gsap.set(containerRef.current, {
                 scale: 1,
-                transformOrigin: "50% 50%"
+                transformOrigin: "50% 65%"
             });
         }
     };
 
-    // Pulling Wire Timeline Creator (Calculates fluid physics and wire attachment)
+    // Pulling Wire Timeline Creator
     const createPullingTimeline = (isFixed: boolean, btnPulled: boolean) => {
         if (!window.gsap || !svgRef.current || !submitBtnRef.current) return null;
         const gsap = window.gsap;
@@ -507,7 +507,7 @@ export default function LoginPage() {
         }
     };
 
-    // Handle Remember Me Checkbox: pulls chain and smoothly swings submit button down with fluid wire physics
+    // Handle Remember Me Checkbox: pulls chain and smoothly swings submit button down
     const handleRememberChange = (checked: boolean) => {
         setRememberMe(checked);
         createPullingTimeline(machineState.current.handClosed, checked);
@@ -519,7 +519,6 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            // Save or clear remember me in localStorage
             if (rememberMe) {
                 localStorage.setItem('remember_me', 'true');
                 localStorage.setItem('remembered_email', targetEmail);
@@ -545,7 +544,6 @@ export default function LoginPage() {
 
             if (isNetworkOrColdStart && !isAutoRetry) {
                 if (isLocalhost) {
-                    // On localhost, immediately attempt offline fallback without 30s delay
                     try {
                         await login(targetEmail, targetPass, true);
                         setIsWakingUp(false);
@@ -558,7 +556,6 @@ export default function LoginPage() {
                         setError(fallbackErr.message || 'Local backend offline. Please check credentials.');
                     }
                 } else {
-                    // In cloud production, Render free-tier spins down after inactivity
                     retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
                     setIsWakingUp(true);
                     setCountdown(30);
@@ -622,7 +619,7 @@ export default function LoginPage() {
                 onLoad={() => setGsapLoaded(true)}
             />
 
-            {/* Unboxed Majestic Brand Header (No box around logo, larger presentation) */}
+            {/* Unboxed Brand Header */}
             <div className="unboxed-brand-header">
                 <div className="free-logo">
                     <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" />
@@ -635,13 +632,13 @@ export default function LoginPage() {
             <button 
                 onClick={toggleTheme}
                 style={{
-                    position: 'fixed', top: 24, right: 24, padding: '8px 16px',
+                    position: 'fixed', top: 16, right: 16, padding: '6px 14px',
                     background: isDark ? '#1e293b' : '#ffffff',
-                    border: isDark ? '1px solid #334155' : '1px solid #D8CEC1',
-                    color: isDark ? '#f8fafc' : '#1e293b',
-                    borderRadius: '100px', cursor: 'pointer', zIndex: 100,
-                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+                    border: isDark ? '1px solid #334155' : '1px solid #dddddd',
+                    color: isDark ? '#f8fafc' : '#0f172a',
+                    borderRadius: '20px', cursor: 'pointer', zIndex: 100,
+                    display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', fontWeight: 700,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
             >
                 {isDark ? '☀️ Light' : '🌙 Dark'}
@@ -669,8 +666,8 @@ export default function LoginPage() {
                 </div>
             )}
 
-            {/* Mechanical Container with SVG & Form precisely positioned */}
-            <div className="machine-container" ref={containerRef}>
+            {/* Exact Stage Container matching Reference Demo */}
+            <div className="stage-container" ref={containerRef}>
                 {/* Form Elements (Exact 270px width / 60px row geometry) */}
                 <form className="form-container" onSubmit={handleSubmit}>
                     {/* Row 1: Email (Touching gears on right) */}
@@ -678,7 +675,7 @@ export default function LoginPage() {
                         <input
                             type="text"
                             name="name"
-                            placeholder="Email address (admin@saiiti.edu.in)"
+                            placeholder="name / email"
                             value={email}
                             onChange={(e) => handleEmailChange(e.target.value)}
                             required
@@ -693,13 +690,13 @@ export default function LoginPage() {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="email"
-                                placeholder="Enter password"
+                                placeholder="password"
                                 value={password}
                                 onChange={(e) => handlePasswordChange(e.target.value)}
                                 required
                                 autoComplete="current-password"
                                 className={machineState.current.passValid ? 'valid' : ''}
-                                style={{ paddingRight: 36 }}
+                                style={{ paddingRight: 32 }}
                             />
                             <button
                                 type="button"
@@ -707,9 +704,9 @@ export default function LoginPage() {
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 title={showPassword ? 'Hide password' : 'Show password'}
                                 style={{
-                                    position: 'absolute', right: 8, background: 'none',
-                                    border: 'none', cursor: 'pointer', fontSize: 15,
-                                    color: '#64748b', padding: 4, display: 'flex', alignItems: 'center'
+                                    position: 'absolute', right: 6, background: 'none',
+                                    border: 'none', cursor: 'pointer', fontSize: 14,
+                                    color: '#64748b', padding: 2, display: 'flex', alignItems: 'center'
                                 }}
                             >
                                 {showPassword ? '👁️' : '🙈'}
@@ -731,7 +728,7 @@ export default function LoginPage() {
                         </label>
                     </div>
 
-                    {/* Row 4: Submit Button (Hanging from pulley / Swings down) */}
+                    {/* Row 4: Submit Button (Hanging vertically from pulley / Swings down) */}
                     <div className="form-row">
                         <button
                             ref={submitBtnRef}
@@ -745,7 +742,7 @@ export default function LoginPage() {
                                     <span>Verifying...</span>
                                 </>
                             ) : (
-                                <span>🔐 Sign In to Portal</span>
+                                <span>submit</span>
                             )}
                         </button>
                     </div>
