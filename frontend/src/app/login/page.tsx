@@ -671,28 +671,6 @@ export default function LoginPage() {
                 {isDark ? '☀️ Light' : '🌙 Dark'}
             </button>
 
-            {/* Floating Server Cold Start Banner */}
-            {isWakingUp && (
-                <div className="floating-alert floating-alert-waking">
-                    <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
-                    <span>Cloud Server is Waking Up ({countdown}s)... Auto-connecting</span>
-                    <button
-                        type="button"
-                        onClick={cancelWakingUp}
-                        style={{ background: 'none', border: 'none', color: '#ffffff', textDecoration: 'underline', cursor: 'pointer', fontSize: 11, padding: 0 }}
-                    >
-                        Cancel
-                    </button>
-                </div>
-            )}
-
-            {/* Floating Error Banner */}
-            {error && !isWakingUp && (
-                <div className="floating-alert floating-alert-error">
-                    <span>⚠️ {error}</span>
-                </div>
-            )}
-
             {/* Mechanical Container with SVG & Form precisely positioned */}
             <div className="machine-container" ref={containerRef}>
                 {/* Form Elements (Exact 330px width / 60px row geometry) */}
@@ -777,6 +755,28 @@ export default function LoginPage() {
                             )}
                         </button>
                     </div>
+
+                    {/* Server Cold Start / Connection Notice - Positioned directly under Verifying / Submit Button */}
+                    {isWakingUp && (
+                        <div className="login-status-notice waking">
+                            <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+                            <span>Cloud Server is Waking Up ({countdown}s)...</span>
+                            <button
+                                type="button"
+                                onClick={cancelWakingUp}
+                                style={{ background: 'none', border: 'none', color: '#bae6fd', textDecoration: 'underline', cursor: 'pointer', fontSize: 11, padding: 0, fontWeight: 700 }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Error Notice - Positioned directly under Verifying / Submit Button */}
+                    {error && !isWakingUp && (
+                        <div className="login-status-notice error">
+                            <span>⚠️ {error}</span>
+                        </div>
+                    )}
                 </form>
 
                 {/* SVG Mechanical Rig (Layered precisely in front of form) */}

@@ -428,8 +428,14 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                     email: form.parentEmail && form.parentEmail.trim() ? form.parentEmail.trim() : undefined
                 } : undefined,
             });
-            const createdStudent = data.data;
+            const createdStudent = (data && data.data) ? data.data : (data || { ...form });
             setShowModal(false);
+            safeStorage.remove('draft_student_admission');
+            setHasStudentDraft(false);
+            setForm(initialFormState);
+            setAdmissionSuccessData(createdStudent);
+            showToast('🎉 Student admitted successfully!');
+
             if (acceptingInquiryId) {
                 try {
                     await api.put(`/inquiries/${acceptingInquiryId}/status`, { status: 'ACCEPTED' });
@@ -439,12 +445,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 }
                 setAcceptingInquiryId(null);
             }
-            safeStorage.remove('draft_student_admission');
-            setHasStudentDraft(false);
-            setForm(initialFormState);
-            fetchStudents();
-            setAdmissionSuccessData(createdStudent);
-            showToast('🎉 Student admitted successfully!');
+            fetchStudents().catch(() => {});
         } catch (err: any) {
             showToast(`❌ ${err.response?.data?.message || 'Failed to add student'}`);
         } finally { setSaving(false); }
@@ -1732,7 +1733,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
             {/* Admission Success Celebratory Modal */}
             {admissionSuccessData && (
-                <div className="modal-overlay" onClick={() => setAdmissionSuccessData(null)}>
+                <div className="modal-overlay" style={{ zIndex: 30000 }} onClick={() => setAdmissionSuccessData(null)}>
                     <div className="admission-success-modal" onClick={(e) => e.stopPropagation()}>
                         {/* Decorative floating celebration items */}
                         <div className="confetti-decoration" style={{ top: 16, left: 24 }}>✨</div>

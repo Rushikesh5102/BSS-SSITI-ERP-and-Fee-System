@@ -268,37 +268,39 @@ html.dark .form-container .form-row label.checkbox-label {
     cursor: not-allowed;
 }
 
-/* Floating Alerts at Top of Screen */
-.floating-alert {
-    position: fixed;
-    top: 135px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    padding: 9px 18px;
-    border-radius: 30px;
-    font-size: 12.5px;
-    font-weight: 600;
+/* Server Status Notice (Positioned directly under Verifying / Submit Button) */
+.login-status-notice {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-    animation: fadeInFloating 0.25s ease;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    box-sizing: border-box;
+    animation: fadeInNotice 0.25s ease;
+    backdrop-filter: blur(8px);
 }
 
-@keyframes fadeInFloating {
-    from { opacity: 0; transform: translate(-50%, -10px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+@keyframes fadeInNotice {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.floating-alert-waking {
-    background: rgba(14, 165, 233, 0.95);
+.login-status-notice.waking {
+    background: rgba(2, 44, 88, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.6);
     color: #ffffff;
-    border: 1px solid rgba(56, 189, 248, 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
-.floating-alert-error {
-    background: rgba(239, 68, 68, 0.95);
+.login-status-notice.error {
+    background: rgba(185, 28, 28, 0.85);
+    border: 1px solid rgba(254, 202, 202, 0.5);
     color: #ffffff;
-    border: 1px solid rgba(248, 113, 113, 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
