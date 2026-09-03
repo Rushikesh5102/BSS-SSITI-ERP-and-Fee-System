@@ -168,32 +168,17 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         return 3000;
     };
 
-    // Calculate Dynamic Fee Heads Total and Update Form Amount & Remarks
+    // Calculate Dynamic Fee Heads Total and Update Form Amount (Remarks is purely user-controlled)
     const updatePaymentTotals = (items: PaymentFeeItem[]) => {
         let sum = 0;
-        const parts: string[] = [];
-
         items.forEach(item => {
             const amt = parseFloat(item.amount) || 0;
             sum += amt;
-            if (amt > 0) {
-                let label = 'Fee';
-                if (item.type === 'TUITION') label = 'Tuition';
-                else if (item.type === 'DRESS_MATERIAL') label = 'Dress Material';
-                else if (item.type === 'EXAM') label = 'Exam Fee';
-                else if (item.type === 'SUPPLEMENTARY') label = `Supp. Exam (${item.subject?.trim() || 'Back Paper'})`;
-                else if (item.type === 'BALANCE') label = 'Course Balance';
-                else if (item.type === 'OTHER') label = item.name?.trim() || 'Other ITI Dues';
-                else if (item.type === 'CUSTOM') label = item.name?.trim() || 'Custom Fee';
-
-                parts.push(`${label}: ₹${amt.toLocaleString('en-IN')}`);
-            }
         });
 
         setForm(f => ({
             ...f,
-            amount: sum > 0 ? sum.toString() : '',
-            remarks: parts.length > 0 ? parts.join(' | ') : 'Fee Payment Received'
+            amount: sum > 0 ? sum.toString() : ''
         }));
     };
 
@@ -762,13 +747,13 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                 ]);
                                                             }}
                                                             style={{
-                                                                padding: '5px 12px',
+                                                                padding: '6px 14px',
                                                                 fontSize: 12,
                                                                 fontWeight: 700,
                                                                 borderRadius: 6,
                                                                 border: 'none',
                                                                 cursor: 'pointer',
-                                                                background: isSplitPayment ? 'var(--accent)' : 'transparent',
+                                                                background: isSplitPayment ? '#0284c7' : 'transparent',
                                                                 color: isSplitPayment ? '#ffffff' : 'var(--text-secondary)',
                                                                 transition: 'all 0.15s ease'
                                                             }}
@@ -781,10 +766,10 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 {/* Total Payment Amount Header Field - Synchronized with Fee Components */}
                                                 <div className="form-group" style={{ marginBottom: 14 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                                        <label className="form-label font-bold" style={{ color: 'var(--primary)', fontSize: 12, margin: 0 }}>
+                                                        <label className="form-label font-bold" style={{ color: '#0f172a', fontSize: 13, margin: 0 }}>
                                                             {isSplitPayment ? 'Total Amount to Split (from Component Allocation above) (₹ INR)' : 'Total Payment Amount (₹ INR)'} <span className="required">*</span>
                                                         </label>
-                                                        <span className="text-xs text-muted">
+                                                        <span className="text-xs" style={{ color: '#475569', fontWeight: 600 }}>
                                                             {isSplitPayment ? '🔒 Auto-synced from Fee Heads' : 'Derived from Fee Heads above'}
                                                         </span>
                                                     </div>
@@ -799,9 +784,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
                                                         placeholder="Enter fee component amount(s) above" 
                                                         style={{ 
-                                                            fontSize: 16, 
-                                                            fontWeight: 800, 
-                                                            color: 'var(--accent)', 
+                                                            fontSize: 18, 
+                                                            fontWeight: 900, 
+                                                            color: '#0f172a', 
                                                             background: isSplitPayment ? 'var(--surface-2)' : 'var(--surface)',
                                                             cursor: isSplitPayment ? 'not-allowed' : 'text'
                                                         }}
@@ -812,12 +797,12 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 {!isSplitPayment && (
                                                     <div className="grid grid-2">
                                                         <div className="form-group">
-                                                            <label className="form-label font-bold">Payment Mode <span className="required">*</span></label>
+                                                            <label className="form-label font-bold" style={{ color: '#0f172a' }}>Payment Mode <span className="required">*</span></label>
                                                             <select 
                                                                 className="form-control" 
                                                                 value={form.mode}
                                                                 onChange={(e) => setForm(f => ({ ...f, mode: e.target.value }))}
-                                                                style={{ fontWeight: 600 }}
+                                                                style={{ fontWeight: 700, color: '#0f172a' }}
                                                             >
                                                                 {PAYMENT_MODES.map((m) => (
                                                                     <option key={m} value={m}>
@@ -837,7 +822,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                                         {/* Context-Aware Payment Mode Reference Fields */}
                                                         <div className="form-group">
-                                                            <label className="form-label">
+                                                            <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>
                                                                 {form.mode === 'CHEQUE' ? 'Cheque Number' : form.mode === 'DD' ? 'DD Number' : form.mode === 'UPI' ? 'UPI UTR / Trx ID' : 'Transaction / Reference No.'}
                                                             </label>
                                                             <input 
@@ -850,7 +835,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                                         {(form.mode === 'CHEQUE' || form.mode === 'DD' || form.mode === 'BANK_TRANSFER') && (
                                                             <div className="form-group">
-                                                                <label className="form-label">Bank Name</label>
+                                                                <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>Bank Name</label>
                                                                 <input 
                                                                     className="form-control" 
                                                                     value={form.bankName}
@@ -862,7 +847,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                                         {(form.mode === 'CHEQUE' || form.mode === 'DD') && (
                                                             <div className="form-group">
-                                                                <label className="form-label">{form.mode === 'DD' ? 'DD Date' : 'Cheque Date'}</label>
+                                                                <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>{form.mode === 'DD' ? 'DD Date' : 'Cheque Date'}</label>
                                                                 <input 
                                                                     type="date"
                                                                     className="form-control" 
@@ -876,14 +861,14 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                                 {/* SPLIT / MULTI-MODE PAYMENT VIEW */}
                                                 {isSplitPayment && (
-                                                    <div style={{ background: 'var(--surface-2)', border: '1.5px solid var(--accent)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+                                                    <div style={{ background: 'var(--surface-2)', border: '1.5px solid #0284c7', borderRadius: 10, padding: 16, marginBottom: 14 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 6 }}>
                                                             <div>
-                                                                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                <span style={{ fontSize: 14, fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                                     🔀 Multi-Mode Split Breakdown ({splitItems.length} Modes)
                                                                 </span>
-                                                                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
-                                                                    Split the total <b>₹{(parseFloat(form.amount) || 0).toLocaleString('en-IN')}</b> across payment modes in your own way.
+                                                                <div style={{ fontSize: 12, color: '#334155', marginTop: 2 }}>
+                                                                    Split the total <b style={{ color: '#0f172a' }}>₹{(parseFloat(form.amount) || 0).toLocaleString('en-IN')}</b> across payment modes in your own way.
                                                                 </div>
                                                             </div>
                                                             <div>
@@ -893,15 +878,15 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                     const diff = targetTotal - currentSplitSum;
 
                                                                     if (targetTotal <= 0) {
-                                                                        return <span className="badge badge-warning">⚠️ Enter fee component amounts above</span>;
+                                                                        return <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#92400e', fontWeight: 700 }}>⚠️ Enter fee component amounts above</span>;
                                                                     }
                                                                     if (Math.abs(diff) <= 0.01 && currentSplitSum > 0) {
-                                                                        return <span className="badge badge-success" style={{ fontWeight: 700 }}>✅ Split matches total (₹{currentSplitSum.toLocaleString('en-IN')})</span>;
+                                                                        return <span className="badge badge-success" style={{ background: '#dcfce7', color: '#166534', fontWeight: 800, border: '1px solid #22c55e' }}>✅ Split matches total (₹{currentSplitSum.toLocaleString('en-IN')})</span>;
                                                                     }
                                                                     if (diff > 0) {
-                                                                        return <span className="badge badge-warning" style={{ fontWeight: 700 }}>⚠️ ₹{diff.toLocaleString('en-IN')} remaining to split</span>;
+                                                                        return <span className="badge badge-warning" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 800, border: '1px solid #ef4444' }}>⚠️ ₹{diff.toLocaleString('en-IN')} remaining to split</span>;
                                                                     }
-                                                                    return <span className="badge badge-danger" style={{ fontWeight: 700 }}>❌ Exceeds by ₹{Math.abs(diff).toLocaleString('en-IN')}</span>;
+                                                                    return <span className="badge badge-danger" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 800, border: '1px solid #ef4444' }}>❌ Exceeds by ₹{Math.abs(diff).toLocaleString('en-IN')}</span>;
                                                                 })()}
                                                             </div>
                                                         </div>
@@ -921,18 +906,18 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                              background: 'var(--surface)', 
                                                                              border: '1px solid var(--border)', 
                                                                              borderRadius: 8, 
-                                                                             padding: '10px 12px' 
+                                                                             padding: '12px 14px' 
                                                                          }}
                                                                      >
-                                                                         <div style={{ display: 'grid', gridTemplateColumns: splitItems.length > 1 ? '1.2fr 1fr 1fr auto' : '1.2fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
+                                                                         <div style={{ display: 'grid', gridTemplateColumns: splitItems.length > 1 ? '1.2fr 1fr 1fr auto' : '1.2fr 1fr 1fr', gap: 10, alignItems: 'center' }}>
                                                                              {/* Split Mode Selector */}
                                                                              <div>
-                                                                                 <label className="form-label" style={{ fontSize: 10.5, marginBottom: 2 }}>
+                                                                                 <label className="form-label" style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>
                                                                                      Mode #{idx + 1}
                                                                                  </label>
                                                                                  <select
                                                                                      className="form-control"
-                                                                                     style={{ fontSize: 12, fontWeight: 700 }}
+                                                                                     style={{ fontSize: 12.5, fontWeight: 700, color: '#0f172a' }}
                                                                                      value={item.mode}
                                                                                      onChange={(e) => updateSplitItem(idx, 'mode', e.target.value)}
                                                                                  >
@@ -949,14 +934,14 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                              {/* Split Amount Input */}
                                                                              <div>
                                                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                                                                                     <label className="form-label" style={{ fontSize: 10.5, margin: 0 }}>
+                                                                                     <label className="form-label" style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', margin: 0 }}>
                                                                                          Amount (₹) <span className="required">*</span>
                                                                                      </label>
                                                                                      {rem > 0 && item.amount !== rem.toString() && (
                                                                                          <button
                                                                                              type="button"
                                                                                              onClick={() => autoFillSplitRemainder(idx)}
-                                                                                             style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                                                                                             style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', color: '#0369a1', fontSize: 10.5, fontWeight: 700, cursor: 'pointer', padding: '2px 6px', borderRadius: 4 }}
                                                                                              title={`Auto-fill remaining ₹${rem.toLocaleString('en-IN')}`}
                                                                                          >
                                                                                              Fill ₹{rem.toLocaleString('en-IN')}
@@ -968,7 +953,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                                      step="1"
                                                                                      min="0"
                                                                                      className="form-control"
-                                                                                     style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}
+                                                                                     style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}
                                                                                      placeholder="₹ Amount"
                                                                                      value={item.amount}
                                                                                      onChange={(e) => updateSplitItem(idx, 'amount', e.target.value)}
@@ -977,12 +962,12 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                                                              {/* Reference / UTR Number */}
                                                                              <div>
-                                                                                 <label className="form-label" style={{ fontSize: 10.5, marginBottom: 2 }}>
+                                                                                 <label className="form-label" style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>
                                                                                      {item.mode === 'CASH' ? 'Receipt Memo' : item.mode === 'UPI' ? 'UPI UTR / Trx ID' : item.mode === 'CHEQUE' ? 'Cheque No.' : 'Ref / Trx ID'}
                                                                                  </label>
                                                                                  <input
                                                                                      className="form-control"
-                                                                                     style={{ fontSize: 12 }}
+                                                                                     style={{ fontSize: 12, color: '#0f172a' }}
                                                                                      placeholder={item.mode === 'CASH' ? 'Cash counter memo' : item.mode === 'UPI' ? 'e.g. 483920194821' : 'Reference number'}
                                                                                      value={item.transactionRef || ''}
                                                                                      onChange={(e) => updateSplitItem(idx, 'transactionRef', e.target.value)}
@@ -995,7 +980,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                                      <button
                                                                                          type="button"
                                                                                          className="btn btn-secondary btn-sm"
-                                                                                         style={{ color: 'var(--danger)', padding: '5px 8px', fontSize: 12 }}
+                                                                                         style={{ color: '#ef4444', padding: '5px 8px', fontSize: 12, fontWeight: 700 }}
                                                                                          onClick={() => removeSplitItem(idx)}
                                                                                          title="Remove this payment mode"
                                                                                      >
@@ -1009,10 +994,10 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                          {(item.mode === 'CHEQUE' || item.mode === 'DD' || item.mode === 'BANK_TRANSFER') && (
                                                                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6, paddingTop: 6, borderTop: '1px dashed var(--border)' }}>
                                                                                  <div>
-                                                                                     <label className="form-label" style={{ fontSize: 10, marginBottom: 2 }}>Bank Name</label>
+                                                                                     <label className="form-label" style={{ fontSize: 10, marginBottom: 2, color: '#0f172a', fontWeight: 600 }}>Bank Name</label>
                                                                                      <input
                                                                                          className="form-control"
-                                                                                         style={{ fontSize: 11 }}
+                                                                                         style={{ fontSize: 11, color: '#0f172a' }}
                                                                                          placeholder="e.g. State Bank of India"
                                                                                          value={item.bankName || ''}
                                                                                          onChange={(e) => updateSplitItem(idx, 'bankName', e.target.value)}
@@ -1020,11 +1005,11 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                                  </div>
                                                                                  {item.mode === 'CHEQUE' && (
                                                                                      <div>
-                                                                                         <label className="form-label" style={{ fontSize: 10, marginBottom: 2 }}>Cheque Date</label>
+                                                                                         <label className="form-label" style={{ fontSize: 10, marginBottom: 2, color: '#0f172a', fontWeight: 600 }}>Cheque Date</label>
                                                                                          <input
                                                                                              type="date"
                                                                                              className="form-control"
-                                                                                             style={{ fontSize: 11 }}
+                                                                                             style={{ fontSize: 11, color: '#0f172a' }}
                                                                                              value={item.chequeDate || ''}
                                                                                              onChange={(e) => updateSplitItem(idx, 'chequeDate', e.target.value)}
                                                                                          />
@@ -1041,12 +1026,12 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                  type="button"
                                                                  className="btn btn-secondary btn-sm"
                                                                  style={{ 
-                                                                     border: '1.5px dashed var(--accent)', 
+                                                                     border: '1.5px dashed #0284c7', 
                                                                      justifyContent: 'center', 
-                                                                     padding: '7px 12px',
+                                                                     padding: '8px 14px',
                                                                      fontWeight: 700,
-                                                                     color: 'var(--accent)',
-                                                                     background: 'var(--surface)'
+                                                                     color: '#0284c7',
+                                                                     background: '#f0f9ff'
                                                                  }}
                                                                  onClick={addSplitItem}
                                                              >
@@ -1066,15 +1051,15 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                              display: 'flex', 
                                                                              alignItems: 'center', 
                                                                              justifyContent: 'space-between',
-                                                                             background: isBalanced ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-                                                                             border: isBalanced ? '1px solid #10b981' : '1px solid #f59e0b',
+                                                                             background: isBalanced ? '#dcfce7' : '#fee2e2',
+                                                                             border: isBalanced ? '1.5px solid #16a34a' : '1.5px solid #dc2626',
                                                                              borderRadius: 6,
-                                                                             padding: '6px 10px',
-                                                                             fontSize: 12,
-                                                                             fontWeight: 700
+                                                                             padding: '8px 12px',
+                                                                             fontSize: 12.5,
+                                                                             fontWeight: 800
                                                                          }}
                                                                      >
-                                                                         <span style={{ color: isBalanced ? '#065f46' : '#92400e' }}>
+                                                                         <span style={{ color: isBalanced ? '#14532d' : '#7f1d1d' }}>
                                                                              {isBalanced 
                                                                                  ? `✅ Balanced: ₹${splitSum.toLocaleString('en-IN')} allocated across ${splitItems.filter(i => (parseFloat(i.amount) || 0) > 0).length} modes` 
                                                                                  : diff > 0 
@@ -1082,7 +1067,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                                      : `⚠️ Excess: Split modes exceed total by ₹${Math.abs(diff).toLocaleString('en-IN')}`
                                                                              }
                                                                          </span>
-                                                                         <span style={{ color: 'var(--text-secondary)' }}>
+                                                                         <span style={{ color: '#0f172a', fontWeight: 800 }}>
                                                                              Split Sum: ₹{splitSum.toLocaleString('en-IN')} / ₹{totalTarget.toLocaleString('en-IN')}
                                                                          </span>
                                                                      </div>
@@ -1094,12 +1079,13 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                                  {/* Remarks Input */}
                                                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                                     <label className="form-label">Remarks / Note (Printed on Receipt)</label>
+                                                     <label className="form-label" style={{ color: '#0f172a', fontWeight: 700 }}>Remarks / Note (Printed on Receipt)</label>
                                                      <input 
                                                          className="form-control" 
                                                          value={form.remarks}
                                                          onChange={(e) => setForm(f => ({ ...f, remarks: e.target.value }))} 
-                                                         placeholder="Note for receipt" 
+                                                         placeholder="Optional memo or notes for receipt (e.g. Paid by Uncle / Installment 2)" 
+                                                         style={{ color: '#0f172a' }}
                                                      />
                                                  </div>
                                             </div>

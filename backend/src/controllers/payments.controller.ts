@@ -11,7 +11,7 @@ import { logger } from '../utils/logger';
 
 import { generateReceiptPdf } from '../services/pdf.service';
 import { notificationService } from '../services/notification.service';
-import { generateReceiptNumber } from '../utils/uuid';
+import { generateReceiptNumber, getNextReceiptNumber } from '../utils/uuid';
 import { razorpayService } from '../services/razorpay.service';
 import { stripeService } from '../services/stripe.service';
 
@@ -174,11 +174,17 @@ export const paymentsController = {
                 effectiveMode = `SPLIT (${splitSummaryParts.join(' + ')})`;
                 if (refParts.length > 0) effectiveTransactionRef = refParts.join(' | ');
                 if (bankParts.length > 0) effectiveBankName = bankParts.join(' | ');
-
-                const splitRemarks = `[Multi-Mode: ${splitSummaryParts.join(' + ')}]`;
-                effectiveRemarks = effectiveRemarks ? `${effectiveRemarks} | ${splitRemarks}` : splitRemarks;
             }
         }
+
+        // Keep accountant remarks clean and decoupled from amounts
+        if (!effectiveRemarks || !effectiveRemarks.trim()) {
+            effectiveRemarks = 'Fee Payment Received';
+        }
+
+        const validChequeDate = (chequeDate && typeof chequeDate === 'string' && chequeDate.trim() && !isNaN(Date.parse(chequeDate)))
+            ? new Date(chequeDate)
+            : null;
 
         // Record payment
         const payment = await prisma.payment.create({
@@ -187,9 +193,9 @@ export const paymentsController = {
                 amount,
                 mode: effectiveMode,
                 status: PaymentStatus.VERIFIED, // Offline payments are auto-verified
-                transactionRef: effectiveTransactionRef,
-                chequeDate: chequeDate ? new Date(chequeDate) : null,
-                bankName: effectiveBankName,
+                transactionRef: effectiveTransactionRef || null,
+                chequeDate: validChequeDate,
+                bankName: effectiveBankName || null,
                 remarks: effectiveRemarks,
                 recordedById: req.user!.id,
                 approvedById: req.user!.id,
@@ -197,9 +203,8 @@ export const paymentsController = {
             },
         });
 
-        // Generate receipt
-        const receiptCount = await prisma.receipt.count();
-        const receiptNumber = generateReceiptNumber(receiptCount + 1);
+        // Generate next guaranteed unique receipt number
+        const receiptNumber = await getNextReceiptNumber();
 
         const pdfBuffer = await generateReceiptPdf({
             receiptNumber,

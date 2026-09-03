@@ -7,7 +7,7 @@ import { razorpayService } from '../services/razorpay.service';
 import { stripeService } from '../services/stripe.service';
 import { PaymentStatus, AuditAction } from '../types/enums';
 import { generateReceiptPdf } from '../services/pdf.service';
-import { generateReceiptNumber } from '../utils/uuid';
+import { generateReceiptNumber, getNextReceiptNumber } from '../utils/uuid';
 import { notificationService } from '../services/notification.service';
 import { config } from '../config';
 
@@ -67,8 +67,7 @@ const processWebhookPayment = async (
     });
 
     // 5. Generate receipt number and PDF
-    const receiptCount = await prisma.receipt.count();
-    const receiptNumber = generateReceiptNumber(receiptCount + 1);
+    const receiptNumber = await getNextReceiptNumber();
     const pdfBuffer = await generateReceiptPdf({
         receiptNumber,
         studentName: studentFee.student.name,
@@ -83,21 +82,23 @@ const processWebhookPayment = async (
         feesFor: studentFee.feeStructure.name,
     });
 
-    // 6. Save PDF to disk
+    // 6. Save PDF to disk safely
     const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
     if (!fs.existsSync(RECEIPTS_DIR)) {
-        fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
+        try { fs.mkdirSync(RECEIPTS_DIR, { recursive: true }); } catch { }
     }
     const pdfFileName = `${receiptNumber}.pdf`;
     const pdfPath = path.join(RECEIPTS_DIR, pdfFileName);
-    fs.writeFileSync(pdfPath, pdfBuffer);
+    try {
+        fs.writeFileSync(pdfPath, pdfBuffer);
+    } catch { }
 
     // 7. Create database receipt record
     const receipt = await prisma.receipt.create({
         data: {
             receiptNumber,
             paymentId: payment.id,
-            pdfUrl: `/receipts/download/${receiptNumber}`,
+            pdfUrl: `/api/receipts/download/${receiptNumber}`,
             generatedById: SYSTEM_USER_ID,
         },
     });
