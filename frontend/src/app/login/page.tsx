@@ -570,7 +570,35 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await performLogin(email, password, false);
+        if (loading) return;
+
+        if (!email || !password) {
+            setError('Please enter both email and password.');
+            return;
+        }
+
+        // Trigger complete mechanical animation sequence on submit / enter key
+        if (typeof window !== 'undefined' && window.gsap) {
+            // Spin gears and pump spray canister
+            if (gearsTlsRef.current && gearsTlsRef.current.length > 0) {
+                gearsTlsRef.current.forEach(tl => {
+                    tl.play();
+                    window.gsap.to(tl, { timeScale: 1.5, duration: 0.3 });
+                });
+            }
+            // Release spring, tilt scale, roll car and close robotic hand
+            if (emailTlRef.current) {
+                emailTlRef.current.timeScale(1.8);
+                emailTlRef.current.play();
+            }
+            // Pull the submit button into place with fluid wire physics
+            createPullingTimeline(true, true);
+        }
+
+        // Wait for the mechanical cascade to complete before signing in
+        setTimeout(async () => {
+            await performLogin(email, password, false);
+        }, 1100);
     };
 
     // Live 30s Countdown & Auto-Login on Timer Completion
@@ -667,7 +695,7 @@ export default function LoginPage() {
 
             {/* Mechanical Container with SVG & Form precisely positioned */}
             <div className="machine-container" ref={containerRef}>
-                {/* Form Elements (Exact 270px width / 60px row geometry) */}
+                {/* Form Elements (Exact 330px width / 60px row geometry) */}
                 <form className="form-container" onSubmit={handleSubmit} autoComplete="off">
                     {/* Row 1: Email (Touching gears on right) */}
                     <div className="form-row">
@@ -675,7 +703,7 @@ export default function LoginPage() {
                             type="email"
                             name="sai_login_identifier"
                             id="sai_login_identifier"
-                            placeholder="Email address (admin@saiiti.edu.in)"
+                            placeholder="Enter your email address"
                             value={email}
                             onChange={(e) => handleEmailChange(e.target.value)}
                             required
@@ -692,14 +720,14 @@ export default function LoginPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 name="sai_login_secret"
                                 id="sai_login_secret"
-                                placeholder="Enter password"
+                                placeholder="Enter your password"
                                 value={password}
                                 onChange={(e) => handlePasswordChange(e.target.value)}
                                 required
                                 autoComplete="new-password"
                                 data-lpignore="true"
                                 className={machineState.current.passValid ? 'valid' : ''}
-                                style={{ paddingRight: 36 }}
+                                style={{ paddingRight: 40 }}
                             />
                             <button
                                 type="button"
@@ -707,8 +735,8 @@ export default function LoginPage() {
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 title={showPassword ? 'Hide password' : 'Show password'}
                                 style={{
-                                    position: 'absolute', right: 8, background: 'none',
-                                    border: 'none', cursor: 'pointer', fontSize: 15,
+                                    position: 'absolute', right: 10, background: 'none',
+                                    border: 'none', cursor: 'pointer', fontSize: 16,
                                     color: '#64748b', padding: 4, display: 'flex', alignItems: 'center'
                                 }}
                             >
@@ -793,7 +821,7 @@ export default function LoginPage() {
                                 <rect x="3.9" y="18.4" width="8.4" height="21.47" rx="3.7" transform="translate(10.2 -1) rotate(19.4)"/>
                                 <path d="M20.9,24a3.4,3.4,0,0,0-1.7-1.1h0a4.2,4.2,0,0,0-5.4,2.5L9.1,38.8a4.3,4.3,0,0,0,2.6,5.4h0a4.3,4.3,0,0,0,5.4-2.6l1.8-5.1"/>
                                 <path d="M18.4,37.9,17.3,43a4.2,4.2,0,0,0,3.4,4.9h0a4.3,4.3,0,0,0,4.5-2.3"/>
-                                <path fill="white" d="M29,16.8c-6.4,5-15,13.2-12.8,17.8s6,.7,15.8-6.7c6.4-4.8,7.4-12.6.5-19.2V4.2A3.8,3.8,0,0,0,28.7.5H8A3.5,3.5,0,0,0,5.4,1.6,3.7,3.7,0,0,0,4.3,4.2V8.7"/>
+                                <path d="M29,16.8c-6.4,5-15,13.2-12.8,17.8s6,.7,15.8-6.7c6.4-4.8,7.4-12.6.5-19.2V4.2A3.8,3.8,0,0,0,28.7.5H8A3.5,3.5,0,0,0,5.4,1.6,3.7,3.7,0,0,0,4.3,4.2V8.7"/>
                                 <path d="M4.3,8.7c-5.8,6.4-3.6,20-2.2,24.8"/>
                             </g>
                         </g>
@@ -835,7 +863,7 @@ export default function LoginPage() {
 
                     {/* Closed Grabbing Hand */}
                     <g className="grabbing-hand">
-                        <g fill="#ffffff">
+                        <g fill="none">
                             <rect className="grabbing-hand-finger-closed" x="44.79" y="13.38" width="8.42" height="22.15" rx="3.67" transform="translate(20.57 71.26) rotate(-85.25)"/>
                             <rect className="grabbing-hand-finger-closed" x="44.08" y="39.17" width="8.42" height="21.47" rx="3.67" transform="translate(-5.44 93.9) rotate(-85.25)"/>
                             <rect className="grabbing-hand-finger-closed" x="45.68" y="30.71" width="8.42" height="22.57" rx="3.67" transform="matrix(0.08, -1, 1, 0.08, 3.91, 88.24)"/>
