@@ -535,6 +535,7 @@ export default function LoginPage() {
                 window.gsap.to(".form-row", { delay: 0.3, duration: 0.1, opacity: 0, stagger: 0.1 });
             }
         } catch (err: any) {
+            const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
             const isNetworkOrColdStart = 
                 !err.response || 
                 err.code === 'ECONNABORTED' || 
@@ -543,9 +544,25 @@ export default function LoginPage() {
                 [502, 503, 504].includes(err.response?.status);
 
             if (isNetworkOrColdStart && !isAutoRetry) {
-                retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
-                setIsWakingUp(true);
-                setCountdown(30);
+                if (isLocalhost) {
+                    // On localhost, immediately attempt offline fallback without 30s delay
+                    try {
+                        await login(targetEmail, targetPass, true);
+                        setIsWakingUp(false);
+                        if (window.gsap && svgRef.current) {
+                            window.gsap.to("svg > *", { duration: 0.1, opacity: 0, stagger: { each: 0.03, from: 'random', ease: 'none' } });
+                            window.gsap.to(".form-row", { delay: 0.3, duration: 0.1, opacity: 0, stagger: 0.1 });
+                        }
+                        return;
+                    } catch (fallbackErr: any) {
+                        setError(fallbackErr.message || 'Local backend offline. Please check credentials.');
+                    }
+                } else {
+                    // In cloud production, Render free-tier spins down after inactivity
+                    retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
+                    setIsWakingUp(true);
+                    setCountdown(30);
+                }
             } else {
                 setIsWakingUp(false);
                 setError(err.response?.data?.message || err.message || 'Login failed. Please check credentials.');

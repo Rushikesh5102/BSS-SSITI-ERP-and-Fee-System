@@ -6,21 +6,10 @@ import { useAuth } from '../context/AuthContext';
 
 export default function RootIndexPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        if (user.role === 'ADMIN' || user.role === 'DEVELOPER') {
-          router.replace('/portal');
-        } else {
-          router.replace('/dashboard');
-        }
-      } else {
-        router.replace('/login');
-      }
-    }
-  }, [user, loading, router]);
+    router.replace('/login');
+  }, [router]);
 
   return (
     <div style={{
