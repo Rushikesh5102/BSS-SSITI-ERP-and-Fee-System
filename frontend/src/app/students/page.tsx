@@ -113,6 +113,120 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     });
     const [assigningFee, setAssigningFee] = useState(false);
 
+    // Edit Student Admission Profile Modal State
+    const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+    const [editingStudent, setEditingStudent] = useState<any | null>(null);
+    const [editProfileForm, setEditProfileForm] = useState({
+        name: '', class: 'Electrician', section: '', rollNumber: '',
+        academicSession: '', dateOfBirth: '', gender: 'Male', bloodGroup: '',
+        category: 'OPEN', subcaste: '', isOtherSubcaste: false, otherSubcaste: '',
+        parentName: '', parentPhone: '', parentEmail: '', address: '', landline: '',
+        photo: '', signature: '',
+        educationDetails: { qualification: '10th (SSC)', board: 'MSBSHSE', schoolName: '', passingYear: '2024', percentage: '', rollNo: '' },
+        submittedDocuments: {
+            sscMarksheet: false, leavingCertificate: false, casteCertificate: false,
+            nonCreamyLayer: false, incomeCertificate: false, aadharCard: false,
+            domicileCertificate: false, passportPhotos: false
+        }
+    });
+    const [updatingProfile, setUpdatingProfile] = useState(false);
+
+    const openEditProfileModal = (student: any) => {
+        setEditingStudent(student);
+        const edu = student.educationDetails || {};
+        const docs = student.submittedDocuments || {};
+        const cat = student.category || 'OPEN';
+        const sub = student.subcaste || edu.subcaste || '';
+        const listSubs = INDIAN_SUBCASTES[cat] || INDIAN_SUBCASTES['OPEN'];
+        const isOther = sub && !listSubs.includes(sub);
+
+        setEditProfileForm({
+            name: student.name || '',
+            class: student.class || 'Electrician',
+            section: student.section || '',
+            rollNumber: student.rollNumber || '',
+            academicSession: `${new Date(student.createdAt).getFullYear()} - ${new Date(student.createdAt).getFullYear() + 2}`,
+            dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '',
+            gender: student.gender || 'Male',
+            bloodGroup: student.bloodGroup || '',
+            category: cat,
+            subcaste: sub,
+            isOtherSubcaste: !!isOther,
+            otherSubcaste: isOther ? sub : '',
+            parentName: student.parent?.name || '',
+            parentPhone: student.parent?.phone || '',
+            parentEmail: student.parent?.email || '',
+            address: student.address || '',
+            landline: student.landline || '',
+            photo: student.photo || '',
+            signature: student.signature || '',
+            educationDetails: {
+                qualification: edu.qualification || '10th (SSC)',
+                board: edu.board || 'MSBSHSE',
+                schoolName: edu.schoolName || '',
+                passingYear: edu.passingYear || '2024',
+                percentage: edu.percentage || '',
+                rollNo: edu.rollNo || ''
+            },
+            submittedDocuments: {
+                sscMarksheet: docs.sscMarksheet || false,
+                leavingCertificate: docs.leavingCertificate || false,
+                casteCertificate: docs.casteCertificate || false,
+                nonCreamyLayer: docs.nonCreamyLayer || false,
+                incomeCertificate: docs.incomeCertificate || false,
+                aadharCard: docs.aadharCard || false,
+                domicileCertificate: docs.domicileCertificate || false,
+                passportPhotos: docs.passportPhotos || false
+            }
+        });
+        setShowEditProfileModal(true);
+    };
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingStudent) return;
+        if (!editProfileForm.name || !editProfileForm.class) {
+            showToast('❌ Full Name and Enrolled Trade are required!');
+            return;
+        }
+
+        setUpdatingProfile(true);
+        try {
+            await api.put(`/students/${editingStudent.id}`, {
+                name: editProfileForm.name,
+                class: editProfileForm.class,
+                section: editProfileForm.section || null,
+                rollNumber: editProfileForm.rollNumber || null,
+                category: editProfileForm.category || 'OPEN',
+                bloodGroup: editProfileForm.bloodGroup || null,
+                gender: editProfileForm.gender || 'Male',
+                dateOfBirth: editProfileForm.dateOfBirth ? editProfileForm.dateOfBirth : null,
+                address: editProfileForm.address || null,
+                landline: editProfileForm.landline || null,
+                photo: editProfileForm.photo || null,
+                signature: editProfileForm.signature || null,
+                educationDetails: {
+                    ...editProfileForm.educationDetails,
+                    subcaste: editProfileForm.subcaste || null
+                },
+                submittedDocuments: editProfileForm.submittedDocuments,
+                parent: {
+                    name: editProfileForm.parentName,
+                    phone: editProfileForm.parentPhone,
+                    email: editProfileForm.parentEmail
+                }
+            });
+
+            showToast('✅ Student admission profile updated successfully!');
+            setShowEditProfileModal(false);
+            fetchStudents();
+        } catch (err: any) {
+            showToast(`❌ ${err.response?.data?.message || 'Failed to update student profile'}`);
+        } finally {
+            setUpdatingProfile(false);
+        }
+    };
+
     const [activeTab, setActiveTab] = useState<'students' | 'inquiries'>('students');
 
     useEffect(() => {
@@ -540,9 +654,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                         ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                     </td>
                                                     <td data-label="Actions" className="cell-actions">
-                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 210 }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 220 }}>
                                                             <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
                                                                 📜 History
+                                                            </button>
+                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openEditProfileModal(s)} title="Edit Student Admission Profile">
+                                                                ✏️ Edit
                                                             </button>
                                                             <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
                                                                 🪪 ID Card
@@ -551,7 +668,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 📄 Form PDF
                                                             </button>
                                                             {canShowFeeBtn && (
-                                                                <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openAssignFeeModal(s)}>
+                                                                <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center', gridColumn: 'span 2' }} onClick={() => openAssignFeeModal(s)}>
                                                                     💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
                                                                 </button>
                                                             )}
@@ -1005,6 +1122,198 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" disabled={saving}>
                                     {saving ? 'Processing...' : '✅ Complete Admission'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Student Admission Profile Modal */}
+            {showEditProfileModal && editingStudent && (
+                <div className="modal-overlay" onClick={() => setShowEditProfileModal(false)}>
+                    <div className="modal" style={{ maxWidth: 720 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">✏️ Edit Admission Profile: {editingStudent.name} ({editingStudent.studentId})</div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowEditProfileModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleUpdateProfile}>
+                            <div className="modal-body">
+                                {/* Role Access Notice */}
+                                <div style={{ background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '10px 14px', borderRadius: 8, fontSize: 12, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span>🛡️</span>
+                                    <span>
+                                        Editing admission profile as <b>{effectiveRole}</b>. Profile updates are logged in the audit trail.
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Full Name <span className="required">*</span></label>
+                                        <input className="form-control" required value={editProfileForm.name} onChange={(e) => setEditProfileForm(f => ({ ...f, name: e.target.value }))} placeholder="Student full name" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Enrolled Trade <span className="required">*</span></label>
+                                        <select className="form-control" required value={editProfileForm.class} onChange={(e) => setEditProfileForm(f => ({ ...f, class: e.target.value }))}>
+                                            <option value="Electrician">Electrician (2-Year)</option>
+                                            <option value="Fitter">Fitter (2-Year)</option>
+                                            <option value="Welder">Welder</option>
+                                            <option value="Mechanic">Mechanic (Motor Vehicle)</option>
+                                            <option value="COPA">COPA (Computer Operator)</option>
+                                            <option value="Wireman">Wireman</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Roll Number</label>
+                                        <input 
+                                            className="form-control" 
+                                            value={editProfileForm.rollNumber} 
+                                            onChange={(e) => setEditProfileForm(f => ({ ...f, rollNumber: e.target.value }))} 
+                                            placeholder="e.g. 01" 
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Date of Birth 📅</label>
+                                        <input 
+                                            className="form-control date-picker-custom" 
+                                            type="date" 
+                                            value={editProfileForm.dateOfBirth} 
+                                            onChange={(e) => setEditProfileForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+                                            max={new Date().toISOString().split('T')[0]}
+                                        />
+                                    </div>
+
+                                    {/* Category & Subcaste */}
+                                    <div className="form-group">
+                                        <label className="form-label">Category</label>
+                                        <select 
+                                            className="form-control" 
+                                            value={editProfileForm.category} 
+                                            onChange={(e) => {
+                                                const cat = e.target.value;
+                                                setEditProfileForm(f => ({ ...f, category: cat, subcaste: '', isOtherSubcaste: false, otherSubcaste: '' }));
+                                            }}
+                                        >
+                                            <option value="OPEN">OPEN / General</option>
+                                            <option value="OBC">OBC (Other Backward Class)</option>
+                                            <option value="SC">SC (Scheduled Caste)</option>
+                                            <option value="ST">ST (Scheduled Tribe)</option>
+                                            <option value="VJNT">VJ / NT (Vimukta Jati / Nomadic Tribe)</option>
+                                            <option value="SBC">SBC (Special Backward Class)</option>
+                                            <option value="EWS">EWS (Economically Weaker Section)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Subcaste</label>
+                                        {!editProfileForm.isOtherSubcaste ? (
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <select 
+                                                    className="form-control"
+                                                    value={editProfileForm.subcaste}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === 'Other (Write-in)') {
+                                                            setEditProfileForm(f => ({ ...f, isOtherSubcaste: true, subcaste: '' }));
+                                                        } else {
+                                                            setEditProfileForm(f => ({ ...f, subcaste: val }));
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">-- Select Subcaste --</option>
+                                                    {(INDIAN_SUBCASTES[editProfileForm.category] || INDIAN_SUBCASTES['OPEN']).map((sub) => (
+                                                        <option key={sub} value={sub}>{sub}</option>
+                                                    ))}
+                                                </select>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => setEditProfileForm(f => ({ ...f, isOtherSubcaste: true }))}
+                                                >
+                                                    ✏️ Type
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <input
+                                                    className="form-control"
+                                                    placeholder="Type subcaste name..."
+                                                    value={editProfileForm.otherSubcaste}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, otherSubcaste: e.target.value, subcaste: e.target.value }))}
+                                                    autoFocus
+                                                />
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-ghost btn-sm"
+                                                    onClick={() => setEditProfileForm(f => ({ ...f, isOtherSubcaste: false, otherSubcaste: '' }))}
+                                                >
+                                                    📋 List
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Address */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label">Permanent / Residential Address</label>
+                                        <input 
+                                            className="form-control" 
+                                            value={editProfileForm.address} 
+                                            onChange={(e) => setEditProfileForm(f => ({ ...f, address: e.target.value }))} 
+                                            placeholder="House No, Street, Village/City, Taluka, District, Pincode" 
+                                        />
+                                    </div>
+
+                                    {/* Gender, Blood Group, Landline */}
+                                    <div className="form-group">
+                                        <label className="form-label">Gender</label>
+                                        <select className="form-control" value={editProfileForm.gender} onChange={(e) => setEditProfileForm(f => ({ ...f, gender: e.target.value }))}>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Blood Group 🩸</label>
+                                        <select className="form-control" value={editProfileForm.bloodGroup} onChange={(e) => setEditProfileForm(f => ({ ...f, bloodGroup: e.target.value }))}>
+                                            <option value="">-- Select --</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Parent / Guardian Contact Details */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 6 }}>
+                                        <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)' }}>👨‍👩‍👦 Parent / Guardian Details</label>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Parent / Guardian Name</label>
+                                        <input className="form-control" value={editProfileForm.parentName} onChange={(e) => setEditProfileForm(f => ({ ...f, parentName: e.target.value }))} placeholder="Father / Mother / Guardian full name" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Contact Phone Number</label>
+                                        <input className="form-control" type="tel" value={editProfileForm.parentPhone} onChange={(e) => setEditProfileForm(f => ({ ...f, parentPhone: e.target.value }))} placeholder="e.g. 9876543210" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Parent Email (Optional)</label>
+                                        <input className="form-control" type="email" value={editProfileForm.parentEmail} onChange={(e) => setEditProfileForm(f => ({ ...f, parentEmail: e.target.value }))} placeholder="parent@email.com" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Landline / Alternate Phone</label>
+                                        <input className="form-control" value={editProfileForm.landline} onChange={(e) => setEditProfileForm(f => ({ ...f, landline: e.target.value }))} placeholder="Optional alternate number" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditProfileModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={updatingProfile}>
+                                    {updatingProfile ? 'Saving Changes...' : '💾 Save Profile Updates'}
                                 </button>
                             </div>
                         </form>

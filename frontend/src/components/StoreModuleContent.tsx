@@ -58,6 +58,52 @@ const statusOptions = [
     { label: 'Under Maintenance', value: 'UNDER_MAINTENANCE', color: '#8b5cf6' },
     { label: 'Damaged', value: 'DAMAGED', color: '#ef4444' },
     { label: 'Lost', value: 'LOST', color: '#f59e0b' },
+];
+
+export const STANDARD_STUDENT_KIT_ITEMS = [
+    { id: 1, name: 'Lead pencil', defaultQty: 1, unit: 'pc' },
+    { id: 2, name: 'Eraser', defaultQty: 1, unit: 'pc' },
+    { id: 3, name: 'Sharpner', defaultQty: 1, unit: 'pc' },
+    { id: 4, name: 'Pencil HB', defaultQty: 1, unit: 'pc' },
+    { id: 5, name: 'Pro Circle', defaultQty: 1, unit: 'pc' },
+    { id: 6, name: 'Ball Pen', defaultQty: 1, unit: 'pc' },
+    { id: 7, name: 'Roller Scale', defaultQty: 1, unit: 'pc' },
+    { id: 8, name: 'Plastic Packet', defaultQty: 1, unit: 'pc' },
+    { id: 9, name: 'Drawing Book', defaultQty: 1, unit: 'pc' },
+    { id: 10, name: 'Set Square', defaultQty: 1, unit: 'set' },
+    { id: 11, name: 'Dress/Shirt', defaultQty: 1, unit: 'set' },
+    { id: 12, name: 'Practical Pages', defaultQty: 200, unit: 'pages' },
+    { id: 13, name: 'Practical Cover', defaultQty: 2, unit: 'covers' },
+    { id: 14, name: 'Theory Pages', defaultQty: 200, unit: 'pages' },
+    { id: 15, name: 'Theory Cover', defaultQty: 2, unit: 'covers' },
+    { id: 16, name: 'Drawing Pages', defaultQty: 40, unit: 'pages' },
+    { id: 17, name: 'Drawing Cover', defaultQty: 1, unit: 'cover' },
+    { id: 18, name: 'Lace', defaultQty: 4, unit: 'pcs' },
+    { id: 19, name: 'Daily Dairy', defaultQty: 1, unit: 'book' },
+    { id: 20, name: 'Divider', defaultQty: 1, unit: 'pc' },
+    { id: 21, name: 'Material Tally', defaultQty: 1, unit: 'sheet' },
+    { id: 22, name: 'Sai I.T.I Name Tag', defaultQty: 1, unit: 'badge' },
+    { id: 23, name: 'Index pages', defaultQty: 1, unit: 'sheet' },
+    { id: 24, name: 'Certificate Pages', defaultQty: 1, unit: 'sheet' },
+];
+
+export const getStudentFeeBadge = (student: any) => {
+    if (!student || !student.studentFees || student.studentFees.length === 0) {
+        return { isPaid: false, label: 'Fee: Not Assigned ⚠️', tag: '⚠️ Unassigned', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
+    }
+    const total = student.studentFees.reduce((acc: number, f: any) => acc + (f.totalAmount || 0), 0);
+    const paid = student.studentFees.reduce((acc: number, f: any) => acc + (f.paidAmount || 0), 0);
+    const pending = total - paid;
+    if (total > 0 && pending <= 0) {
+        return { isPaid: true, label: 'Dress & Material Fee: PAID ✅ (Eligible for Kit)', tag: '✅ Fee Paid (Eligible)', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.1)' };
+    } else if (paid > 0) {
+        return { isPaid: false, label: `Partial Paid (₹${(pending / 100).toLocaleString('en-IN')} Due ⚠️)`, tag: `⚠️ ₹${(pending / 100).toLocaleString('en-IN')} Due`, color: '#d97706', bg: 'rgba(217, 119, 6, 0.1)' };
+    } else {
+        return { isPaid: false, label: `UNPAID (₹${(total / 100).toLocaleString('en-IN')} Due ❌)`, tag: `❌ ₹${(total / 100).toLocaleString('en-IN')} Unpaid`, color: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)' };
+    }
+};
+
+const statusOptionsFooter = [
     { label: 'Decommissioned', value: 'DECOMMISSIONED', color: '#6b7280' },
 ];
 
@@ -197,6 +243,15 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     const [staffName, setStaffName] = useState('');
     const [expectedReturnDate, setExpectedReturnDate] = useState('');
     const [issueRemarks, setIssueRemarks] = useState('');
+
+    // 24-Item Student Material Kit & Uniform Package Issuance Modal Form
+    const [showKitIssueModal, setShowKitIssueModal] = useState(false);
+    const [kitStudentId, setKitStudentId] = useState('');
+    const [kitSelectedItems, setKitSelectedItems] = useState<{ [key: number]: boolean }>(
+        STANDARD_STUDENT_KIT_ITEMS.reduce((acc, item) => ({ ...acc, [item.id]: true }), {})
+    );
+    const [kitIssuedDate, setKitIssuedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [kitRemarks, setKitRemarks] = useState('');
 
     // Return Modal Form
     const [showReturnModal, setShowReturnModal] = useState(false);
@@ -460,6 +515,38 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         }
     };
 
+    const handleKitIssueSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!kitStudentId) {
+            setFormError('Please select a student');
+            return;
+        }
+
+        const selectedList = STANDARD_STUDENT_KIT_ITEMS.filter(item => kitSelectedItems[item.id]);
+        if (selectedList.length === 0) {
+            setFormError('Please select at least one item from the kit to issue');
+            return;
+        }
+
+        setFormLoading(true);
+        setFormError('');
+        try {
+            await api.post('/store/transactions/kit-issue', {
+                studentId: kitStudentId,
+                items: selectedList.map(item => ({ name: item.name, qty: item.defaultQty, unit: item.unit })),
+                issuedDate: kitIssuedDate,
+                remarks: kitRemarks
+            });
+            setShowKitIssueModal(false);
+            setKitRemarks('');
+            fetchAllData();
+        } catch (err: any) {
+            setFormError(err.response?.data?.message || 'Failed to issue student kit');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     const handleReturnSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormError('');
@@ -596,6 +683,22 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                         </h1>
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <button
+                            onClick={() => {
+                                setKitStudentId(students[0]?.id || '');
+                                setShowKitIssueModal(true);
+                            }}
+                            className="btn btn-secondary"
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.22) 100%)',
+                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                color: '#059669'
+                            }}
+                        >
+                            🎒 Issue Student Kit (24 Items)
+                        </button>
                         <button onClick={openIssueModal} className="btn btn-primary" style={{ fontSize: 13 }}>
                             📤 Issue Tool
                         </button>
@@ -1253,10 +1356,26 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     <div className="form-group">
                                         <label className="form-label">Select Student *</label>
                                         <select className="form-control" required value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
-                                            {students.map(s => (
-                                                <option key={s.id} value={s.id}>{s.name} ({s.studentId}) — {s.class}</option>
-                                            ))}
+                                            {students.map(s => {
+                                                const fee = getStudentFeeBadge(s);
+                                                return (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name} ({s.studentId}) — {s.class} [{fee.tag}]
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
+                                        {(() => {
+                                            const sel = students.find(s => s.id === selectedStudentId);
+                                            if (!sel) return null;
+                                            const fee = getStudentFeeBadge(sel);
+                                            return (
+                                                <div style={{ marginTop: 6, padding: '6px 10px', borderRadius: 6, background: fee.bg, color: fee.color, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <span>💳</span>
+                                                    <span>{fee.label}</span>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 ) : (
                                     <div className="form-group">
@@ -1273,6 +1392,194 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-ghost" onClick={() => setShowIssueModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" disabled={formLoading}>{formLoading ? 'Issuing...' : '📤 Issue Tool'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 24-Item Student Kit & Uniform Package Modal */}
+            {showKitIssueModal && (
+                <div className="modal-overlay" onClick={() => setShowKitIssueModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 680, width: '92vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                        <div className="modal-header">
+                            <div>
+                                <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span>🎒</span>
+                                    <span>Issue Student Material Kit & Uniform Package (24 Items)</span>
+                                </h3>
+                                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                                    Standard ITI academic stationery, drawing instruments, and dress package.
+                                </div>
+                            </div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowKitIssueModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleKitIssueSubmit} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
+                            <div className="modal-body" style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {formError && <div style={{ color: 'var(--danger)', fontSize: 13, background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px' }}>⚠️ {formError}</div>}
+
+                                {/* Student Selector */}
+                                <div className="form-group">
+                                    <label className="form-label" style={{ fontWeight: 700 }}>Select Student Recipient *</label>
+                                    <select
+                                        className="form-control"
+                                        required
+                                        value={kitStudentId}
+                                        onChange={e => setKitStudentId(e.target.value)}
+                                        style={{ fontSize: 13, fontWeight: 600 }}
+                                    >
+                                        <option value="">-- Select Student --</option>
+                                        {students.map(s => {
+                                            const fee = getStudentFeeBadge(s);
+                                            return (
+                                                <option key={s.id} value={s.id}>
+                                                    {s.name} ({s.studentId}) — {s.class} [{fee.tag}]
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+
+                                {/* Student Fee Status & Eligibility Card */}
+                                {(() => {
+                                    const currentStudent = students.find(s => s.id === kitStudentId);
+                                    if (!currentStudent) return null;
+                                    const fee = getStudentFeeBadge(currentStudent);
+                                    return (
+                                        <div style={{
+                                            background: fee.bg,
+                                            border: `1.5px solid ${fee.color}44`,
+                                            borderRadius: 10,
+                                            padding: '12px 16px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 6
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontWeight: 700, fontSize: 13, color: fee.color }}>
+                                                    🎓 {currentStudent.name} ({currentStudent.studentId})
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    padding: '3px 8px',
+                                                    borderRadius: 6,
+                                                    background: fee.color,
+                                                    color: '#ffffff'
+                                                }}>
+                                                    {fee.isPaid ? 'ELIGIBLE ✅' : 'FEE PENDING ⚠️'}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+                                                <b>Trade:</b> {currentStudent.class} | <b>Roll No:</b> {currentStudent.rollNumber || '—'} | <b>Parent:</b> {currentStudent.parent?.name || '—'} ({currentStudent.parent?.phone || '—'})
+                                            </div>
+                                            <div style={{ fontSize: 12, fontWeight: 600, color: fee.color, marginTop: 2 }}>
+                                                💳 {fee.label}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Checklist of 24 Predefined Items */}
+                                <div className="form-group">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <label className="form-label" style={{ margin: 0, fontWeight: 700 }}>
+                                            📦 Standard 24-Item Kit Checklist ({STANDARD_STUDENT_KIT_ITEMS.filter(i => kitSelectedItems[i.id]).length}/24 Selected)
+                                        </label>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <button
+                                                type="button"
+                                                className="btn btn-ghost btn-sm"
+                                                style={{ fontSize: 11, padding: '2px 8px' }}
+                                                onClick={() => setKitSelectedItems(STANDARD_STUDENT_KIT_ITEMS.reduce((acc, i) => ({ ...acc, [i.id]: true }), {}))}
+                                            >
+                                                Select All
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-ghost btn-sm"
+                                                style={{ fontSize: 11, padding: '2px 8px' }}
+                                                onClick={() => setKitSelectedItems({})}
+                                            >
+                                                Deselect All
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                        gap: 8,
+                                        maxHeight: 240,
+                                        overflowY: 'auto',
+                                        padding: 10,
+                                        background: 'var(--surface-2)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 8
+                                    }}>
+                                        {STANDARD_STUDENT_KIT_ITEMS.map((item) => {
+                                            const isChecked = !!kitSelectedItems[item.id];
+                                            return (
+                                                <label
+                                                    key={item.id}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 8,
+                                                        padding: '6px 10px',
+                                                        borderRadius: 6,
+                                                        background: isChecked ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                                                        border: isChecked ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid transparent',
+                                                        cursor: 'pointer',
+                                                        fontSize: 12,
+                                                        userSelect: 'none'
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={(e) => setKitSelectedItems(prev => ({ ...prev, [item.id]: e.target.checked }))}
+                                                    />
+                                                    <span style={{ fontWeight: isChecked ? 700 : 400, flex: 1, color: isChecked ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                                        {item.id}. {item.name}
+                                                    </span>
+                                                    <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>
+                                                        x{item.defaultQty} {item.unit}
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Issue Date *</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            required
+                                            value={kitIssuedDate}
+                                            onChange={e => setKitIssuedDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Notes / Remarks</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={kitRemarks}
+                                            onChange={e => setKitRemarks(e.target.value)}
+                                            placeholder="Optional remarks (e.g. standard semester distribution)"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-ghost" onClick={() => setShowKitIssueModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={formLoading} style={{ background: '#10b981', borderColor: '#10b981', color: '#fff', fontWeight: 700 }}>
+                                    {formLoading ? 'Issuing Kit Package...' : '🎒 Issue Complete 24-Item Kit to Student'}
+                                </button>
                             </div>
                         </form>
                     </div>

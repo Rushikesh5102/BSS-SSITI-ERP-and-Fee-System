@@ -509,5 +509,93 @@ export const stockTransactionsController = {
         });
 
         res.status(201).json({ success: true, data: transaction });
+    }),
+
+    /**
+     * POST /api/store/transactions/kit-issue
+     * Standard 24-Item Student Kit & Uniform Package Issuance
+     */
+    recordKitIssue: asyncHandler(async (req: Request, res: Response) => {
+        const { studentId, items, remarks, issuedDate } = req.body;
+
+        if (!studentId) {
+            throw new AppError(400, 'Student selection is required for kit issuance');
+        }
+
+        const student = await prisma.student.findUnique({
+            where: { id: studentId },
+            include: {
+                studentFees: true,
+                branch: true
+            }
+        });
+
+        if (!student) {
+            throw new AppError(404, 'Student not found');
+        }
+
+        // Find or create a master "Standard Student Material Kit & Uniform Package (24 Items)" StoreItem if needed
+        let kitStoreItem = await prisma.storeItem.findFirst({
+            where: {
+                branchId: student.branchId,
+                name: { contains: 'Material Kit', mode: 'insensitive' }
+            }
+        });
+
+        if (!kitStoreItem) {
+            kitStoreItem = await prisma.storeItem.create({
+                data: {
+                    name: 'Standard Student Material Kit & Uniform Package (24 Items)',
+                    category: 'Student Stationery & Uniform',
+                    sku: 'KIT-STD-24',
+                    quantity: 999,
+                    unit: 'kit',
+                    reorderLevel: 10,
+                    pricePerUnit: 0,
+                    status: 'AVAILABLE',
+                    branchId: student.branchId,
+                    createdById: req.user!.id,
+                    description: 'Complete 24-item stationery, drawing materials, notebooks, and uniform package.'
+                }
+            });
+        }
+
+        const itemsListStr = Array.isArray(items) ? items.map((i: any) => `${i.name} (x${i.qty || 1} ${i.unit || 'pc'})`).join(', ') : 'All 24 standard items';
+        const kitRemarks = `🎒 Student Material Kit & Dress Package Issued: [${itemsListStr}]. ${remarks ? `Remarks: ${remarks}` : ''}`;
+
+        const transaction = await prisma.stockTransaction.create({
+            data: {
+                itemId: kitStoreItem.id,
+                type: 'ISSUE',
+                quantity: 1,
+                recipientType: 'STUDENT',
+                studentId: student.id,
+                status: 'COMPLETED',
+                branchId: student.branchId,
+                recordedById: req.user!.id,
+                remarks: kitRemarks,
+                createdAt: issuedDate ? new Date(issuedDate) : new Date()
+            },
+            include: {
+                item: true,
+                student: true,
+                recordedBy: true
+            }
+        });
+
+        await createAuditLog(
+            req.user!.id,
+            AuditAction.STOCK_OUTWARD,
+            'StockTransaction',
+            transaction.id,
+            { action: 'STUDENT_KIT_ISSUED', studentName: student.name, studentId: student.studentId, itemsCount: Array.isArray(items) ? items.length : 24 },
+            req.ip
+        );
+
+        res.status(201).json({
+            success: true,
+            message: `24-Item Student Kit successfully issued to ${student.name}`,
+            data: transaction
+        });
     })
 };

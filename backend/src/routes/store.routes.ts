@@ -23,6 +23,7 @@ router.delete('/items/:id', authorize(Role.STORE_MANAGER, Role.ADMIN), storeItem
 // ─── Stock & Asset Movement Transactions Routes ─────────────────────────────
 router.get('/transactions', stockTransactionsController.list);
 router.post('/transactions/issue', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordIssue);
+router.post('/transactions/kit-issue', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordKitIssue);
 router.post('/transactions/return', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordReturn);
 router.post('/transactions/maintenance', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordMaintenance);
 router.post('/transactions/transfer', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordTransfer);

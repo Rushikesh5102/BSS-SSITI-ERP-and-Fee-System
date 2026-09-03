@@ -379,6 +379,26 @@ export default function SystemHealthPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <Link
+                            href="/404"
+                            className="btn btn-sm"
+                            style={{
+                                fontSize: '12px', padding: '6px 12px',
+                                background: 'linear-gradient(135deg, rgba(245, 181, 68, 0.18) 0%, rgba(217, 119, 6, 0.25) 100%)',
+                                color: '#fbbf24',
+                                border: '1px solid rgba(245, 181, 68, 0.45)',
+                                borderRadius: '6px',
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                            }}
+                            title="Interactive Electrical Workshop Incident Simulation"
+                        >
+                            <span>⚡</span>
+                            <span>404 Incident Sim</span>
+                        </Link>
                         <button
                             className="btn btn-sm"
                             onClick={fetchHealth}

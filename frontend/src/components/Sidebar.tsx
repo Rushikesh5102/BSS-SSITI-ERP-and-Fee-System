@@ -14,21 +14,23 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+    // DEVELOPER OPERATIONS (TOP SECTION)
     { href: '/portal', label: 'Portal Hub', icon: '🏛️', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
     { href: '/system', label: 'Dev Home', icon: '💻', roles: ['DEVELOPER'], module: 'COMMON' },
+    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
+    { href: '/404', label: '404 Experience', icon: '⚡', roles: ['DEVELOPER'], module: 'COMMON' },
 
     // FEES WORKSPACE & FEES DEVELOPER SIMULATIONS
     { href: '/dashboard?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'FEES' },
     { href: '/dashboard?simulate=accountant', label: 'View as Accountant', icon: '🧾', roles: ['DEVELOPER'], module: 'FEES' },
     { href: '/dashboard?simulate=student', label: 'View as Student', icon: '🕶️', roles: ['DEVELOPER'], module: 'FEES' },
 
-    { href: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'STUDENT'], module: 'FEES' },
+    { href: '/dashboard', label: 'Fee Dashboard', icon: '📊', roles: ['ADMIN', 'ACCOUNTANT', 'STUDENT', 'DEVELOPER'], module: 'FEES' },
     { href: '/students', label: 'Students', icon: '👨‍🎓', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
     { href: '/fee-structures', label: 'Fee Structures', icon: '📋', roles: ['ADMIN', 'DEVELOPER', 'ACCOUNTANT'], module: 'FEES' },
     { href: '/payments', label: 'Record Payment', icon: '💳', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
     { href: '/receipts', label: 'Receipts', icon: '🧾', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
     { href: '/reports', label: 'Reports', icon: '📈', roles: ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'], module: 'FEES' },
-    { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
 
     // STORE WORKSPACE & STORE DEVELOPER SIMULATIONS
     { href: '/store?simulate=admin', label: 'View as Admin', icon: '🏛️', roles: ['DEVELOPER'], module: 'STORE' },
@@ -251,17 +253,50 @@ function SidebarInner() {
                 <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />
             )}
 
+            {/* Desktop Collapsed Floating Logo & Hamburger Bar */}
+            {isCollapsed && (
+                <div className="collapsed-logo-bar">
+                    <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))' }} />
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px' }}>
+                        Shri Sai I.T.I
+                    </span>
+                    <button
+                        onClick={toggleCollapse}
+                        style={{
+                            background: 'rgba(56, 189, 248, 0.2)',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            color: '#38bdf8',
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                        }}
+                        title="Open Sidebar Navigation (Shift+E)"
+                        aria-label="Open Sidebar Navigation"
+                    >
+                        ☰
+                    </button>
+                </div>
+            )}
+
             <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
                 {/* Logo & Retract Collapse Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '12px' }}>
-                    <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none', flex: 1 }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
-                        <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}>
-                            <div style={{ width: 56, height: 56, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div className="sidebar-header-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px' }}>
+                    <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
+                        <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 44, height: 44, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.75))' }} />
                             </div>
-                            <div className="sidebar-logo-text">
-                                <h2 style={{ letterSpacing: '0.5px', fontSize: 17 }}>Shri Sai I.T.I</h2>
-                                <span style={{ fontSize: 11.5 }}>{activeWorkspace === 'STORE' ? 'Store Management' : (activeWorkspace === 'LIBRARY' ? 'Library Management' : (activeWorkspace === 'DONATION' ? 'Donation Management' : 'Fee Management'))}</span>
+                            <div className="sidebar-logo-text" style={{ minWidth: 0 }}>
+                                <h2 style={{ letterSpacing: '0.5px', fontSize: 16, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Shri Sai I.T.I</h2>
+                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeWorkspace === 'STORE' ? 'Store Management' : (activeWorkspace === 'LIBRARY' ? 'Library Management' : (activeWorkspace === 'DONATION' ? 'Donation Management' : 'Fee Management'))}</span>
                             </div>
                         </div>
                     </Link>
@@ -269,6 +304,7 @@ function SidebarInner() {
                     {/* Retractable Sidebar Toggle Button */}
                     <button
                         onClick={toggleCollapse}
+                        className="sidebar-toggle-btn"
                         style={{
                             background: 'rgba(255,255,255,0.18)',
                             border: '1px solid rgba(255,255,255,0.25)',
@@ -424,9 +460,16 @@ function SidebarInner() {
                 {/* Categorized Navigation */}
                 {(() => {
                     const isDev = user?.role === 'DEVELOPER';
-                    const moduleItems = visibleItems.filter(item => !item.href.includes('simulate') && item.href !== '/system' && item.href !== '/access');
-                    const simulationItems = isDev ? visibleItems.filter(item => item.href.includes('simulate')) : [];
-                    const devSystemItems = isDev ? visibleItems.filter(item => item.href === '/system' || item.href === '/access') : visibleItems.filter(item => item.href === '/access');
+                    const isCommonDevOp = (href: string) => href === '/portal' || href === '/system' || href === '/access' || href === '/404';
+                    
+                    const devOperationsItems = isDev 
+                        ? visibleItems.filter(item => isCommonDevOp(item.href))
+                        : [];
+                    const simulationItems = isDev 
+                        ? visibleItems.filter(item => item.href.includes('simulate')) 
+                        : [];
+                    const systemOperationsItems = visibleItems.filter(item => !item.href.includes('simulate') && !isCommonDevOp(item.href));
+                    const adminAccessItems = !isDev ? visibleItems.filter(item => item.href === '/access' || item.href === '/portal') : [];
 
                     const renderNavItem = (item: any) => {
                         const targetHref = (simulateParam && !item.href.includes('simulate') && item.href !== '/system') 
@@ -459,6 +502,54 @@ function SidebarInner() {
                         );
                     };
 
+                    if (isDev) {
+                        return (
+                            <>
+                                {/* 1. DEVELOPER OPERATIONS (AT THE TOP) */}
+                                {devOperationsItems.length > 0 && (
+                                    <div className="sidebar-section">
+                                        <div className="sidebar-section-label" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span>⚡</span>
+                                            <span>DEVELOPER OPERATIONS</span>
+                                        </div>
+                                        <nav>
+                                            {devOperationsItems.map(renderNavItem)}
+                                        </nav>
+                                    </div>
+                                )}
+
+                                {/* 2. ROLE PERSPECTIVES (IN THE MIDDLE) */}
+                                {simulationItems.length > 0 && (
+                                    <div className="sidebar-section" style={{ marginTop: '12px', borderTop: '1px solid rgba(56, 189, 248, 0.25)', paddingTop: '10px' }}>
+                                        <div className="sidebar-section-label" style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span>👁️</span>
+                                            <span>ROLE PERSPECTIVES</span>
+                                        </div>
+                                        <nav>
+                                            {simulationItems.map(renderNavItem)}
+                                        </nav>
+                                    </div>
+                                )}
+
+                                {/* 3. SYSTEM OPERATIONS (AT THE BOTTOM) */}
+                                {systemOperationsItems.length > 0 && (
+                                    <div className="sidebar-section" style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                                        <div className="sidebar-section-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span>⚙️</span>
+                                            <span>
+                                                {activeWorkspace === 'FEES' ? 'FEE SYSTEM OPERATIONS' : (activeWorkspace === 'STORE' ? 'STORE ERP OPERATIONS' : (activeWorkspace === 'LIBRARY' ? 'LIBRARY ERP OPERATIONS' : 'DONATION OPERATIONS'))}
+                                            </span>
+                                        </div>
+                                        <nav>
+                                            {systemOperationsItems.map(renderNavItem)}
+                                        </nav>
+                                    </div>
+                                )}
+                            </>
+                        );
+                    }
+
+                    // Standard User View (Admin, Accountant, Store Mgr, Librarian, Student)
                     return (
                         <>
                             {/* 1. Core Module Navigation */}
@@ -467,32 +558,18 @@ function SidebarInner() {
                                     {activeWorkspace === 'FEES' ? '💰 FEE SYSTEM' : (activeWorkspace === 'STORE' ? '📦 STORE ERP' : (activeWorkspace === 'LIBRARY' ? '📚 LIBRARY ERP' : '🤝 DONATION MODULE'))}
                                 </div>
                                 <nav>
-                                    {moduleItems.map(renderNavItem)}
+                                    {systemOperationsItems.map(renderNavItem)}
                                 </nav>
                             </div>
 
-                            {/* 2. Role Simulation Perspectives (Developer Only) */}
-                            {simulationItems.length > 0 && (
-                                <div className="sidebar-section" style={{ marginTop: '12px', borderTop: '1px solid rgba(56, 189, 248, 0.25)', paddingTop: '10px' }}>
-                                    <div className="sidebar-section-label" style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span>👁️</span>
-                                        <span>ROLE PERSPECTIVES</span>
-                                    </div>
-                                    <nav>
-                                        {simulationItems.map(renderNavItem)}
-                                    </nav>
-                                </div>
-                            )}
-
-                            {/* 3. Developer & Permanent System Operations */}
-                            {devSystemItems.length > 0 && (
+                            {/* 2. Admin Operations */}
+                            {adminAccessItems.length > 0 && (
                                 <div className="sidebar-section" style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-                                    <div className="sidebar-section-label" style={{ color: isDev ? '#f59e0b' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span>⚡</span>
-                                        <span>{isDev ? 'DEVELOPER OPERATIONS' : 'ADMINISTRATION'}</span>
+                                    <div className="sidebar-section-label">
+                                        🏛️ ADMINISTRATION
                                     </div>
                                     <nav>
-                                        {devSystemItems.map(renderNavItem)}
+                                        {adminAccessItems.map(renderNavItem)}
                                     </nav>
                                 </div>
                             )}

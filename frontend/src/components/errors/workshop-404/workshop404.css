@@ -1,0 +1,113 @@
+@keyframes mangaPop {
+  0% {
+    transform: translate(-50%, -14px) scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, 2px) scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cordWiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(2.5deg);
+  }
+  75% {
+    transform: rotate(-2.5deg);
+  }
+}
+
+@keyframes probePulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.35), inset 0 0 10px rgba(56, 189, 248, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.75), inset 0 0 15px rgba(56, 189, 248, 0.4);
+  }
+}
+
+/* Custom Multimeter Test Lead Probe Cursor */
+.multimeter-active-cursor,
+.multimeter-active-cursor * {
+  cursor: url('/media/multimeter-probe.svg') 3 3, crosshair !important;
+}
+
+/* Manga Comic Bubble Tail */
+.manga-bubble-tail {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 14px solid #18181b;
+}
+
+.manga-bubble-tail-inner {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 11px solid #ffffff;
+}
+
+/* Responsive Breakpoints and Collision Prevention */
+@media (max-width: 1100px) {
+  .workshop-header-tools {
+    max-width: calc(100% - 64px) !important;
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .workshop-blended-panel {
+    top: auto !important;
+    bottom: 1rem !important;
+    right: 50% !important;
+    transform: translateX(50%) !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 440px !important;
+    background-color: rgba(238, 226, 200, 0.96) !important;
+    backdrop-filter: blur(14px) !important;
+    padding: 1.15rem 1.25rem !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .multimeter-hud {
+    bottom: auto !important;
+    top: 5.2rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 340px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .workshop-header-brand {
+    font-size: 0.7rem !important;
+    padding: 0 0.55rem !important;
+  }
+
+  .manga-bubble {
+    max-width: 250px !important;
+    font-size: 0.8rem !important;
+    padding: 0.6rem 0.85rem !important;
+  }
+}
