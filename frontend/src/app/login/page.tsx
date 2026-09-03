@@ -72,14 +72,13 @@ export default function LoginPage() {
     // Responsive scaling to fit viewports
     const scaleToFit = () => {
         if (!containerRef.current || !window.gsap) return;
-        const totalNeededHeight = 880;
-        const totalNeededWidth = 1020;
-        const scaleH = window.innerHeight / totalNeededHeight;
+        const totalNeededWidth = 1040;
+        const scaleH = (window.innerHeight - 150) / 720;
         const scaleW = window.innerWidth / totalNeededWidth;
         const targetScale = Math.min(1, scaleH, scaleW);
 
         window.gsap.set(containerRef.current, {
-            scale: Math.max(0.52, targetScale),
+            scale: Math.max(0.48, Math.min(0.95, targetScale)),
             transformOrigin: "50% 50%"
         });
     };
