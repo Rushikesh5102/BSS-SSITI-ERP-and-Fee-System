@@ -674,13 +674,13 @@ export default function LoginPage() {
                     {/* Row 1: Email (Touching gears on right) */}
                     <div className="form-row">
                         <input
-                            type="text"
-                            name="name"
+                            type="email"
+                            name="email"
                             placeholder="Email address (admin@saiiti.edu.in)"
                             value={email}
                             onChange={(e) => handleEmailChange(e.target.value)}
                             required
-                            autoComplete="email"
+                            autoComplete="off"
                             className={machineState.current.emailValid ? 'valid' : ''}
                         />
                     </div>
@@ -690,12 +690,12 @@ export default function LoginPage() {
                         <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                name="email"
+                                name="password"
                                 placeholder="Enter password"
                                 value={password}
                                 onChange={(e) => handlePasswordChange(e.target.value)}
                                 required
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                                 className={machineState.current.passValid ? 'valid' : ''}
                                 style={{ paddingRight: 36 }}
                             />
