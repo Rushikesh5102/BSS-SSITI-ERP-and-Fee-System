@@ -21,6 +21,15 @@ interface PaymentFeeItem {
     amount: string;
 }
 
+// Split / Multi-Mode Payment Item
+interface SplitPaymentItem {
+    mode: string;
+    amount: string;
+    transactionRef?: string;
+    bankName?: string;
+    chequeDate?: string;
+}
+
 function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
@@ -33,6 +42,13 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     
     const [feeItems, setFeeItems] = useState<PaymentFeeItem[]>([
         { type: 'TUITION', amount: '' }
+    ]);
+
+    // Split / Multi-Mode Payment State
+    const [isSplitPayment, setIsSplitPayment] = useState(false);
+    const [splitItems, setSplitItems] = useState<SplitPaymentItem[]>([
+        { mode: 'CASH', amount: '', transactionRef: '' },
+        { mode: 'UPI', amount: '', transactionRef: '' }
     ]);
 
     // Main Payment Form state
@@ -262,6 +278,36 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         updatePaymentTotals(updated);
     };
 
+    // ─── Split / Multi-Mode Payment Helpers ────────────────────────────────────
+    const addSplitItem = () => {
+        const usedModes = splitItems.map(i => i.mode);
+        let nextMode = 'UPI';
+        if (!usedModes.includes('UPI')) nextMode = 'UPI';
+        else if (!usedModes.includes('BANK_TRANSFER')) nextMode = 'BANK_TRANSFER';
+        else if (!usedModes.includes('CHEQUE')) nextMode = 'CHEQUE';
+        else nextMode = 'CARD';
+
+        setSplitItems(prev => [...prev, { mode: nextMode, amount: '', transactionRef: '' }]);
+    };
+
+    const removeSplitItem = (idx: number) => {
+        if (splitItems.length <= 1) return;
+        setSplitItems(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    const updateSplitItem = (idx: number, field: keyof SplitPaymentItem, val: string) => {
+        setSplitItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
+    };
+
+    const autoFillSplitRemainder = (idx: number) => {
+        const targetTotal = parseFloat(form.amount) || 0;
+        const currentOtherSum = splitItems
+            .filter((_, i) => i !== idx)
+            .reduce((acc, item) => acc + (parseFloat(item.amount) || 0), 0);
+        const remainder = Math.max(0, targetTotal - currentOtherSum);
+        updateSplitItem(idx, 'amount', remainder > 0 ? remainder.toString() : '');
+    };
+
     const handleStudentSelect = (studentId: string) => {
         const student = students.find((s) => s.id === studentId);
         setSelectedStudent(student || null);
@@ -365,10 +411,35 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 ? `Supplementary / Back Paper Exam Fee: ${supplementarySubject}`
                 : feeBreakdown.map(b => `${b.name} (₹${(b.amount / 100).toLocaleString('en-IN')})`).join(', ') || selectedFee.feeStructure?.name || 'Academic Course Fee';
 
+            // Split Payment validation & payload construction
+            let splitPaymentPayload: any = undefined;
+            if (isSplitPayment) {
+                const validSplits = splitItems
+                    .filter(i => (parseFloat(i.amount) || 0) > 0)
+                    .map(i => ({
+                        mode: i.mode,
+                        amount: Math.round((parseFloat(i.amount) || 0) * 100),
+                        transactionRef: i.transactionRef?.trim() || undefined,
+                        bankName: i.bankName?.trim() || undefined,
+                        chequeDate: i.chequeDate || undefined
+                    }));
+
+                if (validSplits.length === 0) {
+                    throw new Error('Please enter amounts for the split payment modes');
+                }
+
+                const splitSumPaise = validSplits.reduce((acc, i) => acc + i.amount, 0);
+                if (Math.abs(splitSumPaise - amountPaise) > 1) {
+                    throw new Error(`Sum of split modes (₹${(splitSumPaise / 100).toLocaleString('en-IN')}) must equal total payment amount (₹${(amountPaise / 100).toLocaleString('en-IN')})`);
+                }
+
+                splitPaymentPayload = validSplits;
+            }
+
             const { data } = await api.post('/payments', {
                 studentFeeId: selectedFee.id,
                 amount: amountPaise,
-                mode: form.mode,
+                mode: isSplitPayment ? 'SPLIT' : form.mode,
                 transactionRef: form.transactionRef || undefined,
                 bankName: form.bankName || undefined,
                 chequeDate: form.chequeDate || undefined,
@@ -377,6 +448,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 isSupplementary,
                 supplementarySubject: isSupplementary ? supplementarySubject : undefined,
                 feeBreakdown: feeBreakdown.length > 0 ? feeBreakdown : undefined,
+                splitPayment: splitPaymentPayload,
             });
             
             setResult(data.data);
@@ -680,9 +752,61 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             </div>
 
                                             {/* ─── PAYMENT TRANSACTION DETAILS & MODES ──────────────────── */}
-                                            <div className="grid grid-2">
-                                                <div className="form-group">
-                                                    <label className="form-label font-bold" style={{ color: 'var(--primary)' }}>
+                                            <div style={{ marginTop: 16 }}>
+                                                {/* Mode Type Segmented Switcher */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                                                    <label className="form-label font-bold" style={{ margin: 0, fontSize: 13, color: 'var(--primary)' }}>
+                                                        💳 Payment Mode & Settlement Method
+                                                    </label>
+                                                    <div style={{ display: 'inline-flex', background: 'var(--surface-2)', padding: 3, borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setIsSplitPayment(false)}
+                                                            style={{
+                                                                padding: '5px 12px',
+                                                                fontSize: 12,
+                                                                fontWeight: 700,
+                                                                borderRadius: 6,
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                background: !isSplitPayment ? 'var(--primary)' : 'transparent',
+                                                                color: !isSplitPayment ? '#ffffff' : 'var(--text-secondary)',
+                                                                transition: 'all 0.15s ease'
+                                                            }}
+                                                        >
+                                                            💵 Single Mode
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setIsSplitPayment(true);
+                                                                if (!splitItems[0].amount && form.amount) {
+                                                                    setSplitItems([
+                                                                        { mode: 'CASH', amount: form.amount, transactionRef: '' },
+                                                                        { mode: 'UPI', amount: '', transactionRef: '' }
+                                                                    ]);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                padding: '5px 12px',
+                                                                fontSize: 12,
+                                                                fontWeight: 700,
+                                                                borderRadius: 6,
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                background: isSplitPayment ? 'var(--accent)' : 'transparent',
+                                                                color: isSplitPayment ? '#ffffff' : 'var(--text-secondary)',
+                                                                transition: 'all 0.15s ease'
+                                                            }}
+                                                        >
+                                                            🔀 Split Payment (Cash + UPI / Bank)
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Total Payment Amount Header Field */}
+                                                <div className="form-group" style={{ marginBottom: 14 }}>
+                                                    <label className="form-label font-bold" style={{ color: 'var(--primary)', fontSize: 12 }}>
                                                         Total Payment Amount (₹ INR) <span className="required">*</span>
                                                     </label>
                                                     <input 
@@ -694,80 +818,284 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         value={form.amount}
                                                         onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
                                                         placeholder="Total Amount in ₹" 
-                                                        style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent)' }}
+                                                        style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent)', background: 'var(--surface)' }}
                                                     />
                                                 </div>
 
-                                                <div className="form-group">
-                                                    <label className="form-label font-bold">Payment Mode <span className="required">*</span></label>
-                                                    <select 
-                                                        className="form-control" 
-                                                        value={form.mode}
-                                                        onChange={(e) => setForm(f => ({ ...f, mode: e.target.value }))}
-                                                        style={{ fontWeight: 600 }}
-                                                    >
-                                                        {PAYMENT_MODES.map((m) => (
-                                                            <option key={m} value={m}>
-                                                                {m === 'CASH' && '💵 CASH'}
-                                                                {m === 'UPI' && '📱 UPI (GPay / PhonePe / Paytm / BHIM)'}
-                                                                {m === 'BANK_TRANSFER' && '🏦 Bank Transfer (NEFT / RTGS / IMPS)'}
-                                                                {m === 'CHEQUE' && '🧾 Cheque'}
-                                                                {m === 'DD' && '🏛️ Demand Draft (DD)'}
-                                                                {m === 'CARD' && '💳 Debit / Credit Card'}
-                                                                {m === 'NET_BANKING' && '💻 Net Banking'}
-                                                                {m === 'RAZORPAY' && '⚡ Online Gateway (Razorpay)'}
-                                                                {m === 'OTHER' && '💼 Other Mode'}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
+                                                {/* SINGLE MODE VIEW */}
+                                                {!isSplitPayment && (
+                                                    <div className="grid grid-2">
+                                                        <div className="form-group">
+                                                            <label className="form-label font-bold">Payment Mode <span className="required">*</span></label>
+                                                            <select 
+                                                                className="form-control" 
+                                                                value={form.mode}
+                                                                onChange={(e) => setForm(f => ({ ...f, mode: e.target.value }))}
+                                                                style={{ fontWeight: 600 }}
+                                                            >
+                                                                {PAYMENT_MODES.map((m) => (
+                                                                    <option key={m} value={m}>
+                                                                        {m === 'CASH' && '💵 CASH'}
+                                                                        {m === 'UPI' && '📱 UPI (GPay / PhonePe / Paytm / BHIM)'}
+                                                                        {m === 'BANK_TRANSFER' && '🏦 Bank Transfer (NEFT / RTGS / IMPS)'}
+                                                                        {m === 'CHEQUE' && '🧾 Cheque'}
+                                                                        {m === 'DD' && '🏛️ Demand Draft (DD)'}
+                                                                        {m === 'CARD' && '💳 Debit / Credit Card'}
+                                                                        {m === 'NET_BANKING' && '💻 Net Banking'}
+                                                                        {m === 'RAZORPAY' && '⚡ Online Gateway (Razorpay)'}
+                                                                        {m === 'OTHER' && '💼 Other Mode'}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
 
-                                                {/* Context-Aware Payment Mode Reference Fields */}
-                                                <div className="form-group">
-                                                    <label className="form-label">
-                                                        {form.mode === 'CHEQUE' ? 'Cheque Number' : form.mode === 'DD' ? 'DD Number' : form.mode === 'UPI' ? 'UPI UTR / Trx ID' : 'Transaction / Reference No.'}
-                                                    </label>
-                                                    <input 
-                                                        className="form-control" 
-                                                        value={form.transactionRef}
-                                                        onChange={(e) => setForm(f => ({ ...f, transactionRef: e.target.value }))}
-                                                        placeholder={form.mode === 'CHEQUE' ? 'e.g. CHQ-849201' : form.mode === 'DD' ? 'e.g. DD-09281' : 'e.g. UTR / Ref number'} 
-                                                    />
-                                                </div>
+                                                        {/* Context-Aware Payment Mode Reference Fields */}
+                                                        <div className="form-group">
+                                                            <label className="form-label">
+                                                                {form.mode === 'CHEQUE' ? 'Cheque Number' : form.mode === 'DD' ? 'DD Number' : form.mode === 'UPI' ? 'UPI UTR / Trx ID' : 'Transaction / Reference No.'}
+                                                            </label>
+                                                            <input 
+                                                                className="form-control" 
+                                                                value={form.transactionRef}
+                                                                onChange={(e) => setForm(f => ({ ...f, transactionRef: e.target.value }))}
+                                                                placeholder={form.mode === 'CHEQUE' ? 'e.g. CHQ-849201' : form.mode === 'DD' ? 'e.g. DD-09281' : 'e.g. UTR / Ref number'} 
+                                                            />
+                                                        </div>
 
-                                                {(form.mode === 'CHEQUE' || form.mode === 'DD' || form.mode === 'BANK_TRANSFER') && (
-                                                    <div className="form-group">
-                                                        <label className="form-label">Bank Name</label>
-                                                        <input 
-                                                            className="form-control" 
-                                                            value={form.bankName}
-                                                            onChange={(e) => setForm(f => ({ ...f, bankName: e.target.value }))} 
-                                                            placeholder="e.g. State Bank of India, HDFC Bank" 
-                                                        />
+                                                        {(form.mode === 'CHEQUE' || form.mode === 'DD' || form.mode === 'BANK_TRANSFER') && (
+                                                            <div className="form-group">
+                                                                <label className="form-label">Bank Name</label>
+                                                                <input 
+                                                                    className="form-control" 
+                                                                    value={form.bankName}
+                                                                    onChange={(e) => setForm(f => ({ ...f, bankName: e.target.value }))} 
+                                                                    placeholder="e.g. State Bank of India, HDFC Bank" 
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {(form.mode === 'CHEQUE' || form.mode === 'DD') && (
+                                                            <div className="form-group">
+                                                                <label className="form-label">{form.mode === 'DD' ? 'DD Date' : 'Cheque Date'}</label>
+                                                                <input 
+                                                                    type="date"
+                                                                    className="form-control" 
+                                                                    value={form.chequeDate}
+                                                                    onChange={(e) => setForm(f => ({ ...f, chequeDate: e.target.value }))} 
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 
-                                                {(form.mode === 'CHEQUE' || form.mode === 'DD') && (
-                                                    <div className="form-group">
-                                                        <label className="form-label">{form.mode === 'DD' ? 'DD Date' : 'Cheque Date'}</label>
-                                                        <input 
-                                                            type="date"
-                                                            className="form-control" 
-                                                            value={form.chequeDate}
-                                                            onChange={(e) => setForm(f => ({ ...f, chequeDate: e.target.value }))} 
-                                                        />
-                                                    </div>
-                                                )}
+                                                {/* SPLIT / MULTI-MODE PAYMENT VIEW */}
+                                                {isSplitPayment && (
+                                                    <div style={{ background: 'var(--surface-2)', border: '1.5px solid var(--accent)', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>
+                                                                🔀 Multi-Mode Split Breakdown ({splitItems.length} Modes)
+                                                            </span>
+                                                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                                                Specify how much was paid in Cash vs Online/UPI
+                                                            </span>
+                                                        </div>
 
-                                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                                    <label className="form-label">Remarks / Note (Printed on Receipt)</label>
-                                                    <input 
-                                                        className="form-control" 
-                                                        value={form.remarks}
-                                                        onChange={(e) => setForm(f => ({ ...f, remarks: e.target.value }))} 
-                                                        placeholder="Note for receipt" 
-                                                    />
-                                                </div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                             {splitItems.map((item, idx) => {
+                                                                 const otherSum = splitItems
+                                                                     .filter((_, i) => i !== idx)
+                                                                     .reduce((acc, sp) => acc + (parseFloat(sp.amount) || 0), 0);
+                                                                 const targetTotal = parseFloat(form.amount) || 0;
+                                                                 const rem = Math.max(0, targetTotal - otherSum);
+
+                                                                 return (
+                                                                     <div 
+                                                                         key={idx}
+                                                                         style={{ 
+                                                                             background: 'var(--surface)', 
+                                                                             border: '1px solid var(--border)', 
+                                                                             borderRadius: 8, 
+                                                                             padding: '10px 12px' 
+                                                                         }}
+                                                                     >
+                                                                         <div style={{ display: 'grid', gridTemplateColumns: splitItems.length > 1 ? '1.2fr 1fr 1fr auto' : '1.2fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
+                                                                             {/* Split Mode Selector */}
+                                                                             <div>
+                                                                                 <label className="form-label" style={{ fontSize: 10.5, marginBottom: 2 }}>
+                                                                                     Mode #{idx + 1}
+                                                                                 </label>
+                                                                                 <select
+                                                                                     className="form-control"
+                                                                                     style={{ fontSize: 12, fontWeight: 700 }}
+                                                                                     value={item.mode}
+                                                                                     onChange={(e) => updateSplitItem(idx, 'mode', e.target.value)}
+                                                                                 >
+                                                                                     <option value="CASH">💵 CASH</option>
+                                                                                     <option value="UPI">📱 UPI / Online</option>
+                                                                                     <option value="BANK_TRANSFER">🏦 Bank Transfer (NEFT/RTGS)</option>
+                                                                                     <option value="CHEQUE">🧾 Cheque</option>
+                                                                                     <option value="DD">🏛️ Demand Draft</option>
+                                                                                     <option value="CARD">💳 Debit/Credit Card</option>
+                                                                                     <option value="OTHER">💼 Other Mode</option>
+                                                                                 </select>
+                                                                             </div>
+
+                                                                             {/* Split Amount Input */}
+                                                                             <div>
+                                                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                                                                                     <label className="form-label" style={{ fontSize: 10.5, margin: 0 }}>
+                                                                                         Amount (₹) <span className="required">*</span>
+                                                                                     </label>
+                                                                                     {rem > 0 && item.amount !== rem.toString() && (
+                                                                                         <button
+                                                                                             type="button"
+                                                                                             onClick={() => autoFillSplitRemainder(idx)}
+                                                                                             style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                                                                                             title={`Auto-fill remaining ₹${rem.toLocaleString('en-IN')}`}
+                                                                                         >
+                                                                                             Fill ₹{rem.toLocaleString('en-IN')}
+                                                                                         </button>
+                                                                                     )}
+                                                                                 </div>
+                                                                                 <input
+                                                                                     type="number"
+                                                                                     step="1"
+                                                                                     min="0"
+                                                                                     className="form-control"
+                                                                                     style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}
+                                                                                     placeholder="₹ Amount"
+                                                                                     value={item.amount}
+                                                                                     onChange={(e) => updateSplitItem(idx, 'amount', e.target.value)}
+                                                                                 />
+                                                                             </div>
+
+                                                                             {/* Reference / UTR Number */}
+                                                                             <div>
+                                                                                 <label className="form-label" style={{ fontSize: 10.5, marginBottom: 2 }}>
+                                                                                     {item.mode === 'CASH' ? 'Receipt Memo' : item.mode === 'UPI' ? 'UPI UTR / Trx ID' : item.mode === 'CHEQUE' ? 'Cheque No.' : 'Ref / Trx ID'}
+                                                                                 </label>
+                                                                                 <input
+                                                                                     className="form-control"
+                                                                                     style={{ fontSize: 12 }}
+                                                                                     placeholder={item.mode === 'CASH' ? 'Cash counter memo' : item.mode === 'UPI' ? 'e.g. 483920194821' : 'Reference number'}
+                                                                                     value={item.transactionRef || ''}
+                                                                                     onChange={(e) => updateSplitItem(idx, 'transactionRef', e.target.value)}
+                                                                                 />
+                                                                             </div>
+
+                                                                             {/* Remove Mode Button */}
+                                                                             {splitItems.length > 1 && (
+                                                                                 <div style={{ paddingTop: 14 }}>
+                                                                                     <button
+                                                                                         type="button"
+                                                                                         className="btn btn-secondary btn-sm"
+                                                                                         style={{ color: 'var(--danger)', padding: '5px 8px', fontSize: 12 }}
+                                                                                         onClick={() => removeSplitItem(idx)}
+                                                                                         title="Remove this payment mode"
+                                                                                     >
+                                                                                         ✕
+                                                                                     </button>
+                                                                                 </div>
+                                                                             )}
+                                                                         </div>
+
+                                                                         {/* Bank Name / Date if Cheque or Bank Transfer */}
+                                                                         {(item.mode === 'CHEQUE' || item.mode === 'DD' || item.mode === 'BANK_TRANSFER') && (
+                                                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6, paddingTop: 6, borderTop: '1px dashed var(--border)' }}>
+                                                                                 <div>
+                                                                                     <label className="form-label" style={{ fontSize: 10, marginBottom: 2 }}>Bank Name</label>
+                                                                                     <input
+                                                                                         className="form-control"
+                                                                                         style={{ fontSize: 11 }}
+                                                                                         placeholder="e.g. State Bank of India"
+                                                                                         value={item.bankName || ''}
+                                                                                         onChange={(e) => updateSplitItem(idx, 'bankName', e.target.value)}
+                                                                                     />
+                                                                                 </div>
+                                                                                 {item.mode === 'CHEQUE' && (
+                                                                                     <div>
+                                                                                         <label className="form-label" style={{ fontSize: 10, marginBottom: 2 }}>Cheque Date</label>
+                                                                                         <input
+                                                                                             type="date"
+                                                                                             className="form-control"
+                                                                                             style={{ fontSize: 11 }}
+                                                                                             value={item.chequeDate || ''}
+                                                                                             onChange={(e) => updateSplitItem(idx, 'chequeDate', e.target.value)}
+                                                                                         />
+                                                                                     </div>
+                                                                                 )}
+                                                                             </div>
+                                                                         )}
+                                                                     </div>
+                                                                 );
+                                                             })}
+
+                                                             {/* ➕ Add Another Payment Mode */}
+                                                             <button
+                                                                 type="button"
+                                                                 className="btn btn-secondary btn-sm"
+                                                                 style={{ 
+                                                                     border: '1.5px dashed var(--accent)', 
+                                                                     justifyContent: 'center', 
+                                                                     padding: '7px 12px',
+                                                                     fontWeight: 700,
+                                                                     color: 'var(--accent)',
+                                                                     background: 'var(--surface)'
+                                                                 }}
+                                                                 onClick={addSplitItem}
+                                                             >
+                                                                 ➕ Add Another Payment Mode (e.g. Cheque / Card / DD)
+                                                             </button>
+
+                                                             {/* Live Split Sum Verification Bar */}
+                                                             {(() => {
+                                                                 const splitSum = splitItems.reduce((acc, sp) => acc + (parseFloat(sp.amount) || 0), 0);
+                                                                 const totalTarget = parseFloat(form.amount) || 0;
+                                                                 const isBalanced = totalTarget > 0 && Math.abs(splitSum - totalTarget) <= 0.01;
+                                                                 const diff = totalTarget - splitSum;
+
+                                                                 return (
+                                                                     <div 
+                                                                         style={{ 
+                                                                             display: 'flex', 
+                                                                             alignItems: 'center', 
+                                                                             justifyContent: 'space-between',
+                                                                             background: isBalanced ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                                                                             border: isBalanced ? '1px solid #10b981' : '1px solid #f59e0b',
+                                                                             borderRadius: 6,
+                                                                             padding: '6px 10px',
+                                                                             fontSize: 12,
+                                                                             fontWeight: 700
+                                                                         }}
+                                                                     >
+                                                                         <span style={{ color: isBalanced ? '#065f46' : '#92400e' }}>
+                                                                             {isBalanced 
+                                                                                 ? `✅ Balanced: ₹${splitSum.toLocaleString('en-IN')} allocated across ${splitItems.filter(i => (parseFloat(i.amount) || 0) > 0).length} modes` 
+                                                                                 : diff > 0 
+                                                                                     ? `⚠️ Unallocated: ₹${diff.toLocaleString('en-IN')} remaining of ₹${totalTarget.toLocaleString('en-IN')}` 
+                                                                                     : `⚠️ Excess: Split modes exceed total by ₹${Math.abs(diff).toLocaleString('en-IN')}`
+                                                                             }
+                                                                         </span>
+                                                                         <span style={{ color: 'var(--text-secondary)' }}>
+                                                                             Split Sum: ₹{splitSum.toLocaleString('en-IN')} / ₹{totalTarget.toLocaleString('en-IN')}
+                                                                         </span>
+                                                                     </div>
+                                                                 );
+                                                             })()}
+                                                         </div>
+                                                     </div>
+                                                 )}
+
+                                                 {/* Remarks Input */}
+                                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                                     <label className="form-label">Remarks / Note (Printed on Receipt)</label>
+                                                     <input 
+                                                         className="form-control" 
+                                                         value={form.remarks}
+                                                         onChange={(e) => setForm(f => ({ ...f, remarks: e.target.value }))} 
+                                                         placeholder="Note for receipt" 
+                                                     />
+                                                 </div>
                                             </div>
                                         </div>
 

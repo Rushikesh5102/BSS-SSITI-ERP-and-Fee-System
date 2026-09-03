@@ -4,6 +4,14 @@ import { formatCurrencyForPdf, paiseToRupees } from '../utils/currency';
 import fs from 'fs';
 import path from 'path';
 
+export interface SplitPaymentBreakdownItem {
+    mode: string;
+    amount: number; // in paise
+    transactionRef?: string;
+    bankName?: string;
+    chequeDate?: string;
+}
+
 interface ReceiptData {
     receiptNumber: string;
     studentName: string;
@@ -25,6 +33,7 @@ interface ReceiptData {
     isSupplementary?: boolean;
     supplementarySubject?: string;
     feeBreakdown?: Array<{ name: string; amount: number }>;
+    splitPaymentBreakdown?: SplitPaymentBreakdownItem[];
 }
 
 /**
@@ -102,7 +111,11 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         let y = height - 162;
         const drawField = (label: string, val: string, fx: number, fy: number) => {
             page.drawText(label, { x: fx, y: fy, font: regularFont, size: 7.5, color: gray });
-            page.drawText(val || '—', { x: fx, y: fy - 10, font: boldFont, size: 8.5, color: black });
+            const displayVal = val || '—';
+            let fontSize = 8.5;
+            if (displayVal.length > 25) fontSize = 7.2;
+            if (displayVal.length > 40) fontSize = 6.2;
+            page.drawText(displayVal.substring(0, 65), { x: fx, y: fy - 10, font: boldFont, size: fontSize, color: black });
         };
 
         drawField('Student Name', data.studentName, leftX, y);
@@ -110,7 +123,10 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
         y -= 26;
         drawField('Student ID', data.studentId, leftX, y);
-        drawField('Payment Mode', data.paymentMode, rightX, y);
+        const headerMode = (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0)
+            ? 'Split (Multi-Mode)'
+            : data.paymentMode;
+        drawField('Payment Mode', headerMode, rightX, y);
 
         y -= 26;
         drawField('Class / Trade', data.className, leftX, y);
@@ -118,6 +134,11 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             drawField('Transaction / Ref. No.', data.transactionRef, rightX, y);
         } else if (data.bankName) {
             drawField('Bank Name', data.bankName, rightX, y);
+        } else if (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0) {
+            const allRefs = data.splitPaymentBreakdown.filter(i => i.transactionRef).map(i => `${i.mode}: ${i.transactionRef}`).join('; ');
+            drawField('Transaction / Ref. No.', allRefs || 'Multi-Mode Breakdown', rightX, y);
+        } else {
+            drawField('Transaction / Ref. No.', 'Counter Cash / Direct', rightX, y);
         }
 
         if (data.isSupplementary) {
@@ -179,13 +200,30 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         }
 
         // Amount in Words
-        y -= 16;
+        y -= 15;
         const amountInWords = numberToWords(paiseToRupees(data.amount));
         page.drawText(`Amount in Words: ${amountInWords} Rupees Only`, { x: leftX, y, font: regularFont, size: 7, color: gray });
 
+        // Payment Mode Breakdown (Explicitly printed)
+        y -= 11;
+        let modeBreakdownText = '';
+        if (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0) {
+            const parts = data.splitPaymentBreakdown.map(item => {
+                const label = item.mode === 'UPI' ? 'UPI/Online' : item.mode === 'BANK_TRANSFER' ? 'Bank Transfer' : item.mode === 'CASH' ? 'Cash' : item.mode === 'CHEQUE' ? 'Cheque' : item.mode;
+                const ref = item.transactionRef ? ` (${item.transactionRef})` : '';
+                return `${label} — ${formatCurrencyForPdf(item.amount)}${ref}`;
+            });
+            modeBreakdownText = `Payment Mode: ${parts.join('  |  ')}  |  Total Paid — ${formatCurrencyForPdf(data.amount)}`;
+        } else {
+            const singleRef = data.transactionRef ? ` (Ref: ${data.transactionRef})` : '';
+            const singleBank = data.bankName ? ` [${data.bankName}]` : '';
+            modeBreakdownText = `Payment Mode: ${data.paymentMode}${singleRef}${singleBank}  |  Total Paid — ${formatCurrencyForPdf(data.amount)}`;
+        }
+        page.drawText(modeBreakdownText.substring(0, 95), { x: leftX, y, font: boldFont, size: 6.8, color: primary });
+
         // Remarks / Notes
-        y -= 12;
-        page.drawText(`Remarks / Note: ${data.remarks || 'Fees received with thanks.'}`, { x: leftX, y, font: boldFont, size: 7, color: primary });
+        y -= 10;
+        page.drawText(`Remarks / Note: ${data.remarks || 'Fees received with thanks.'}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
 
         // ─── 3 SIGNATURE SECTIONS (Student, Clerk, Principal) ─────────────────
         y -= 38;

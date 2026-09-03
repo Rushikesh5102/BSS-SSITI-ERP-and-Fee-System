@@ -31,7 +31,8 @@ export const paymentsController = {
             feesFor,
             isSupplementary,
             supplementarySubject,
-            feeBreakdown
+            feeBreakdown,
+            splitPayment,
         } = req.body;
 
         // Validate student fee exists
@@ -137,16 +138,57 @@ export const paymentsController = {
             pdfBalanceDue = Math.max(0, studentFee.totalAmount - pdfTotalPaid);
         }
 
+        // ─── 3. SPLIT / MULTI-MODE PAYMENT FORMATTING ─────────────────────────────────
+        let effectiveMode = mode;
+        let effectiveTransactionRef = transactionRef;
+        let effectiveBankName = bankName;
+        let splitPaymentBreakdown: any = undefined;
+
+        if (Array.isArray(splitPayment) && splitPayment.length > 0) {
+            const splitSummaryParts: string[] = [];
+            const refParts: string[] = [];
+            const bankParts: string[] = [];
+
+            splitPaymentBreakdown = splitPayment
+                .filter((sp: any) => (parseFloat(sp.amount) || 0) > 0)
+                .map((sp: any) => {
+                    const spPaise = typeof sp.amount === 'number' && sp.amount > 1000
+                        ? sp.amount
+                        : Math.round((parseFloat(sp.amount) || 0) * 100);
+                    const spRupees = spPaise / 100;
+                    splitSummaryParts.push(`${sp.mode}: ₹${spRupees.toLocaleString('en-IN')}`);
+                    if (sp.transactionRef) refParts.push(`${sp.mode}: ${sp.transactionRef}`);
+                    if (sp.bankName) bankParts.push(`${sp.mode}: ${sp.bankName}`);
+
+                    return {
+                        mode: sp.mode,
+                        amount: spPaise,
+                        transactionRef: sp.transactionRef,
+                        bankName: sp.bankName,
+                        chequeDate: sp.chequeDate
+                    };
+                });
+
+            if (splitSummaryParts.length > 0) {
+                effectiveMode = `SPLIT (${splitSummaryParts.join(' + ')})`;
+                if (refParts.length > 0) effectiveTransactionRef = refParts.join(' | ');
+                if (bankParts.length > 0) effectiveBankName = bankParts.join(' | ');
+
+                const splitRemarks = `[Multi-Mode: ${splitSummaryParts.join(' + ')}]`;
+                effectiveRemarks = effectiveRemarks ? `${effectiveRemarks} | ${splitRemarks}` : splitRemarks;
+            }
+        }
+
         // Record payment
         const payment = await prisma.payment.create({
             data: {
                 studentFeeId: targetStudentFeeId,
                 amount,
-                mode,
+                mode: effectiveMode,
                 status: PaymentStatus.VERIFIED, // Offline payments are auto-verified
-                transactionRef,
+                transactionRef: effectiveTransactionRef,
                 chequeDate: chequeDate ? new Date(chequeDate) : null,
-                bankName,
+                bankName: effectiveBankName,
                 remarks: effectiveRemarks,
                 recordedById: req.user!.id,
                 approvedById: req.user!.id,
@@ -170,15 +212,16 @@ export const paymentsController = {
             totalFee: pdfTotalFee,
             totalPaid: pdfTotalPaid,
             balanceDue: pdfBalanceDue,
-            paymentMode: mode,
-            transactionRef,
+            paymentMode: effectiveMode,
+            transactionRef: effectiveTransactionRef,
             feesFor: effectiveFeesFor,
-            bankName,
+            bankName: effectiveBankName,
             remarks: effectiveRemarks,
             clerkName: (req.user as any)?.name || 'Fee Counter Cashier',
             isSupplementary: Boolean(isSupplementary),
             supplementarySubject: supplementarySubject || undefined,
             feeBreakdown: Array.isArray(feeBreakdown) ? feeBreakdown : undefined,
+            splitPaymentBreakdown: splitPaymentBreakdown && splitPaymentBreakdown.length > 0 ? splitPaymentBreakdown : undefined,
         });
 
         // Save PDF to disk
