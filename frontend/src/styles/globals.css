@@ -245,12 +245,12 @@ body.sidebar-collapsed .user-badge {
 /* ─── Institutional ERP Footer ──────────────────────────────────────────────── */
 .footer {
   margin-top: auto;
-  min-height: 52px;
+  min-height: 48px;
   padding: 16px 28px;
-  border-top: 1px solid var(--border);
-  background: var(--surface-card);
-  color: #475569;
-  font-size: 12px;
+  border-top: 1px solid rgba(186, 159, 122, 0.28);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12.5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -259,29 +259,36 @@ body.sidebar-collapsed .user-badge {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  transition: border-color var(--transition-fast);
 }
 
-.footer a {
-  color: #334155;
+.footer a,
+.footer .footer-link {
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 600;
-  transition: color var(--transition-fast);
+  transition: color 0.15s ease;
 }
 
-.footer a:hover {
-  text-decoration: underline;
-  color: var(--primary);
+.footer a:hover,
+.footer .footer-link:hover {
+  text-decoration: none;
+  color: var(--primary-dark);
 }
 
 html.dark .footer {
-  color: #94a3b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: var(--text-muted);
 }
 
-html.dark .footer a {
+html.dark .footer a,
+html.dark .footer .footer-link {
   color: #cbd5e1;
 }
 
-html.dark .footer a:hover {
+html.dark .footer a:hover,
+html.dark .footer .footer-link:hover {
   color: #38bdf8;
 }
 
@@ -771,24 +778,7 @@ html.dark .login-logo h1 { color: var(--primary); }
   color: var(--text-muted);
 }
 
-/* ─── Global Footer Styling ────────────────────────────────────────────────── */
-.footer {
-  width: 100%;
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-html.dark .footer {
-  background: #020617;
-  border-color: #1e293b;
-  color: #94a3b8;
-}
+
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.96) translateY(10px); }
   to { opacity: 0; transform: scale(1) translateY(0); }
