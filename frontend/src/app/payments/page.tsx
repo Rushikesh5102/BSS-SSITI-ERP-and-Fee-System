@@ -282,6 +282,24 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         setResult(null);
     };
 
+    const handleClearAllFields = () => {
+        setFeeItems([{ type: 'TUITION', amount: '' }]);
+        setForm({
+            amount: '',
+            mode: 'CASH',
+            transactionRef: '',
+            bankName: '',
+            chequeDate: '',
+            remarks: ''
+        });
+        setSplitItems([
+            { mode: 'CASH', amount: '', transactionRef: '' },
+            { mode: 'UPI', amount: '', transactionRef: '' }
+        ]);
+        setIsSplitPayment(false);
+        showToast('🧹 All payment fields cleared!');
+    };
+
     const handleQuickAddStudent = async (e: React.FormEvent) => {
         e.preventDefault();
         setQuickAdding(true);
@@ -539,7 +557,18 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                             {selectedFee && (
                                 <div className="card">
-                                    <div className="card-header"><div className="card-title">Step 2: Payment Allocation & Fee Head Breakdown</div></div>
+                                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                                        <div className="card-title">Step 2: Payment Allocation & Fee Head Breakdown</div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-xs"
+                                            style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px' }}
+                                            onClick={handleClearAllFields}
+                                            title="Clear all fee amounts, split modes, and remarks"
+                                        >
+                                            🧹 Clear All Fields
+                                        </button>
+                                    </div>
                                     <form onSubmit={handleSubmit}>
                                         <div className="card-body">
                                             {/* Balance summary */}

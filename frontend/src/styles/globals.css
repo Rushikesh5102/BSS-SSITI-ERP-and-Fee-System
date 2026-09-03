@@ -649,6 +649,64 @@ input[type="file"]::file-selector-button:hover {
   line-height: 1.2;
 }
 
+/* ─── Global Centered Floating Toast / Popup System ────────────────────────── */
+.toast-wrap {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  animation: toastPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast {
+  padding: 16px 26px;
+  border-radius: var(--radius-xl);
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  line-height: 1.45;
+  max-width: 580px;
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+  border: 1.5px solid #34d399;
+  box-shadow: 0 25px 50px -12px rgba(5, 150, 105, 0.5), 0 0 25px rgba(52, 211, 153, 0.3);
+  color: #ffffff;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+  border: 1.5px solid #f87171;
+  box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.5), 0 0 25px rgba(248, 113, 113, 0.3);
+  color: #ffffff;
+}
+
+@keyframes toastPopIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -42%) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 /* ─── Modals ───────────────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
