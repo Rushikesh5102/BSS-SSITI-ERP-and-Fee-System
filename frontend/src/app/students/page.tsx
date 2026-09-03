@@ -227,6 +227,28 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         }
     };
 
+    const [deletingStudent, setDeletingStudent] = useState(false);
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
+    const handleDeleteStudent = async () => {
+        if (!editingStudent) return;
+        try {
+            setDeletingStudent(true);
+            await api.delete(`/students/${editingStudent.id}`, {
+                data: { reason: `Administrative Deletion by ${effectiveRole}` }
+            });
+            showToast(`🗑️ Student ${editingStudent.name} (${editingStudent.studentId}) successfully deleted and archived.`);
+            setShowDeleteConfirmModal(false);
+            setShowEditProfileModal(false);
+            setEditingStudent(null);
+            fetchStudents();
+        } catch (err: any) {
+            showToast(`❌ ${err.response?.data?.message || 'Failed to delete student'}`);
+        } finally {
+            setDeletingStudent(false);
+        }
+    };
+
     const [activeTab, setActiveTab] = useState<'students' | 'inquiries'>('students');
 
     useEffect(() => {
@@ -654,25 +676,25 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             </span>
                                                         ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                     </td>
-                                                    <td data-label="Actions" className="cell-actions">
-                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', minWidth: 220 }}>
-                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openHistoryModal(s.id)}>
-                                                                📜 History
-                                                            </button>
-                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={() => openEditProfileModal(s)} title="Edit Student Admission Profile">
-                                                                ✏️ Edit
-                                                            </button>
-                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
-                                                                🪪 ID Card
-                                                            </button>
-                                                            <button className="btn btn-secondary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center' }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
-                                                                📄 Form PDF
-                                                            </button>
+                                                    <td data-label="Actions" className="cell-actions" style={{ minWidth: 160 }}>
+                                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                                                             {canShowFeeBtn && (
-                                                                <button className="btn btn-primary btn-sm" style={{ padding: '6px 8px', fontSize: 12, justifyContent: 'center', gridColumn: 'span 2' }} onClick={() => openAssignFeeModal(s)}>
+                                                                <button className="btn btn-primary btn-xs" style={{ padding: '4px 8px', fontSize: 11.5, fontWeight: 700 }} onClick={() => openAssignFeeModal(s)} title={feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}>
                                                                     💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
                                                                 </button>
                                                             )}
+                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5 }} onClick={() => openHistoryModal(s.id)} title="View Fee History">
+                                                                📜 History
+                                                            </button>
+                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5 }} onClick={() => openEditProfileModal(s)} title="Edit Student Admission Profile">
+                                                                ✏️ Edit
+                                                            </button>
+                                                            <button className="btn btn-ghost btn-xs" style={{ padding: '4px 6px', fontSize: 11.5 }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
+                                                                🪪 ID
+                                                            </button>
+                                                            <button className="btn btn-ghost btn-xs" style={{ padding: '4px 6px', fontSize: 11.5 }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
+                                                                📄 PDF
+                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1311,13 +1333,63 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     </div>
                                 </div>
                             </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditProfileModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={updatingProfile}>
-                                    {updatingProfile ? 'Saving Changes...' : '💾 Save Profile Updates'}
-                                </button>
+                            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-danger btn-sm" 
+                                        style={{ background: '#dc2626', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
+                                        onClick={() => setShowDeleteConfirmModal(true)}
+                                    >
+                                        🗑️ Delete Student Record
+                                    </button>
+                                )}
+                                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowEditProfileModal(false)}>Cancel</button>
+                                    <button type="submit" className="btn btn-primary" disabled={updatingProfile}>
+                                        {updatingProfile ? 'Saving Changes...' : '💾 Save Profile Updates'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirmModal && editingStudent && (
+                <div className="modal-overlay" style={{ zIndex: 35000 }} onClick={() => setShowDeleteConfirmModal(false)}>
+                    <div className="modal" style={{ maxWidth: 440, textAlign: 'center', padding: '24px 20px' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ fontSize: 40, marginBottom: 10 }}>⚠️</div>
+                        <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--danger)', marginBottom: 8 }}>
+                            Confirm Student Deletion
+                        </h3>
+                        <p style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
+                            Are you sure you want to delete <b>{editingStudent.name}</b> (<code>{editingStudent.studentId}</code>)?
+                        </p>
+                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', textAlign: 'left', marginBottom: 20 }}>
+                            🛡️ <b>Audit Log Notice:</b> This action will be permanently recorded in the administrative Audit Log with your timestamp and authority credentials.
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{ flex: 1, justifyContent: 'center' }}
+                                onClick={() => setShowDeleteConfirmModal(false)}
+                                disabled={deletingStudent}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                style={{ flex: 1, justifyContent: 'center', background: '#dc2626', color: '#fff', fontWeight: 700 }}
+                                onClick={handleDeleteStudent}
+                                disabled={deletingStudent}
+                            >
+                                {deletingStudent ? 'Deleting...' : '🗑️ Yes, Delete'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

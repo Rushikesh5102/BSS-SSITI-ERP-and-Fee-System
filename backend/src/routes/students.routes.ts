@@ -1,9 +1,7 @@
 import { Router } from 'express';
 import { studentsController } from '../controllers/students.controller';
 import { authenticate, authorize } from '../middleware/auth';
-
 import { Role } from '../types/enums';
-
 
 const router = Router();
 
@@ -22,7 +20,7 @@ router.post('/', authorize(Role.ADMIN, Role.ACCOUNTANT), studentsController.crea
 // PUT /students/:id - Admin and Accountant only
 router.put('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT), studentsController.update);
 
-// DELETE /students/:id - Admin only
-router.delete('/:id', authorize(Role.ADMIN), studentsController.delete);
+// DELETE /students/:id - Admin, SuperAdmin, and Developer
+router.delete('/:id', authorize(Role.ADMIN, Role.SUPERADMIN, Role.DEVELOPER), studentsController.delete);
 
 export default router;

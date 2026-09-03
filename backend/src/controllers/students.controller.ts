@@ -295,10 +295,48 @@ export const studentsController = {
 
     /**
      * DELETE /students/:id
-     * Soft delete (set isActive = false)
+     * Administrative Student Deletion (Soft delete & Audit Logging)
      */
     delete: asyncHandler(async (req: Request, res: Response) => {
-        await prisma.student.update({ where: { id: req.params.id }, data: { isActive: false } });
-        res.json({ success: true, message: 'Student deactivated' });
+        const student = await prisma.student.findUnique({
+            where: { id: req.params.id }
+        });
+
+        if (!student) {
+            throw new AppError(404, 'Student record not found');
+        }
+
+        // Soft delete student record
+        await prisma.student.update({
+            where: { id: req.params.id },
+            data: { isActive: false }
+        });
+
+        // Record official audit log for administrative authority
+        try {
+            await createAuditLog(
+                req.user!.id,
+                AuditAction.STUDENT_DELETED,
+                'Student',
+                student.id,
+                {
+                    studentId: student.studentId,
+                    name: student.name,
+                    class: student.class,
+                    rollNumber: student.rollNumber,
+                    deletedBy: req.user?.email,
+                    role: req.user?.role,
+                    reason: req.body?.reason || 'Administrative Deletion via Profile Edit'
+                },
+                req.ip
+            );
+        } catch (auditErr) {
+            console.warn('Student deletion audit log notice:', auditErr);
+        }
+
+        res.json({
+            success: true,
+            message: `Student ${student.name} (${student.studentId}) successfully deleted and archived in audit records.`
+        });
     }),
 };
