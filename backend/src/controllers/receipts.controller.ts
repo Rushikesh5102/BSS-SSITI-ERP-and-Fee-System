@@ -94,6 +94,7 @@ export const receiptsController = {
                             },
                         },
                     },
+                    generatedBy: { select: { name: true } },
                 },
             });
 
@@ -102,27 +103,30 @@ export const receiptsController = {
             }
 
             const studentFee = receipt.payment.studentFee;
-            const totalPaid = studentFee.paidAmount;
-            const balanceDue = Math.max(0, studentFee.totalAmount - totalPaid);
+            const totalFee = studentFee ? studentFee.totalAmount : receipt.payment.amount;
+            const totalPaid = studentFee ? studentFee.paidAmount : receipt.payment.amount;
+            const balanceDue = Math.max(0, totalFee - totalPaid);
+            const isSupp = receipt.payment.remarks?.toLowerCase().includes('supplementary') || studentFee?.feeStructure?.name?.toLowerCase().includes('supplementary');
 
             pdfBuffer = await generateReceiptPdf({
                 receiptNumber: receipt.receiptNumber,
-                studentName: studentFee.student.name,
-                studentId: studentFee.student.studentId,
-                className: studentFee.student.class,
-                parentName: studentFee.student.parent?.name,
-                parentPhone: studentFee.student.parent?.phone,
+                studentName: studentFee?.student?.name || 'Student',
+                studentId: studentFee?.student?.studentId || 'N/A',
+                className: studentFee?.student?.class || 'ITI Trade',
+                parentName: studentFee?.student?.parent?.name,
+                parentPhone: studentFee?.student?.parent?.phone,
                 paymentDate: receipt.createdAt,
                 amount: receipt.payment.amount,
-                totalFee: studentFee.totalAmount,
+                totalFee: totalFee,
                 totalPaid: totalPaid,
-                balanceDue: balanceDue,
+                balanceDue: isSupp ? 0 : balanceDue,
                 paymentMode: receipt.payment.mode,
                 transactionRef: receipt.payment.transactionRef || undefined,
-                feesFor: studentFee.feeStructure?.name || 'Academic Fee',
+                feesFor: isSupp ? 'Supplementary / Back Paper Exam Fee' : (studentFee?.feeStructure?.name || 'Academic Fee'),
                 bankName: receipt.payment.bankName || undefined,
                 remarks: receipt.payment.remarks || undefined,
-                clerkName: (receipt as any).generatedBy?.name || 'Fee Counter Cashier',
+                clerkName: receipt.generatedBy?.name || 'Fee Counter Cashier',
+                isSupplementary: Boolean(isSupp),
             });
 
             try {
@@ -131,7 +135,8 @@ export const receiptsController = {
         }
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${receiptNumber}.pdf"`);
+        res.setHeader('Content-Disposition', `inline; filename="${receiptNumber}.pdf"`);
+        res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(pdfBuffer);
     }),
 };

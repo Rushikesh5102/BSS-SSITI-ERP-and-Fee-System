@@ -7,6 +7,7 @@ import { createAuditLog } from '../middleware/auditLogger';
 import { config } from '../config';
 
 import { AuditAction, PaymentStatus } from '../types/enums';
+import { logger } from '../utils/logger';
 
 import { generateReceiptPdf } from '../services/pdf.service';
 import { notificationService } from '../services/notification.service';
@@ -224,10 +225,14 @@ export const paymentsController = {
             splitPaymentBreakdown: splitPaymentBreakdown && splitPaymentBreakdown.length > 0 ? splitPaymentBreakdown : undefined,
         });
 
-        // Save PDF to disk
+        // Save PDF to disk safely
         const pdfFileName = `${receiptNumber}.pdf`;
         const pdfPath = path.join(RECEIPTS_DIR, pdfFileName);
-        fs.writeFileSync(pdfPath, pdfBuffer);
+        try {
+            fs.writeFileSync(pdfPath, pdfBuffer);
+        } catch (fsErr) {
+            logger.warn(`Could not cache PDF receipt to disk (ignoring for serverless/cloud runtime): ${fsErr}`);
+        }
 
         const receipt = await prisma.receipt.create({
             data: {
@@ -258,7 +263,16 @@ export const paymentsController = {
 
         res.status(201).json({
             success: true,
-            data: { payment, receipt, pdfUrl: receipt.pdfUrl },
+            data: { 
+                payment, 
+                receipt, 
+                pdfUrl: receipt.pdfUrl,
+                studentFee: {
+                    totalAmount: pdfTotalFee,
+                    paidAmount: pdfTotalPaid,
+                    balanceDue: pdfBalanceDue,
+                }
+            },
         });
     }),
 

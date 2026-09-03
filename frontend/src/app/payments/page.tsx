@@ -1218,49 +1218,77 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                         <div>
                             {result ? (
                                 <div className="card">
-                                    <div style={{ background: 'var(--accent)', padding: '20px 24px', borderRadius: '10px 10px 0 0', color: 'white', textAlign: 'center' }}>
-                                        <div style={{ fontSize: 40 }}>✅</div>
-                                        <div style={{ fontSize: 18, fontWeight: 700, marginTop: 8 }}>Payment Successful!</div>
-                                        <div style={{ opacity: 0.85, fontSize: 13 }}>Official receipt has been generated</div>
+                                    <div style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', padding: '20px 24px', borderRadius: '10px 10px 0 0', color: 'white', textAlign: 'center' }}>
+                                        <div style={{ fontSize: 36, marginBottom: 4 }}>🎉</div>
+                                        <div style={{ fontSize: 18, fontWeight: 800 }}>Payment Recorded Successfully!</div>
+                                        <div style={{ opacity: 0.9, fontSize: 12.5 }}>Official receipt generated & stored</div>
                                     </div>
                                     <div className="card-body">
-                                        {[
-                                            ['Receipt No.', result.receipt?.receiptNumber],
-                                            ['Amount Paid', formatRupees(result.payment?.amount || 0)],
-                                            ['Payment Mode', result.payment?.mode],
-                                            ['Date', new Date(result.payment?.createdAt || Date.now()).toLocaleDateString('en-IN')],
-                                            ['Remarks / Notes', result.payment?.remarks || 'Fee Payment Received'],
-                                        ].map(([label, value]) => (
-                                            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                                                <span className="text-muted">{label}</span>
-                                                <b>{value}</b>
-                                            </div>
-                                        ))}
-
-                                        {selectedFee && (
-                                            <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 8, fontSize: 13 }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span className="text-muted">Total Agreed Course Fee:</span>
-                                                    <b>{formatRupees(selectedFee.totalAmount)}</b>
-                                                </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                                                    <span className="text-muted">Total Paid Till Date:</span>
-                                                    <b style={{ color: 'var(--accent)' }}>{formatRupees((selectedFee.paidAmount || 0) + (result.payment?.amount || 0))}</b>
-                                                </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                                                    <span className="text-muted">Remaining Balance:</span>
-                                                    <b style={{ color: Math.max(0, selectedFee.totalAmount - (selectedFee.paidAmount || 0) - (result.payment?.amount || 0)) > 0 ? 'var(--danger)' : 'var(--accent)' }}>
-                                                        {formatRupees(Math.max(0, selectedFee.totalAmount - (selectedFee.paidAmount || 0) - (result.payment?.amount || 0)))}
-                                                    </b>
-                                                </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <span className="text-muted">Receipt Number</span>
+                                            <span className="badge badge-primary" style={{ fontSize: 12, fontWeight: 800 }}>{result.receipt?.receiptNumber || 'N/A'}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <span className="text-muted">Received Amount (This Receipt)</span>
+                                            <b style={{ color: 'var(--accent)', fontSize: 15 }}>{formatRupees(result.payment?.amount || 0)}</b>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <span className="text-muted">Payment Mode</span>
+                                            <span className="badge badge-neutral">{result.payment?.mode}</span>
+                                        </div>
+                                        {result.payment?.transactionRef && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                                <span className="text-muted">Reference / Trx No.</span>
+                                                <span style={{ fontSize: 12, fontWeight: 600 }}>{result.payment.transactionRef}</span>
                                             </div>
                                         )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <span className="text-muted">Transaction Date</span>
+                                            <b>{new Date(result.payment?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</b>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <span className="text-muted">Remarks / Fee Head</span>
+                                            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{result.payment?.remarks || 'Fee Payment Received'}</span>
+                                        </div>
+
+                                        {/* ─── Clear Total, Received, and Balance Ledger Breakdown ─── */}
+                                        {(() => {
+                                            const totalAmt = result.studentFee?.totalAmount ?? (selectedFee?.totalAmount || 0);
+                                            const totalPaid = result.studentFee?.paidAmount ?? (selectedFee?.paidAmount || 0);
+                                            const balDue = result.studentFee?.balanceDue ?? Math.max(0, totalAmt - totalPaid);
+
+                                            return (
+                                                <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                                                    <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 8, letterSpacing: '0.5px' }}>
+                                                        📊 Official Account Balance Summary
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                                                        <span className="text-muted">Total Agreed Course Fee:</span>
+                                                        <b>{formatRupees(totalAmt)}</b>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                                                        <span className="text-muted">Received Amount (This Receipt):</span>
+                                                        <b style={{ color: 'var(--accent)' }}>{formatRupees(result.payment?.amount || 0)}</b>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                                                        <span className="text-muted">Total Paid Till Date:</span>
+                                                        <b style={{ color: '#10b981' }}>{formatRupees(totalPaid)}</b>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, paddingTop: 6, borderTop: '1px dashed var(--border)', marginTop: 4 }}>
+                                                        <span className="font-bold">Remaining Balance Due:</span>
+                                                        <b style={{ color: balDue > 0 ? '#ef4444' : '#10b981', fontSize: 14.5 }}>
+                                                            {balDue > 0 ? formatRupees(balDue) : '✅ Fully Paid (₹0)'}
+                                                        </b>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
 
                                         <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                                             <button 
                                                 onClick={() => window.print()}
                                                 className="btn btn-secondary" 
-                                                style={{ justifyContent: 'center' }}
+                                                style={{ justifyContent: 'center', fontWeight: 700 }}
                                             >
                                                 🖨️ Print Slip
                                             </button>
@@ -1269,9 +1297,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
                                                 className="btn btn-primary" 
-                                                style={{ justifyContent: 'center' }}
+                                                style={{ justifyContent: 'center', fontWeight: 700 }}
                                             >
-                                                📄 PDF Receipt
+                                                📄 View / Download PDF
                                             </a>
                                         </div>
                                     </div>
@@ -1334,12 +1362,31 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                                                 <span className="text-muted">Payment Mode:</span>
-                                                <span className="badge badge-info">{form.mode}</span>
+                                                <span className="badge badge-info">{isSplitPayment ? '🔀 Split Payment' : form.mode}</span>
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 6 }}>
-                                                <span className="font-bold">Total Amount Receiving:</span>
-                                                <b style={{ fontSize: 16, color: 'var(--accent)' }}>{formatRupees(inputAmountPaise)}</b>
-                                            </div>
+
+                                            {selectedFee && (
+                                                <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                                                        <span className="text-muted">Total Agreed Fee:</span>
+                                                        <b>{formatRupees(selectedFee.totalAmount)}</b>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                                                        <span className="text-muted">Paid Till Date:</span>
+                                                        <b style={{ color: '#10b981' }}>{formatRupees(selectedFee.paidAmount)}</b>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--accent)', fontWeight: 800, padding: '4px 0', borderTop: '1px dashed var(--border)', borderBottom: '1px dashed var(--border)', margin: '4px 0' }}>
+                                                        <span>Amount Receiving Now:</span>
+                                                        <span>{formatRupees(inputAmountPaise)}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 700 }}>
+                                                        <span>Estimated Remaining Balance:</span>
+                                                        <span style={{ color: Math.max(0, pendingBalance - inputAmountPaise) > 0 ? '#ef4444' : '#10b981' }}>
+                                                            {formatRupees(Math.max(0, pendingBalance - inputAmountPaise))}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="text-center text-muted text-sm" style={{ padding: '20px 0' }}>

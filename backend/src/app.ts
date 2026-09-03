@@ -85,6 +85,7 @@ app.use('/api/fee-structures', feeStructuresRoutes);
 app.use('/api/fees', feeStructuresRoutes);     // alias for /fees/assign
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/receipts', receiptsRoutes);
+app.use('/receipts', receiptsRoutes);             // direct alias for receipt downloads
 app.use('/api/reports', reportsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/branches', branchesRoutes);
