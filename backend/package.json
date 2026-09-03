@@ -10,6 +10,7 @@
         "prisma:generate": "prisma generate",
         "prisma:seed": "ts-node prisma/seed.ts",
         "prisma:studio": "prisma studio",
+        "db:purge-students": "ts-node prisma/purge_students.ts",
         "db:rls": "node src/scripts/apply-rls.js"
     },
     "prisma": {
