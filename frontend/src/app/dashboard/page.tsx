@@ -5,10 +5,19 @@ import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import api from '../../services/api';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import WelcomeOverlay from '../../components/WelcomeOverlay';
 import Footer from '../../components/Footer';
+
+const MonthlyRevenueChart = dynamic(() => import('../../components/MonthlyRevenueChart'), {
+    ssr: false,
+    loading: () => (
+        <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner" />
+        </div>
+    )
+});
 
 interface DashboardStats {
     totalStudents: number;
@@ -112,14 +121,24 @@ function DashboardContent() {
                 }
             }).catch(() => { });
         } else {
-            api.get('/reports/dashboard').then(({ data }) => {
-                setStats(data.data);
-                if (data.data.chartData) {
-                    setChartData(data.data.chartData);
+            Promise.allSettled([
+                api.get('/reports/dashboard'),
+                api.get('/payments?limit=5'),
+                api.get('/reports/storage-stats')
+            ]).then(([dashRes, payRes, storeRes]) => {
+                if (dashRes.status === 'fulfilled' && dashRes.value?.data?.data) {
+                    setStats(dashRes.value.data.data);
+                    if (dashRes.value.data.data.chartData) {
+                        setChartData(dashRes.value.data.data.chartData);
+                    }
                 }
-            }).catch(() => { });
-            api.get('/payments?limit=5').then(({ data }) => setRecentPayments(data.data || [])).catch(() => { });
-            api.get('/reports/storage-stats').then(({ data }) => setStorageStats(data.data)).catch(() => { });
+                if (payRes.status === 'fulfilled' && payRes.value?.data?.data) {
+                    setRecentPayments(payRes.value.data.data);
+                }
+                if (storeRes.status === 'fulfilled' && storeRes.value?.data?.data) {
+                    setStorageStats(storeRes.value.data.data);
+                }
+            });
         }
     }, [user?.id, effectiveRole]);
 
@@ -493,36 +512,7 @@ function DashboardContent() {
                                     <span className="badge badge-info">Last 6 Months</span>
                                 </div>
                                 <div className="card-body" style={{ height: 320, padding: '16px 12px 12px 12px' }}>
-                                    <ResponsiveContainer width="100%" height={280}>
-                                        <BarChart data={chartData} margin={{ top: 12, right: 16, left: -4, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.95} />
-                                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.7} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
-                                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)', fontWeight: 600 }} />
-                                            <YAxis
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
-                                                tickFormatter={(v) => v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`}
-                                            />
-                                            <Tooltip
-                                                formatter={(v: any) => [`₹${Number(v).toLocaleString('en-IN')}`, 'Collection']}
-                                                contentStyle={{
-                                                    borderRadius: 10,
-                                                    border: '1px solid var(--border)',
-                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                                    fontSize: 13,
-                                                    background: 'var(--surface-card)',
-                                                    color: 'var(--text-primary)'
-                                                }}
-                                            />
-                                            <Bar dataKey="amount" fill="url(#barGradient)" radius={[6, 6, 0, 0]} maxBarSize={44} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                    <MonthlyRevenueChart chartData={chartData} />
                                 </div>
                             </div>
 

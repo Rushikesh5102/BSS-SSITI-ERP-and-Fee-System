@@ -6,10 +6,19 @@ import Sidebar from '../../components/Sidebar';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
 import Footer from '../../components/Footer';
 import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
+
+const generateAdmissionFormPdf = async (student: any) => {
+    const mod = await import('../../utils/studentPdfGenerator');
+    return mod.generateAdmissionFormPdf(student);
+};
+
+const generateStudentIdCardPdf = async (student: any) => {
+    const mod = await import('../../utils/studentPdfGenerator');
+    return mod.generateStudentIdCardPdf(student);
+};
 
 const INDIAN_SUBCASTES: Record<string, string[]> = {
     OBC: ['Mali', 'Kunbi', 'Teli', 'Dhangar', 'Nhavi', 'Kumbhar', 'Sutar', 'Koshti', 'Shimpi', 'Lohar', 'Vani', 'Sonar', 'Gurav', 'Bhavsar', 'Koli', 'Tambat', 'Gawali', 'Yadav', 'Other (Write-in)'],

@@ -83,18 +83,27 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
     const fetchStudentsList = (query: string) => {
-        api.get(`/students?search=${query}&limit=30`).then(({ data }) => setStudents(data.data || [])).catch(() => { });
+        api.get(`/students?search=${encodeURIComponent(query)}&limit=30`).then(({ data }) => setStudents(data.data || [])).catch(() => { });
     };
 
     const fetchFeeStructures = () => {
         api.get('/fee-structures').then(({ data }) => setFeeStructures(data.data || [])).catch(() => { });
     };
 
+    // Load master fee structures once on mount
     useEffect(() => {
         if (!user) return;
-        fetchStudentsList(studentSearch);
         fetchFeeStructures();
-    }, [user, effectiveRole, studentSearch]);
+    }, [user]);
+
+    // Debounced student search (250ms) to eliminate redundant network requests while typing
+    useEffect(() => {
+        if (!user) return;
+        const debounceTimer = setTimeout(() => {
+            fetchStudentsList(studentSearch);
+        }, 250);
+        return () => clearTimeout(debounceTimer);
+    }, [user, studentSearch]);
 
     const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
 

@@ -188,7 +188,7 @@ export const studentsController = {
         }
 
         // ─── Generate Student Login Account ────────────────────────────────────
-        const passwordHash = await bcrypt.hash(studentId, 12);
+        const passwordHash = await bcrypt.hash(studentId, 10);
         const generatedEmail = `${studentId.toLowerCase().replace(/[^a-z0-9]/g, '')}@student.saiiti.edu.in`;
         const primaryEmail = cleanEmail || generatedEmail;
 
