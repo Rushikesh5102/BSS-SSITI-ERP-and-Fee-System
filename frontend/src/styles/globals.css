@@ -247,10 +247,11 @@ body.sidebar-collapsed .user-badge {
   margin-top: auto;
   min-height: 48px;
   padding: 16px 28px;
-  border-top: 1px solid rgba(186, 159, 122, 0.28);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12.5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(2, 44, 88, 0.35);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -259,37 +260,39 @@ body.sidebar-collapsed .user-badge {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   transition: border-color var(--transition-fast);
 }
 
 .footer a,
 .footer .footer-link {
-  color: var(--text-secondary);
+  color: #bae6fd;
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
 }
 
 .footer a:hover,
 .footer .footer-link:hover {
   text-decoration: none;
-  color: var(--primary-dark);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
 }
 
 html.dark .footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: transparent;
-  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.45);
+  color: rgba(255, 255, 255, 0.88);
 }
 
 html.dark .footer a,
 html.dark .footer .footer-link {
-  color: #cbd5e1;
+  color: #7dd3fc;
 }
 
 html.dark .footer a:hover,
 html.dark .footer .footer-link:hover {
-  color: #38bdf8;
+  color: #ffffff;
 }
 
 /* ─── Mobile Header (Hidden on Desktop) ────────────────────────────────────── */
