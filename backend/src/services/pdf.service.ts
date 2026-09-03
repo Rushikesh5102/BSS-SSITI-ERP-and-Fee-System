@@ -37,6 +37,20 @@ interface ReceiptData {
 }
 
 /**
+ * Cleans string to ensure 100% WinAnsi / ASCII compatibility for pdf-lib standard fonts
+ */
+export function cleanAscii(str: string | undefined | null): string {
+    if (!str) return '';
+    return String(str)
+        .replace(/[\u2014\u2013]/g, '-')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/\u20B9/g, 'Rs. ')
+        .replace(/[^\x20-\x7E\t\r\n]/g, '')
+        .trim();
+}
+
+/**
  * Generate a professional PDF receipt using pdf-lib
  * Returns the PDF as a Buffer (can be saved to disk or streamed)
  */
@@ -95,23 +109,23 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             textX = xOffset + 105;
         }
 
-        page.drawText(config.school.name, { x: textX, y: height - 42, font: boldFont, size: 15, color: white });
-        page.drawText(config.school.address.substring(0, 50), { x: textX, y: height - 58, font: regularFont, size: 8, color: rgb(0.8, 0.8, 0.9) });
-        page.drawText(`Ph: ${config.school.phone} | Email: ${config.school.email}`, { x: textX, y: height - 72, font: regularFont, size: 7.5, color: rgb(0.8, 0.8, 0.9) });
+        page.drawText(cleanAscii(config.school.name), { x: textX, y: height - 42, font: boldFont, size: 15, color: white });
+        page.drawText(cleanAscii(config.school.address).substring(0, 50), { x: textX, y: height - 58, font: regularFont, size: 8, color: rgb(0.8, 0.8, 0.9) });
+        page.drawText(cleanAscii(`Ph: ${config.school.phone} | Email: ${config.school.email}`), { x: textX, y: height - 72, font: regularFont, size: 7.5, color: rgb(0.8, 0.8, 0.9) });
         page.drawText(copyLabel.toUpperCase(), { x: textX, y: height - 86, font: boldFont, size: 8, color: accent });
 
         const headerBadgeColor = data.isSupplementary ? gold : accent;
         const headerBadgeTitle = data.isSupplementary ? 'SUPPLEMENTARY EXAM RECEIPT' : 'OFFICIAL FEE RECEIPT';
         page.drawRectangle({ x: xOffset + 215, y: height - 130, width: 160, height: 26, color: headerBadgeColor });
         page.drawText(headerBadgeTitle, { x: xOffset + 222, y: height - 116, font: boldFont, size: 7.5, color: white });
-        page.drawText(data.receiptNumber, { x: xOffset + 222, y: height - 126, font: regularFont, size: 7, color: white });
+        page.drawText(cleanAscii(data.receiptNumber), { x: xOffset + 222, y: height - 126, font: regularFont, size: 7, color: white });
 
         page.drawLine({ start: { x: leftX, y: height - 142 }, end: { x: xOffset + 375, y: height - 142 }, thickness: 0.75, color: primary });
 
         let y = height - 162;
         const drawField = (label: string, val: string, fx: number, fy: number) => {
             page.drawText(label, { x: fx, y: fy, font: regularFont, size: 7.5, color: gray });
-            const displayVal = val || '—';
+            const displayVal = cleanAscii(val) || '-';
             let fontSize = 8.5;
             if (displayVal.length > 25) fontSize = 7.2;
             if (displayVal.length > 40) fontSize = 6.2;
@@ -158,7 +172,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         y -= 30;
         const tableTitle = data.isSupplementary
             ? 'SUPPLEMENTARY EXAM LEDGER (INDEPENDENT CHARGE)'
-            : `FEE BREAKDOWN & ACCOUNT LEDGER — ${(data.feesFor || 'ACADEMIC FEE').substring(0, 32).toUpperCase()}`;
+            : cleanAscii(`FEE BREAKDOWN & ACCOUNT LEDGER - ${(data.feesFor || 'ACADEMIC FEE').substring(0, 32).toUpperCase()}`);
         page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 18, color: primary });
         page.drawText(tableTitle, { x: leftX + 10, y: y + 1, font: boldFont, size: 7.5, color: white });
 
@@ -173,7 +187,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             page.drawText('Charge Type: Independent Supplementary Exam Fee (Tuition Balance Unaffected)', { x: leftX + 10, y: y - 2, font: boldFont, size: 7, color: primary });
             page.drawText(formatCurrencyForPdf(data.amount), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
         } else {
-            page.drawText(`Total Agreed Course Fee (${data.feesFor?.substring(0, 28) || 'Trade Fee'}):`, { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText(cleanAscii(`Total Agreed Course Fee (${data.feesFor?.substring(0, 28) || 'Trade Fee'}):`), { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
             page.drawText(formatCurrencyForPdf(totalFeePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
         }
 
@@ -188,7 +202,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 16, color: lightGray });
         if (data.isSupplementary) {
             page.drawText('Status:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText('✅ Supplementary Exam Fee Cleared', { x: leftX + 50, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+            page.drawText('[CLEARED] Supplementary Exam Fee Cleared', { x: leftX + 50, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
             page.drawText('Regular Course Dues:', { x: leftX + 205, y: y - 2, font: regularFont, size: 7.5, color: gray });
             page.drawText('Maintained Separately', { x: xOffset + 285, y: y - 2, font: boldFont, size: 7, color: primary });
         } else {
@@ -201,7 +215,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
         // Amount in Words
         y -= 15;
-        const amountInWords = numberToWords(paiseToRupees(data.amount));
+        const amountInWords = cleanAscii(numberToWords(paiseToRupees(data.amount)));
         page.drawText(`Amount in Words: ${amountInWords} Rupees Only`, { x: leftX, y, font: regularFont, size: 7, color: gray });
 
         // Payment Mode Breakdown (Explicitly printed)
@@ -210,20 +224,21 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         if (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0) {
             const parts = data.splitPaymentBreakdown.map(item => {
                 const label = item.mode === 'UPI' ? 'UPI/Online' : item.mode === 'BANK_TRANSFER' ? 'Bank Transfer' : item.mode === 'CASH' ? 'Cash' : item.mode === 'CHEQUE' ? 'Cheque' : item.mode;
-                const ref = item.transactionRef ? ` (${item.transactionRef})` : '';
-                return `${label} — ${formatCurrencyForPdf(item.amount)}${ref}`;
+                const ref = item.transactionRef ? ` (${cleanAscii(item.transactionRef)})` : '';
+                return `${label} - ${formatCurrencyForPdf(item.amount)}${ref}`;
             });
-            modeBreakdownText = `Payment Mode: ${parts.join('  |  ')}  |  Total Paid — ${formatCurrencyForPdf(data.amount)}`;
+            modeBreakdownText = `Payment Mode: ${parts.join(' | ')} | Total Paid - ${formatCurrencyForPdf(data.amount)}`;
         } else {
-            const singleRef = data.transactionRef ? ` (Ref: ${data.transactionRef})` : '';
-            const singleBank = data.bankName ? ` [${data.bankName}]` : '';
-            modeBreakdownText = `Payment Mode: ${data.paymentMode}${singleRef}${singleBank}  |  Total Paid — ${formatCurrencyForPdf(data.amount)}`;
+            const singleRef = data.transactionRef ? ` (Ref: ${cleanAscii(data.transactionRef)})` : '';
+            const singleBank = data.bankName ? ` [${cleanAscii(data.bankName)}]` : '';
+            modeBreakdownText = `Payment Mode: ${cleanAscii(data.paymentMode)}${singleRef}${singleBank} | Total Paid - ${formatCurrencyForPdf(data.amount)}`;
         }
-        page.drawText(modeBreakdownText.substring(0, 95), { x: leftX, y, font: boldFont, size: 6.8, color: primary });
+        page.drawText(cleanAscii(modeBreakdownText).substring(0, 95), { x: leftX, y, font: boldFont, size: 6.8, color: primary });
 
         // Remarks / Notes
         y -= 10;
-        page.drawText(`Remarks / Note: ${data.remarks || 'Fees received with thanks.'}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
+        const safeRemarks = cleanAscii(data.remarks) || 'Fees received with thanks.';
+        page.drawText(`Remarks / Note: ${safeRemarks}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
 
         // ─── 3 SIGNATURE SECTIONS (Student, Clerk, Principal) ─────────────────
         y -= 38;
@@ -235,13 +250,13 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         const clerkX = leftX + 110;
         page.drawLine({ start: { x: clerkX, y }, end: { x: clerkX + 90, y }, thickness: 0.5, color: gray });
         page.drawText("Clerk / Cashier Signature", { x: clerkX, y: y - 9, font: boldFont, size: 6.5, color: black });
-        page.drawText(data.clerkName ? `By: ${data.clerkName}` : 'Accounts Clerk', { x: clerkX, y: y - 16, font: regularFont, size: 6, color: gray });
+        page.drawText(data.clerkName ? `By: ${cleanAscii(data.clerkName)}` : 'Accounts Clerk', { x: clerkX, y: y - 16, font: regularFont, size: 6, color: gray });
 
         // 3. Authorized Principal Signature & Official Stamp
         const sigX = xOffset + 245;
         page.drawLine({ start: { x: sigX, y }, end: { x: sigX + 110, y }, thickness: 0.5, color: gray });
         page.drawText("Authorized Signatory & Seal", { x: sigX, y: y - 9, font: boldFont, size: 6.5, color: primary });
-        page.drawText(config.school.name, { x: sigX, y: y - 16, font: boldFont, size: 6, color: gray });
+        page.drawText(cleanAscii(config.school.name), { x: sigX, y: y - 16, font: boldFont, size: 6, color: gray });
 
         if (stampImage) {
             page.drawImage(stampImage, { x: sigX + 15, y: y + 2, width: 55, height: 35 });
@@ -372,7 +387,7 @@ export const generateReportPdf = async (
         const rowColor = rowIndex % 2 === 0 ? white : lightGray;
         page.drawRectangle({ x: 30, y: currentY - 20, width: width - 60, height: 20, color: rowColor, borderColor: borderGray, borderWidth: 0.5 });
         row.forEach((cell, colIndex) => {
-            const text = String(cell || '—');
+            const text = cleanAscii(String(cell || '-'));
             page.drawText(text.substring(0, 22), { x: 35 + colIndex * colWidth, y: currentY - 14, font: regularFont, size: 7.5, color: black });
         });
         currentY -= 20;
@@ -382,7 +397,7 @@ export const generateReportPdf = async (
     // Footer
     page.drawRectangle({ x: 0, y: 0, width, height: 20, color: primary });
     page.drawText(`Generated on: ${new Date().toLocaleString('en-IN')}`, { x: 30, y: 6, font: regularFont, size: 7, color: rgb(0.8, 0.8, 0.9) });
-    page.drawText(`${config.school.name} — Confidential ERP Report`, { x: width - 260, y: 6, font: regularFont, size: 7, color: rgb(0.8, 0.8, 0.9) });
+    page.drawText(`${cleanAscii(config.school.name)} - Confidential ERP Report`, { x: width - 260, y: 6, font: regularFont, size: 7, color: rgb(0.8, 0.8, 0.9) });
 
     const pdfBytes = await doc.save({ useObjectStreams: true });
     return Buffer.from(pdfBytes);

@@ -3,17 +3,39 @@ import path from 'path';
 import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { generateReceiptPdf } from '../services/pdf.service';
+import { generateReceiptPdf, cleanAscii } from '../services/pdf.service';
+import { getNextReceiptNumber } from '../utils/uuid';
 
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 
 export const receiptsController = {
     /**
-     * GET /receipts - List receipts (paginated)
+     * GET /receipts - List receipts (paginated with automatic receipt generation for any unlinked payments)
      */
     list: asyncHandler(async (req: Request, res: Response) => {
-        const { page = 1, limit = 20, studentId, search = '' } = req.query;
+        const { page = 1, limit = 50, studentId, search = '' } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
+
+        // Auto-heal: Ensure any payments that were recorded have a corresponding Receipt row
+        try {
+            const paymentsWithoutReceipt = await prisma.payment.findMany({
+                where: { receipt: null },
+                select: { id: true, createdAt: true, recordedById: true },
+            });
+
+            for (const p of paymentsWithoutReceipt) {
+                const receiptNumber = await getNextReceiptNumber();
+                await prisma.receipt.create({
+                    data: {
+                        receiptNumber,
+                        paymentId: p.id,
+                        pdfUrl: `/api/receipts/download/${receiptNumber}`,
+                        generatedById: p.recordedById,
+                        createdAt: p.createdAt,
+                    },
+                }).catch(() => {});
+            }
+        } catch { }
 
         const where: any = {};
         if (studentId) {
@@ -23,7 +45,8 @@ export const receiptsController = {
             where.OR = [
                 { receiptNumber: { contains: String(search), mode: 'insensitive' } },
                 { payment: { studentFee: { student: { name: { contains: String(search), mode: 'insensitive' } } } } },
-                { payment: { studentFee: { student: { studentId: { contains: String(search), mode: 'insensitive' } } } } }
+                { payment: { studentFee: { student: { studentId: { contains: String(search), mode: 'insensitive' } } } } },
+                { payment: { remarks: { contains: String(search), mode: 'insensitive' } } }
             ];
         }
 

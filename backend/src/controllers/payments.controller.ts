@@ -206,37 +206,44 @@ export const paymentsController = {
         // Generate next guaranteed unique receipt number
         const receiptNumber = await getNextReceiptNumber();
 
-        const pdfBuffer = await generateReceiptPdf({
-            receiptNumber,
-            studentName: studentFee.student.name,
-            studentId: studentFee.student.studentId,
-            className: studentFee.student.class,
-            parentName: studentFee.student.parent?.name,
-            parentPhone: studentFee.student.parent?.phone,
-            paymentDate: new Date(),
-            amount,
-            totalFee: pdfTotalFee,
-            totalPaid: pdfTotalPaid,
-            balanceDue: pdfBalanceDue,
-            paymentMode: effectiveMode,
-            transactionRef: effectiveTransactionRef,
-            feesFor: effectiveFeesFor,
-            bankName: effectiveBankName,
-            remarks: effectiveRemarks,
-            clerkName: (req.user as any)?.name || 'Fee Counter Cashier',
-            isSupplementary: Boolean(isSupplementary),
-            supplementarySubject: supplementarySubject || undefined,
-            feeBreakdown: Array.isArray(feeBreakdown) ? feeBreakdown : undefined,
-            splitPaymentBreakdown: splitPaymentBreakdown && splitPaymentBreakdown.length > 0 ? splitPaymentBreakdown : undefined,
-        });
-
-        // Save PDF to disk safely
-        const pdfFileName = `${receiptNumber}.pdf`;
-        const pdfPath = path.join(RECEIPTS_DIR, pdfFileName);
+        let pdfBuffer: Buffer | null = null;
         try {
-            fs.writeFileSync(pdfPath, pdfBuffer);
-        } catch (fsErr) {
-            logger.warn(`Could not cache PDF receipt to disk (ignoring for serverless/cloud runtime): ${fsErr}`);
+            pdfBuffer = await generateReceiptPdf({
+                receiptNumber,
+                studentName: studentFee.student.name,
+                studentId: studentFee.student.studentId,
+                className: studentFee.student.class,
+                parentName: studentFee.student.parent?.name,
+                parentPhone: studentFee.student.parent?.phone,
+                paymentDate: new Date(),
+                amount,
+                totalFee: pdfTotalFee,
+                totalPaid: pdfTotalPaid,
+                balanceDue: pdfBalanceDue,
+                paymentMode: effectiveMode,
+                transactionRef: effectiveTransactionRef,
+                feesFor: effectiveFeesFor,
+                bankName: effectiveBankName,
+                remarks: effectiveRemarks,
+                clerkName: (req.user as any)?.name || 'Fee Counter Cashier',
+                isSupplementary: Boolean(isSupplementary),
+                supplementarySubject: supplementarySubject || undefined,
+                feeBreakdown: Array.isArray(feeBreakdown) ? feeBreakdown : undefined,
+                splitPaymentBreakdown: splitPaymentBreakdown && splitPaymentBreakdown.length > 0 ? splitPaymentBreakdown : undefined,
+            });
+        } catch (pdfErr) {
+            logger.warn(`Could not render PDF buffer synchronously (will render on demand): ${pdfErr}`);
+        }
+
+        // Save PDF to disk safely if buffer generated
+        if (pdfBuffer) {
+            const pdfFileName = `${receiptNumber}.pdf`;
+            const pdfPath = path.join(RECEIPTS_DIR, pdfFileName);
+            try {
+                fs.writeFileSync(pdfPath, pdfBuffer);
+            } catch (fsErr) {
+                logger.warn(`Could not cache PDF receipt to disk (ignoring for serverless/cloud runtime): ${fsErr}`);
+            }
         }
 
         const receipt = await prisma.receipt.create({
