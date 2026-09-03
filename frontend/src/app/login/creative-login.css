@@ -1,25 +1,26 @@
-/* Clean, Premium Beige & Blue Creative Mechanical Login Form */
+/* Clean, Premium Beige-Blue & Royal Blue Creative Mechanical Login Form */
 .creative-login-wrapper {
     min-height: 100vh;
     width: 100vw;
     position: relative;
     overflow: hidden;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: #FAF9F6;
-    transition: background-color 0.3s ease;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #0f172a 100%);
+    transition: background 0.3s ease;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 html.dark .creative-login-wrapper {
-    background-color: #0b0f19;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%);
 }
 
-/* Unboxed Majestic Brand Header (Positioned at top without pushing the machine) */
+/* Unboxed Majestic Brand Header */
 .unboxed-brand-header {
     position: fixed;
-    top: 16px;
+    top: 24px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -32,9 +33,9 @@ html.dark .creative-login-wrapper {
 }
 
 .unboxed-brand-header .free-logo {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 4px;
+    width: 82px;
+    height: 82px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -49,37 +50,31 @@ html.dark .creative-login-wrapper {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.45));
+    filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 30px rgba(56, 189, 248, 0.85));
 }
 
 .unboxed-brand-header .brand-title {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 800;
-    color: #1e293b;
+    color: #ffffff;
     letter-spacing: 0.5px;
     margin: 0;
-}
-
-html.dark .unboxed-brand-header .brand-title {
-    color: #f8fafc;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
 .unboxed-brand-header .brand-subtitle {
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 600;
-    margin: 2px 0 0;
-    letter-spacing: 0.3px;
+    font-size: 13px;
+    color: #bae6fd;
+    font-weight: 700;
+    margin: 3px 0 0;
+    letter-spacing: 0.4px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 
-html.dark .unboxed-brand-header .brand-subtitle {
-    color: #94a3b8;
-}
-
-/* Main Machine Stage Container (Matches original 38% top anchor for exact full-screen fit) */
-.container {
+/* Main Machine Stage Container */
+.machine-container {
     position: fixed;
-    top: 38%;
+    top: 54%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 1000px;
@@ -87,8 +82,8 @@ html.dark .unboxed-brand-header .brand-subtitle {
     pointer-events: none;
 }
 
-/* SVG Line Art Layer */
-svg.machine-svg {
+/* SVG Line Art Layer (Crisp White against Blue background) */
+.machine-svg {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -96,32 +91,33 @@ svg.machine-svg {
     width: 1000px;
     height: 1000px;
     pointer-events: none;
-    stroke-width: 1.4px;
-    stroke: #1e293b;
+    stroke-width: 1.5px;
+    stroke: #ffffff;
     fill: none;
     transition: stroke 0.3s ease;
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.3));
 }
 
-html.dark svg.machine-svg {
-    stroke: #f1f5f9;
+html.dark .machine-svg {
+    stroke: #e2e8f0;
 }
 
-html.dark svg.machine-svg [fill="#000"],
-html.dark svg.machine-svg [fill="#000000"],
-html.dark svg.machine-svg [fill="#231f20"] {
+.machine-svg [fill="#000"],
+.machine-svg [fill="#000000"],
+.machine-svg [fill="#231f20"] {
     fill: #38bdf8 !important;
 }
 
-html.dark svg.machine-svg [fill="#fff"],
-html.dark svg.machine-svg [fill="#ffffff"] {
-    fill: #1e293b !important;
+.machine-svg [fill="#fff"],
+.machine-svg [fill="#ffffff"] {
+    fill: #ffffff !important;
 }
 
-html.dark svg.machine-svg [fill="#cccccc"] {
-    fill: #475569 !important;
+.machine-svg [fill="#cccccc"] {
+    fill: #94a3b8 !important;
 }
 
-/* Exact Form Geometry (270px width, 60px row intervals) */
+/* Exact Form Geometry (270px width, 60px row intervals) with Warm Beige Inputs */
 .form-container {
     position: absolute;
     top: 50%;
@@ -144,114 +140,102 @@ html.dark svg.machine-svg [fill="#cccccc"] {
     box-sizing: border-box;
 }
 
-/* Beige Tinted Input Fields */
 .form-container .form-row input[type="text"],
 .form-container .form-row input[type="email"],
 .form-container .form-row input[type="password"] {
     width: 100%;
-    height: 32px;
+    height: 38px;
     margin: 0;
-    padding: 5px 10px;
+    padding: 6px 14px;
     outline: none;
-    border: 2px solid #E2D9CD;
-    border-radius: 4px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
     background: #FAF7F2;
-    color: #1e293b;
+    color: #0f172a;
     font-size: 13.5px;
+    font-weight: 600;
     font-family: inherit;
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
 }
 
 html.dark .form-container .form-row input[type="text"],
 html.dark .form-container .form-row input[type="email"],
 html.dark .form-container .form-row input[type="password"] {
-    background: #131b2e;
-    border-color: #2a3854;
+    background: #1e293b;
+    border-color: #334155;
     color: #f8fafc;
 }
 
 .form-container .form-row input:focus {
-    border-color: #2563eb;
+    border-color: #38bdf8;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35);
 }
 
 html.dark .form-container .form-row input:focus {
     background: #0f172a;
     border-color: #38bdf8;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.35);
 }
 
 .form-container .form-row input.valid {
-    border-color: #1e293b;
+    border-color: #34d399;
 }
 
 html.dark .form-container .form-row input.valid {
-    border-color: #38bdf8;
+    border-color: #34d399;
 }
 
-/* Checkbox with Beige Label */
 .form-container .form-row input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     margin: 0 10px 0 0;
     padding: 0;
     cursor: pointer;
-    accent-color: #2563eb;
+    accent-color: #38bdf8;
 }
 
 .form-container .form-row label.checkbox-label {
     display: flex;
     align-items: center;
     font-size: 13px;
-    font-weight: 600;
-    color: #334155;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
     cursor: pointer;
     user-select: none;
 }
 
 html.dark .form-container .form-row label.checkbox-label {
-    color: #cbd5e1;
+    color: #e2e8f0;
 }
 
-/* Submit Button in Warm Beige & Royal Blue (Rotates and swings via GSAP) */
+/* Submit Button styled with Royal Blue Theme & connected to the GSAP pulley */
 .form-container .form-row .submit-btn {
     width: 100%;
-    height: 40px;
+    height: 42px;
     cursor: pointer;
-    border: 1px solid #E2D9CD;
-    border-radius: 4px;
-    background-color: #F5EFEB;
-    color: #1e40af;
-    font-size: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    color: #ffffff !important;
+    font-size: 13.5px;
     font-weight: 700;
     font-family: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
     transform-origin: 100% 0%;
 }
 
 .form-container .form-row .submit-btn:hover:not(:disabled) {
-    background-color: #2563eb;
-    color: #ffffff !important;
-    border-color: #1d4ed8;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-}
-
-html.dark .form-container .form-row .submit-btn {
-    background-color: #1e293b;
-    border-color: #334155;
-    color: #38bdf8;
-}
-
-html.dark .form-container .form-row .submit-btn:hover:not(:disabled) {
-    background-color: #2563eb;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .form-container .form-row .submit-btn:disabled {
@@ -262,18 +246,18 @@ html.dark .form-container .form-row .submit-btn:hover:not(:disabled) {
 /* Floating Alerts at Top of Screen */
 .floating-alert {
     position: fixed;
-    top: 110px;
+    top: 135px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
-    padding: 8px 16px;
+    padding: 9px 18px;
     border-radius: 30px;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     animation: fadeInFloating 0.25s ease;
 }
 
@@ -285,11 +269,11 @@ html.dark .form-container .form-row .submit-btn:hover:not(:disabled) {
 .floating-alert-waking {
     background: rgba(14, 165, 233, 0.95);
     color: #ffffff;
-    border: 1px solid rgba(56, 189, 248, 0.4);
+    border: 1px solid rgba(56, 189, 248, 0.5);
 }
 
 .floating-alert-error {
     background: rgba(239, 68, 68, 0.95);
     color: #ffffff;
-    border: 1px solid rgba(248, 113, 113, 0.4);
+    border: 1px solid rgba(248, 113, 113, 0.5);
 }

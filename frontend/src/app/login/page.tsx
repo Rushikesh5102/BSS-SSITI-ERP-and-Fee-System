@@ -34,15 +34,15 @@ export default function LoginPage() {
     // Machine Animation State
     const machineState = useRef({
         handClosed: false,
-        sumbitBtnOnPlace: false,
-        sumbitBtnTextOpacity: 1,
+        submitBtnOnPlace: false,
+        submitBtnTextOpacity: 1,
         pullProgress: 0,
         sprayRepeatCounter: 0,
-        nameValid: false,
-        emailValid: false
+        emailValid: false,
+        passValid: false
     });
 
-    // Theme & Remember Me initialization
+    // 1. Remember Me & Saved Email initialization
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
         try {
@@ -52,7 +52,7 @@ export default function LoginPage() {
                 setRememberMe(true);
                 if (savedEmail) {
                     setEmail(savedEmail);
-                    machineState.current.nameValid = true;
+                    machineState.current.emailValid = true;
                 }
             }
         } catch {}
@@ -70,24 +70,24 @@ export default function LoginPage() {
         }
     };
 
-    // Responsive scaling to fit viewports without bottom cut-off
+    // Responsive scaling to fit viewports
     const scaleToFit = () => {
         if (!containerRef.current || !window.gsap) return;
-        const h = 800;
+        const h = 860;
         if (window.innerHeight < h) {
             window.gsap.set(containerRef.current, {
-                scale: window.innerHeight / h,
-                transformOrigin: "50% 75%"
+                scale: Math.max(0.58, window.innerHeight / h),
+                transformOrigin: "50% 50%"
             });
         } else {
             window.gsap.set(containerRef.current, {
                 scale: 1,
-                transformOrigin: "50% 75%"
+                transformOrigin: "50% 50%"
             });
         }
     };
 
-    // Pulling Wire Timeline Creator (Fluid wire physics connecting checkbox, pulley wheel & swinging button)
+    // Pulling Wire Timeline Creator (Calculates fluid physics and wire attachment)
     const createPullingTimeline = (isFixed: boolean, btnPulled: boolean) => {
         if (!window.gsap || !svgRef.current || !submitBtnRef.current) return null;
         const gsap = window.gsap;
@@ -138,7 +138,7 @@ export default function LoginPage() {
         if (isFixed && btnPulled) {
             tl.to(machineState.current, { pullProgress: 1 }, 0)
               .to(submitBtn, { rotation: 0 }, 0)
-              .to(machineState.current, { duration: 0.1, sumbitBtnOnPlace: 1 }, 0.9)
+              .to(machineState.current, { duration: 0.1, submitBtnOnPlace: 1 }, 0.9)
               .to(checkboxPullLine, { attr: { y2: 44 - 130 } }, 0)
               .to(checkboxPullCircle, { y: 44 - 130 }, 0);
         } else if (!isFixed && btnPulled) {
@@ -148,7 +148,7 @@ export default function LoginPage() {
         } else if (isFixed && !btnPulled) {
             tl.to(machineState.current, { pullProgress: 0 }, 0)
               .to(submitBtn, { rotation: -90 }, 0)
-              .to(machineState.current, { duration: 0.1, sumbitBtnOnPlace: 0 }, 0)
+              .to(machineState.current, { duration: 0.1, submitBtnOnPlace: 0 }, 0)
               .to(checkboxPullLine, { attr: { y2: 44 } }, 0)
               .to(checkboxPullCircle, { y: 44 }, 0);
         } else {
@@ -196,7 +196,7 @@ export default function LoginPage() {
 
         if (!gearsContainer || !spiralPath) return;
 
-        // 1. Layout Preparation (Exact coordinates from original demo)
+        // Reset positions
         gsap.set(pullSystemContainer, { x: 375, y: 646 });
         gsap.set(sprayHandContainer, { x: 700, y: 621 });
         gsap.set(sprayer, { x: -59.5, y: 53 });
@@ -204,7 +204,6 @@ export default function LoginPage() {
         gsap.set(scalesContainer, { x: 170, y: 710 });
         gsap.set(grabbingHand, { x: 297, y: 830 });
         gsap.set(grabbingHandClosedFingers, { opacity: 0 });
-        gsap.set(grabbingHandOpenFingers, { opacity: 1 });
         gsap.set(spiralContainer, { x: 305, y: 435, svgOrigin: "14 14", scaleX: -1 });
         gsap.set(weightBigContainer, { x: 305, y: 435 });
         gsap.set([sprayLines, sprayBubbles], { opacity: 0 });
@@ -256,8 +255,8 @@ export default function LoginPage() {
             gsap.set(weightBig, { x: -47 + 3 * offset, y: 12 + outerLength });
         }
 
-        // 2. Email Timeline: Spring, Scales, Car & Grabbing Hand (Triggered by password input)
-        function createEmailTl() {
+        // Password Timeline: Spring, Scales, Car & Grabbing Hand
+        function createPasswordTl() {
             const spiralTurnsNumber = 8;
             const spiralProgress = { v: 0 };
             const hammerTimeStart = 1.85;
@@ -299,7 +298,7 @@ export default function LoginPage() {
             return tl;
         }
 
-        // 3. Rotating Gears & Spray Canister Timeline (Triggered by username/email input)
+        // Rotating Gears & Spray Canister Timeline
         function createGearsTimelines() {
             const tls: any[] = [];
             if (!gearsContainer) return tls;
@@ -435,12 +434,6 @@ export default function LoginPage() {
                             });
                         }
                     });
-
-                    tl.eventCallback("onRepeat", () => {
-                        if (!machineState.current.sumbitBtnOnPlace) {
-                            machineState.current.sprayRepeatCounter++;
-                        }
-                    });
                 }
 
                 tl.progress(0.6);
@@ -451,7 +444,7 @@ export default function LoginPage() {
             return tls;
         }
 
-        emailTlRef.current = createEmailTl();
+        emailTlRef.current = createPasswordTl();
         gearsTlsRef.current = createGearsTimelines();
         createPullingTimeline(machineState.current.handClosed, rememberMe);
 
@@ -471,11 +464,11 @@ export default function LoginPage() {
         };
     }, [gsapLoaded]);
 
-    // Handle Username / Email typing: spins the gears & pumps spray head
+    // Handle Email typing: spins the gears & pumps spray head
     const handleEmailChange = (val: string) => {
         setEmail(val);
         const isValid = val.length > 3;
-        machineState.current.nameValid = isValid;
+        machineState.current.emailValid = isValid;
 
         if (window.gsap && gearsTlsRef.current.length > 0) {
             if (isValid) {
@@ -491,16 +484,15 @@ export default function LoginPage() {
                         window.gsap.to(tl, { timeScale: 0, onComplete: () => tl.pause() });
                     }
                 });
-                machineState.current.sprayRepeatCounter = 0;
             }
         }
     };
 
-    // Handle Password typing: unwinds spiral spring, tilts scales, rolls cart, closes robotic hand
+    // Handle Password typing: unwinds spring, tilts scale, moves car, closes robotic hand
     const handlePasswordChange = (val: string) => {
         setPassword(val);
         const isValid = val.length >= 4;
-        machineState.current.emailValid = isValid;
+        machineState.current.passValid = isValid;
 
         if (emailTlRef.current) {
             if (isValid) {
@@ -515,7 +507,7 @@ export default function LoginPage() {
         }
     };
 
-    // Handle Remember Me Checkbox: pulls chain and swings submit button down
+    // Handle Remember Me Checkbox: pulls chain and smoothly swings submit button down with fluid wire physics
     const handleRememberChange = (checked: boolean) => {
         setRememberMe(checked);
         createPullingTimeline(machineState.current.handClosed, checked);
@@ -527,6 +519,7 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
+            // Save or clear remember me in localStorage
             if (rememberMe) {
                 localStorage.setItem('remember_me', 'true');
                 localStorage.setItem('remembered_email', targetEmail);
@@ -552,6 +545,7 @@ export default function LoginPage() {
 
             if (isNetworkOrColdStart && !isAutoRetry) {
                 if (isLocalhost) {
+                    // On localhost, immediately attempt offline fallback without 30s delay
                     try {
                         await login(targetEmail, targetPass, true);
                         setIsWakingUp(false);
@@ -564,6 +558,7 @@ export default function LoginPage() {
                         setError(fallbackErr.message || 'Local backend offline. Please check credentials.');
                     }
                 } else {
+                    // In cloud production, Render free-tier spins down after inactivity
                     retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
                     setIsWakingUp(true);
                     setCountdown(30);
@@ -627,7 +622,7 @@ export default function LoginPage() {
                 onLoad={() => setGsapLoaded(true)}
             />
 
-            {/* Unboxed Brand Header */}
+            {/* Unboxed Majestic Brand Header (No box around logo, larger presentation) */}
             <div className="unboxed-brand-header">
                 <div className="free-logo">
                     <img src="/sai_iti_logo.png" alt="Shri Sai I.T.I Logo" />
@@ -640,13 +635,13 @@ export default function LoginPage() {
             <button 
                 onClick={toggleTheme}
                 style={{
-                    position: 'fixed', top: 20, right: 24, padding: '7px 14px',
+                    position: 'fixed', top: 24, right: 24, padding: '8px 16px',
                     background: isDark ? '#1e293b' : '#ffffff',
-                    border: isDark ? '1px solid #334155' : '1px solid #E2D9CD',
+                    border: isDark ? '1px solid #334155' : '1px solid #D8CEC1',
                     color: isDark ? '#f8fafc' : '#1e293b',
                     borderRadius: '100px', cursor: 'pointer', zIndex: 100,
-                    display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', fontWeight: 700,
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
                 }}
             >
                 {isDark ? '☀️ Light' : '🌙 Dark'}
@@ -674,11 +669,11 @@ export default function LoginPage() {
                 </div>
             )}
 
-            {/* Main Machinery Stage (.container with exact original 38% top anchor & full bottom visibility) */}
-            <div className="container" ref={containerRef}>
-                {/* Form Container (Exact 270px width / 60px row geometry) */}
-                <div className="form-container">
-                    {/* Row 1: Email / Username */}
+            {/* Mechanical Container with SVG & Form precisely positioned */}
+            <div className="machine-container" ref={containerRef}>
+                {/* Form Elements (Exact 270px width / 60px row geometry) */}
+                <form className="form-container" onSubmit={handleSubmit}>
+                    {/* Row 1: Email (Touching gears on right) */}
                     <div className="form-row">
                         <input
                             type="text"
@@ -688,11 +683,11 @@ export default function LoginPage() {
                             onChange={(e) => handleEmailChange(e.target.value)}
                             required
                             autoComplete="email"
-                            className={machineState.current.nameValid ? 'valid' : ''}
+                            className={machineState.current.emailValid ? 'valid' : ''}
                         />
                     </div>
 
-                    {/* Row 2: Password */}
+                    {/* Row 2: Password (Touching spiral spring on left) */}
                     <div className="form-row">
                         <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
                             <input
@@ -703,8 +698,8 @@ export default function LoginPage() {
                                 onChange={(e) => handlePasswordChange(e.target.value)}
                                 required
                                 autoComplete="current-password"
-                                className={machineState.current.emailValid ? 'valid' : ''}
-                                style={{ paddingRight: 34 }}
+                                className={machineState.current.passValid ? 'valid' : ''}
+                                style={{ paddingRight: 36 }}
                             />
                             <button
                                 type="button"
@@ -712,8 +707,8 @@ export default function LoginPage() {
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 title={showPassword ? 'Hide password' : 'Show password'}
                                 style={{
-                                    position: 'absolute', right: 6, background: 'none',
-                                    border: 'none', cursor: 'pointer', fontSize: 14,
+                                    position: 'absolute', right: 8, background: 'none',
+                                    border: 'none', cursor: 'pointer', fontSize: 15,
                                     color: '#64748b', padding: 4, display: 'flex', alignItems: 'center'
                                 }}
                             >
@@ -722,7 +717,7 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    {/* Row 3: Stay Signed In Checkbox */}
+                    {/* Row 3: Checkbox (Touching vertical pulley chain) */}
                     <div className="form-row">
                         <label className="checkbox-label">
                             <input
@@ -736,12 +731,11 @@ export default function LoginPage() {
                         </label>
                     </div>
 
-                    {/* Row 4: Submit Button */}
+                    {/* Row 4: Submit Button (Hanging from pulley / Swings down) */}
                     <div className="form-row">
                         <button
                             ref={submitBtnRef}
-                            type="button"
-                            onClick={handleSubmit}
+                            type="submit"
                             className="submit-btn"
                             disabled={loading || isWakingUp}
                         >
@@ -755,9 +749,9 @@ export default function LoginPage() {
                             )}
                         </button>
                     </div>
-                </div>
+                </form>
 
-                {/* SVG Line Art Layer (Exact duplicate of original vector geometry) */}
+                {/* SVG Mechanical Rig (Layered precisely in front of form) */}
                 <svg
                     ref={svgRef}
                     className="machine-svg"
@@ -767,7 +761,7 @@ export default function LoginPage() {
                 >
                     <rect x="710" y="527" width="16" height="47" rx="10" ry="10" />
 
-                    {/* Grabbing Hand: Open state (initial) */}
+                    {/* Grabbing Hand */}
                     <g className="grabbing-hand">
                         <path d="M48.89,54.39c-3.51.76-15.72,3-22.83-.68a14,14,0,0,0-6.41-1.52h0A3.79,3.79,0,0,1,17,51.09a3.7,3.7,0,0,1-1.1-2.64V27.75A3.75,3.75,0,0,1,19.63,24H24.1"/>
                         <path className="grabbing-hand-finger-open" d="M57.05,29.76l24.82,0a4.07,4.07,0,0,0,4.11-4h0a4.07,4.07,0,0,0-4-4.11L48.69,21.3"/>
@@ -777,7 +771,7 @@ export default function LoginPage() {
                         <path className="grabbing-hand-finger-open" d="M40.78,28c5.75-5.85,12.66-22,10.5-25.88-2.25-4.09-6,.1-14.73,8.66C30.84,16.36,30.91,17.1,24.32,24"/>
                     </g>
 
-                    {/* Pull System: Checkbox line, Pulley wheel, Button connector */}
+                    {/* Pull System */}
                     <g className="pull-system">
                         <line className="checkbox-pull-line" x1="0" y1="0" x2="0" y2="0"/>
                         <g className="checkbox-pull-circle">
@@ -788,7 +782,7 @@ export default function LoginPage() {
                         <path className="submit-btn-connector" d=""></path>
                     </g>
 
-                    {/* Spray Hand & Canister */}
+                    {/* Spray Canister System */}
                     <g className="spray-hand-container">
                         <g className="pushing-hand">
                             <circle cx="18" cy="0" r="5" fill="#000000"/>
@@ -839,7 +833,7 @@ export default function LoginPage() {
                         <g className="gears" />
                     </g>
 
-                    {/* Grabbing Hand: Closed fingers state */}
+                    {/* Closed Grabbing Hand */}
                     <g className="grabbing-hand">
                         <g fill="#ffffff">
                             <rect className="grabbing-hand-finger-closed" x="44.79" y="13.38" width="8.42" height="22.15" rx="3.67" transform="translate(20.57 71.26) rotate(-85.25)"/>
@@ -905,7 +899,7 @@ export default function LoginPage() {
                         <path fill="#000000" d="M102.45,30.68,92,20.26c-9.89,9.9-9.89,10.47-9.89,10.47Z" />
                     </g>
 
-                    {/* Toy Car Track (Fully visible at the bottom) */}
+                    {/* Toy Car Track */}
                     <g className="car-container">
                         <g>
                             <g className="car">
