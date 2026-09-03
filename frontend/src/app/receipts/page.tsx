@@ -25,9 +25,50 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     const fetchReceipts = async (searchQuery: string = '') => {
         setFetching(true);
         try {
-            const { data } = await api.get(`/receipts?limit=50&search=${searchQuery}`);
-            setReceipts(data.data || []);
-        } catch { /* */ } finally { setFetching(false); }
+            const q = searchQuery.trim();
+            const { data } = await api.get(`/receipts?limit=100${q ? `&search=${encodeURIComponent(q)}` : ''}`);
+            if (Array.isArray(data.data) && data.data.length > 0) {
+                setReceipts(data.data);
+            } else {
+                // If /receipts returns empty, fallback to fetching /payments
+                const res = await api.get(`/payments?limit=100`);
+                if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
+                    const mapped = res.data.data.map((p: any, idx: number) => ({
+                        id: p.receipt?.id || p.id,
+                        receiptNumber: p.receipt?.receiptNumber || `RCP-${String(idx + 1).padStart(4, '0')}`,
+                        paymentId: p.id,
+                        pdfUrl: p.receipt?.pdfUrl || `/api/receipts/download/${p.receipt?.receiptNumber || p.id}`,
+                        createdAt: p.createdAt,
+                        payment: p,
+                        generatedBy: p.recordedBy || { name: 'Accounts Clerk' },
+                    }));
+                    setReceipts(mapped);
+                } else {
+                    setReceipts([]);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load receipts, trying fallback:', err);
+            try {
+                const res = await api.get(`/payments?limit=100`);
+                if (Array.isArray(res.data?.data)) {
+                    const mapped = res.data.data.map((p: any, idx: number) => ({
+                        id: p.receipt?.id || p.id,
+                        receiptNumber: p.receipt?.receiptNumber || `RCP-${String(idx + 1).padStart(4, '0')}`,
+                        paymentId: p.id,
+                        pdfUrl: p.receipt?.pdfUrl || `/api/receipts/download/${p.receipt?.receiptNumber || p.id}`,
+                        createdAt: p.createdAt,
+                        payment: p,
+                        generatedBy: p.recordedBy || { name: 'Accounts Clerk' },
+                    }));
+                    setReceipts(mapped);
+                }
+            } catch {
+                setReceipts([]);
+            }
+        } finally {
+            setFetching(false);
+        }
     };
 
     useEffect(() => {
