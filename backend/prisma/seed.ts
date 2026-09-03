@@ -31,13 +31,16 @@ async function main() {
     await safeDelete(() => prisma.payment.deleteMany({}), 'payment');
     await safeDelete(() => prisma.studentFee.deleteMany({}), 'studentFee');
 
-    // 2. Clean students & parents
+    // 2. Clean student inquiries, students & parents
+    await safeDelete(() => prisma.studentInquiry.deleteMany({}), 'studentInquiry');
     await safeDelete(() => prisma.student.deleteMany({}), 'student');
     await safeDelete(() => prisma.parent.deleteMany({}), 'parent');
+    await safeDelete(() => prisma.user.deleteMany({ where: { role: { in: ['STUDENT', 'PARENT'] } } }), 'student/parent users');
 
-    // 3. Clean store inventory & transactions
+    // 3. Clean store inventory, transactions & suppliers
     await safeDelete(() => prisma.stockTransaction.deleteMany({}), 'stockTransaction');
     await safeDelete(() => prisma.storeItem.deleteMany({}), 'storeItem');
+    await safeDelete(() => prisma.storeSupplier.deleteMany({}), 'storeSupplier');
 
     // 4. Clean library movements, issues, reservations & books
     await safeDelete(() => prisma.bookMovementLog.deleteMany({}), 'bookMovementLog');
