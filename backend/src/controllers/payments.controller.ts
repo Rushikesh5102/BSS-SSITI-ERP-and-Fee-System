@@ -115,31 +115,9 @@ export const paymentsController = {
             pdfTotalFee = suppStudentFee.totalAmount;
             pdfTotalPaid = suppStudentFee.paidAmount;
             pdfBalanceDue = 0;
-        } else {
-            // ─── 2. REGULAR / MULTI-COMPONENT COURSE FEE PAYMENT ────────────────────────
-            // Check if payment amount exceeds outstanding balance (e.g. for on-the-spot custom fee head)
-            const outstanding = studentFee.totalAmount - studentFee.paidAmount;
-            if (amount > outstanding) {
-                // Automatically increment totalAmount for custom / on-the-spot fee heads so transaction succeeds seamlessly
-                await prisma.studentFee.update({
-                    where: { id: studentFeeId },
-                    data: { totalAmount: { increment: amount - outstanding } },
-                });
-                studentFee.totalAmount += (amount - outstanding);
-            }
-
-            // Update paid amount for regular student fee
-            await prisma.studentFee.update({
-                where: { id: studentFeeId },
-                data: { paidAmount: { increment: amount } },
-            });
-
-            pdfTotalFee = studentFee.totalAmount;
-            pdfTotalPaid = studentFee.paidAmount + amount;
-            pdfBalanceDue = Math.max(0, studentFee.totalAmount - pdfTotalPaid);
         }
 
-        // ─── 3. SPLIT / MULTI-MODE PAYMENT FORMATTING ─────────────────────────────────
+        // ─── 1. SPLIT / MULTI-MODE PAYMENT FORMATTING ─────────────────────────────────
         let effectiveMode = mode;
         let effectiveTransactionRef = transactionRef;
         let effectiveBankName = bankName;
@@ -157,9 +135,10 @@ export const paymentsController = {
                         ? sp.amount
                         : Math.round((parseFloat(sp.amount) || 0) * 100);
                     const spRupees = spPaise / 100;
-                    splitSummaryParts.push(`${sp.mode}: ₹${spRupees.toLocaleString('en-IN')}`);
-                    if (sp.transactionRef) refParts.push(`${sp.mode}: ${sp.transactionRef}`);
-                    if (sp.bankName) bankParts.push(`${sp.mode}: ${sp.bankName}`);
+                    const label = sp.mode === 'CASH' ? 'Cash' : sp.mode === 'UPI' ? 'UPI/Online' : sp.mode === 'BANK_TRANSFER' ? 'Bank Transfer' : sp.mode === 'CHEQUE' ? 'Cheque' : sp.mode;
+                    splitSummaryParts.push(`${label}: Rs. ${spRupees.toLocaleString('en-IN')}`);
+                    if (sp.transactionRef) refParts.push(`${label} Ref: ${sp.transactionRef}`);
+                    if (sp.bankName) bankParts.push(`${label} Bank: ${sp.bankName}`);
 
                     return {
                         mode: sp.mode,
@@ -171,7 +150,8 @@ export const paymentsController = {
                 });
 
             if (splitSummaryParts.length > 0) {
-                effectiveMode = `SPLIT (${splitSummaryParts.join(' + ')})`;
+                // e.g. "Cash: Rs. 5,000 + UPI/Online: Rs. 500"
+                effectiveMode = splitSummaryParts.join(' + ');
                 if (refParts.length > 0) effectiveTransactionRef = refParts.join(' | ');
                 if (bankParts.length > 0) effectiveBankName = bankParts.join(' | ');
             }
@@ -202,6 +182,31 @@ export const paymentsController = {
                 approvedAt: new Date(),
             },
         });
+
+        // ─── 2. ACCURATE AGGREGATE FEE BALANCE CALCULATION ────────────────────────
+        if (isSupplementary) {
+            pdfTotalFee = studentFee.totalAmount || amount;
+            pdfTotalPaid = amount;
+            pdfBalanceDue = 0;
+        } else {
+            // Aggregate all verified payments for this student fee record
+            const paymentAgg = await prisma.payment.aggregate({
+                where: { studentFeeId: targetStudentFeeId, status: PaymentStatus.VERIFIED },
+                _sum: { amount: true }
+            });
+            const truePaidAmount = paymentAgg._sum.amount || amount;
+
+            // Update studentFee in DB with exact sum
+            const updatedFee = await prisma.studentFee.update({
+                where: { id: targetStudentFeeId },
+                data: { paidAmount: truePaidAmount },
+                select: { totalAmount: true, paidAmount: true }
+            });
+
+            pdfTotalFee = updatedFee.totalAmount;
+            pdfTotalPaid = updatedFee.paidAmount;
+            pdfBalanceDue = Math.max(0, updatedFee.totalAmount - updatedFee.paidAmount);
+        }
 
         // Generate next guaranteed unique receipt number
         const receiptNumber = await getNextReceiptNumber();

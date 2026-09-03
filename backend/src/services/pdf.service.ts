@@ -96,7 +96,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
     const drawReceiptCopy = (xOffset: number, copyLabel: string) => {
         const leftX = xOffset + 25;
-        const rightX = xOffset + 205;
+        const rightX = xOffset + 195;
         const copyWidth = 360;
 
         // Header rectangle
@@ -132,48 +132,38 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             page.drawText(displayVal.substring(0, 65), { x: fx, y: fy - 10, font: boldFont, size: fontSize, color: black });
         };
 
+        // Row 1: Student Name & Receipt Date
         drawField('Student Name', data.studentName, leftX, y);
         drawField('Receipt Date', new Date(data.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }), rightX, y);
 
+        // Row 2: Student ID & Trade / Class
         y -= 26;
         drawField('Student ID', data.studentId, leftX, y);
-        const headerMode = (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0)
-            ? 'Split (Multi-Mode)'
-            : data.paymentMode;
-        drawField('Payment Mode', headerMode, rightX, y);
+        drawField('Class / Trade', data.className, rightX, y);
 
+        // Row 3: Parent Name (or Back paper) & Clean Payment Mode
         y -= 26;
-        drawField('Class / Trade', data.className, leftX, y);
-        if (data.transactionRef) {
-            drawField('Transaction / Ref. No.', data.transactionRef, rightX, y);
-        } else if (data.bankName) {
-            drawField('Bank Name', data.bankName, rightX, y);
-        } else if (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0) {
-            const allRefs = data.splitPaymentBreakdown.filter(i => i.transactionRef).map(i => `${i.mode}: ${i.transactionRef}`).join('; ');
-            drawField('Transaction / Ref. No.', allRefs || 'Multi-Mode Breakdown', rightX, y);
+        if (data.isSupplementary) {
+            drawField('Back Paper / Subject', data.supplementarySubject || 'NCVT / DVET Back Paper', leftX, y);
         } else {
-            drawField('Transaction / Ref. No.', 'Counter Cash / Direct', rightX, y);
+            drawField("Parent's Name", data.parentName || 'Father / Guardian', leftX, y);
         }
 
-        if (data.isSupplementary) {
-            y -= 26;
-            drawField('Back Paper / Subject', data.supplementarySubject || 'NCVT / DVET Back Paper Exam', leftX, y);
-            drawField('Fees Paid Towards', 'Supplementary / Back Paper Exam Fee', rightX, y);
-        } else if (data.parentName) {
-            y -= 26;
-            drawField("Parent's Name", data.parentName, leftX, y);
-            drawField("Fees Paid Towards", data.feesFor || 'Academic Course Fee', rightX, y);
-        } else {
-            y -= 26;
-            drawField("Fees Paid Towards", data.feesFor || 'Academic Course Fee', leftX, y);
-        }
+        const modeDisplay = (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0)
+            ? data.splitPaymentBreakdown.map(i => {
+                const lbl = i.mode === 'CASH' ? 'Cash' : i.mode === 'UPI' ? 'UPI/Online' : i.mode === 'BANK_TRANSFER' ? 'Bank Transfer' : i.mode;
+                return `${lbl}: ${formatCurrencyForPdf(i.amount)}`;
+            }).join(' + ')
+            : data.paymentMode;
+        drawField('Payment Mode', modeDisplay, rightX, y);
 
         // ─── FEE BREAKDOWN & BALANCE BREAKDOWN TABLE ─────────────────────────────
-        y -= 30;
+        y -= 28;
+        const tableWidth = copyWidth - 20; // 340
         const tableTitle = data.isSupplementary
-            ? 'SUPPLEMENTARY EXAM LEDGER (INDEPENDENT CHARGE)'
-            : cleanAscii(`FEE BREAKDOWN & ACCOUNT LEDGER - ${(data.feesFor || 'ACADEMIC FEE').substring(0, 32).toUpperCase()}`);
-        page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 18, color: primary });
+            ? 'SUPPLEMENTARY EXAM LEDGER'
+            : 'FEE BREAKDOWN & ACCOUNT LEDGER';
+        page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 18, color: primary });
         page.drawText(tableTitle, { x: leftX + 10, y: y + 1, font: boldFont, size: 7.5, color: white });
 
         // Total Course Fee / Supplementary Notice Row
@@ -182,66 +172,79 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         const totalPaidPaise = data.totalPaid || data.amount;
         const balanceDuePaise = data.balanceDue !== undefined ? data.balanceDue : Math.max(0, totalFeePaise - totalPaidPaise);
 
-        page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 16, color: lightGray });
+        page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 16, color: lightGray });
         if (data.isSupplementary) {
-            page.drawText('Charge Type: Independent Supplementary Exam Fee (Tuition Balance Unaffected)', { x: leftX + 10, y: y - 2, font: boldFont, size: 7, color: primary });
-            page.drawText(formatCurrencyForPdf(data.amount), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
+            page.drawText('Charge Type: Independent Supplementary Exam Fee', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: primary });
+            page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 245, y: y - 2, font: boldFont, size: 8, color: black });
         } else {
-            page.drawText(cleanAscii(`Total Agreed Course Fee (${data.feesFor?.substring(0, 28) || 'Trade Fee'}):`), { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(totalFeePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: black });
+            page.drawText('Total Agreed Course Fee:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(totalFeePaise), { x: leftX + 245, y: y - 2, font: boldFont, size: 8, color: black });
         }
 
         // Amount Paid In This Receipt
         y -= 20;
-        page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 20, color: data.isSupplementary ? gold : accent });
+        page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 20, color: data.isSupplementary ? gold : accent });
         page.drawText(data.isSupplementary ? 'SUPPLEMENTARY EXAM AMOUNT PAID:' : 'AMOUNT PAID IN THIS RECEIPT:', { x: leftX + 10, y: y + 1, font: boldFont, size: 8, color: white });
-        page.drawText(formatCurrencyForPdf(data.amount), { x: xOffset + 290, y: y + 1, font: boldFont, size: 9.5, color: white });
+        page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 240, y: y + 1, font: boldFont, size: 9.5, color: white });
 
-        // Total Paid & Balance Due Summary
+        // Total Paid & Balance Due Summary (Accurate 2-Column Alignment with zero overlap)
         y -= 18;
-        page.drawRectangle({ x: leftX, y: y - 6, width: copyWidth - 20, height: 16, color: lightGray });
+        page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 16, color: lightGray });
         if (data.isSupplementary) {
-            page.drawText('Status:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText('[CLEARED] Supplementary Exam Fee Cleared', { x: leftX + 50, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
-            page.drawText('Regular Course Dues:', { x: leftX + 205, y: y - 2, font: regularFont, size: 7.5, color: gray });
-            page.drawText('Maintained Separately', { x: xOffset + 285, y: y - 2, font: boldFont, size: 7, color: primary });
+            page.drawText('Status: [CLEARED] Supplementary Exam Fee Cleared', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+            page.drawText('Course Dues: Maintained Separately', { x: leftX + 200, y: y - 2, font: regularFont, size: 7, color: gray });
         } else {
-            page.drawText('Total Fee Paid Till Date:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 130, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+            // Left column: Total Paid Till Date
+            page.drawText('Total Paid Till Date:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 92, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
 
-            page.drawText('Remaining Balance Due:', { x: leftX + 195, y: y - 2, font: boldFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: xOffset + 295, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
+            // Right column: Remaining Balance Due
+            page.drawText('Balance Due:', { x: leftX + 195, y: y - 2, font: boldFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: leftX + 252, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
         }
 
         // Amount in Words
-        y -= 15;
+        y -= 16;
         const amountInWords = cleanAscii(numberToWords(paiseToRupees(data.amount)));
         page.drawText(`Amount in Words: ${amountInWords} Rupees Only`, { x: leftX, y, font: regularFont, size: 7, color: gray });
 
-        // Payment Mode Breakdown (Explicitly printed)
-        y -= 11;
-        let modeBreakdownText = '';
-        if (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0) {
-            const parts = data.splitPaymentBreakdown.map(item => {
-                const label = item.mode === 'UPI' ? 'UPI/Online' : item.mode === 'BANK_TRANSFER' ? 'Bank Transfer' : item.mode === 'CASH' ? 'Cash' : item.mode === 'CHEQUE' ? 'Cheque' : item.mode;
-                const ref = item.transactionRef ? ` (${cleanAscii(item.transactionRef)})` : '';
-                return `${label} - ${formatCurrencyForPdf(item.amount)}${ref}`;
-            });
-            modeBreakdownText = `Payment Mode: ${parts.join(' | ')} | Total Paid - ${formatCurrencyForPdf(data.amount)}`;
-        } else {
-            const singleRef = data.transactionRef ? ` (Ref: ${cleanAscii(data.transactionRef)})` : '';
-            const singleBank = data.bankName ? ` [${cleanAscii(data.bankName)}]` : '';
-            modeBreakdownText = `Payment Mode: ${cleanAscii(data.paymentMode)}${singleRef}${singleBank} | Total Paid - ${formatCurrencyForPdf(data.amount)}`;
+        // Itemized Fee Components (if present and not just generic)
+        if (Array.isArray(data.feeBreakdown) && data.feeBreakdown.length > 0) {
+            y -= 11;
+            const feeItems = data.feeBreakdown.map(fb => `${cleanAscii(fb.name)}: ${formatCurrencyForPdf(fb.amount)}`).join('  |  ');
+            page.drawText(`Fee Heads: ${feeItems}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.8, color: primary });
         }
-        page.drawText(cleanAscii(modeBreakdownText).substring(0, 95), { x: leftX, y, font: boldFont, size: 6.8, color: primary });
 
-        // Remarks / Notes
-        y -= 10;
-        const safeRemarks = cleanAscii(data.remarks) || 'Fees received with thanks.';
-        page.drawText(`Remarks / Note: ${safeRemarks}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
+        // Transaction References / Bank info (only if ref or split details exist)
+        let refText = '';
+        if (data.splitPaymentBreakdown && data.splitPaymentBreakdown.length > 0) {
+            const splitRefs = data.splitPaymentBreakdown
+                .map(i => {
+                    const lbl = i.mode === 'CASH' ? 'Cash' : i.mode === 'UPI' ? 'UPI/Online' : i.mode === 'BANK_TRANSFER' ? 'Bank Transfer' : i.mode;
+                    return i.transactionRef ? `${lbl} (Ref: ${cleanAscii(i.transactionRef)})` : `${lbl} (Direct)`;
+                })
+                .join('  |  ');
+            refText = `Payment Details: ${splitRefs}`;
+        } else if (data.transactionRef || data.bankName) {
+            const refPart = data.transactionRef ? `Ref: ${cleanAscii(data.transactionRef)}` : '';
+            const bankPart = data.bankName ? `Bank: ${cleanAscii(data.bankName)}` : '';
+            refText = `Payment Details: ${[refPart, bankPart].filter(Boolean).join(' - ')}`;
+        }
+
+        if (refText) {
+            y -= 11;
+            page.drawText(refText.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
+        }
+
+        // Accountant Custom Remarks / Notes (Only if non-default)
+        const customRemarks = cleanAscii(data.remarks);
+        if (customRemarks && !customRemarks.startsWith('Paid towards') && customRemarks !== 'Fee Payment Received') {
+            y -= 10;
+            page.drawText(`Remarks: ${customRemarks}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
+        }
 
         // ─── 3 SIGNATURE SECTIONS (Student, Clerk, Principal) ─────────────────
-        y -= 38;
+        y -= 34;
         // 1. Student Signature
         page.drawLine({ start: { x: leftX, y }, end: { x: leftX + 85, y }, thickness: 0.5, color: gray });
         page.drawText("Student Signature", { x: leftX, y: y - 9, font: regularFont, size: 6.5, color: gray });
@@ -253,13 +256,13 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         page.drawText(data.clerkName ? `By: ${cleanAscii(data.clerkName)}` : 'Accounts Clerk', { x: clerkX, y: y - 16, font: regularFont, size: 6, color: gray });
 
         // 3. Authorized Principal Signature & Official Stamp
-        const sigX = xOffset + 245;
-        page.drawLine({ start: { x: sigX, y }, end: { x: sigX + 110, y }, thickness: 0.5, color: gray });
+        const sigX = xOffset + 235;
+        page.drawLine({ start: { x: sigX, y }, end: { x: sigX + 120, y }, thickness: 0.5, color: gray });
         page.drawText("Authorized Signatory & Seal", { x: sigX, y: y - 9, font: boldFont, size: 6.5, color: primary });
         page.drawText(cleanAscii(config.school.name), { x: sigX, y: y - 16, font: boldFont, size: 6, color: gray });
 
         if (stampImage) {
-            page.drawImage(stampImage, { x: sigX + 15, y: y + 2, width: 55, height: 35 });
+            page.drawImage(stampImage, { x: sigX + 20, y: y + 2, width: 55, height: 35 });
         }
     };
 

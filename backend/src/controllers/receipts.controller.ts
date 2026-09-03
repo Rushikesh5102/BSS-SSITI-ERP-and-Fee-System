@@ -93,69 +93,63 @@ export const receiptsController = {
     }),
 
     /**
-     * GET /receipts/download/:receiptNumber - Stream PDF receipt (auto-regenerates if missing)
+     * GET /receipts/download/:receiptNumber - Stream PDF receipt (always renders latest design and totals)
      */
     downloadPdf: asyncHandler(async (req: Request, res: Response) => {
         const { receiptNumber } = req.params;
         const pdfPath = path.join(RECEIPTS_DIR, `${receiptNumber}.pdf`);
 
-        let pdfBuffer: Buffer;
-
-        if (fs.existsSync(pdfPath)) {
-            pdfBuffer = fs.readFileSync(pdfPath);
-        } else {
-            const receipt = await prisma.receipt.findUnique({
-                where: { receiptNumber },
-                include: {
-                    payment: {
-                        include: {
-                            studentFee: {
-                                include: {
-                                    student: { include: { parent: true } },
-                                    feeStructure: true,
-                                },
+        const receipt = await prisma.receipt.findUnique({
+            where: { receiptNumber },
+            include: {
+                payment: {
+                    include: {
+                        studentFee: {
+                            include: {
+                                student: { include: { parent: true } },
+                                feeStructure: true,
                             },
                         },
                     },
-                    generatedBy: { select: { name: true } },
                 },
-            });
+                generatedBy: { select: { name: true } },
+            },
+        });
 
-            if (!receipt) {
-                throw new AppError(404, 'Receipt not found');
-            }
-
-            const studentFee = receipt.payment.studentFee;
-            const totalFee = studentFee ? studentFee.totalAmount : receipt.payment.amount;
-            const totalPaid = studentFee ? studentFee.paidAmount : receipt.payment.amount;
-            const balanceDue = Math.max(0, totalFee - totalPaid);
-            const isSupp = receipt.payment.remarks?.toLowerCase().includes('supplementary') || studentFee?.feeStructure?.name?.toLowerCase().includes('supplementary');
-
-            pdfBuffer = await generateReceiptPdf({
-                receiptNumber: receipt.receiptNumber,
-                studentName: studentFee?.student?.name || 'Student',
-                studentId: studentFee?.student?.studentId || 'N/A',
-                className: studentFee?.student?.class || 'ITI Trade',
-                parentName: studentFee?.student?.parent?.name,
-                parentPhone: studentFee?.student?.parent?.phone,
-                paymentDate: receipt.createdAt,
-                amount: receipt.payment.amount,
-                totalFee: totalFee,
-                totalPaid: totalPaid,
-                balanceDue: isSupp ? 0 : balanceDue,
-                paymentMode: receipt.payment.mode,
-                transactionRef: receipt.payment.transactionRef || undefined,
-                feesFor: isSupp ? 'Supplementary / Back Paper Exam Fee' : (studentFee?.feeStructure?.name || 'Academic Fee'),
-                bankName: receipt.payment.bankName || undefined,
-                remarks: receipt.payment.remarks || undefined,
-                clerkName: receipt.generatedBy?.name || 'Fee Counter Cashier',
-                isSupplementary: Boolean(isSupp),
-            });
-
-            try {
-                fs.writeFileSync(pdfPath, pdfBuffer);
-            } catch { /* Ignore file write error on read-only environments */ }
+        if (!receipt) {
+            throw new AppError(404, 'Receipt not found');
         }
+
+        const studentFee = receipt.payment.studentFee;
+        const totalFee = studentFee ? studentFee.totalAmount : receipt.payment.amount;
+        const totalPaid = studentFee ? studentFee.paidAmount : receipt.payment.amount;
+        const balanceDue = Math.max(0, totalFee - totalPaid);
+        const isSupp = receipt.payment.remarks?.toLowerCase().includes('supplementary') || studentFee?.feeStructure?.name?.toLowerCase().includes('supplementary');
+
+        const pdfBuffer = await generateReceiptPdf({
+            receiptNumber: receipt.receiptNumber,
+            studentName: studentFee?.student?.name || 'Student',
+            studentId: studentFee?.student?.studentId || 'N/A',
+            className: studentFee?.student?.class || 'ITI Trade',
+            parentName: studentFee?.student?.parent?.name,
+            parentPhone: studentFee?.student?.parent?.phone,
+            paymentDate: receipt.createdAt,
+            amount: receipt.payment.amount,
+            totalFee: totalFee,
+            totalPaid: totalPaid,
+            balanceDue: isSupp ? 0 : balanceDue,
+            paymentMode: receipt.payment.mode,
+            transactionRef: receipt.payment.transactionRef || undefined,
+            feesFor: isSupp ? 'Supplementary / Back Paper Exam Fee' : (studentFee?.feeStructure?.name || 'Academic Fee'),
+            bankName: receipt.payment.bankName || undefined,
+            remarks: receipt.payment.remarks || undefined,
+            clerkName: receipt.generatedBy?.name || 'Fee Counter Cashier',
+            isSupplementary: Boolean(isSupp),
+        });
+
+        try {
+            fs.writeFileSync(pdfPath, pdfBuffer);
+        } catch { /* Ignore file write error on read-only environments */ }
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename="${receiptNumber}.pdf"`);
