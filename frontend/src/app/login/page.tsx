@@ -42,18 +42,17 @@ export default function LoginPage() {
         passValid: false
     });
 
-    // 1. Remember Me & Saved Email initialization
+    // 1. Theme and clean initialization
     useEffect(() => {
         setIsDark(document.documentElement.classList.contains('dark'));
         try {
-            const savedRemember = localStorage.getItem('remember_me');
+            // Clean up any stale developer email or old remember tokens
             const savedEmail = localStorage.getItem('remembered_email');
-            if (savedRemember === 'true') {
-                setRememberMe(true);
-                if (savedEmail) {
-                    setEmail(savedEmail);
-                    machineState.current.emailValid = true;
-                }
+            if (savedEmail && (savedEmail.includes('pattiwar') || savedEmail.includes('rushikesh') || savedEmail.includes('5102'))) {
+                localStorage.removeItem('remembered_email');
+                localStorage.removeItem('remember_me');
+                setEmail('');
+                setRememberMe(false);
             }
         } catch {}
     }, []);
@@ -670,17 +669,19 @@ export default function LoginPage() {
             {/* Mechanical Container with SVG & Form precisely positioned */}
             <div className="machine-container" ref={containerRef}>
                 {/* Form Elements (Exact 270px width / 60px row geometry) */}
-                <form className="form-container" onSubmit={handleSubmit}>
+                <form className="form-container" onSubmit={handleSubmit} autoComplete="off">
                     {/* Row 1: Email (Touching gears on right) */}
                     <div className="form-row">
                         <input
                             type="email"
-                            name="email"
+                            name="sai_login_identifier"
+                            id="sai_login_identifier"
                             placeholder="Email address (admin@saiiti.edu.in)"
                             value={email}
                             onChange={(e) => handleEmailChange(e.target.value)}
                             required
                             autoComplete="off"
+                            data-lpignore="true"
                             className={machineState.current.emailValid ? 'valid' : ''}
                         />
                     </div>
@@ -690,12 +691,14 @@ export default function LoginPage() {
                         <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                name="password"
+                                name="sai_login_secret"
+                                id="sai_login_secret"
                                 placeholder="Enter password"
                                 value={password}
                                 onChange={(e) => handlePasswordChange(e.target.value)}
                                 required
                                 autoComplete="new-password"
+                                data-lpignore="true"
                                 className={machineState.current.passValid ? 'valid' : ''}
                                 style={{ paddingRight: 36 }}
                             />
