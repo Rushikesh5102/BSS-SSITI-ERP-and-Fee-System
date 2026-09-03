@@ -176,14 +176,20 @@ body.sidebar-collapsed .main-content {
   z-index: 999;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
   border-radius: 40px;
-  padding: 6px 14px 6px 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 5px 14px 5px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   animation: fadeInLogoBar 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Prevent header content from being overlapped by the floating collapsed logo bar */
+body.sidebar-collapsed .header {
+  padding-left: 235px !important;
+  transition: padding-left var(--transition-md);
 }
 
 @keyframes fadeInLogoBar {
@@ -1022,6 +1028,12 @@ html.dark .login-logo h1 { color: var(--primary); }
     justify-content: center !important;
     gap: 8px !important;
     padding: 16px 12px !important;
+  }
+  .collapsed-logo-bar {
+    display: none !important;
+  }
+  body.sidebar-collapsed .header {
+    padding-left: 14px !important;
   }
   .header {
     padding: 16px 14px !important;

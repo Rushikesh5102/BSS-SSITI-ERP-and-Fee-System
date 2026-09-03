@@ -228,8 +228,8 @@ function SidebarInner() {
         <>
             {/* Mobile Top App Bar Header */}
             <div className="mobile-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 34, height: 34, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 42, height: 42, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
                     <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-on-primary)' }}>Shri Sai I.T.I</span>
@@ -256,20 +256,20 @@ function SidebarInner() {
             {/* Desktop Collapsed Floating Logo & Hamburger Bar */}
             {isCollapsed && (
                 <div className="collapsed-logo-bar">
-                    <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))' }} />
+                    <div style={{ width: 46, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.85))' }} />
                     </div>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.3px' }}>
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>
                         Shri Sai I.T.I
                     </span>
                     <button
                         onClick={toggleCollapse}
                         style={{
-                            background: 'rgba(56, 189, 248, 0.2)',
-                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            background: 'rgba(56, 189, 248, 0.22)',
+                            border: '1px solid rgba(56, 189, 248, 0.45)',
                             color: '#38bdf8',
-                            width: '28px',
-                            height: '28px',
+                            width: '30px',
+                            height: '30px',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
@@ -277,6 +277,7 @@ function SidebarInner() {
                             fontSize: '14px',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
+                            flexShrink: 0,
                         }}
                         title="Open Sidebar Navigation (Shift+E)"
                         aria-label="Open Sidebar Navigation"
@@ -291,7 +292,7 @@ function SidebarInner() {
                 <div className="sidebar-header-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px' }}>
                     <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
                         <div className="sidebar-logo" style={{ cursor: 'pointer', transition: 'transform 0.2s ease', display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 44, height: 44, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: 52, height: 52, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.75))' }} />
                             </div>
                             <div className="sidebar-logo-text" style={{ minWidth: 0 }}>
