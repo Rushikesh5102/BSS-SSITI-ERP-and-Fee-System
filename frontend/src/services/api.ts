@@ -18,6 +18,13 @@ const cacheMap = new Map<string, { timestamp: number; data: any }>();
 const pendingRequests = new Map<string, Promise<any>>();
 const CACHE_TTL_MS = 6000; // 6 seconds memory cache for lightning-fast tab navigation
 
+export const clientCacheMetrics = {
+    hits: 0,
+    misses: 0,
+    dedupes: 0,
+    get size() { return cacheMap.size; }
+};
+
 export const invalidateApiCache = (pattern?: string) => {
     if (!pattern) {
         cacheMap.clear();
@@ -117,6 +124,12 @@ api.interceptors.response.use(
 // ── Ultra-Fast Cached GET Helper ─────────────────────────────────────────────
 const originalGet = api.get.bind(api);
 api.get = function <T = any, R = AxiosResponse<T>, D = any>(url: string, config?: AxiosRequestConfig<D>): Promise<R> {
+    const isClientCacheDisabled = typeof window !== 'undefined' && localStorage.getItem('dev_disable_client_cache') === 'true';
+    
+    if (isClientCacheDisabled) {
+        return originalGet(url, config) as unknown as Promise<R>;
+    }
+
     const baseURL = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
         ? 'http://localhost:4000/api'
         : (process.env.NEXT_PUBLIC_API_URL || 'https://bss-ssiti-erp-and-fee-system.onrender.com/api');
@@ -126,6 +139,7 @@ api.get = function <T = any, R = AxiosResponse<T>, D = any>(url: string, config?
 
     // If cache is fresh, return immediately (0ms latency)
     if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+        clientCacheMetrics.hits++;
         return Promise.resolve({
             data: cached.data,
             status: 200,
@@ -137,9 +151,11 @@ api.get = function <T = any, R = AxiosResponse<T>, D = any>(url: string, config?
 
     // In-flight request deduplication
     if (pendingRequests.has(cacheKey)) {
+        clientCacheMetrics.dedupes++;
         return pendingRequests.get(cacheKey)!;
     }
 
+    clientCacheMetrics.misses++;
     const requestPromise = originalGet(url, config).finally(() => {
         pendingRequests.delete(cacheKey);
     });

@@ -135,6 +135,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+                <link rel="dns-prefetch" href="https://bss-ssiti-erp-and-fee-system.onrender.com" />
+                <link rel="preconnect" href="https://bss-ssiti-erp-and-fee-system.onrender.com" crossOrigin="" />
                 <link
                     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap"
                     rel="stylesheet"

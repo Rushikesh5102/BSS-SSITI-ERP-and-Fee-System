@@ -27,6 +27,10 @@ import { securityShield } from './middleware/securityShield';
 
 const app = express();
 
+// ── Load Balancer & Reverse Proxy Support ───────────────────────────────────────
+// Trust first proxy hop (Render, Vercel Edge, AWS ALB, Cloudflare) for accurate client IP & rate-limiting
+app.set('trust proxy', 1);
+
 // ── Security Middleware ────────────────────────────────────────────────────────
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow PDF serving
@@ -66,7 +70,18 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(securityShield); // Deep payload sanitization & injection shield
-app.use(compression());
+
+// ── High-Efficiency Payload Compression (Gzip / Deflate) ──────────────────────
+app.use(compression({
+    threshold: 1024, // Only compress responses exceeding 1KB
+    level: 6,        // Balanced CPU compression ratio
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    }
+}));
 
 // ── HTTP Request Logging ───────────────────────────────────────────────────────
 app.use(
@@ -75,8 +90,12 @@ app.use(
     })
 );
 
-// ── Static Files (Generated receipt PDFs) ─────────────────────────────────────
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// ── Static Files (Generated receipt PDFs & uploads with immutable caching) ───
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+    maxAge: '30d',
+    immutable: true,
+    etag: true
+}));
 
 // ── API Routes ─────────────────────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);

@@ -128,6 +128,10 @@ model Student {
   bookIssues  BookIssue[]
   bookReservations BookReservation[]
 
+  @@index([branchId])
+  @@index([class])
+  @@index([name])
+  @@index([isActive])
   @@map("students")
 }
 
@@ -201,6 +205,9 @@ model StudentFee {
   payments     Payment[]
 
   // Derived: pendingAmount = totalAmount - paidAmount
+  @@index([studentId])
+  @@index([feeStructureId])
+  @@index([academicYear])
   @@unique([studentId, feeStructureId, academicYear])
   @@map("student_fees")
 }
@@ -229,6 +236,10 @@ model Payment {
   approvedBy User?      @relation("ApprovedBy", fields: [approvedById], references: [id])
   receipt    Receipt?
 
+  @@index([studentFeeId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([recordedById])
   @@map("payments")
 }
 
@@ -246,6 +257,8 @@ model Receipt {
   payment     Payment @relation(fields: [paymentId], references: [id])
   generatedBy User    @relation(fields: [generatedById], references: [id])
 
+  @@index([paymentId])
+  @@index([createdAt])
   @@map("receipts")
 }
 
@@ -321,6 +334,10 @@ model StoreItem {
   createdBy    User?              @relation("StoreItemsCreated", fields: [createdById], references: [id])
   transactions StockTransaction[]
 
+  @@index([branchId])
+  @@index([category])
+  @@index([status])
+  @@index([isActive])
   @@map("store_items")
 }
 
@@ -376,6 +393,10 @@ model StockTransaction {
   receivedBy         User?                @relation("ReceivedTransactions", fields: [receivedById], references: [id])
   student            Student?             @relation(fields: [studentId], references: [id])
 
+  @@index([itemId])
+  @@index([studentId])
+  @@index([branchId])
+  @@index([createdAt])
   @@map("stock_transactions")
 }
 
@@ -426,6 +447,9 @@ model Book {
   reservations    BookReservation[]
   movements       BookMovementLog[]
 
+  @@index([branchId])
+  @@index([category])
+  @@index([status])
   @@map("books")
 }
 
@@ -460,6 +484,9 @@ model BookIssue {
   receivedBy         User?     @relation("ReceivedByStaff", fields: [receivedById], references: [id])
   branch             Branch    @relation(fields: [branchId], references: [id])
 
+  @@index([bookId])
+  @@index([studentId])
+  @@index([status])
   @@map("book_issues")
 }
 

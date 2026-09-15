@@ -1268,6 +1268,31 @@ html.dark .login-logo h1 { color: var(--primary); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ─── Zero-CLS High-Speed Skeleton Shimmer ─────────────────────────────────── */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.08) 0%,
+    rgba(148, 163, 184, 0.22) 50%,
+    rgba(148, 163, 184, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer-sweep 1.5s infinite ease-in-out;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+@keyframes skeleton-shimmer-sweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  height: 14px;
+  margin: 6px 0;
+  border-radius: 4px;
+}
+
 /* ─── Mobile Drawer Scroll Lock ────────────────────────────────────────────── */
 html.mobile-drawer-open,
 body.mobile-drawer-open {

@@ -78,13 +78,24 @@ export const studentsController = {
         
         let studentId = studentData.studentId;
         if (!studentId) {
-            let candidate = generateStudentId(tradeClass, autoRollNumber);
-            let offset = 0;
-            while (await prisma.student.findUnique({ where: { studentId: candidate } })) {
-                offset++;
-                candidate = generateStudentId(tradeClass, countInTrade + 1 + offset);
+            const candidate = generateStudentId(tradeClass, autoRollNumber);
+            const existing = await prisma.student.findUnique({ where: { studentId: candidate }, select: { id: true } });
+            if (existing) {
+                // Batch query all existing IDs for this trade prefix in 1 query instead of sequential loop queries
+                const prefix = candidate.substring(0, candidate.lastIndexOf('-') + 1);
+                const sameTradeStudents = await prisma.student.findMany({
+                    where: { studentId: { startsWith: prefix } },
+                    select: { studentId: true }
+                });
+                const takenIds = new Set(sameTradeStudents.map(s => s.studentId));
+                let rollNum = countInTrade + 1;
+                while (takenIds.has(generateStudentId(tradeClass, rollNum))) {
+                    rollNum++;
+                }
+                studentId = generateStudentId(tradeClass, rollNum);
+            } else {
+                studentId = candidate;
             }
-            studentId = candidate;
         }
 
         // Create or find parent

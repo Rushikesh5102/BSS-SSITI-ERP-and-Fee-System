@@ -9,6 +9,7 @@ import api from '../../services/api';
 import Footer from '../../components/Footer';
 import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
+import { useDebounce } from '../../hooks/useDebounce';
 
 // Lazy-load PDF generator utilities on demand so heavy PDF-Lib chunks
 // aren't included in the initial students page bundle load
@@ -40,6 +41,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
     const [students, setStudents] = useState<any[]>([]);
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 300);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
@@ -328,7 +330,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const fetchStudents = async () => {
         setFetching(true);
         try {
-            const { data } = await api.get(`/students?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
+            const { data } = await api.get(`/students?page=${page}&limit=15&search=${encodeURIComponent(debouncedSearch)}`);
             setStudents(data.data || []);
             setTotal(data.pagination?.total || 0);
         } catch { } finally { setFetching(false); }
@@ -346,7 +348,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         fetchStudents();
         fetchFeeStructures();
         if (actionParam === 'new') setShowModal(true);
-    }, [user, page, search, actionParam]);
+    }, [user, page, debouncedSearch, actionParam]);
 
     useEffect(() => {
         if (user && activeTab === 'inquiries') {

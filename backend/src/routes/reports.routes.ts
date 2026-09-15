@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { reportsController } from '../controllers/reports.controller';
 import { authenticate, authorize } from '../middleware/auth';
 import { Role } from '../types/enums';
+import { cacheResponse } from '../middleware/cacheMiddleware';
 
 const router = Router();
 
 router.use(authenticate);
 
-// GET /reports/dashboard - Dashboard stats
-router.get('/dashboard', reportsController.dashboard);
+// GET /reports/dashboard - Dashboard stats (cached for 30s)
+router.get('/dashboard', cacheResponse(30, 'reports'), reportsController.dashboard);
 
 // GET /reports/daily - Daily collection report
 router.get('/daily', authorize(Role.ADMIN, Role.ACCOUNTANT), reportsController.daily);

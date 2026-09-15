@@ -314,13 +314,14 @@ export const reportsController = {
                 where: { createdAt: { gte: new Date(today.getFullYear(), today.getMonth(), 1) }, status: 'VERIFIED' },
                 _sum: { amount: true }, _count: true,
             }),
-            prisma.studentFee.findMany({
+            prisma.studentFee.aggregate({
                 where: { student: branchFilter },
-                select: { totalAmount: true, paidAmount: true },
+                _sum: { totalAmount: true, paidAmount: true },
             }),
         ]);
 
-        const totalPending = pendingFees.reduce((sum, sf) => sum + Math.max(0, sf.totalAmount - sf.paidAmount), 0);
+        const feeSums = pendingFees._sum;
+        const totalPending = Math.max(0, (feeSums.totalAmount || 0) - (feeSums.paidAmount || 0));
 
         // Generate live chart data for the last 6 months concurrently
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
