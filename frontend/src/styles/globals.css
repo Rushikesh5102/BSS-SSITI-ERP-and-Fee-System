@@ -995,24 +995,25 @@ html.dark .login-logo h1 { color: var(--primary); }
     color: #ef4444 !important;
   }
 
-  /* Slide Drawer Sidebar (Sliding in from Left) */
+  /* Slide Drawer Sidebar (Sliding in from Right) */
   .sidebar {
     position: fixed !important;
     top: 0 !important;
-    left: 0 !important;
-    right: auto !important;
+    left: auto !important;
+    right: 0 !important;
     width: 285px !important;
     max-width: 85vw !important;
     height: 100vh !important;
     height: 100dvh !important;
     z-index: 10000 !important;
-    transform: translateX(-100%) !important;
+    transform: translateX(100%) !important;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5) !important;
   }
-  .sidebar.active {
-    transform: translateX(0) !important;
+  body.sidebar-collapsed .sidebar {
+    transform: translateX(100%) !important;
   }
+  .sidebar.active,
   body.sidebar-collapsed .sidebar.active {
     transform: translateX(0) !important;
   }
