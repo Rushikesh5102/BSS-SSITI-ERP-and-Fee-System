@@ -257,29 +257,104 @@ body.sidebar-collapsed .user-badge {
 }
 
 /* ─── Institutional ERP Footer ──────────────────────────────────────────────── */
-.footer {
+.footer,
+.app-footer {
   margin-top: auto;
-  min-height: 48px;
+  min-height: 52px;
   padding: 16px 28px;
   border-top: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(2, 44, 88, 0.35);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-  transition: border-color var(--transition-fast);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footer-copy {
+  opacity: 0.9;
+}
+
+.footer-institute {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.footer-brand-sep,
+.footer-sep {
+  opacity: 0.45;
+  user-select: none;
+}
+
+.footer-tagline {
+  opacity: 0.85;
+}
+
+.footer-links-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.footer-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-credit {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-credit-text {
+  opacity: 0.9;
+}
+
+.footer-author-name {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.footer-heart {
+  display: inline-block;
+  animation: footerHeartBeat 2s ease-in-out infinite;
+  transform-origin: center;
+  user-select: none;
+}
+
+@keyframes footerHeartBeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.22); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.18); }
+  60% { transform: scale(1); }
 }
 
 .footer a,
-.footer .footer-link {
+.footer .footer-link,
+.app-footer a,
+.app-footer .footer-link {
   color: #bae6fd;
   text-decoration: none;
   font-weight: 600;
@@ -287,26 +362,281 @@ body.sidebar-collapsed .user-badge {
 }
 
 .footer a:hover,
-.footer .footer-link:hover {
+.footer .footer-link:hover,
+.app-footer a:hover,
+.app-footer .footer-link:hover {
   text-decoration: none;
   color: #ffffff;
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
 }
 
-html.dark .footer {
+html.dark .footer,
+html.dark .app-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.55);
   color: rgba(255, 255, 255, 0.88);
 }
 
 html.dark .footer a,
-html.dark .footer .footer-link {
+html.dark .footer .footer-link,
+html.dark .app-footer a,
+html.dark .app-footer .footer-link {
   color: #7dd3fc;
 }
 
 html.dark .footer a:hover,
-html.dark .footer .footer-link:hover {
+html.dark .footer .footer-link:hover,
+html.dark .app-footer a:hover,
+html.dark .app-footer .footer-link:hover {
   color: #ffffff;
+}
+
+/* ─── Unique Celestial Theme Toggle Switch ─────────────────────────────────── */
+.theme-celestial-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  outline: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.theme-celestial-switch:hover {
+  transform: scale(1.05);
+}
+
+.theme-celestial-switch:active {
+  transform: scale(0.92);
+}
+
+.theme-celestial-switch:focus-visible {
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.45);
+}
+
+.theme-celestial-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 64px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 999px;
+  box-sizing: border-box;
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Light mode track: Sunlit day sky */
+.theme-celestial-switch.is-light .theme-celestial-track {
+  background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+/* Dark mode track: Deep midnight cosmos */
+.theme-celestial-switch.is-dark .theme-celestial-track {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.35);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(129, 140, 248, 0.25);
+}
+
+.theme-track-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.sun-track-icon {
+  color: #f59e0b;
+}
+
+.moon-track-icon {
+  color: #a78bfa;
+}
+
+.theme-celestial-switch.is-light .sun-track-icon {
+  opacity: 0.15;
+}
+.theme-celestial-switch.is-light .moon-track-icon {
+  opacity: 0.75;
+}
+
+.theme-celestial-switch.is-dark .sun-track-icon {
+  opacity: 0.75;
+}
+.theme-celestial-switch.is-dark .moon-track-icon {
+  opacity: 0.15;
+}
+
+/* Sliding Celestial Orb Thumb */
+.theme-celestial-thumb {
+  position: absolute;
+  top: 3.5px;
+  left: 3.5px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Light mode thumb position (Left) */
+.theme-celestial-switch.is-light .theme-celestial-thumb {
+  transform: translateX(0);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark mode thumb position (Right) */
+.theme-celestial-switch.is-dark .theme-celestial-thumb {
+  transform: translateX(30px);
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.65), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.thumb-icon {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.theme-celestial-switch:hover .thumb-icon {
+  transform: rotate(20deg);
+}
+
+/* Compact Orb Variant */
+.theme-toggle-compact {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.theme-toggle-compact:hover {
+  transform: scale(1.08);
+  border-color: var(--primary);
+}
+
+.theme-toggle-compact.is-light {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #b45309;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.theme-toggle-compact.is-dark {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #c7d2fe;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.3);
+}
+
+/* Sidebar Dedicated Theme Switcher */
+.theme-toggle-sidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  color: var(--sidebar-text);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.theme-toggle-sidebar:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.theme-toggle-sidebar-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle-sidebar-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sidebar-text);
+}
+
+.theme-pill-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.25s ease;
+}
+
+.theme-pill-track.is-dark {
+  background: #6366f1;
+}
+
+.theme-pill-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.theme-pill-track.is-dark .theme-pill-thumb {
+  transform: translateX(16px);
+}
+
+body.sidebar-collapsed .theme-toggle-sidebar {
+  padding: 8px !important;
+  justify-content: center !important;
+}
+
+body.sidebar-collapsed .theme-toggle-sidebar-label,
+body.sidebar-collapsed .theme-pill-track {
+  display: none !important;
+}
+
+body.sidebar-collapsed .theme-toggle-sidebar-icon {
+  margin: 0 !important;
 }
 
 /* ─── Mobile Header (Hidden on Desktop) ────────────────────────────────────── */
@@ -1051,12 +1381,34 @@ html.dark .login-logo h1 { color: var(--primary); }
   }
 
   /* Page Header & Footer */
-  .footer {
+  .footer,
+  .app-footer {
     flex-direction: column !important;
     text-align: center !important;
     justify-content: center !important;
-    gap: 8px !important;
-    padding: 16px 12px !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 18px 14px !important;
+  }
+  .footer-brand {
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    gap: 6px 8px !important;
+  }
+  .footer-links-group {
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    gap: 8px 14px !important;
+  }
+  .footer-nav-links {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .footer-credit {
+    justify-content: center !important;
+    text-align: center !important;
   }
   .collapsed-logo-bar {
     display: none !important;
@@ -1247,13 +1599,46 @@ html.dark .login-logo h1 { color: var(--primary); }
   }
 }
 
+/* ─── Mobile Footer Symmetrical Stacking (max-width: 640px) ─────────────────── */
+@media (max-width: 640px) {
+  .footer,
+  .app-footer {
+    padding: 14px 12px !important;
+    gap: 10px !important;
+  }
+  .footer-brand {
+    font-size: 12px !important;
+    gap: 6px !important;
+    line-height: 1.4 !important;
+  }
+  .footer-links-group {
+    flex-direction: column !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+  .footer-sep-desktop {
+    display: none !important;
+  }
+  .footer-nav-links {
+    font-size: 12px !important;
+    gap: 8px !important;
+  }
+  .footer-credit {
+    font-size: 11.5px !important;
+    opacity: 0.95 !important;
+  }
+}
+
 /* ─── Ultra Small Breakpoints (320px - 390px) ─────────────────────────────── */
 @media (max-width: 390px) {
   .page-content { padding: 12px 8px !important; }
-  .mobile-header { padding: 0 12px !important; }
+  .mobile-header { padding: 0 10px !important; }
   .modal-overlay { padding: 8px !important; }
   .btn:not(.btn-xs):not(.btn-sm):not(.pagination-btn) { min-height: 44px !important; padding: 8px 14px !important; font-size: 13.5px !important; }
   .btn-xs { min-height: unset !important; }
+  .theme-celestial-track { width: 58px !important; height: 32px !important; }
+  .theme-celestial-thumb { width: 23px !important; height: 23px !important; top: 3px !important; left: 3px !important; }
+  .theme-celestial-switch.is-dark .theme-celestial-thumb { transform: translateX(27px) !important; }
 }
 
 /* ─── Donation Admin Mobile Responsive System ─────────────────────────────── */

@@ -1244,6 +1244,27 @@ h1, h2, h3, h4, h5, h6,
   color: var(--bss-emerald-light);
 }
 
+.bss-footer-bottom {
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 900px) {
+  .bss-footer-bottom {
+    flex-direction: column !important;
+    text-align: center !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+  .bss-footer-bottom-copy,
+  .bss-footer-bottom-secure,
+  .bss-footer-bottom-author {
+    text-align: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+}
+
 /* ─── COMPREHENSIVE RESPONSIVE CSS DESIGN SYSTEM ───────────────────────── */
 
 /* Mobile Phones (small portrait < 480px) */

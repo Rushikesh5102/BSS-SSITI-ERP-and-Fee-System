@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 interface NavItem {
     href: string;
@@ -247,27 +248,8 @@ function SidebarInner() {
                     </div>
                     <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>Shri Sai I.T.I</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button 
-                        onClick={toggleTheme} 
-                        className="btn-icon" 
-                        style={{ 
-                            background: 'var(--surface-2)', 
-                            border: '1px solid var(--border)', 
-                            color: 'var(--text-primary)', 
-                            padding: '6px 10px', 
-                            borderRadius: '20px', 
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                        }}
-                        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                        aria-label="Toggle Theme"
-                    >
-                        <span>{isDark ? '☀️' : '🌙'}</span>
-                    </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <ThemeToggle variant="switch" />
                     <button
                         className={`hamburger-btn ${mobileOpen ? 'open' : ''}`}
                         onClick={() => setMobileOpen(!mobileOpen)}
@@ -636,6 +618,7 @@ function SidebarInner() {
                 {/* User Profile Badge (Click to open Profile Modal) */}
                 {user && (
                     <div className="sidebar-footer">
+                        <ThemeToggle variant="sidebar" />
                         <div
                             className="user-badge"
                             style={{ cursor: 'pointer' }}

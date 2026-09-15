@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import ThemeToggle from '../../components/ThemeToggle';
 import './creative-login.css';
 
 declare const window: any;
@@ -656,20 +657,9 @@ export default function LoginPage() {
             </div>
 
             {/* Theme Toggle Button */}
-            <button 
-                onClick={toggleTheme}
-                style={{
-                    position: 'fixed', top: 24, right: 24, padding: '8px 16px',
-                    background: isDark ? '#1e293b' : '#ffffff',
-                    border: isDark ? '1px solid #334155' : '1px solid #D8CEC1',
-                    color: isDark ? '#f8fafc' : '#1e293b',
-                    borderRadius: '100px', cursor: 'pointer', zIndex: 100,
-                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
-                }}
-            >
-                {isDark ? '☀️ Light' : '🌙 Dark'}
-            </button>
+            <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100 }}>
+                <ThemeToggle variant="switch" />
+            </div>
 
             {/* Mechanical Container with SVG & Form precisely positioned */}
             <div className="machine-container" ref={containerRef}>

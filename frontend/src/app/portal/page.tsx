@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import WelcomeOverlay from '../../components/WelcomeOverlay';
 import Footer from '../../components/Footer';
+import ThemeToggle from '../../components/ThemeToggle';
 
 export default function PortalHubPage() {
     const { user, loading, logout } = useAuth();
@@ -86,21 +87,9 @@ export default function PortalHubPage() {
             transition: 'background 0.3s ease'
         }}>
             {/* Theme Toggle */}
-            <button 
-                onClick={toggleTheme}
-                style={{
-                    position: 'absolute', top: 20, right: 20, padding: '8px 16px',
-                    background: 'rgba(255, 255, 255, 0.18)',
-                    border: '1px solid rgba(255, 255, 255, 0.35)',
-                    color: '#ffffff',
-                    borderRadius: '100px', cursor: 'pointer', zIndex: 10,
-                    display: 'flex', alignItems: 'center', gap: 8, fontSize: '13px', fontWeight: 700,
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
-                }}
-            >
-                {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
-            </button>
+            <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
+                <ThemeToggle variant="switch" />
+            </div>
 
             {showWelcome && <WelcomeOverlay role={user.role} />}
 

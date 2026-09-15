@@ -85,17 +85,17 @@ export default function Footer({ onOpenDonate }: FooterProps) {
         </div>
 
         {/* Bottom Bar */}
-        <div style={{ paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.12)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', fontSize: '0.8125rem', color: 'rgba(255, 255, 255, 0.7)' }}>
-          <div>
+        <div className="bss-footer-bottom" style={{ paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.12)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', fontSize: '0.8125rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+          <div className="bss-footer-bottom-copy">
             &copy; {new Date().getFullYear()} Bharat Shikshan Sanstha. All Rights Reserved.
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>
+          <div className="bss-footer-bottom-secure" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>
             <ShieldCheck size={16} color="var(--bss-emerald-light)" />
             <span>Secure donations powered by Razorpay.</span>
           </div>
 
-          <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.85)' }}>
+          <div className="bss-footer-bottom-author" style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.85)' }}>
             Designed & Developed by <strong style={{ color: '#ffffff', fontWeight: 600 }}>Rushikesh Pattiwar</strong> — Project Architect & System Administrator
           </div>
         </div>
