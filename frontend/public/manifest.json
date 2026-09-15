@@ -1,21 +1,105 @@
 {
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "Shri Sai Private ITI Fee & Campus ERP",
   "short_name": "Sai ITI ERP",
-  "name": "Shri Sai I.T.I Fee Management & ERP System",
-  "icons": [
-    {
-      "src": "/sai_iti_logo.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "/sai_iti_logo.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": "/dashboard",
+  "id": "/?source=pwa",
+  "description": "Official ERP, Student Admission, Workshop Asset Register, and Fee Management Portal for Shri Sai Private Industrial Training Institute, Bhadravati.",
+  "start_url": "/dashboard?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0284c7",
-  "display": "standalone",
-  "orientation": "portrait"
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["education", "finance", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop Fee & Campus ERP Dashboard"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Fee Collection & Student Management"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Fee Dashboard",
+      "short_name": "Dashboard",
+      "description": "View institutional fee metrics and collection overview",
+      "url": "/dashboard?source=shortcut",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Record Payment",
+      "short_name": "New Payment",
+      "description": "Collect student fees and print instant PDF receipts",
+      "url": "/payments?source=shortcut",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Student Admissions",
+      "short_name": "Students",
+      "description": "Enroll students and generate ID cards",
+      "url": "/students?source=shortcut",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Receipts Register",
+      "short_name": "Receipts",
+      "description": "View, download, and verify fee receipts",
+      "url": "/receipts?source=shortcut",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
 }

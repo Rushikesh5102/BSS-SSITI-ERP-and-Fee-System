@@ -1,0 +1,59 @@
+{
+  "packageId": "in.edu.saiiti.erp",
+  "host": "bss-ssiti-erp-and-fee-system.vercel.app",
+  "name": "Shri Sai Private ITI Fee & Campus ERP",
+  "launcherName": "Sai ITI ERP",
+  "display": "standalone",
+  "themeColor": "#0284C7",
+  "themeColorDark": "#0F172A",
+  "navigationColor": "#0F172A",
+  "navigationColorDark": "#0F172A",
+  "navigationDividerColor": "#334155",
+  "navigationDividerColorDark": "#334155",
+  "backgroundColor": "#0F172A",
+  "enableNotifications": true,
+  "startUrl": "/dashboard?source=pwa",
+  "iconUrl": "https://bss-ssiti-erp-and-fee-system.vercel.app/icon-512x512.png",
+  "maskableIconUrl": "https://bss-ssiti-erp-and-fee-system.vercel.app/icon-maskable-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "saiiti"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "shortName": "Dashboard",
+      "url": "/dashboard?source=shortcut",
+      "icon": "https://bss-ssiti-erp-and-fee-system.vercel.app/icon-192x192.png"
+    },
+    {
+      "name": "Record Payment",
+      "shortName": "Payment",
+      "url": "/payments?source=shortcut",
+      "icon": "https://bss-ssiti-erp-and-fee-system.vercel.app/icon-192x192.png"
+    },
+    {
+      "name": "Student Admissions",
+      "shortName": "Students",
+      "url": "/students?source=shortcut",
+      "icon": "https://bss-ssiti-erp-and-fee-system.vercel.app/icon-192x192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://bss-ssiti-erp-and-fee-system.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": false
+    },
+    "locationDelegation": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  }
+}
