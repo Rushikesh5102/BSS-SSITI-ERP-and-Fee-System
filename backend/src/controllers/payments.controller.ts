@@ -34,6 +34,8 @@ export const paymentsController = {
             supplementarySubject,
             feeBreakdown,
             splitPayment,
+            receiptDate,
+            paymentDate,
         } = req.body;
 
         // Validate student fee exists
@@ -166,6 +168,16 @@ export const paymentsController = {
             ? new Date(chequeDate)
             : null;
 
+        // Custom Typed / Backdated Receipt & Payment Date
+        const rawCustomDate = receiptDate || paymentDate;
+        let effectivePaymentDate = new Date();
+        if (rawCustomDate && typeof rawCustomDate === 'string' && rawCustomDate.trim()) {
+            const parsed = new Date(rawCustomDate.trim());
+            if (!isNaN(parsed.getTime())) {
+                effectivePaymentDate = parsed;
+            }
+        }
+
         // Record payment
         const payment = await prisma.payment.create({
             data: {
@@ -179,7 +191,8 @@ export const paymentsController = {
                 remarks: effectiveRemarks,
                 recordedById: req.user!.id,
                 approvedById: req.user!.id,
-                approvedAt: new Date(),
+                approvedAt: effectivePaymentDate,
+                createdAt: effectivePaymentDate,
             },
         });
 
@@ -220,7 +233,7 @@ export const paymentsController = {
                 className: studentFee.student.class,
                 parentName: studentFee.student.parent?.name,
                 parentPhone: studentFee.student.parent?.phone,
-                paymentDate: new Date(),
+                paymentDate: effectivePaymentDate,
                 amount,
                 totalFee: pdfTotalFee,
                 totalPaid: pdfTotalPaid,
@@ -257,6 +270,7 @@ export const paymentsController = {
                 paymentId: payment.id,
                 pdfUrl: `/api/receipts/download/${receiptNumber}`,
                 generatedById: req.user!.id,
+                createdAt: effectivePaymentDate,
             },
         });
 

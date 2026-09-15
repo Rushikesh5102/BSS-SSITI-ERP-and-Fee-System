@@ -428,14 +428,12 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         try {
             await api.post('/store/items', {
                 name: itemName,
-                sku: itemSku || undefined,
                 description: itemDescription,
-                category: itemCategory,
+                category: 'General',
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
                 pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
-                location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
                 branchId: itemBranchId,
@@ -460,14 +458,12 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         try {
             await api.put(`/store/items/${selectedItem.id}`, {
                 name: itemName,
-                sku: itemSku || undefined,
                 description: itemDescription,
-                category: itemCategory,
+                category: 'General',
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
                 pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
-                location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
                 image: itemImage || null
@@ -1068,8 +1064,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                             <thead>
                                                 <tr style={{ borderBottom: '2px solid var(--border)' }}>
                                                     <th style={{ textAlign: 'left', padding: '12px' }}>Tool Name</th>
-                                                    <th style={{ textAlign: 'left', padding: '12px' }}>Category</th>
-                                                    <th style={{ textAlign: 'left', padding: '12px' }}>Location</th>
                                                     <th style={{ textAlign: 'right', padding: '12px' }}>Actions</th>
                                                 </tr>
                                             </thead>
@@ -1077,8 +1071,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                 {items.filter(i => i.status === 'UNDER_MAINTENANCE').map((item) => (
                                                     <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
                                                         <td style={{ padding: '12px', fontWeight: 700 }}>{item.name}</td>
-                                                        <td style={{ padding: '12px', fontSize: 12 }}>{item.category}</td>
-                                                        <td style={{ padding: '12px', fontSize: 12 }}>📍 {item.location || 'Workshop'}</td>
                                                         <td style={{ padding: '12px', textAlign: 'right' }}>
                                                             <button onClick={() => openMaintenanceModal(item.id, 'COMPLETE')} className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12, marginRight: 6 }}>
                                                                 ✓ Repaired & Available
@@ -1118,8 +1110,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                             <thead>
                                                 <tr style={{ borderBottom: '2px solid var(--border)' }}>
                                                     <th style={{ textAlign: 'left', padding: '12px' }}>Asset Name</th>
-                                                    <th style={{ textAlign: 'left', padding: '12px' }}>Category</th>
-                                                    <th style={{ textAlign: 'left', padding: '12px' }}>Location</th>
                                                     <th style={{ textAlign: 'left', padding: '12px' }}>Status</th>
                                                     <th style={{ textAlign: 'left', padding: '12px' }}>Notes</th>
                                                 </tr>
@@ -1128,8 +1118,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                 {damagedItems.map((item) => (
                                                     <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
                                                         <td style={{ padding: '12px', fontWeight: 700 }}>{item.name}</td>
-                                                        <td style={{ padding: '12px', fontSize: 12 }}>{item.category}</td>
-                                                        <td style={{ padding: '12px', fontSize: 12 }}>📍 {item.location || 'N/A'}</td>
                                                         <td style={{ padding: '12px' }}>
                                                             <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
                                                                 {item.status}
@@ -1175,19 +1163,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     <input type="text" className="form-control" required value={itemName} onChange={e => setItemName(e.target.value)} placeholder="e.g. Digital Vernier Caliper 150mm" />
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">SKU / Serial No</label>
-                                        <input type="text" className="form-control" value={itemSku} onChange={e => setItemSku(e.target.value)} placeholder="e.g. ITI-FIT-0042" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Category *</label>
-                                        <select className="form-control" required value={itemCategory} onChange={e => setItemCategory(e.target.value)}>
-                                            {categoriesList.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
@@ -1212,17 +1187,11 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Rack Location</label>
-                                        <input type="text" className="form-control" value={itemLocation} onChange={e => setItemLocation(e.target.value)} placeholder="e.g. Fitter Lab - Rack B2" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Status *</label>
-                                        <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
-                                            {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
-                                        </select>
-                                    </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status *</label>
+                                    <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
+                                        {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                                    </select>
                                 </div>
                             </div>
                             <div className="modal-footer">
@@ -1252,19 +1221,6 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     <input type="text" className="form-control" required value={itemName} onChange={e => setItemName(e.target.value)} />
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">SKU / Serial No</label>
-                                        <input type="text" className="form-control" value={itemSku} onChange={e => setItemSku(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Category *</label>
-                                        <select className="form-control" required value={itemCategory} onChange={e => setItemCategory(e.target.value)}>
-                                            {categoriesList.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
@@ -1289,17 +1245,11 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                     <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Rack Location</label>
-                                        <input type="text" className="form-control" value={itemLocation} onChange={e => setItemLocation(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Status *</label>
-                                        <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
-                                            {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
-                                        </select>
-                                    </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status *</label>
+                                    <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
+                                        {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                                    </select>
                                 </div>
                             </div>
                             <div className="modal-footer">

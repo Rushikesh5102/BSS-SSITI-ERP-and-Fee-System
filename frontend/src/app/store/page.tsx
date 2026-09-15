@@ -19,16 +19,7 @@ interface StoreDashboardStats {
     lowStockCount: number;
 }
 
-const CATEGORIES = [
-    'Electrical Tools',
-    'Fitter & Machining',
-    'Welding Equipment',
-    'Electronics & IT',
-    'Automotive & Mechanic',
-    'Measurement & Calibration',
-    'Safety & Protective Gear',
-    'General Tools & Consumables'
-];
+
 
 function StoreDashboardContent() {
     const { user, loading } = useAuth();
@@ -286,29 +277,61 @@ function StoreDashboardContent() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-                        {/* Workshop Category Breakdown */}
+                        {/* Workshop Asset Overview */}
                         <div className="card" style={{ padding: 20 }}>
                             <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>
-                                🛠️ Category Stock Distribution
+                                📊 Asset Status Overview
                             </h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {CATEGORIES.map(cat => {
-                                    const catItems = items.filter(i => i.category === cat);
-                                    const totalQty = catItems.reduce((acc, i) => acc + (i.quantity || 0), 0);
-                                    const count = catItems.length;
+                                <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 10 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                                        <span style={{ color: '#10b981' }}>✅ Available in Workshop</span>
+                                        <span>{stats?.availableCount || 0} assets</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${stats?.totalItems ? Math.round(((stats.availableCount || 0) / stats.totalItems) * 100) : 0}%`, height: '100%', background: '#10b981', borderRadius: 4 }} />
+                                    </div>
+                                </div>
 
-                                    return (
-                                        <div key={cat} style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 10 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-                                                <span>{cat}</span>
-                                                <span>{count} assets ({totalQty} units)</span>
-                                            </div>
-                                            <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
-                                                <div style={{ width: `${Math.min(100, count * 15)}%`, height: '100%', background: '#c084fc', borderRadius: 4 }} />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 10 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                                        <span style={{ color: '#0284c7' }}>📤 Currently Issued</span>
+                                        <span>{stats?.issuedCount || 0} active ({stats?.issuedQuantity || 0} units)</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${stats?.totalItems ? Math.round(((stats.issuedCount || 0) / stats.totalItems) * 100) : 0}%`, height: '100%', background: '#0284c7', borderRadius: 4 }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 10 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                                        <span style={{ color: '#f59e0b' }}>⚠️ Low Stock Alert</span>
+                                        <span>{stats?.lowStockCount || 0} items</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${stats?.totalItems ? Math.round(((stats.lowStockCount || 0) / stats.totalItems) * 100) : 0}%`, height: '100%', background: '#f59e0b', borderRadius: 4 }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 10 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                                        <span style={{ color: '#8b5cf6' }}>🔧 Under Maintenance</span>
+                                        <span>{stats?.maintenanceCount || 0} items</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${stats?.totalItems ? Math.round(((stats.maintenanceCount || 0) / stats.totalItems) * 100) : 0}%`, height: '100%', background: '#8b5cf6', borderRadius: 4 }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 10 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                                        <span style={{ color: '#ef4444' }}>❌ Damaged / Lost</span>
+                                        <span>{stats?.damagedCount || 0} items</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${stats?.totalItems ? Math.round(((stats.damagedCount || 0) / stats.totalItems) * 100) : 0}%`, height: '100%', background: '#ef4444', borderRadius: 4 }} />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
@@ -7,6 +9,9 @@ import { AuditAction } from '../types/enums';
 
 import { generateStudentId } from '../utils/uuid';
 import bcrypt from 'bcryptjs';
+
+const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
+
 
 export const studentsController = {
     /**
@@ -295,24 +300,119 @@ export const studentsController = {
 
     /**
      * DELETE /students/:id
-     * Administrative Student Deletion (Soft delete & Audit Logging)
+     * Complete Administrative Cascade Deletion:
+     * When fee accountant/admin deletes a profile, all records related to that profile:
+     * receipts, receipt PDF files, payment records, payment history, student fees,
+     * tool issue transactions, library records, and the student login account are completely purged.
      */
     delete: asyncHandler(async (req: Request, res: Response) => {
         const student = await prisma.student.findUnique({
-            where: { id: req.params.id }
+            where: { id: req.params.id },
+            include: {
+                studentFees: {
+                    include: {
+                        payments: {
+                            include: { receipt: true }
+                        }
+                    }
+                }
+            }
         });
 
         if (!student) {
             throw new AppError(404, 'Student record not found');
         }
 
-        // Soft delete student record
-        await prisma.student.update({
-            where: { id: req.params.id },
-            data: { isActive: false }
+        const studentFeeIds = student.studentFees.map(f => f.id);
+        const payments = student.studentFees.flatMap(f => f.payments);
+        const paymentIds = payments.map(p => p.id);
+        const receipts = payments.map(p => p.receipt).filter(Boolean);
+        const receiptIds = receipts.map(r => r!.id);
+        const receiptNumbers = receipts.map(r => r!.receiptNumber);
+
+        // 1. Delete physical cached PDF files from disk
+        for (const rNum of receiptNumbers) {
+            const p = path.join(RECEIPTS_DIR, `${rNum}.pdf`);
+            if (fs.existsSync(p)) {
+                try {
+                    fs.unlinkSync(p);
+                } catch (fsErr) {
+                    console.warn(`Could not delete PDF file ${p}:`, fsErr);
+                }
+            }
+        }
+
+        // 2. Perform complete cascade deletion in a database transaction
+        await prisma.$transaction(async (tx) => {
+            // Delete all receipts linked to student's payments
+            if (receiptIds.length > 0) {
+                await tx.receipt.deleteMany({
+                    where: { id: { in: receiptIds } }
+                });
+            }
+
+            // Delete all payment records / history linked to student's fees
+            if (paymentIds.length > 0) {
+                await tx.payment.deleteMany({
+                    where: { id: { in: paymentIds } }
+                });
+            }
+
+            // Delete all assigned student fee structures
+            if (studentFeeIds.length > 0) {
+                await tx.studentFee.deleteMany({
+                    where: { id: { in: studentFeeIds } }
+                });
+            }
+
+            // Delete workshop tool stock transactions linked to student
+            await tx.stockTransaction.deleteMany({
+                where: { studentId: student.id }
+            });
+
+            // Delete library issues & reservations
+            await tx.bookReservation.deleteMany({
+                where: { studentId: student.id }
+            });
+            await tx.bookIssue.deleteMany({
+                where: { studentId: student.id }
+            });
+
+            // Delete student portal login user account (if exists)
+            const cleanStudentId = student.studentId.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const generatedEmail = `${cleanStudentId}@student.saiiti.edu.in`;
+            const emailsToDelete = [student.email, generatedEmail].filter(Boolean) as string[];
+            if (emailsToDelete.length > 0) {
+                await tx.user.deleteMany({
+                    where: {
+                        email: { in: emailsToDelete },
+                        role: 'STUDENT'
+                    }
+                });
+            }
+
+            // Delete the student profile itself
+            await tx.student.delete({
+                where: { id: student.id }
+            });
+
+            // Clean up parent record if no other students are linked
+            if (student.parentId) {
+                const otherChildren = await tx.student.count({
+                    where: {
+                        parentId: student.parentId,
+                        id: { not: student.id }
+                    }
+                });
+                if (otherChildren === 0) {
+                    await tx.parent.delete({
+                        where: { id: student.parentId }
+                    }).catch(() => {});
+                }
+            }
         });
 
-        // Record official audit log for administrative authority
+        // 3. Record official audit log for administrative compliance
         try {
             await createAuditLog(
                 req.user!.id,
@@ -323,10 +423,12 @@ export const studentsController = {
                     studentId: student.studentId,
                     name: student.name,
                     class: student.class,
-                    rollNumber: student.rollNumber,
+                    deletedReceiptsCount: receiptIds.length,
+                    deletedPaymentsCount: paymentIds.length,
+                    deletedFeesCount: studentFeeIds.length,
                     deletedBy: req.user?.email,
                     role: req.user?.role,
-                    reason: req.body?.reason || 'Administrative Deletion via Profile Edit'
+                    reason: req.body?.reason || 'Complete Profile Cascade Deletion'
                 },
                 req.ip
             );
@@ -336,7 +438,7 @@ export const studentsController = {
 
         res.json({
             success: true,
-            message: `Student ${student.name} (${student.studentId}) successfully deleted and archived in audit records.`
+            message: `Student profile ${student.name} (${student.studentId}) and all associated records (fees, payment history, and receipts) were completely deleted successfully.`
         });
     }),
 };

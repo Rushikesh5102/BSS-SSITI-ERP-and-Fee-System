@@ -71,8 +71,8 @@ function ReportsPageContent() {
 
     const handleExportExcel = () => {
         if (reportType === 'ASSETS') {
-            const headers = ['Name', 'SKU', 'Category', 'Quantity', 'Unit', 'Reorder Level', 'Location', 'Status', 'Notes'];
-            const rows = items.map(i => [i.name, i.sku || '', i.category, i.quantity.toString(), i.unit, i.reorderLevel.toString(), i.location || '', i.status, i.notes || '']);
+            const headers = ['Name', 'Quantity', 'Unit', 'Reorder Level', 'Status', 'Notes'];
+            const rows = items.map(i => [i.name, i.quantity.toString(), i.unit, i.reorderLevel.toString(), i.status, i.notes || '']);
             downloadCSV('Sai_ITI_Asset_Catalog_Report', [headers, ...rows]);
         } else if (reportType === 'ISSUES') {
             const issues = transactions.filter(t => t.type === 'ISSUE');
@@ -112,8 +112,8 @@ function ReportsPageContent() {
             downloadCSV('Sai_ITI_Maintenance_Report', [headers, ...rows]);
         } else if (reportType === 'DAMAGED') {
             const dam = items.filter(i => i.status === 'DAMAGED' || i.status === 'LOST');
-            const headers = ['Asset Name', 'Category', 'Rack Location', 'Status', 'Notes'];
-            const rows = dam.map(d => [d.name, d.category, d.location || '', d.status, d.notes || '']);
+            const headers = ['Asset Name', 'Status', 'Notes'];
+            const rows = dam.map(d => [d.name, d.status, d.notes || '']);
             downloadCSV('Sai_ITI_Damaged_Lost_Report', [headers, ...rows]);
         }
     };
@@ -213,12 +213,10 @@ function ReportsPageContent() {
                                             <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>#</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Item Name</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Category</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'center' }}>Quantity</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'right' }}>Unit Price (₹)</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'right' }}>Total Asset Value (₹)</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'center' }}>Reorder Level</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Rack Location</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Status</th>
                                             </tr>
                                         </thead>
@@ -230,12 +228,10 @@ function ReportsPageContent() {
                                                     <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                                         <td style={{ padding: '8px' }}>{idx + 1}</td>
                                                         <td style={{ padding: '8px', fontWeight: 700 }}>{item.name}</td>
-                                                        <td style={{ padding: '8px' }}>{item.category}</td>
                                                         <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{item.quantity} {item.unit}</td>
                                                         <td style={{ padding: '8px', textAlign: 'right', fontWeight: 600 }}>₹{unitPrice.toLocaleString('en-IN')}</td>
                                                         <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>₹{totalVal.toLocaleString('en-IN')}</td>
                                                         <td style={{ padding: '8px', textAlign: 'center' }}>{item.reorderLevel} {item.unit}</td>
-                                                        <td style={{ padding: '8px' }}>{item.location || 'N/A'}</td>
                                                         <td style={{ padding: '8px', fontWeight: 700 }}>{item.status}</td>
                                                     </tr>
                                                 );
@@ -243,13 +239,13 @@ function ReportsPageContent() {
                                         </tbody>
                                         <tfoot>
                                             <tr style={{ background: '#f8fafc', fontWeight: 800, borderTop: '2px solid #0f172a' }}>
-                                                <td colSpan={3} style={{ padding: '10px 8px', textAlign: 'right' }}>Total Inventory Valuation:</td>
+                                                <td colSpan={2} style={{ padding: '10px 8px', textAlign: 'right' }}>Total Inventory Valuation:</td>
                                                 <td style={{ padding: '10px 8px', textAlign: 'center' }}>{items.reduce((a, i) => a + (i.quantity || 0), 0)} pcs</td>
                                                 <td style={{ padding: '10px 8px' }}></td>
                                                 <td style={{ padding: '10px 8px', textAlign: 'right', color: '#16a34a', fontSize: 13 }}>
                                                     ₹{items.reduce((a, i) => a + ((i.quantity || 0) * (i.pricePerUnit || 0)), 0).toLocaleString('en-IN')}
                                                 </td>
-                                                <td colSpan={3}></td>
+                                                <td colSpan={2}></td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -318,8 +314,6 @@ function ReportsPageContent() {
                                         <thead>
                                             <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Tool Name</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Category</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Rack Location</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Status</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Notes</th>
                                             </tr>
@@ -328,8 +322,6 @@ function ReportsPageContent() {
                                             {items.filter(i => i.status === 'UNDER_MAINTENANCE').map((item) => (
                                                 <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                                     <td style={{ padding: '8px', fontWeight: 700 }}>{item.name}</td>
-                                                    <td style={{ padding: '8px' }}>{item.category}</td>
-                                                    <td style={{ padding: '8px' }}>{item.location || 'Workshop'}</td>
                                                     <td style={{ padding: '8px', fontWeight: 700, color: '#8b5cf6' }}>{item.status}</td>
                                                     <td style={{ padding: '8px' }}>{item.notes || '-'}</td>
                                                 </tr>
@@ -343,8 +335,6 @@ function ReportsPageContent() {
                                         <thead>
                                             <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Tool Name</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Category</th>
-                                                <th style={{ padding: '10px 8px', textAlign: 'left' }}>Rack Location</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Status</th>
                                                 <th style={{ padding: '10px 8px', textAlign: 'left' }}>Notes</th>
                                             </tr>
@@ -353,8 +343,6 @@ function ReportsPageContent() {
                                             {items.filter(i => i.status === 'DAMAGED' || i.status === 'LOST').map((item) => (
                                                 <tr key={item.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                                     <td style={{ padding: '8px', fontWeight: 700 }}>{item.name}</td>
-                                                    <td style={{ padding: '8px' }}>{item.category}</td>
-                                                    <td style={{ padding: '8px' }}>{item.location || 'N/A'}</td>
                                                     <td style={{ padding: '8px', fontWeight: 700, color: '#ef4444' }}>{item.status}</td>
                                                     <td style={{ padding: '8px' }}>{item.notes || '-'}</td>
                                                 </tr>

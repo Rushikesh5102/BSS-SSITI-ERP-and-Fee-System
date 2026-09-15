@@ -58,6 +58,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
         transactionRef: '', 
         bankName: '', 
         chequeDate: '',
+        paymentDate: new Date().toISOString().split('T')[0],
         remarks: '' 
     });
     
@@ -284,6 +285,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             transactionRef: '',
             bankName: '',
             chequeDate: '',
+            paymentDate: new Date().toISOString().split('T')[0],
             remarks: ''
         });
         setSplitItems([
@@ -410,6 +412,8 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 transactionRef: form.transactionRef || undefined,
                 bankName: form.bankName || undefined,
                 chequeDate: form.chequeDate || undefined,
+                paymentDate: form.paymentDate || undefined,
+                receiptDate: form.paymentDate || undefined,
                 remarks: form.remarks || `Paid towards ${effectiveFeesFor}`,
                 feesFor: effectiveFeesFor,
                 isSupplementary,
@@ -423,7 +427,15 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             safeStorage.remove('draft_fee_payment_v3');
             
             // Reset form
-            setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', chequeDate: '', remarks: '' });
+            setForm({
+                amount: '',
+                mode: 'CASH',
+                transactionRef: '',
+                bankName: '',
+                chequeDate: '',
+                paymentDate: new Date().toISOString().split('T')[0],
+                remarks: ''
+            });
             setFeeItems([{ type: 'TUITION', amount: '' }]);
 
             // Refresh student fee data
@@ -1086,6 +1098,67 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                      </div>
                                                  )}
 
+                                                 {/* Custom Typed / Backdated Receipt Date */}
+                                                 <div className="form-group" style={{ gridColumn: '1 / -1', background: 'rgba(2, 132, 199, 0.05)', border: '1px solid rgba(2, 132, 199, 0.25)', borderRadius: 10, padding: '12px 14px' }}>
+                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
+                                                         <label className="form-label" style={{ color: '#0369a1', fontWeight: 800, margin: 0, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                             <span>📅 Receipt / Payment Date</span>
+                                                             <span style={{ fontSize: 11, fontWeight: 700, background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: 4 }}>
+                                                                 Custom Typed / Backdated Allowed
+                                                             </span>
+                                                         </label>
+                                                         <div style={{ display: 'flex', gap: 6 }}>
+                                                             <button
+                                                                 type="button"
+                                                                 onClick={() => setForm(f => ({ ...f, paymentDate: new Date().toISOString().split('T')[0] }))}
+                                                                 className="btn btn-ghost btn-sm"
+                                                                 style={{ fontSize: 11, padding: '2px 8px', height: 'auto', color: '#0284c7', fontWeight: 700, background: '#ffffff', border: '1px solid #bae6fd' }}
+                                                             >
+                                                                 Today
+                                                             </button>
+                                                             <button
+                                                                 type="button"
+                                                                 onClick={() => {
+                                                                     const d = new Date();
+                                                                     d.setDate(d.getDate() - 1);
+                                                                     setForm(f => ({ ...f, paymentDate: d.toISOString().split('T')[0] }));
+                                                                 }}
+                                                                 className="btn btn-ghost btn-sm"
+                                                                 style={{ fontSize: 11, padding: '2px 8px', height: 'auto', color: '#0284c7', fontWeight: 700, background: '#ffffff', border: '1px solid #bae6fd' }}
+                                                             >
+                                                                 Yesterday
+                                                             </button>
+                                                         </div>
+                                                     </div>
+                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
+                                                         <input
+                                                             type="text"
+                                                             className="form-control"
+                                                             value={form.paymentDate}
+                                                             onChange={(e) => setForm(f => ({ ...f, paymentDate: e.target.value }))}
+                                                             placeholder="YYYY-MM-DD (e.g. 2024-05-15) or type custom date"
+                                                             style={{ fontWeight: 700, color: '#0f172a', fontSize: 13, background: '#ffffff' }}
+                                                         />
+                                                         <input
+                                                             type="date"
+                                                             value={form.paymentDate?.length === 10 ? form.paymentDate : ''}
+                                                             onChange={(e) => e.target.value && setForm(f => ({ ...f, paymentDate: e.target.value }))}
+                                                             style={{
+                                                                 height: '38px',
+                                                                 padding: '4px 8px',
+                                                                 border: '1px solid var(--border)',
+                                                                 borderRadius: 6,
+                                                                 cursor: 'pointer',
+                                                                 background: '#ffffff'
+                                                             }}
+                                                             title="Pick from calendar"
+                                                         />
+                                                     </div>
+                                                     <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                                                         You can directly custom type any past date to create a backdated official receipt.
+                                                     </div>
+                                                 </div>
+
                                                  {/* Remarks Input */}
                                                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                                      <label className="form-label" style={{ color: '#0f172a', fontWeight: 700 }}>Remarks / Note (Printed on Receipt)</label>
@@ -1166,7 +1239,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                                     if (verifyRes.success) {
                                                                         setResult(verifyRes.data);
                                                                         showToast('✅ Razorpay Payment Successful! Receipt generated.');
-                                                                        setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', chequeDate: '', remarks: '' });
+                                                                        setForm({ amount: '', mode: 'CASH', transactionRef: '', bankName: '', chequeDate: '', paymentDate: new Date().toISOString().split('T')[0], remarks: '' });
                                                                     }
                                                                 } catch (err: any) {
                                                                     showToast(`❌ Verification error: ${err.message}`);

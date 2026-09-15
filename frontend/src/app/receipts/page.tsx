@@ -87,9 +87,27 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
             ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
             : 'http://localhost:4000';
-    };
+    };    const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
+    const canDeleteReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'ACCOUNTANT';
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
+    const handleDeleteReceipt = async (receipt: any) => {
+        const studentName = receipt.payment?.studentFee?.student?.name || 'the student';
+        const amountStr = formatRupees(receipt.payment?.amount || 0);
+        const confirmMsg = `Are you sure you want to delete Receipt #${receipt.receiptNumber} (${amountStr}) for ${studentName}?\n\nThis will permanently remove the receipt and recalculate the student's fee balance.`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setDeletingId(receipt.id);
+        try {
+            await api.delete(`/receipts/${receipt.id}`);
+            alert(`✅ Receipt #${receipt.receiptNumber} deleted successfully!`);
+            fetchReceipts(search);
+        } catch (err: any) {
+            alert(`❌ ${err.response?.data?.message || 'Failed to delete receipt'}`);
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     const handlePrintReceipt = () => {
         window.print();
@@ -138,73 +156,91 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                         <tr><td colSpan={8} className="text-center text-muted" style={{ padding: 40 }}>No receipts found</td></tr>
                                     ) : filtered.map((r) => (
                                         <tr key={r.id}>
-                                            <td data-label="Receipt No.">
-                                                <span className="badge badge-primary" style={{ fontWeight: 800 }}>{r.receiptNumber}</span>
-                                            </td>
-                                            <td data-label="Student">
-                                                <b>{r.payment?.studentFee?.student?.name || '—'}</b>
-                                                <div className="text-sm text-muted">{r.payment?.studentFee?.student?.studentId} • {r.payment?.studentFee?.student?.class}</div>
-                                            </td>
-                                            <td data-label="Amount Paid"><b style={{ color: 'var(--accent)', fontSize: 14 }}>{formatRupees(r.payment?.amount || 0)}</b></td>
-                                            <td data-label="Mode"><span className="badge badge-neutral">{r.payment?.mode}</span></td>
-                                            <td data-label="Remarks / Notes">
-                                                {r.payment?.remarks ? (
-                                                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 6 }}>
-                                                        📝 {r.payment.remarks}
-                                                    </span>
-                                                ) : <span className="text-muted text-xs">—</span>}
-                                            </td>
-                                            <td data-label="Issued Date">{new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                                            <td data-label="Clerk / Cashier">
-                                                <span className="text-sm font-bold">{r.generatedBy?.name || 'Accounts Clerk'}</span>
-                                            </td>
-                                            <td data-label="Actions">
-                                                <div style={{ display: 'flex', gap: 6 }}>
-                                                    <button
-                                                        onClick={() => setViewReceipt(r)}
-                                                        className="btn btn-secondary btn-sm"
-                                                        title="View full printable receipt with balance & clerk signature"
-                                                    >
-                                                        👁️ View / Print
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            window.location.href = `${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`;
-                                                        }}
-                                                        className="btn btn-accent btn-sm"
-                                                        title="Download Official PDF Receipt"
-                                                    >
-                                                        📄 PDF
-                                                    </button>
-                                                    {canRefund && r.payment?.status !== 'REFUNDED' && (
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            style={{ padding: '4px 8px', fontSize: 11 }}
-                                                            onClick={async () => {
-                                                                const reason = prompt('Reason for fee refund:');
-                                                                if (!reason) return;
-                                                                try {
-                                                                    await api.post(`/payments/${r.paymentId}/refund`, { reason });
-                                                                    alert('✅ Fee refunded successfully!');
-                                                                    fetchReceipts();
-                                                                } catch (err: any) {
-                                                                    alert(`❌ ${err.response?.data?.message || 'Refund failed'}`);
-                                                                }
-                                                            }}
-                                                        >
-                                                            ↩ Refund
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <Footer />
+                                             <td data-label="Receipt No.">
+                                                 <span className="badge badge-primary" style={{ fontWeight: 800 }}>{r.receiptNumber}</span>
+                                             </td>
+                                             <td data-label="Student">
+                                                 <b>{r.payment?.studentFee?.student?.name || '—'}</b>
+                                                 <div className="text-sm text-muted">{r.payment?.studentFee?.student?.studentId} • {r.payment?.studentFee?.student?.class}</div>
+                                             </td>
+                                             <td data-label="Amount Paid"><b style={{ color: 'var(--accent)', fontSize: 14 }}>{formatRupees(r.payment?.amount || 0)}</b></td>
+                                             <td data-label="Mode"><span className="badge badge-neutral">{r.payment?.mode}</span></td>
+                                             <td data-label="Remarks / Notes">
+                                                 {r.payment?.remarks ? (
+                                                     <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 6 }}>
+                                                         📝 {r.payment.remarks}
+                                                     </span>
+                                                 ) : <span className="text-muted text-xs">—</span>}
+                                             </td>
+                                             <td data-label="Issued Date">{new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                             <td data-label="Clerk / Cashier">
+                                                 <span className="text-sm font-bold">{r.generatedBy?.name || 'Accounts Clerk'}</span>
+                                             </td>
+                                             <td data-label="Actions">
+                                                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                     <button
+                                                         onClick={() => setViewReceipt(r)}
+                                                         className="btn btn-secondary btn-sm"
+                                                         title="View full printable receipt with balance & clerk signature"
+                                                     >
+                                                         👁️ View / Print
+                                                     </button>
+                                                     <button
+                                                         onClick={() => {
+                                                             window.location.href = `${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`;
+                                                         }}
+                                                         className="btn btn-accent btn-sm"
+                                                         title="Download Official PDF Receipt"
+                                                     >
+                                                         📄 PDF
+                                                     </button>
+                                                     {canRefund && r.payment?.status !== 'REFUNDED' && (
+                                                         <button
+                                                             className="btn btn-warning btn-sm"
+                                                             style={{ padding: '4px 8px', fontSize: 11 }}
+                                                             onClick={async () => {
+                                                                 const reason = prompt('Reason for fee refund:');
+                                                                 if (!reason) return;
+                                                                 try {
+                                                                     await api.post(`/payments/${r.paymentId}/refund`, { reason });
+                                                                     alert('✅ Fee refunded successfully!');
+                                                                     fetchReceipts();
+                                                                 } catch (err: any) {
+                                                                     alert(`❌ ${err.response?.data?.message || 'Refund failed'}`);
+                                                                 }
+                                                             }}
+                                                         >
+                                                             ↩ Refund
+                                                         </button>
+                                                     )}
+                                                     {canDeleteReceipt && (
+                                                         <button
+                                                             className="btn btn-sm"
+                                                             style={{
+                                                                 padding: '4px 8px',
+                                                                 fontSize: 11,
+                                                                 background: '#fee2e2',
+                                                                 color: '#dc2626',
+                                                                 border: '1px solid #fca5a5',
+                                                                 fontWeight: 700
+                                                             }}
+                                                             disabled={deletingId === r.id}
+                                                             onClick={() => handleDeleteReceipt(r)}
+                                                             title="Permanently delete receipt and adjust student balance"
+                                                         >
+                                                             {deletingId === r.id ? '⏳ Deleting...' : '🗑️ Delete'}
+                                                         </button>
+                                                     )}
+                                                 </div>
+                                             </td>
+                                         </tr>
+                                     ))}
+                                 </tbody>
+                             </table>
+                         </div>
+                     </div>
+                 </div>
+                 <Footer />
             </div>
 
             {/* Printable Receipt Modal with Remarks, Total, Balance & Clerk Signature */}

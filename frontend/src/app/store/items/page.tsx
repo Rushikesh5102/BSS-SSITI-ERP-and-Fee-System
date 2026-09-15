@@ -173,14 +173,12 @@ function AssetRegisterContent() {
         try {
             await api.post('/store/items', {
                 name: itemName,
-                sku: itemSku || undefined,
                 description: itemDescription,
-                category: itemCategory,
+                category: 'General',
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
                 pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
-                location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
                 branchId: itemBranchId,
@@ -203,14 +201,12 @@ function AssetRegisterContent() {
         try {
             await api.put(`/store/items/${selectedItem.id}`, {
                 name: itemName,
-                sku: itemSku || undefined,
                 description: itemDescription,
-                category: itemCategory,
+                category: 'General',
                 quantity: parseInt(itemQuantity, 10) || 0,
                 unit: itemUnit,
                 reorderLevel: parseInt(itemReorderLevel, 10) || 5,
                 pricePerUnit: parseInt(itemPricePerUnit, 10) || 0,
-                location: itemLocation,
                 status: itemStatus,
                 notes: itemNotes,
                 image: itemImage || null
@@ -401,24 +397,16 @@ function AssetRegisterContent() {
 
                     {/* Search & Filters */}
                     <div className="card" style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, alignItems: 'center' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, alignItems: 'center' }}>
                             <div>
-                                <label className="form-label" style={{ fontSize: 11 }}>Search Asset / SKU / Location</label>
+                                <label className="form-label" style={{ fontSize: 11 }}>Search Workshop Assets</label>
                                 <input
                                     type="text"
                                     className="form-control"
-                                    placeholder="🔍 Search name, SKU, location..."
+                                    placeholder="🔍 Search asset name or notes..."
                                     value={itemSearch}
                                     onChange={(e) => setItemSearch(e.target.value)}
                                 />
-                            </div>
-
-                            <div>
-                                <label className="form-label" style={{ fontSize: 11 }}>Category</label>
-                                <select className="form-control" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                                    <option value="">All Categories</option>
-                                    {categoriesList.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
                             </div>
 
                             <div>
@@ -462,12 +450,10 @@ function AssetRegisterContent() {
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
                                         <th style={{ textAlign: 'left', padding: '14px 16px', whiteSpace: 'nowrap' }}>Item Name</th>
-                                        <th style={{ textAlign: 'left', padding: '14px 12px', whiteSpace: 'nowrap' }}>Category</th>
                                         <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Quantity</th>
                                         <th style={{ textAlign: 'right', padding: '14px 12px', whiteSpace: 'nowrap' }}>Unit Price (₹)</th>
                                         <th style={{ textAlign: 'right', padding: '14px 12px', whiteSpace: 'nowrap' }}>Total Asset Value (₹)</th>
                                         <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Reorder Level</th>
-                                        <th style={{ textAlign: 'left', padding: '14px 12px', whiteSpace: 'nowrap' }}>Rack Location</th>
                                         <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Status</th>
                                         <th style={{ textAlign: 'right', padding: '14px 16px', whiteSpace: 'nowrap' }}>Actions</th>
                                     </tr>
@@ -515,14 +501,8 @@ function AssetRegisterContent() {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {item.sku && <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700, marginTop: 2 }}>SKU: {item.sku}</div>}
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td data-label="Category" style={{ padding: '14px 12px', whiteSpace: 'nowrap' }}>
-                                                    <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: '6px', background: 'var(--surface-2)', color: 'var(--text-primary)', fontWeight: 700 }}>
-                                                        {item.category}
-                                                    </span>
                                                 </td>
                                                 <td data-label="Quantity" style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
@@ -537,9 +517,6 @@ function AssetRegisterContent() {
                                                 </td>
                                                 <td data-label="Reorder Level" style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                                                     {item.reorderLevel} {cleanUnit}
-                                                </td>
-                                                <td data-label="Rack Location" style={{ padding: '14px 12px', color: 'var(--text-primary)', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>
-                                                    {item.location ? `📍 ${item.location}` : 'Unassigned'}
                                                 </td>
                                                 <td data-label="Status" style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{
@@ -624,19 +601,6 @@ function AssetRegisterContent() {
                                     <input type="text" className="form-control" required value={itemName} onChange={e => setItemName(e.target.value)} placeholder="e.g. Digital Vernier Caliper 150mm" />
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">SKU / Serial No</label>
-                                        <input type="text" className="form-control" value={itemSku} onChange={e => setItemSku(e.target.value)} placeholder="e.g. ITI-FIT-0042" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Category *</label>
-                                        <select className="form-control" required value={itemCategory} onChange={e => setItemCategory(e.target.value)}>
-                                            {categoriesList.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
@@ -661,17 +625,11 @@ function AssetRegisterContent() {
                                     <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Rack Location</label>
-                                        <input type="text" className="form-control" value={itemLocation} onChange={e => setItemLocation(e.target.value)} placeholder="e.g. Fitter Lab - Rack B2" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Status *</label>
-                                        <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
-                                            {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
-                                        </select>
-                                    </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status *</label>
+                                    <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
+                                        {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                                    </select>
                                 </div>
                             </div>
                             <div className="modal-footer">
@@ -702,19 +660,6 @@ function AssetRegisterContent() {
                                     <input type="text" className="form-control" required value={itemName} onChange={e => setItemName(e.target.value)} />
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">SKU / Serial No</label>
-                                        <input type="text" className="form-control" value={itemSku} onChange={e => setItemSku(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Category *</label>
-                                        <select className="form-control" required value={itemCategory} onChange={e => setItemCategory(e.target.value)}>
-                                            {categoriesList.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
                                     <div className="form-group">
                                         <label className="form-label">Quantity *</label>
@@ -739,17 +684,11 @@ function AssetRegisterContent() {
                                     <span style={{ fontSize: 14 }}>₹{((parseInt(itemQuantity, 10) || 0) * (parseInt(itemPricePerUnit, 10) || 0)).toLocaleString('en-IN')}</span>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Rack Location</label>
-                                        <input type="text" className="form-control" value={itemLocation} onChange={e => setItemLocation(e.target.value)} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Status *</label>
-                                        <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
-                                            {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
-                                        </select>
-                                    </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status *</label>
+                                    <select className="form-control" value={itemStatus} onChange={e => setItemStatus(e.target.value)}>
+                                        {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                                    </select>
                                 </div>
                             </div>
                             <div className="modal-footer">

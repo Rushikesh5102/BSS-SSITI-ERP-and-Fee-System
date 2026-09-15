@@ -208,4 +208,90 @@ export const receiptsController = {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(pdfBuffer);
     }),
+
+    /**
+     * DELETE /receipts/:id - Delete a receipt, its linked payment, and reconcile student fee balance
+     */
+    delete: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+
+        // Support lookup by either receipt ID or receiptNumber
+        const receipt = await prisma.receipt.findFirst({
+            where: {
+                OR: [
+                    { id },
+                    { receiptNumber: id }
+                ]
+            },
+            include: {
+                payment: {
+                    include: {
+                        studentFee: {
+                            include: { student: true }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!receipt) {
+            throw new AppError(404, 'Receipt not found');
+        }
+
+        const receiptNumber = receipt.receiptNumber;
+        const paymentId = receipt.paymentId;
+        const studentFeeId = receipt.payment?.studentFeeId;
+        const studentName = receipt.payment?.studentFee?.student?.name;
+
+        // 1. Delete physical PDF file if it exists
+        const pdfPath = path.join(RECEIPTS_DIR, `${receiptNumber}.pdf`);
+        if (fs.existsSync(pdfPath)) {
+            try {
+                fs.unlinkSync(pdfPath);
+            } catch (fsErr) {
+                console.warn(`Could not delete PDF file for receipt ${receiptNumber}:`, fsErr);
+            }
+        }
+
+        // 2. Delete receipt from database
+        await prisma.receipt.delete({
+            where: { id: receipt.id }
+        });
+
+        // 3. Delete associated payment
+        if (paymentId) {
+            await prisma.payment.delete({
+                where: { id: paymentId }
+            });
+        }
+
+        // 4. Reconcile studentFee paidAmount with remaining verified payments
+        let newPaidAmount = 0;
+        if (studentFeeId) {
+            const agg = await prisma.payment.aggregate({
+                where: {
+                    studentFeeId,
+                    status: 'VERIFIED'
+                },
+                _sum: { amount: true }
+            });
+            newPaidAmount = agg._sum.amount || 0;
+
+            await prisma.studentFee.update({
+                where: { id: studentFeeId },
+                data: { paidAmount: newPaidAmount }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: `Receipt #${receiptNumber} deleted successfully. Student balance reconciled.`,
+            data: {
+                receiptNumber,
+                studentName,
+                reconciledPaidAmount: newPaidAmount
+            }
+        });
+    }),
 };
+

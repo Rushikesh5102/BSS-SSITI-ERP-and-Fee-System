@@ -88,8 +88,8 @@ export const storeItemsController = {
     create: asyncHandler(async (req: Request, res: Response) => {
         const { name, sku, description, category, quantity, unit, reorderLevel, pricePerUnit, location, status, notes, branchId, image } = req.body;
 
-        if (!name || !category) {
-            throw new AppError(400, 'Name and Category are required');
+        if (!name) {
+            throw new AppError(400, 'Asset name is required');
         }
 
         const itemBranchId = req.user?.branchId || branchId;
@@ -103,14 +103,14 @@ export const storeItemsController = {
         const item = await prisma.storeItem.create({
             data: {
                 name,
-                sku,
+                sku: sku || null,
                 description,
-                category,
+                category: category || 'General',
                 quantity: initialQty,
                 unit: unit || 'pcs',
                 reorderLevel: reorderLevel ? parseInt(reorderLevel, 10) : 5,
                 pricePerUnit: parsedPrice,
-                location,
+                location: location || null,
                 status: status || 'AVAILABLE',
                 notes,
                 branchId: itemBranchId,

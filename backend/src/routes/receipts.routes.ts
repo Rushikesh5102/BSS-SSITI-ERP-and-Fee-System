@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { receiptsController } from '../controllers/receipts.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate, authorize } from '../middleware/auth';
+import { Role } from '../types/enums';
 
 const router = Router();
 
@@ -16,4 +17,8 @@ router.get('/', receiptsController.list);
 // GET /receipts/:id - Get receipt details
 router.get('/:id', receiptsController.getById);
 
+// DELETE /receipts/:id - Delete receipt and reconcile student payment balance
+router.delete('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER, Role.SUPERADMIN), receiptsController.delete);
+
 export default router;
+
