@@ -1,15 +1,13 @@
-import { v4 as uuidv4 } from 'uuid';
 import { prisma } from './prisma';
 
-/** Generate a unique receipt number based on sequential count */
+// Pads serial sequence numbers into standard 2-digit format (e.g. 1 -> "01", 12 -> "12")
 export const generateReceiptNumber = (count: number): string => {
     return String(count).padStart(2, '0');
 };
 
-/**
- * Dynamically queries the database for all existing receipts and returns the next unused sequential number
- * Guarantees zero P2002 unique constraint collisions
- */
+// Scans existing receipts in the DB and calculates the lowest unused sequential number.
+// Using a Set lookup prevents race-condition collisions (Prisma P2002) when older receipts
+// get deleted or when receipts were imported with legacy prefixes.
 export const getNextReceiptNumber = async (): Promise<string> => {
     try {
         const receipts = await prisma.receipt.findMany({
@@ -27,12 +25,14 @@ export const getNextReceiptNumber = async (): Promise<string> => {
         }
         return String(seq).padStart(2, '0');
     } catch {
+        // Fallback to basic record count if the bulk fetch fails for any reason
         const count = await prisma.receipt.count().catch(() => 0);
         return String(count + 1).padStart(2, '0');
     }
 };
 
-/** Generate a unique student ID in SSITI-YEAR-E01 format */
+// Formats standardized student registration IDs: SSITI-{AdmissionYear}-{TradeInitial}{PaddedRoll}
+// Example: SSITI-2026-E01 (Electrician, Roll 1, 2026)
 export const generateStudentId = (tradeName: string = 'Electrician', rollOrSeq: string | number = 1, yearInput?: number): string => {
     const year = yearInput || new Date().getFullYear();
     const tradeInitial = (tradeName.trim().charAt(0) || 'E').toUpperCase();

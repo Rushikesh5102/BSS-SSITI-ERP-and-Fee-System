@@ -19,3 +19,10 @@ credentials*.json
 logs/
 *.log
 uploads/
+
+# Python & Local DB
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3

@@ -10,6 +10,8 @@ import Footer from '../../components/Footer';
 import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
 
+// Lazy-load PDF generator utilities on demand so heavy PDF-Lib chunks
+// aren't included in the initial students page bundle load
 const generateAdmissionFormPdf = async (student: any) => {
     const mod = await import('../../utils/studentPdfGenerator');
     return mod.generateAdmissionFormPdf(student);
@@ -20,6 +22,7 @@ const generateStudentIdCardPdf = async (student: any) => {
     return mod.generateStudentIdCardPdf(student);
 };
 
+// Sub-caste taxonomy according to DVET Maharashtra vocational admission standards
 const INDIAN_SUBCASTES: Record<string, string[]> = {
     OBC: ['Mali', 'Kunbi', 'Teli', 'Dhangar', 'Nhavi', 'Kumbhar', 'Sutar', 'Koshti', 'Shimpi', 'Lohar', 'Vani', 'Sonar', 'Gurav', 'Bhavsar', 'Koli', 'Tambat', 'Gawali', 'Yadav', 'Other (Write-in)'],
     SC: ['Mahar', 'Matang (Mang)', 'Chambhar', 'Valmiki', 'Bhangi', 'Holiya', 'Dhor', 'Khatik', 'Meghwal', 'Pasi', 'Other (Write-in)'],

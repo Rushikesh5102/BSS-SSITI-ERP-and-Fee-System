@@ -3,15 +3,15 @@ import path from 'path';
 import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { generateReceiptPdf, cleanAscii } from '../services/pdf.service';
+import { generateReceiptPdf } from '../services/pdf.service';
 import { getNextReceiptNumber } from '../utils/uuid';
 
+// Storage path where generated PDF receipts are cached on disk
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 
 export const receiptsController = {
-    /**
-     * GET /receipts - List receipts (paginated with robust automatic receipt generation for any unlinked payments)
-     */
+    // GET /receipts - Lists receipts with pagination, multi-field search, and auto-repair
+    // for payments that might have been recorded without an immediate receipt row.
     list: asyncHandler(async (req: Request, res: Response) => {
         const { page = 1, limit = 100, studentId, search = '' } = req.query;
         const skip = (Number(page) - 1) * Number(limit);

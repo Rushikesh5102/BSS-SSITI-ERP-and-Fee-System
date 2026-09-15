@@ -52,3 +52,11 @@ Thumbs.db
 # Test & Coverage
 coverage/
 .nyc_output/
+
+# Python & Local DB
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite
+*.sqlite3

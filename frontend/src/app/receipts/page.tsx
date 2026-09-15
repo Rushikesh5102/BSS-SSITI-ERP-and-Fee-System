@@ -10,9 +10,12 @@ import api from '../../services/api';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
+// Receipts dashboard: Handles searching, viewing, streaming on-demand PDF receipts,
+// and allowing authorized cashiers/admins to delete erroneous entries with automatic ledger reconciliation.
 function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
+    // Support role simulation when tested in Developer mode
     const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [receipts, setReceipts] = useState<any[]>([]);

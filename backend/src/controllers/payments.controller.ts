@@ -11,15 +11,17 @@ import { logger } from '../utils/logger';
 
 import { generateReceiptPdf } from '../services/pdf.service';
 import { notificationService } from '../services/notification.service';
-import { generateReceiptNumber, getNextReceiptNumber } from '../utils/uuid';
+import { getNextReceiptNumber } from '../utils/uuid';
 import { razorpayService } from '../services/razorpay.service';
 import { stripeService } from '../services/stripe.service';
 
-// Directory to store generated receipts
+// Local disk cache for generated receipt PDFs (accessible by express static / download handlers)
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 if (!fs.existsSync(RECEIPTS_DIR)) fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
 
 export const paymentsController = {
+    // Records an offline or counter fee payment, generates an official PDF receipt,
+    // and recalculates the student ledger balance inside an atomic sequence.
     recordPayment: asyncHandler(async (req: Request, res: Response) => {
         const {
             studentFeeId,

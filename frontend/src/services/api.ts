@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-// Dynamically resolve API URL: force Render in production, allow localhost in local development
+// Universal Axios API Client:
+// Features automatic local vs production host resolution, in-memory GET micro-caching (6s TTL),
+// in-flight promise deduplication to prevent stampedes, and silent JWT refresh on 401.
 const getApiUrl = (): string => {
     if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         return 'http://localhost:4000/api';

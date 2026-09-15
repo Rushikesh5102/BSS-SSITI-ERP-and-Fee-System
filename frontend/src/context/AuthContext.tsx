@@ -23,6 +23,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Built-in institutional test accounts used when the backend network is unreachable
+// or running in offline PWA / field mode on the workshop floor
 const INSTITUTIONAL_OFFLINE_USERS: Record<string, { pass: string; role: User['role']; name: string }> = {
     'admin@saiiti.edu.in': { pass: 'Admin@123', role: 'ADMIN', name: 'Branch Administrator' },
     'superadmin@saiiti.edu.in': { pass: 'Admin@123', role: 'SUPERADMIN', name: 'Super Administrator' },

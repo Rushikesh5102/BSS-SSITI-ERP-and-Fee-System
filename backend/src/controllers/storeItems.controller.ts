@@ -5,10 +5,8 @@ import { createAuditLog } from '../middleware/auditLogger';
 import { AuditAction } from '../types/enums';
 
 export const storeItemsController = {
-    /**
-     * GET /api/store/items
-     * Query parameters: category, status, branchId, lowStock, search, showArchived
-     */
+    // GET /api/store/items - Fetches active workshop equipment & consumables.
+    // Scoped to the logged-in user's branch unless accessed by SuperAdmin.
     list: asyncHandler(async (req: Request, res: Response) => {
         const { category, status, branchId, lowStock, search, showArchived } = req.query;
 

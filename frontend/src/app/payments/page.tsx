@@ -12,7 +12,8 @@ import { safeStorage } from '../../utils/safeStorage';
 const PAYMENT_MODES = ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'DD', 'CARD', 'NET_BANKING', 'RAZORPAY', 'OTHER'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
-// Dynamic Fee Head Items with Dropdowns (matching Fee Structure style)
+// Individual line items for the fee breakdown (e.g. Tuition, Dress Material, Exam Back Paper)
+// Allows the cashier to specify exact head-wise allocations which are printed directly onto the official PDF receipt
 interface PaymentFeeItem {
     type: 'TUITION' | 'DRESS_MATERIAL' | 'EXAM' | 'SUPPLEMENTARY' | 'BALANCE' | 'OTHER' | 'CUSTOM';
     name?: string;
@@ -20,7 +21,8 @@ interface PaymentFeeItem {
     amount: string;
 }
 
-// Split / Multi-Mode Payment Item
+// Sub-entry for split payments where a single transaction is settled across multiple payment methods
+// (e.g. ₹5,000 Cash + ₹2,500 UPI). The client verifies that the split sum matches total amount before submitting.
 interface SplitPaymentItem {
     mode: string;
     amount: string;

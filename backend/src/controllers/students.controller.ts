@@ -6,18 +6,14 @@ import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
 
 import { AuditAction } from '../types/enums';
-
 import { generateStudentId } from '../utils/uuid';
 import bcrypt from 'bcryptjs';
 
+// Receipt storage directory for unlinking cached student receipt PDFs upon deletion
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 
-
 export const studentsController = {
-    /**
-     * GET /students
-     * List all students for the user's branch (with pagination)
-     */
+    // GET /students - Returns paginated list of students filtered by branch, trade, or search string
     list: asyncHandler(async (req: Request, res: Response) => {
         const { page = 1, limit = 20, search = '', class: cls = '' } = req.query;
         let parsedPage = Number(page);
