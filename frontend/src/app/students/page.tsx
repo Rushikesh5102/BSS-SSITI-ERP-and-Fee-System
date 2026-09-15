@@ -62,6 +62,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         submittedDocuments: { 
             domicile: false, marksheet12th: false, baDegree: false, bcomDegree: false, btechDegree: false,
             tc: false, marklist: false, caste: false, nonCreamy: false, photo4: true, income: false, 
+            ewsCertificate: false, pwdCertificate: false,
             affidavit: false, gap: false, aadhar: true, bankPassbook: false, otherDocs: false, otherDocsText: ''
         }
     };
@@ -181,6 +182,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 rollNo: edu.rollNo || ''
             },
             submittedDocuments: {
+                ...(docs || {}),
                 sscMarksheet: docs.sscMarksheet || false,
                 leavingCertificate: docs.leavingCertificate || false,
                 casteCertificate: docs.casteCertificate || false,
@@ -188,7 +190,9 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 incomeCertificate: docs.incomeCertificate || false,
                 aadharCard: docs.aadharCard || false,
                 domicileCertificate: docs.domicileCertificate || false,
-                passportPhotos: docs.passportPhotos || false
+                passportPhotos: docs.passportPhotos || false,
+                ewsCertificate: docs.ewsCertificate || docs.ews || false,
+                pwdCertificate: docs.pwdCertificate || docs.disability || false,
             }
         });
         setShowEditProfileModal(true);
@@ -1137,6 +1141,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                 { key: 'caste', label: 'Caste Certificate' },
                                                 { key: 'nonCreamy', label: 'Non-Creamy Layer' },
                                                 { key: 'income', label: 'Income Certificate' },
+                                                { key: 'ewsCertificate', label: 'EWS (Economically Weaker Section) Cert.' },
+                                                { key: 'pwdCertificate', label: 'PWD / Disability Certificate (Divyangjan)' },
                                                 { key: 'affidavit', label: 'Affidavit / Gap Cert.' },
                                                 { key: 'aadhar', label: 'Aadhaar Card' },
                                                 { key: 'bankPassbook', label: 'Bank Passbook Xerox' },

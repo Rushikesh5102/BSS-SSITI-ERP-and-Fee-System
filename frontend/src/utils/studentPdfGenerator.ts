@@ -268,25 +268,33 @@ export async function generateAdmissionFormPdf(student: any) {
     doc.text('4. Original Documents Submitted Checklist (Verified at Admission Desk)', 10, y);
     y += 2.5;
 
-    doc.rect(10, y, pageWidth - 20, 29, 'S');
+    doc.rect(10, y, pageWidth - 20, 30, 'S');
     const docs = student.submittedDocuments || {};
     const docChecklist = [
         ['Domicile Certificate', docs.domicile ? '[X] Submitted' : '[  ] Pending', 'Caste Certificate', docs.caste ? '[X] Submitted' : '[  ] Pending', 'B.A. Marksheet / Degree', docs.baDegree ? '[X] Submitted' : '[  ] Pending'],
         ['Class X (10th) Marksheet', docs.marklist ? '[X] Submitted' : '[  ] Pending', 'Non-Creamy Layer', docs.nonCreamy ? '[X] Submitted' : '[  ] Pending', 'B.Com Marksheet / Degree', docs.bcomDegree ? '[X] Submitted' : '[  ] Pending'],
         ['Class XII (12th / HSC)', docs.marksheet12th ? '[X] Submitted' : '[  ] Pending', 'Income Certificate', docs.income ? '[X] Submitted' : '[  ] Pending', 'B.Tech / B.E. Marksheet', docs.btechDegree ? '[X] Submitted' : '[  ] Pending'],
-        ['TC (Transfer Certificate)', docs.tc ? '[X] Submitted' : '[  ] Pending', 'Aadhaar Card', docs.aadhar ? '[X] Submitted' : '[  ] Pending', 'Affidavit / Gap Cert.', docs.affidavit ? '[X] Submitted' : '[  ] Pending'],
-        ['Photos (4 Passport)', docs.photo4 ? '[X] Submitted' : '[  ] Pending', 'Bank Passbook Xerox', docs.bankPassbook ? '[X] Submitted' : '[  ] Pending', 'Other Documents', docs.otherDocs ? `[X] ${docs.otherDocsText || 'Submitted'}` : '[  ] Pending'],
+        ['TC (Transfer Certificate)', docs.tc ? '[X] Submitted' : '[  ] Pending', 'EWS Certificate', (docs.ewsCertificate || docs.ews) ? '[X] Submitted' : '[  ] Pending', 'Affidavit / Gap Cert.', docs.affidavit ? '[X] Submitted' : '[  ] Pending'],
+        ['PWD / Disability Cert.', (docs.pwdCertificate || docs.disability) ? '[X] Submitted' : '[  ] Pending', 'Aadhaar Card', docs.aadhar ? '[X] Submitted' : '[  ] Pending', 'Bank Passbook Xerox', docs.bankPassbook ? '[X] Submitted' : '[  ] Pending'],
+        ['Photos (4 Passport)', docs.photo4 ? '[X] Submitted' : '[  ] Pending', 'Other Documents', docs.otherDocs ? `[X] ${docs.otherDocsText || 'Submitted'}` : '[  ] Pending', '', ''],
     ];
 
-    rowY = y + 4.5;
+    rowY = y + 4.2;
+    doc.setFontSize(7.5);
     docChecklist.forEach(([l1, v1, l2, v2, l3, v3]) => {
-        doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(v1, 48, rowY);
-        doc.setFont('helvetica', 'bold'); doc.text(l2, 76, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(v2, 110, rowY);
-        doc.setFont('helvetica', 'bold'); doc.text(l3, 138, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(v3, 178, rowY);
-        rowY += 5;
+        if (l1) {
+            doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
+            doc.setFont('helvetica', 'normal'); doc.text(v1, 48, rowY);
+        }
+        if (l2) {
+            doc.setFont('helvetica', 'bold'); doc.text(l2, 76, rowY);
+            doc.setFont('helvetica', 'normal'); doc.text(v2, 110, rowY);
+        }
+        if (l3) {
+            doc.setFont('helvetica', 'bold'); doc.text(l3, 138, rowY);
+            doc.setFont('helvetica', 'normal'); doc.text(v3, 178, rowY);
+        }
+        rowY += 4.5;
     });
 
     // ─── 5. Admission Fee Breakdown & Agreed Total ───────────────────────────
