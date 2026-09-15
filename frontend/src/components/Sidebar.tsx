@@ -127,11 +127,17 @@ function SidebarInner() {
     useEffect(() => {
         if (mobileOpen) {
             document.body.style.overflow = 'hidden';
+            document.body.classList.add('mobile-drawer-open');
+            document.documentElement.classList.add('mobile-drawer-open');
         } else {
             document.body.style.overflow = '';
+            document.body.classList.remove('mobile-drawer-open');
+            document.documentElement.classList.remove('mobile-drawer-open');
         }
         return () => {
             document.body.style.overflow = '';
+            document.body.classList.remove('mobile-drawer-open');
+            document.documentElement.classList.remove('mobile-drawer-open');
         };
     }, [mobileOpen]);
 

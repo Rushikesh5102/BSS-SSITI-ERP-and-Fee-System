@@ -1268,6 +1268,15 @@ html.dark .login-logo h1 { color: var(--primary); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ─── Mobile Drawer Scroll Lock ────────────────────────────────────────────── */
+html.mobile-drawer-open,
+body.mobile-drawer-open {
+  overflow: hidden !important;
+  height: 100% !important;
+  touch-action: none !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+
 /* ─── COMPLETE MOBILE RESPONSIVE OVERHAUL (< 1024px) ────────────────────────── */
 
 @media (max-width: 1024px) {
@@ -1331,14 +1340,19 @@ html.dark .login-logo h1 { color: var(--primary); }
     top: 0 !important;
     left: auto !important;
     right: 0 !important;
-    width: 285px !important;
+    width: 290px !important;
     max-width: 85vw !important;
     height: 100vh !important;
     height: 100dvh !important;
     z-index: 10000 !important;
     transform: translateX(100%) !important;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px) !important;
+    touch-action: pan-y !important;
   }
   body.sidebar-collapsed .sidebar {
     transform: translateX(100%) !important;
@@ -1346,6 +1360,11 @@ html.dark .login-logo h1 { color: var(--primary); }
   .sidebar.active,
   body.sidebar-collapsed .sidebar.active {
     transform: translateX(0) !important;
+  }
+
+  .sidebar-nav-item.active::before {
+    left: 0 !important;
+    border-radius: 0 3px 3px 0 !important;
   }
 
   .mobile-drawer-close-btn {
@@ -1358,9 +1377,14 @@ html.dark .login-logo h1 { color: var(--primary); }
   .mobile-overlay {
     position: fixed !important;
     inset: 0 !important;
-    background: rgba(0, 0, 0, 0.5) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
     z-index: 9999 !important;
+    touch-action: none !important;
   }
 
   /* Main Content Area */

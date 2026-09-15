@@ -59,6 +59,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
     const [showAddPassword, setShowAddPassword] = useState(false);
     const [showResetPassword, setShowResetPassword] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [syncingStudents, setSyncingStudents] = useState(false);
     const [toast, setToast] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
 
@@ -95,6 +96,19 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
             showToast(`❌ Sync Failed: ${err.response?.data?.message || 'Unauthorized API Access'}`);
         } finally {
             setFetching(false);
+        }
+    };
+
+    const handleSyncStudents = async () => {
+        setSyncingStudents(true);
+        try {
+            const res = await api.post('/users/sync-students');
+            showToast(`✅ ${res.data?.message || 'Student nodes synchronized successfully!'}`);
+            fetchData();
+        } catch (err: any) {
+            showToast(`❌ Sync Failed: ${err.response?.data?.message || 'Failed to sync student nodes'}`);
+        } finally {
+            setSyncingStudents(false);
         }
     };
 
@@ -188,7 +202,12 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
         if (targetUser.role === 'DEVELOPER' && currentUser?.role !== 'DEVELOPER') {
             return showToast('❌ Administrators cannot revoke Developer accounts.');
         }
-        if (window.confirm(`⚠️ CRITICAL: Revoking access will attempt to PERMANENTLY delete user ${targetUser.name} and all associated login credentials from the database. If they have historical financial records, their login access will be deactivated instead. Proceed?`)) {
+        const isStudent = targetUser.role === 'STUDENT';
+        const confirmMsg = isStudent
+            ? `⚠️ Revoking student credentials for ${targetUser.name} (${targetUser.email}) will remove their portal login access. (Their academic profile in Students directory remains intact). Proceed?`
+            : `⚠️ CRITICAL: Revoking access will attempt to PERMANENTLY delete user ${targetUser.name} and all associated login credentials from the database. If they have historical financial records, their login access will be deactivated instead. Proceed?`;
+
+        if (window.confirm(confirmMsg)) {
             try {
                 const { data } = await api.delete(`/users/${targetUser.id}`);
                 showToast(`✅ ${data.message}`);
@@ -221,14 +240,26 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
         <div className="layout">
             <Sidebar />
             <div className="main-content">
-                <header className="header">
+                <header className="header" style={{ flexWrap: 'wrap', gap: 12 }}>
                     <div>
                         <div className="header-subtitle" style={{ textTransform: 'uppercase', letterSpacing: 1.5, fontSize: 12 }}>Central Authority Console</div>
                         <div className="header-title" style={{ marginTop: 4 }}>🔑 Access & Identity Control</div>
                     </div>
-                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                        ➕ Provision New Node
-                    </button>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <button 
+                            className="btn btn-secondary" 
+                            onClick={handleSyncStudents}
+                            disabled={syncingStudents}
+                            title="Scan student registry and ensure login credentials exist for every enrolled student"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                            {syncingStudents ? <span className="spinner spinner-sm" /> : '🔄'}
+                            <span>{syncingStudents ? 'Syncing...' : 'Sync Student Nodes'}</span>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                            ➕ Provision New Node
+                        </button>
+                    </div>
                 </header>
 
                 <div className="page-content">
@@ -293,12 +324,12 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
 
                     {/* Users list table */}
                     <div className="card">
-                        <div className="card-header" style={{ padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="card-header" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                             <div className="card-title">🛡️ Global User & Access Registry</div>
                             <span className="badge badge-primary">{filteredUsers.length} node(s) match filters</span>
                         </div>
                         <div className="table-wrap" style={{ borderTop: 'none', borderRadius: 0 }}>
-                            <table className="table">
+                            <table className="table responsive-table">
                                 <thead>
                                     <tr>
                                         <th>Registered Name</th>
@@ -317,11 +348,11 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                     ) : (
                                         filteredUsers.map((u) => (
                                              <tr key={u.id}>
-                                                <td>
+                                                <td data-label="Registered Name">
                                                     <b style={{ color: 'var(--text-primary)' }}>{u.name}</b>
                                                 </td>
-                                                <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{u.email}</td>
-                                                <td>
+                                                <td data-label="Email Address" style={{ color: 'var(--text-muted)', fontSize: 13 }}>{u.email}</td>
+                                                <td data-label="Security Role">
                                                     {u.id === currentUser.id ? (
                                                         <span className="badge badge-success" style={{ padding: '6px 12px', fontSize: 11, fontWeight: 700, borderRadius: 20 }}>
                                                             {u.role} (YOU)
@@ -354,7 +385,7 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                         </select>
                                                     )}
                                                 </td>
-                                                <td>
+                                                <td data-label="Access Status">
                                                     <button
                                                         onClick={() => handleToggleStatus(u)}
                                                         className={`btn btn-sm ${u.isActive ? 'btn-ghost' : 'btn-secondary'}`}
@@ -371,11 +402,11 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                                         {u.isActive ? '● Active' : '○ Suspended'}
                                                     </button>
                                                 </td>
-                                                <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                                                <td data-label="Branch Link" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
                                                     {u.branch?.name || <span className="text-muted">Global / All Branches</span>}
                                                 </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                <td data-label="Identity Actions" className="cell-actions" style={{ textAlign: 'right' }}>
+                                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                                                         <button 
                                                             className="btn btn-secondary btn-sm"
                                                             onClick={() => {

@@ -78,15 +78,18 @@
   .workshop-blended-panel {
     top: auto !important;
     bottom: 1rem !important;
-    right: 50% !important;
-    transform: translateX(50%) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
     width: calc(100% - 2rem) !important;
     max-width: 440px !important;
-    background-color: rgba(238, 226, 200, 0.96) !important;
+    background-color: rgba(245, 238, 222, 0.96) !important;
     backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     padding: 1.15rem 1.25rem !important;
     border-radius: 14px !important;
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(217, 119, 6, 0.25) !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.18) !important;
   }
 
   .multimeter-hud {
@@ -99,15 +102,68 @@
   }
 }
 
+@media (max-width: 640px) {
+  .workshop-header-tools {
+    max-width: calc(100% - 48px) !important;
+    padding: 8px 10px !important;
+    gap: 0.35rem !important;
+  }
+
+  .workshop-header-brand {
+    font-size: 0.72rem !important;
+    height: 32px !important;
+    padding: 0 0.65rem !important;
+  }
+
+  .workshop-header-tools button {
+    height: 32px !important;
+    padding: 0 0.6rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .workshop-blended-panel {
+    bottom: 0.75rem !important;
+    width: calc(100% - 1.25rem) !important;
+    max-width: 400px !important;
+    padding: 0.9rem 1rem !important;
+    gap: 0.55rem !important;
+  }
+
+  .workshop-blended-panel h1 {
+    font-size: 1.15rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .workshop-blended-panel p {
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .workshop-blended-panel button {
+    min-height: 40px !important;
+    font-size: 0.85rem !important;
+    padding: 0.5rem 0.85rem !important;
+  }
+}
+
 @media (max-width: 480px) {
   .workshop-header-brand {
-    font-size: 0.7rem !important;
-    padding: 0 0.55rem !important;
+    font-size: 0.68rem !important;
+    padding: 0 0.5rem !important;
   }
 
   .manga-bubble {
-    max-width: 250px !important;
-    font-size: 0.8rem !important;
-    padding: 0.6rem 0.85rem !important;
+    max-width: 230px !important;
+    font-size: 0.76rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .workshop-blended-panel {
+    max-width: calc(100% - 1rem) !important;
+    padding: 0.75rem 0.85rem !important;
+  }
+
+  .workshop-blended-panel h1 {
+    font-size: 1.05rem !important;
   }
 }

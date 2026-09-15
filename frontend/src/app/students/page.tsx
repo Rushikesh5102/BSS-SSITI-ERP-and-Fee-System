@@ -36,6 +36,7 @@ const INDIAN_SUBCASTES: Record<string, string[]> = {
 function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam: string | null; simulateParam: string | null; tabParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
 
     const [students, setStudents] = useState<any[]>([]);
     const [search, setSearch] = useState('');
@@ -489,8 +490,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         } finally { setSaving(false); }
     };
 
-    const effectiveRole = (user?.role === 'DEVELOPER' && simulateParam) ? simulateParam.toUpperCase() : user?.role;
-
     const isAdminOrDev = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
     const isAccountant = effectiveRole === 'ACCOUNTANT';
     const canAdmitStudent = ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(effectiveRole || '');
@@ -749,6 +748,27 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>📄</span>
                                                                 <span>Form PDF</span>
                                                             </button>
+                                                            {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
+                                                                <button
+                                                                    className="btn btn-danger btn-xs"
+                                                                    style={{
+                                                                        padding: '4px 7px',
+                                                                        fontSize: 11.5,
+                                                                        fontWeight: 700,
+                                                                        color: 'var(--danger)',
+                                                                        border: '1px solid var(--danger)',
+                                                                        background: 'rgba(239, 68, 68, 0.08)',
+                                                                        borderRadius: '6px'
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        setEditingStudent(s);
+                                                                        setShowDeleteConfirmModal(true);
+                                                                    }}
+                                                                    title="Delete Student and Cascade Records"
+                                                                >
+                                                                    🗑️ Delete
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>

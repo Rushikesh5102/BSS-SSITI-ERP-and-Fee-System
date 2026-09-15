@@ -181,4 +181,66 @@ export const usersController = {
             res.json({ success: true, message: 'User access revoked (account deactivated to preserve historical transaction history).' });
         }
     }),
+
+    /**
+     * POST /users/sync-students - Synchronize all students as system login credentials
+     */
+    syncStudents: asyncHandler(async (_req: Request, res: Response) => {
+        const students = await prisma.student.findMany({
+            select: { id: true, studentId: true, name: true, email: true, branchId: true, isActive: true }
+        });
+
+        let createdCount = 0;
+        let updatedCount = 0;
+
+        for (const student of students) {
+            const cleanStudentId = student.studentId.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const generatedEmail = `${cleanStudentId}@student.saiiti.edu.in`;
+            const primaryEmail = (student.email && student.email.trim().length > 0) ? student.email.trim().toLowerCase() : generatedEmail;
+
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { email: primaryEmail },
+                        { email: generatedEmail }
+                    ]
+                }
+            });
+
+            if (!existingUser) {
+                const passwordHash = await authService.hashPassword(student.studentId);
+                await prisma.user.create({
+                    data: {
+                        name: student.name,
+                        email: primaryEmail,
+                        passwordHash,
+                        role: 'STUDENT',
+                        branchId: student.branchId,
+                        isActive: student.isActive,
+                    }
+                });
+                createdCount++;
+            } else {
+                await prisma.user.update({
+                    where: { id: existingUser.id },
+                    data: {
+                        name: student.name,
+                        isActive: student.isActive,
+                        role: 'STUDENT'
+                    }
+                });
+                updatedCount++;
+            }
+        }
+
+        res.json({
+            success: true,
+            data: {
+                totalStudents: students.length,
+                createdCount,
+                updatedCount
+            },
+            message: `Student credentials synchronized: ${createdCount} new account(s) provisioned, ${updatedCount} account(s) verified.`
+        });
+    }),
 };
