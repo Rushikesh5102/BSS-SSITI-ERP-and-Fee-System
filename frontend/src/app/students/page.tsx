@@ -685,24 +685,62 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             </span>
                                                         ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                     </td>
-                                                    <td data-label="Actions" className="cell-actions" style={{ minWidth: 160 }}>
-                                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                    <td data-label="Actions" className="cell-actions" style={{ minWidth: 220 }}>
+                                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                                                             {canShowFeeBtn && (
                                                                 <button className="btn btn-primary btn-xs" style={{ padding: '4px 8px', fontSize: 11.5, fontWeight: 700 }} onClick={() => openAssignFeeModal(s)} title={feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}>
                                                                     💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
                                                                 </button>
                                                             )}
-                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5 }} onClick={() => openHistoryModal(s.id)} title="View Fee History">
+                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5, fontWeight: 600 }} onClick={() => openHistoryModal(s.id)} title="View Fee History">
                                                                 📜 History
                                                             </button>
-                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5 }} onClick={() => openEditProfileModal(s)} title="Edit Student Admission Profile">
+                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5, fontWeight: 600 }} onClick={() => openEditProfileModal(s)} title="Edit Student Admission Profile">
                                                                 ✏️ Edit
                                                             </button>
-                                                            <button className="btn btn-ghost btn-xs" style={{ padding: '4px 6px', fontSize: 11.5 }} onClick={async () => await generateStudentIdCardPdf(s)} title="Download Student Identity Card PDF">
-                                                                🪪 ID
+                                                            <button
+                                                                className="btn btn-xs"
+                                                                style={{
+                                                                    padding: '4px 8px',
+                                                                    fontSize: 11.5,
+                                                                    fontWeight: 700,
+                                                                    background: 'rgba(2, 132, 199, 0.12)',
+                                                                    color: '#0284c7',
+                                                                    border: '1px solid rgba(2, 132, 199, 0.4)',
+                                                                    borderRadius: '6px',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.15s ease'
+                                                                }}
+                                                                onClick={async () => await generateStudentIdCardPdf(s)}
+                                                                title="Download Student Identity Card PDF"
+                                                            >
+                                                                <span>🪪</span>
+                                                                <span>ID Card</span>
                                                             </button>
-                                                            <button className="btn btn-ghost btn-xs" style={{ padding: '4px 6px', fontSize: 11.5 }} onClick={async () => await generateAdmissionFormPdf(s)} title="Download Official Admission Form PDF">
-                                                                📄 PDF
+                                                            <button
+                                                                className="btn btn-xs"
+                                                                style={{
+                                                                    padding: '4px 8px',
+                                                                    fontSize: 11.5,
+                                                                    fontWeight: 700,
+                                                                    background: 'rgba(168, 85, 247, 0.12)',
+                                                                    color: '#7e22ce',
+                                                                    border: '1px solid rgba(168, 85, 247, 0.4)',
+                                                                    borderRadius: '6px',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.15s ease'
+                                                                }}
+                                                                onClick={async () => await generateAdmissionFormPdf(s)}
+                                                                title="Download Official Admission Form PDF"
+                                                            >
+                                                                <span>📄</span>
+                                                                <span>Form PDF</span>
                                                             </button>
                                                         </div>
                                                     </td>

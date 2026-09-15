@@ -122,6 +122,18 @@ function SidebarInner() {
         setMobileOpen(false);
     }, [pathname]);
 
+    // Lock body scroll when mobile drawer is open
+    useEffect(() => {
+        if (mobileOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [mobileOpen]);
+
     // Close mobile drawer & profile modal on Escape key press
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -174,6 +186,7 @@ function SidebarInner() {
     const handleSwitchWorkspace = (ws: 'FEES' | 'STORE' | 'LIBRARY' | 'DONATION') => {
         localStorage.setItem('activeWorkspace', ws);
         setActiveWorkspace(ws);
+        setMobileOpen(false);
         if (ws === 'STORE') {
             router.push(simulateParam ? `/store?simulate=${simulateParam}` : '/store');
         } else if (ws === 'LIBRARY') {
@@ -228,22 +241,40 @@ function SidebarInner() {
         <>
             {/* Mobile Top App Bar Header */}
             <div className="mobile-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 42, height: 42, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 38, height: 38, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <img src="/sai_iti_logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </div>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-on-primary)' }}>Shri Sai I.T.I</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>Shri Sai I.T.I</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <button onClick={toggleTheme} className="btn-icon" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '4px 10px', borderRadius: '20px', fontSize: '12px' }}>
-                        {isDark ? '☀️' : '🌙'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button 
+                        onClick={toggleTheme} 
+                        className="btn-icon" 
+                        style={{ 
+                            background: 'var(--surface-2)', 
+                            border: '1px solid var(--border)', 
+                            color: 'var(--text-primary)', 
+                            padding: '6px 10px', 
+                            borderRadius: '20px', 
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                        }}
+                        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        aria-label="Toggle Theme"
+                    >
+                        <span>{isDark ? '☀️' : '🌙'}</span>
                     </button>
                     <button
-                        className="hamburger-btn"
+                        className={`hamburger-btn ${mobileOpen ? 'open' : ''}`}
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        aria-label="Toggle Navigation Menu"
+                        aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+                        aria-expanded={mobileOpen}
                     >
-                        ☰
+                        {mobileOpen ? '✕' : '☰'}
                     </button>
                 </div>
             </div>
@@ -302,10 +333,35 @@ function SidebarInner() {
                         </div>
                     </Link>
 
-                    {/* Retractable Sidebar Toggle Button */}
+                    {/* Dedicated Mobile Close Button (Visible on Mobile Viewports < 1024px) */}
+                    <button
+                        onClick={() => setMobileOpen(false)}
+                        className="mobile-drawer-close-btn"
+                        style={{
+                            background: 'rgba(255,255,255,0.18)',
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            color: '#ffffff',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            transition: 'all 0.15s ease'
+                        }}
+                        title="Close navigation menu"
+                        aria-label="Close navigation menu"
+                    >
+                        ✕
+                    </button>
+
+                    {/* Desktop Retractable Sidebar Toggle Button (Hidden on Mobile) */}
                     <button
                         onClick={toggleCollapse}
-                        className="sidebar-toggle-btn"
+                        className="sidebar-toggle-btn desktop-only"
                         style={{
                             background: 'rgba(255,255,255,0.18)',
                             border: '1px solid rgba(255,255,255,0.25)',
@@ -313,7 +369,6 @@ function SidebarInner() {
                             width: '28px',
                             height: '28px',
                             borderRadius: '6px',
-                            display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: '11px',
