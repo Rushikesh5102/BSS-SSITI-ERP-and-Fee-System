@@ -681,7 +681,7 @@ function SidebarInner() {
                                 </button>
 
                                 {/* Blank Letterhead Generator for Admin/Staff */}
-                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT', 'BRANCH_ADMIN'].includes(user.role) && (
+                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT', 'BRANCH_ADMIN'].includes(effectiveRole || user?.role || '') && (
                                     <div style={{ background: 'var(--surface-2, rgba(2,132,199,0.06))', border: '1px solid var(--border, #cbd5e1)', borderRadius: 10, padding: '10px 12px' }}>
                                         <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary, #0284c7)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                                             <span>📜</span> Blank Letterhead
