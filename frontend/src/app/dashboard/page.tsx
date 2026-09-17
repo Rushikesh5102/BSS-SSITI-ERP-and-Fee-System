@@ -451,7 +451,7 @@ function DashboardContent() {
                 <Sidebar />
                 <div className="main-content">
                     {/* Header */}
-                    <header className="header">
+                    <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                         <div>
                             <div className="header-subtitle">
                                 {simulateRole ? `SIMULATING: ${effectiveRole} DASHBOARD` : 'Dashboard'}
@@ -460,7 +460,42 @@ function DashboardContent() {
                                 Welcome back, {user.name}
                             </div>
                         </div>
-                        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT', 'BRANCH_ADMIN'].includes(effectiveRole || '') && (
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--surface-2)', padding: '6px 12px', borderRadius: 10, border: '1px solid var(--border)' }}>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary-dark)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                        📜 Blank Letterhead:
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+                                                ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+                                                : 'http://localhost:4000';
+                                            window.open(`${base}/api/receipts/blank-letterhead?orientation=portrait`, '_blank');
+                                        }}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ fontSize: 11.5, padding: '5px 10px', fontWeight: 700 }}
+                                        title="Download Official A4 Portrait Blank Letterhead"
+                                    >
+                                        📄 Portrait A4
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+                                                ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+                                                : 'http://localhost:4000';
+                                            window.open(`${base}/api/receipts/blank-letterhead?orientation=landscape`, '_blank');
+                                        }}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ fontSize: 11.5, padding: '5px 10px', fontWeight: 700 }}
+                                        title="Download Official A4 Landscape Blank Letterhead"
+                                    >
+                                        📜 Landscape
+                                    </button>
+                                </div>
+                            )}
                             <span className={`badge ${effectiveRole === 'SUPERADMIN' ? 'badge-primary' : effectiveRole === 'ADMIN' ? 'badge-info' : 'badge-success'}`}>
                                 {effectiveRole}
                             </span>

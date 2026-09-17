@@ -124,36 +124,11 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
         <div className="layout">
             <Sidebar />
             <div className="main-content">
-                <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <header className="header">
                     <div>
                         <div className="header-title">🧾 Fee Receipts & Invoices</div>
                         <div className="header-subtitle">Official payment ledger with Remarks, Balances & Clerk Signatures</div>
                     </div>
-                    {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT', 'BRANCH_ADMIN'].includes(effectiveRole || '') && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--surface-2)', padding: '6px 12px', borderRadius: 10, border: '1px solid var(--border)' }}>
-                            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary-dark)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                📜 Blank Letterhead:
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => window.open(`${getBaseUrl()}/api/receipts/blank-letterhead?orientation=portrait`, '_blank')}
-                                className="btn btn-secondary btn-sm"
-                                style={{ fontSize: 11.5, padding: '5px 10px', fontWeight: 700 }}
-                                title="Download Official A4 Portrait Blank Letterhead"
-                            >
-                                📄 Portrait A4
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => window.open(`${getBaseUrl()}/api/receipts/blank-letterhead?orientation=landscape`, '_blank')}
-                                className="btn btn-secondary btn-sm"
-                                style={{ fontSize: 11.5, padding: '5px 10px', fontWeight: 700 }}
-                                title="Download Official A4 Landscape Blank Letterhead"
-                            >
-                                📜 Landscape
-                            </button>
-                        </div>
-                    )}
                 </header>
 
                 <div className="page-content">
