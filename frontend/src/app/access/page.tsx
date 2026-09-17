@@ -246,6 +246,37 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                         <div className="header-title" style={{ marginTop: 4 }}>🔑 Access & Identity Control</div>
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                        {/* Blank Letterhead Direct Actions */}
+                        <div style={{ display: 'inline-flex', borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden', background: 'var(--surface-2)' }}>
+                            <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                style={{ border: 'none', borderRadius: 0, padding: '7px 12px', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                                onClick={() => {
+                                    const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+                                        ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+                                        : 'http://localhost:4000';
+                                    window.open(`${base}/api/receipts/blank-letterhead?orientation=portrait`, '_blank');
+                                }}
+                                title="Download Official Blank Letterhead (A4 Portrait - Header & Footer to corners)"
+                            >
+                                📜 Letterhead (Portrait)
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                style={{ border: 'none', borderLeft: '1px solid var(--border)', borderRadius: 0, padding: '7px 12px', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                                onClick={() => {
+                                    const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+                                        ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+                                        : 'http://localhost:4000';
+                                    window.open(`${base}/api/receipts/blank-letterhead?orientation=landscape`, '_blank');
+                                }}
+                                title="Download Official Blank Letterhead (A4 Landscape - Header & Footer to corners)"
+                            >
+                                📄 Landscape
+                            </button>
+                        </div>
                         <button 
                             className="btn btn-secondary" 
                             onClick={handleSyncStudents}

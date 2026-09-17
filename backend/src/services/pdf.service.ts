@@ -35,6 +35,7 @@ interface ReceiptData {
     supplementarySubject?: string;
     feeBreakdown?: Array<{ name: string; amount: number }>;
     splitPaymentBreakdown?: SplitPaymentBreakdownItem[];
+    letterhead?: boolean; // When false, suppresses top institute header & bottom footer for pre-printed stationery
 }
 
 /**
@@ -53,9 +54,11 @@ export function cleanAscii(str: string | undefined | null): string {
 
 /**
  * Generate a professional PDF receipt using pdf-lib
- * Returns the PDF as a Buffer (can be saved to disk or streamed)
+ * Supports both With Letterhead (pattern 1) and Without Letterhead (pattern 2)
+ * Returns the PDF as a Buffer
  */
 export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => {
+    const withLetterhead = data.letterhead !== false;
     const doc = await PDFDocument.create();
     const page = doc.addPage([841.89, 595.28]); // A4 Landscape
     const { width, height } = page.getSize();
@@ -96,34 +99,47 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
     const successGreen = rgb(0.06, 0.60, 0.35);
 
     const drawReceiptCopy = (xOffset: number, copyLabel: string) => {
-        const leftX = xOffset + 25;
-        const rightX = xOffset + 195;
-        const copyWidth = 360;
+        const midX = width / 2;
+        const leftX = xOffset + 24;
+        const rightX = xOffset + 200;
+        const copyWidth = 370;
 
-        // Header rectangle
-        page.drawRectangle({ x: xOffset + 15, y: height - 100, width: copyWidth, height: 85, color: primary });
+        if (withLetterhead) {
+            // Header rectangle spread to the top and corners (0 margin on left/right/top)
+            const headerBoxX = xOffset === 0 ? 0 : midX;
+            const headerBoxWidth = xOffset === 0 ? midX : (width - midX);
+            page.drawRectangle({ x: headerBoxX, y: height - 95, width: headerBoxWidth, height: 95, color: primary });
+            page.drawRectangle({ x: headerBoxX, y: height - 97, width: headerBoxWidth, height: 2, color: accent });
 
-        let logoX = xOffset + 25;
-        let textX = xOffset + 25;
-        if (logoImage) {
-            page.drawImage(logoImage, { x: logoX, y: height - 92, width: 70, height: 70 });
-            textX = xOffset + 105;
+            let logoX = xOffset === 0 ? 18 : (midX + 18);
+            let textX = xOffset === 0 ? 18 : (midX + 18);
+            if (logoImage) {
+                page.drawImage(logoImage, { x: logoX, y: height - 88, width: 72, height: 72 });
+                textX = logoX + 80;
+            }
+
+            const schoolNameStr = cleanAscii(config.school.name);
+            let schoolNameSize = 14;
+            if (schoolNameStr.length > 38) schoolNameSize = 9.8;
+            else if (schoolNameStr.length > 22) schoolNameSize = 11.5;
+            page.drawText(schoolNameStr.substring(0, 52), { x: textX, y: height - 38, font: boldFont, size: schoolNameSize, color: white });
+            page.drawText(cleanAscii(config.school.address).substring(0, 52), { x: textX, y: height - 54, font: regularFont, size: 7.8, color: rgb(0.85, 0.88, 0.95) });
+            page.drawText(cleanAscii(`Ph: ${config.school.phone} | Email: ${config.school.email}`), { x: textX, y: height - 68, font: regularFont, size: 7.5, color: rgb(0.85, 0.88, 0.95) });
+            page.drawText(copyLabel.toUpperCase(), { x: textX, y: height - 82, font: boldFont, size: 8, color: accent });
+        } else {
+            // Pattern Without Letterhead: Clean copy badge for pre-printed letterhead stationery
+            page.drawText(copyLabel.toUpperCase(), { x: leftX, y: height - 120, font: boldFont, size: 8.5, color: primary });
         }
-
-        page.drawText(cleanAscii(config.school.name), { x: textX, y: height - 42, font: boldFont, size: 15, color: white });
-        page.drawText(cleanAscii(config.school.address).substring(0, 50), { x: textX, y: height - 58, font: regularFont, size: 8, color: rgb(0.8, 0.8, 0.9) });
-        page.drawText(cleanAscii(`Ph: ${config.school.phone} | Email: ${config.school.email}`), { x: textX, y: height - 72, font: regularFont, size: 7.5, color: rgb(0.8, 0.8, 0.9) });
-        page.drawText(copyLabel.toUpperCase(), { x: textX, y: height - 86, font: boldFont, size: 8, color: accent });
 
         const headerBadgeColor = data.isSupplementary ? gold : accent;
         const headerBadgeTitle = data.isSupplementary ? 'SUPPLEMENTARY EXAM RECEIPT' : 'OFFICIAL FEE RECEIPT';
-        page.drawRectangle({ x: xOffset + 215, y: height - 130, width: 160, height: 26, color: headerBadgeColor });
-        page.drawText(headerBadgeTitle, { x: xOffset + 222, y: height - 116, font: boldFont, size: 7.5, color: white });
-        page.drawText(cleanAscii(data.receiptNumber), { x: xOffset + 222, y: height - 126, font: regularFont, size: 7, color: white });
+        page.drawRectangle({ x: xOffset + 225, y: height - 130, width: 165, height: 26, color: headerBadgeColor });
+        page.drawText(headerBadgeTitle, { x: xOffset + 232, y: height - 116, font: boldFont, size: 7.5, color: white });
+        page.drawText(cleanAscii(data.receiptNumber), { x: xOffset + 232, y: height - 126, font: regularFont, size: 7, color: white });
 
-        page.drawLine({ start: { x: leftX, y: height - 142 }, end: { x: xOffset + 375, y: height - 142 }, thickness: 0.75, color: primary });
+        page.drawLine({ start: { x: leftX, y: height - 138 }, end: { x: xOffset + 390, y: height - 138 }, thickness: 0.75, color: primary });
 
-        let y = height - 162;
+        let y = height - 158;
         const drawField = (label: string, val: string, fx: number, fy: number) => {
             page.drawText(label, { x: fx, y: fy, font: regularFont, size: 7.5, color: gray });
             const displayVal = cleanAscii(val) || '-';
@@ -161,7 +177,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
         // ─── FEE BREAKDOWN & BALANCE BREAKDOWN TABLE ─────────────────────────────
         y -= 28;
-        const tableWidth = copyWidth - 20; // 340
+        const tableWidth = copyWidth; // 370
         const tableTitle = data.isSupplementary
             ? 'SUPPLEMENTARY EXAM LEDGER'
             : 'FEE BREAKDOWN & ACCOUNT LEDGER';
@@ -177,32 +193,32 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 16, color: lightGray });
         if (data.isSupplementary) {
             page.drawText('Charge Type: Independent Supplementary Exam Fee', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: primary });
-            page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 245, y: y - 2, font: boldFont, size: 8, color: black });
+            page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 270, y: y - 2, font: boldFont, size: 8, color: black });
         } else {
             page.drawText('Total Agreed Course Fee:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(totalFeePaise), { x: leftX + 245, y: y - 2, font: boldFont, size: 8, color: black });
+            page.drawText(formatCurrencyForPdf(totalFeePaise), { x: leftX + 270, y: y - 2, font: boldFont, size: 8, color: black });
         }
 
         // Amount Paid In This Receipt
         y -= 20;
         page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 20, color: data.isSupplementary ? gold : accent });
         page.drawText(data.isSupplementary ? 'SUPPLEMENTARY EXAM AMOUNT PAID:' : 'AMOUNT PAID IN THIS RECEIPT:', { x: leftX + 10, y: y + 1, font: boldFont, size: 8, color: white });
-        page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 240, y: y + 1, font: boldFont, size: 9.5, color: white });
+        page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 265, y: y + 1, font: boldFont, size: 9.5, color: white });
 
         // Total Paid & Balance Due Summary (Accurate 2-Column Alignment with zero overlap)
         y -= 18;
         page.drawRectangle({ x: leftX, y: y - 6, width: tableWidth, height: 16, color: lightGray });
         if (data.isSupplementary) {
             page.drawText('Status: [CLEARED] Supplementary Exam Fee Cleared', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
-            page.drawText('Course Dues: Maintained Separately', { x: leftX + 200, y: y - 2, font: regularFont, size: 7, color: gray });
+            page.drawText('Course Dues: Maintained Separately', { x: leftX + 210, y: y - 2, font: regularFont, size: 7, color: gray });
         } else {
             // Left column: Total Paid Till Date
             page.drawText('Total Paid Till Date:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 92, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 96, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
 
             // Right column: Remaining Balance Due
-            page.drawText('Balance Due:', { x: leftX + 195, y: y - 2, font: boldFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: leftX + 252, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
+            page.drawText('Balance Due:', { x: leftX + 210, y: y - 2, font: boldFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: leftX + 270, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
         }
 
         // Amount in Words
@@ -252,13 +268,13 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         page.drawText("Student Signature", { x: leftX, y: y - 9, font: regularFont, size: 6.5, color: gray });
 
         // 2. Clerk / Cashier Signature Section
-        const clerkX = leftX + 110;
+        const clerkX = leftX + 115;
         page.drawLine({ start: { x: clerkX, y }, end: { x: clerkX + 90, y }, thickness: 0.5, color: gray });
         page.drawText("Clerk / Cashier Signature", { x: clerkX, y: y - 9, font: boldFont, size: 6.5, color: black });
         page.drawText(data.clerkName ? `By: ${cleanAscii(data.clerkName)}` : 'Accounts Clerk', { x: clerkX, y: y - 16, font: regularFont, size: 6, color: gray });
 
         // 3. Authorized Principal Signature & Official Stamp
-        const sigX = xOffset + 235;
+        const sigX = xOffset + 245;
         page.drawLine({ start: { x: sigX, y }, end: { x: sigX + 120, y }, thickness: 0.5, color: gray });
         page.drawText("Authorized Signatory & Seal", { x: sigX, y: y - 9, font: boldFont, size: 6.5, color: primary });
         page.drawText(cleanAscii(config.school.name), { x: sigX, y: y - 16, font: boldFont, size: 6, color: gray });
@@ -268,10 +284,12 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         }
     };
 
+    const halfWidth = width / 2;
     drawReceiptCopy(0, 'Office Copy (Counterfoil)');
-    drawReceiptCopy(425, 'Student Copy');
+    drawReceiptCopy(halfWidth, 'Student Copy');
 
-    const midX = 415;
+    // Central dividing dashed cut line between counterfoils from top to bottom
+    const midX = halfWidth;
     for (let currentY = 15; currentY < height - 15; currentY += 10) {
         page.drawLine({
             start: { x: midX, y: currentY },
@@ -281,12 +299,168 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         });
     }
 
-    page.drawRectangle({ x: 0, y: 0, width, height: 18, color: primary });
-    page.drawText('Shri Sai Private Industrial Training Institute, Bhadrawati | Official ERP Generated Fee Receipt', {
-        x: 30, y: 5.5, font: regularFont, size: 6.5, color: rgb(0.8, 0.8, 0.9),
+    // Only draw the bottom footer if withLetterhead is true (spread edge-to-edge to page corners)
+    if (withLetterhead) {
+        page.drawRectangle({ x: 0, y: 0, width, height: 24, color: primary });
+        page.drawRectangle({ x: 0, y: 24, width, height: 1.5, color: accent });
+        page.drawText('Shri Sai Private Industrial Training Institute, Bhadrawati | Official ERP Generated Fee Receipt', {
+            x: 20, y: 8, font: regularFont, size: 6.8, color: rgb(0.85, 0.88, 0.95),
+        });
+        page.drawText(`Printed: ${new Date().toLocaleString('en-IN')}`, {
+            x: width - 175, y: 8, font: regularFont, size: 6.5, color: rgb(0.8, 0.85, 0.95),
+        });
+    }
+
+    const pdfBytes = await doc.save({ useObjectStreams: true });
+    return Buffer.from(pdfBytes);
+};
+
+/**
+ * Generate an official Blank Letterhead PDF
+ * (Header and Footer spread to the corners of the page without any content in between)
+ */
+export const generateBlankLetterheadPdf = async (options?: { orientation?: 'portrait' | 'landscape' }): Promise<Buffer> => {
+    const doc = await PDFDocument.create();
+    const isLandscape = options?.orientation === 'landscape';
+    const page = isLandscape ? doc.addPage([841.89, 595.28]) : doc.addPage([595.28, 841.89]);
+    const { width, height } = page.getSize();
+
+    const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+    const regularFont = await doc.embedFont(StandardFonts.Helvetica);
+
+    let logoImage: any = null;
+    try {
+        const logoPath = path.join(process.cwd(), 'assets', 'sai_iti_logo.png');
+        if (fs.existsSync(logoPath)) {
+            const logoBytes = fs.readFileSync(logoPath);
+            try {
+                logoImage = await doc.embedPng(logoBytes);
+            } catch {
+                logoImage = await doc.embedJpg(logoBytes);
+            }
+        }
+    } catch { }
+
+    const primary = rgb(0.07, 0.17, 0.35);    // Premium Navy Blue (#122b59)
+    const accent = rgb(0.02, 0.52, 0.78);     // Brand Sky Blue (#0284c7)
+    const gold = rgb(0.85, 0.65, 0.13);       // Supplementary Gold (#d97706)
+    const gray = rgb(0.35, 0.40, 0.48);
+    const white = rgb(1, 1, 1);
+
+    // ─── TOP HEADER BANNER (Spread edge-to-edge to the top corners) ─────────
+    const headerHeight = isLandscape ? 95 : 115;
+    page.drawRectangle({ x: 0, y: height - headerHeight, width, height: headerHeight, color: primary });
+    page.drawRectangle({ x: 0, y: height - headerHeight - 3, width, height: 3, color: gold });
+
+    let textStartX = 25;
+    if (logoImage) {
+        const logoSize = isLandscape ? 70 : 85;
+        page.drawImage(logoImage, {
+            x: 25,
+            y: height - headerHeight + (headerHeight - logoSize) / 2,
+            width: logoSize,
+            height: logoSize,
+        });
+        textStartX = isLandscape ? 105 : 122;
+    }
+
+    if (!isLandscape) {
+        // Portrait Layout
+        page.drawText(cleanAscii(config.school.name).toUpperCase(), {
+            x: textStartX,
+            y: height - 38,
+            font: boldFont,
+            size: 16.5,
+            color: white,
+        });
+        page.drawText('Approved by NCVT, DGT, Govt. of India & DVET, Maharashtra | DGET Code: PR27000151', {
+            x: textStartX,
+            y: height - 54,
+            font: boldFont,
+            size: 7.2,
+            color: gold,
+        });
+        page.drawText(cleanAscii(config.school.address), {
+            x: textStartX,
+            y: height - 70,
+            font: regularFont,
+            size: 8,
+            color: rgb(0.88, 0.90, 0.96),
+        });
+        page.drawText(`Phone: ${config.school.phone}  |  Email: ${config.school.email}`, {
+            x: textStartX,
+            y: height - 85,
+            font: regularFont,
+            size: 7.5,
+            color: rgb(0.85, 0.88, 0.95),
+        });
+        page.drawText('Website: www.saiitibhadravati.in  |  Affiliated Trades: Electrician, Fitter, Welder', {
+            x: textStartX,
+            y: height - 99,
+            font: regularFont,
+            size: 7,
+            color: rgb(0.75, 0.82, 0.92),
+        });
+        // Notice: Middle area is completely blank with NO text, NO Ref No, NO Date, and NO lines as requested.
+    } else {
+        // Landscape Layout
+        page.drawText(cleanAscii(config.school.name).toUpperCase(), {
+            x: textStartX,
+            y: height - 36,
+            font: boldFont,
+            size: 18,
+            color: white,
+        });
+        page.drawText('Approved by NCVT, DGT, Govt. of India & DVET, Maharashtra | DGET Code: PR27000151', {
+            x: textStartX,
+            y: height - 52,
+            font: boldFont,
+            size: 8,
+            color: gold,
+        });
+        page.drawText(`${cleanAscii(config.school.address)}  |  Phone: ${config.school.phone}  |  Email: ${config.school.email}`, {
+            x: textStartX,
+            y: height - 68,
+            font: regularFont,
+            size: 8,
+            color: rgb(0.88, 0.90, 0.96),
+        });
+        // Notice: Middle area is completely blank with NO text, NO Ref No, NO Date, and NO lines as requested.
+    }
+
+    // ─── BOTTOM FOOTER BANNER (Spread edge-to-edge to the bottom corners) ───
+    const footerHeight = 34;
+    page.drawRectangle({ x: 0, y: footerHeight, width, height: 3, color: gold });
+    page.drawRectangle({ x: 0, y: 0, width, height: footerHeight, color: primary });
+
+    page.drawText('SHRI SAI PRIVATE INDUSTRIAL TRAINING INSTITUTE, BHADRAWATI', {
+        x: 25,
+        y: 19,
+        font: boldFont,
+        size: 7.8,
+        color: white,
     });
-    page.drawText(`Printed: ${new Date().toLocaleString('en-IN')}`, {
-        x: width - 180, y: 5.5, font: regularFont, size: 6, color: rgb(0.7, 0.7, 0.8),
+    page.drawText('Excellence in Technical & Vocational Training | Chandrapur, Maharashtra', {
+        x: 25,
+        y: 8,
+        font: regularFont,
+        size: 7,
+        color: rgb(0.85, 0.88, 0.95),
+    });
+
+    page.drawText('Affiliated to NCVT & DGT, New Delhi', {
+        x: width - 210,
+        y: 19,
+        font: boldFont,
+        size: 7.8,
+        color: gold,
+    });
+    page.drawText('ISO 9001:2015 Certified Educational Institute', {
+        x: width - 210,
+        y: 8,
+        font: regularFont,
+        size: 7,
+        color: rgb(0.85, 0.88, 0.95),
     });
 
     const pdfBytes = await doc.save({ useObjectStreams: true });

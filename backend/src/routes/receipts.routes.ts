@@ -8,6 +8,9 @@ const router = Router();
 // GET /receipts/download/:receiptNumber - Public PDF download (no auth needed for parent link sharing)
 router.get('/download/:receiptNumber', receiptsController.downloadPdf);
 
+// GET /receipts/blank-letterhead - Official institutional blank letterhead (header & footer spread to corners)
+router.get('/blank-letterhead', receiptsController.downloadBlankLetterhead);
+
 // All other receipt routes require auth
 router.use(authenticate);
 
@@ -21,4 +24,3 @@ router.get('/:id', receiptsController.getById);
 router.delete('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER, Role.SUPERADMIN), receiptsController.delete);
 
 export default router;
-

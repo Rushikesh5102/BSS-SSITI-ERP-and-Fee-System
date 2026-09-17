@@ -7,6 +7,7 @@ import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
@@ -22,6 +23,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     const [fetching, setFetching] = useState(false);
     const [search, setSearch] = useState('');
     const [viewReceipt, setViewReceipt] = useState<any | null>(null);
+    const [downloadModalReceipt, setDownloadModalReceipt] = useState<any | null>(null);
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
@@ -90,7 +92,9 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
             ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
             : 'http://localhost:4000';
-    };    const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
+    };
+
+    const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
     const canDeleteReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'ACCOUNTANT';
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -142,14 +146,14 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                             <table className="table responsive-table">
                                 <thead>
                                     <tr>
-                                        <th>Receipt No.</th>
-                                        <th>Student</th>
-                                        <th>Amount Paid</th>
-                                        <th>Payment Mode</th>
-                                        <th>Remarks / Notes</th>
-                                        <th>Issued Date</th>
-                                        <th>Clerk / Cashier</th>
-                                        <th>Actions</th>
+                                        <th style={{ verticalAlign: 'middle', textAlign: 'center', width: 80, fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>RECEIPT NO.</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>STUDENT</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>AMOUNT PAID</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>PAYMENT MODE</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>REMARKS / NOTES</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>ISSUED DATE</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>CLERK / CASHIER</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em', textAlign: 'center', width: 150 }}>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -159,48 +163,122 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                         <tr><td colSpan={8} className="text-center text-muted" style={{ padding: 40 }}>No receipts found</td></tr>
                                     ) : filtered.map((r) => (
                                         <tr key={r.id}>
-                                             <td data-label="Receipt No.">
-                                                 <span className="badge badge-primary" style={{ fontWeight: 800 }}>{r.receiptNumber}</span>
+                                             <td data-label="RECEIPT NO." style={{ verticalAlign: 'middle', textAlign: 'center' }}>
+                                                 <span style={{
+                                                     display: 'inline-flex',
+                                                     alignItems: 'center',
+                                                     justifyContent: 'center',
+                                                     width: 36,
+                                                     height: 36,
+                                                     borderRadius: '50%',
+                                                     backgroundColor: 'rgba(14, 165, 233, 0.15)',
+                                                     color: '#0284c7',
+                                                     fontWeight: 800,
+                                                     fontSize: 14
+                                                 }}>
+                                                     {r.receiptNumber}
+                                                 </span>
                                              </td>
-                                             <td data-label="Student">
-                                                 <b>{r.payment?.studentFee?.student?.name || '—'}</b>
-                                                 <div className="text-sm text-muted">{r.payment?.studentFee?.student?.studentId} • {r.payment?.studentFee?.student?.class}</div>
+                                             <td data-label="STUDENT" style={{ verticalAlign: 'middle', minWidth: 170 }}>
+                                                 <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.35 }}>
+                                                     {r.payment?.studentFee?.student?.name || '—'}
+                                                 </div>
+                                                 <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3 }}>
+                                                     {r.payment?.studentFee?.student?.studentId} • {r.payment?.studentFee?.student?.class}
+                                                 </div>
                                              </td>
-                                             <td data-label="Amount Paid"><b style={{ color: 'var(--accent)', fontSize: 14 }}>{formatRupees(r.payment?.amount || 0)}</b></td>
-                                             <td data-label="Mode"><span className="badge badge-neutral">{r.payment?.mode}</span></td>
-                                             <td data-label="Remarks / Notes">
+                                             <td data-label="AMOUNT PAID" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                                                 <b style={{ color: '#f59e0b', fontSize: 15, fontWeight: 800 }}>
+                                                     {formatRupees(r.payment?.amount || 0)}
+                                                 </b>
+                                             </td>
+                                             <td data-label="PAYMENT MODE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                                                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                                     {r.payment?.mode || '—'}
+                                                 </span>
+                                             </td>
+                                             <td data-label="REMARKS / NOTES" style={{ verticalAlign: 'middle' }}>
                                                  {r.payment?.remarks ? (
-                                                     <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 6 }}>
-                                                         📝 {r.payment.remarks}
+                                                     <span style={{
+                                                         fontSize: 12,
+                                                         fontWeight: 600,
+                                                         color: 'var(--text-secondary)',
+                                                         background: 'var(--surface-2, rgba(0,0,0,0.06))',
+                                                         border: '1px solid var(--border)',
+                                                         padding: '4px 10px',
+                                                         borderRadius: 8,
+                                                         display: 'inline-flex',
+                                                         alignItems: 'center',
+                                                         gap: 6
+                                                     }}>
+                                                         📑 {r.payment.remarks}
                                                      </span>
                                                  ) : <span className="text-muted text-xs">—</span>}
                                              </td>
-                                             <td data-label="Issued Date">{new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                                             <td data-label="Clerk / Cashier">
-                                                 <span className="text-sm font-bold">{r.generatedBy?.name || 'Accounts Clerk'}</span>
+                                             <td data-label="ISSUED DATE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 13 }}>
+                                                 {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                              </td>
-                                             <td data-label="Actions">
-                                                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                             <td data-label="CLERK / CASHIER" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                                                 <span style={{ fontWeight: 800, fontSize: 13 }}>
+                                                     {r.generatedBy?.name || 'Fee Accountant'}
+                                                 </span>
+                                             </td>
+                                             <td data-label="ACTIONS" style={{ verticalAlign: 'middle', width: 150, minWidth: 150, padding: '12px 14px' }}>
+                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', alignItems: 'stretch' }}>
                                                      <button
                                                          onClick={() => setViewReceipt(r)}
                                                          className="btn btn-secondary btn-sm"
                                                          title="View full printable receipt with balance & clerk signature"
+                                                         style={{
+                                                             width: '100%',
+                                                             justifyContent: 'center',
+                                                             borderRadius: 8,
+                                                             fontWeight: 700,
+                                                             padding: '7px 12px',
+                                                             fontSize: 12,
+                                                             display: 'inline-flex',
+                                                             alignItems: 'center',
+                                                             gap: 6
+                                                         }}
                                                      >
                                                          👁️ View / Print
                                                      </button>
                                                      <button
-                                                         onClick={() => {
-                                                             window.location.href = `${getBaseUrl()}${r.pdfUrl.startsWith('/api') ? r.pdfUrl : `/api${r.pdfUrl}`}`;
+                                                         onClick={() => setDownloadModalReceipt(r)}
+                                                         className="btn btn-sm"
+                                                         title="Download Fee Receipt"
+                                                         style={{
+                                                             width: '100%',
+                                                             justifyContent: 'center',
+                                                             borderRadius: 8,
+                                                             background: '#f59e0b',
+                                                             color: '#ffffff',
+                                                             border: 'none',
+                                                             fontWeight: 800,
+                                                             padding: '7px 12px',
+                                                             fontSize: 12,
+                                                             display: 'inline-flex',
+                                                             alignItems: 'center',
+                                                             gap: 6,
+                                                             boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                                          }}
-                                                         className="btn btn-accent btn-sm"
-                                                         title="Download Official PDF Receipt"
                                                      >
-                                                         📄 PDF
+                                                         📥 Download Receipt
                                                      </button>
                                                      {canRefund && r.payment?.status !== 'REFUNDED' && (
                                                          <button
-                                                             className="btn btn-warning btn-sm"
-                                                             style={{ padding: '4px 8px', fontSize: 11 }}
+                                                             className="btn btn-ghost btn-sm"
+                                                             style={{
+                                                                 width: '100%',
+                                                                 justifyContent: 'center',
+                                                                 borderRadius: 8,
+                                                                 padding: '6px 12px',
+                                                                 fontSize: 12,
+                                                                 fontWeight: 700,
+                                                                 display: 'inline-flex',
+                                                                 alignItems: 'center',
+                                                                 gap: 6
+                                                             }}
                                                              onClick={async () => {
                                                                  const reason = prompt('Reason for fee refund:');
                                                                  if (!reason) return;
@@ -220,12 +298,18 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                          <button
                                                              className="btn btn-sm"
                                                              style={{
-                                                                 padding: '4px 8px',
-                                                                 fontSize: 11,
+                                                                 width: '100%',
+                                                                 justifyContent: 'center',
+                                                                 borderRadius: 8,
+                                                                 padding: '6px 12px',
+                                                                 fontSize: 12,
                                                                  background: '#fee2e2',
                                                                  color: '#dc2626',
                                                                  border: '1px solid #fca5a5',
-                                                                 fontWeight: 700
+                                                                 fontWeight: 700,
+                                                                 display: 'inline-flex',
+                                                                 alignItems: 'center',
+                                                                 gap: 6
                                                              }}
                                                              disabled={deletingId === r.id}
                                                              onClick={() => handleDeleteReceipt(r)}
@@ -238,12 +322,12 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                              </td>
                                          </tr>
                                      ))}
-                                 </tbody>
-                             </table>
-                         </div>
-                     </div>
-                 </div>
-                 <Footer />
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <Footer />
             </div>
 
             {/* Printable Receipt Modal with Remarks, Total, Balance & Clerk Signature */}
@@ -355,7 +439,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                 );
                             })()}
 
-                            {/* ─── Clerk Signature & Seal (Requirement 11) ────────────────── */}
+                            {/* ─── Clerk Signature & Seal ────────────────── */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: 20, borderTop: '1px solid var(--border)' }}>
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ width: 130, borderBottom: '1px solid var(--text-primary)', marginBottom: 4 }} />
@@ -381,16 +465,25 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                             <button className="btn btn-primary" onClick={handlePrintReceipt}>🖨️ Print Receipt Slip</button>
                             <button 
                                 className="btn btn-accent" 
-                                onClick={() => {
-                                    window.location.href = `${getBaseUrl()}${viewReceipt.pdfUrl.startsWith('/api') ? viewReceipt.pdfUrl : `/api${viewReceipt.pdfUrl}`}`;
-                                }}
+                                onClick={() => setDownloadModalReceipt(viewReceipt)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}
                             >
-                                📄 Download PDF
+                                📥 Download Receipt
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Modal for selecting With Letterhead or Without Letterhead pattern */}
+            <ReceiptDownloadModal
+                isOpen={Boolean(downloadModalReceipt)}
+                onClose={() => setDownloadModalReceipt(null)}
+                receiptNumber={downloadModalReceipt?.receiptNumber || ''}
+                studentName={downloadModalReceipt?.payment?.studentFee?.student?.name}
+                amount={downloadModalReceipt?.payment?.amount}
+                receiptDate={downloadModalReceipt?.createdAt}
+            />
         </div>
     );
 }

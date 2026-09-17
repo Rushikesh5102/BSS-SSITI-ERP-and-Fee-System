@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { safeStorage } from '../../utils/safeStorage';
+import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
 
 const PAYMENT_MODES = ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'DD', 'CARD', 'NET_BANKING', 'RAZORPAY', 'OTHER'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
@@ -40,6 +41,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const [feeStructures, setFeeStructures] = useState<any[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [selectedFee, setSelectedFee] = useState<any>(null);
+    const [receiptModalData, setReceiptModalData] = useState<any | null>(null);
     
     // Clean initial fee items - strictly no pre-filled amounts
     const [feeItems, setFeeItems] = useState<PaymentFeeItem[]>([
@@ -1238,7 +1240,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                             : form.remarks || 'Academic Fee';
 
                                                         const options = {
-                                                            key: order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_test_TEUu7W94JCplrN',
+                                                            key: order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_live_TFjqmeDkhUgmSZ',
                                                             amount: order.amount,
                                                             currency: order.currency,
                                                             name: 'Shri Sai I.T.I',
@@ -1381,15 +1383,19 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             >
                                                 🖨️ Print Slip
                                             </button>
-                                            <a 
-                                                href={`${typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://bss-ssiti-erp-and-fee-system.onrender.com' : 'http://localhost:4000'}${result.receipt?.pdfUrl?.startsWith('/api') ? result.receipt.pdfUrl : `/api${result.receipt?.pdfUrl}`}`}
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="btn btn-primary" 
-                                                style={{ justifyContent: 'center', fontWeight: 700 }}
+                                            <button
+                                                type="button"
+                                                onClick={() => setReceiptModalData({
+                                                    receiptNumber: result.receipt?.receiptNumber,
+                                                    studentName: selectedStudent?.name,
+                                                    amount: result.payment?.amount,
+                                                    receiptDate: result.receipt?.createdAt,
+                                                })}
+                                                className="btn btn-primary"
+                                                style={{ justifyContent: 'center', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                                             >
-                                                📄 View / Download PDF
-                                            </a>
+                                                📥 Download Receipt
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1610,6 +1616,17 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                     </div>
                 </div>
             )}
+
+            
+            {/* Modal for selecting With Letterhead or Without Letterhead pattern */}
+            <ReceiptDownloadModal
+                isOpen={Boolean(receiptModalData)}
+                onClose={() => setReceiptModalData(null)}
+                receiptNumber={receiptModalData?.receiptNumber || ''}
+                studentName={receiptModalData?.studentName}
+                amount={receiptModalData?.amount}
+                receiptDate={receiptModalData?.receiptDate}
+            />
 
             {/* Toast */}
             {toast && (

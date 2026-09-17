@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import api from '../../services/api';
 import WelcomeOverlay from '../../components/WelcomeOverlay';
 import Footer from '../../components/Footer';
+import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
 
 const MonthlyRevenueChart = dynamic(() => import('../../components/MonthlyRevenueChart'), {
     ssr: false,
@@ -61,6 +62,7 @@ function DashboardContent() {
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [inquiryForm, setInquiryForm] = useState({ name: '', class: 'Electrician', email: '', phone: '', parentName: '' });
     const [savingInquiry, setSavingInquiry] = useState(false);
+    const [receiptModalData, setReceiptModalData] = useState<any | null>(null);
 
     const handleInquirySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -201,7 +203,7 @@ function DashboardContent() {
                 const order = orderRes.data;
 
                 const options = {
-                    key: order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_test_TEUu7W94JCplrN',
+                    key: order.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_live_TFjqmeDkhUgmSZ',
                     amount: order.amount,
                     currency: order.currency,
                     name: 'Shri Sai I.T.I',
@@ -366,7 +368,7 @@ function DashboardContent() {
                                                                 <th>Payment Mode</th>
                                                                 <th>Amount Paid</th>
                                                                 <th>Date</th>
-                                                                <th>Official PDF</th>
+                                                                <th>Download Receipt</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -377,14 +379,20 @@ function DashboardContent() {
                                                                     <td><b>{formatRupees(p.amount)}</b></td>
                                                                     <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
                                                                     <td>
-                                                                        <a
-                                                                            href={`${typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://bss-ssiti-erp-and-fee-system.onrender.com' : 'http://localhost:4000'}${p.receipt.pdfUrl}`}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setReceiptModalData({
+                                                                                receiptNumber: p.receipt.receiptNumber,
+                                                                                studentName: studentData?.name,
+                                                                                amount: p.amount,
+                                                                                receiptDate: p.createdAt,
+                                                                            })}
                                                                             className="btn btn-accent btn-sm"
+                                                                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                                                            title="Download Fee Receipt"
                                                                         >
-                                                                            📄 Download PDF
-                                                                        </a>
+                                                                            📥 Download Receipt
+                                                                        </button>
                                                                     </td>
                                                                 </tr>
                                                             ))}
@@ -418,7 +426,18 @@ function DashboardContent() {
                                 </div>
                             )}
                         </div>
-                        <Footer />
+                        
+                    {/* Modal for selecting With Letterhead or Without Letterhead pattern */}
+                    <ReceiptDownloadModal
+                        isOpen={Boolean(receiptModalData)}
+                        onClose={() => setReceiptModalData(null)}
+                        receiptNumber={receiptModalData?.receiptNumber || ''}
+                        studentName={receiptModalData?.studentName}
+                        amount={receiptModalData?.amount}
+                        receiptDate={receiptModalData?.receiptDate}
+                    />
+
+                    <Footer />
                     </div>
                 </div>
             </>

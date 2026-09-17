@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { generateReceiptPdf } from '../services/pdf.service';
+import { generateReceiptPdf, generateBlankLetterheadPdf } from '../services/pdf.service';
 import { getNextReceiptNumber } from '../utils/uuid';
 
 // Storage path where generated PDF receipts are cached on disk
@@ -145,11 +145,13 @@ export const receiptsController = {
     }),
 
     /**
-     * GET /receipts/download/:receiptNumber - Stream PDF receipt (always renders latest design and totals)
+     * GET /receipts/download/:receiptNumber - Stream PDF receipt
+     * Accepts query param ?letterhead=true (Pattern 1) or ?letterhead=false (Pattern 2: Stationary)
      */
     downloadPdf: asyncHandler(async (req: Request, res: Response) => {
         const { receiptNumber } = req.params;
-        const pdfPath = path.join(RECEIPTS_DIR, `${receiptNumber}.pdf`);
+        const letterhead = req.query.letterhead !== 'false' && req.query.letterhead !== '0';
+        const pdfPath = path.join(RECEIPTS_DIR, `${receiptNumber}${letterhead ? '' : '_without_letterhead'}.pdf`);
 
         const receipt = await prisma.receipt.findUnique({
             where: { receiptNumber },
@@ -198,14 +200,31 @@ export const receiptsController = {
             remarks: receipt.payment.remarks || undefined,
             clerkName: receipt.generatedBy?.name || 'Fee Counter Cashier',
             isSupplementary: Boolean(isSupp),
+            letterhead,
         });
 
         try {
             fs.writeFileSync(pdfPath, pdfBuffer);
         } catch { /* Ignore file write error on read-only environments */ }
 
+        const filename = `${receiptNumber}${letterhead ? '' : '_without_letterhead'}.pdf`;
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${receiptNumber}.pdf"`);
+        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.send(pdfBuffer);
+    }),
+
+    /**
+     * GET /receipts/blank-letterhead - Stream official blank institutional letterhead PDF
+     * Spreads header and footer to the corners of the page without middle content
+     */
+    downloadBlankLetterhead: asyncHandler(async (req: Request, res: Response) => {
+        const orientation = (req.query.orientation === 'landscape') ? 'landscape' : 'portrait';
+        const pdfBuffer = await generateBlankLetterheadPdf({ orientation });
+
+        const filename = `Shri_Sai_ITI_Blank_Letterhead_${orientation}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(pdfBuffer);
     }),
@@ -244,15 +263,18 @@ export const receiptsController = {
         const studentFeeId = receipt.payment?.studentFeeId;
         const studentName = receipt.payment?.studentFee?.student?.name;
 
-        // 1. Delete physical PDF file if it exists
+        // 1. Delete physical PDF files if they exist
         const pdfPath = path.join(RECEIPTS_DIR, `${receiptNumber}.pdf`);
-        if (fs.existsSync(pdfPath)) {
-            try {
-                fs.unlinkSync(pdfPath);
-            } catch (fsErr) {
-                console.warn(`Could not delete PDF file for receipt ${receiptNumber}:`, fsErr);
+        const pdfPathNoHead = path.join(RECEIPTS_DIR, `${receiptNumber}_without_letterhead.pdf`);
+        [pdfPath, pdfPathNoHead].forEach(p => {
+            if (fs.existsSync(p)) {
+                try {
+                    fs.unlinkSync(p);
+                } catch (fsErr) {
+                    console.warn(`Could not delete PDF file ${p}:`, fsErr);
+                }
             }
-        }
+        });
 
         // 2. Delete receipt from database
         await prisma.receipt.delete({
@@ -295,4 +317,3 @@ export const receiptsController = {
         });
     }),
 };
-

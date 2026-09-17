@@ -77,7 +77,7 @@ export default function DonationModal({
     if (isRazorpayLoaded && window.Razorpay) {
       try {
         const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_BSSFoundationKey',
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY || 'rzp_live_TFjqmeDkhUgmSZ',
           amount: amount * 100, // Amount in paise
           currency: 'INR',
           name: 'BSS Foundation',

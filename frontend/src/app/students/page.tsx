@@ -10,6 +10,7 @@ import Footer from '../../components/Footer';
 import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
 import { useDebounce } from '../../hooks/useDebounce';
+import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
 
 // Lazy-load PDF generator utilities on demand so heavy PDF-Lib chunks
 // aren't included in the initial students page bundle load
@@ -46,6 +47,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [receiptModalData, setReceiptModalData] = useState<any | null>(null);
 
     const currentYear = new Date().getFullYear();
     const defaultSession = `${currentYear}-${currentYear + 2}`;
@@ -1714,7 +1716,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             <th style={{ width: '12%' }}>Mode</th>
                                                             <th style={{ width: '15%' }}>Amount</th>
                                                             <th style={{ width: '24%' }}>Ref No.</th>
-                                                            <th style={{ width: '25%', textAlign: 'center' }}>Actions / PDF</th>
+                                                            <th style={{ width: '25%', textAlign: 'center' }}>Download Receipt</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -1728,15 +1730,20 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <td style={{ textAlign: 'center' }}>
                                                                     <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                                                                         {p.receipt ? (
-                                                                            <a
-                                                                                href={`${getBaseUrl()}${p.receipt.pdfUrl.startsWith('/api') ? p.receipt.pdfUrl : `/api${p.receipt.pdfUrl}`}`}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setReceiptModalData({
+                                                                                    receiptNumber: p.receipt.receiptNumber,
+                                                                                    studentName: historyStudentDetail?.name,
+                                                                                    amount: p.amount,
+                                                                                    receiptDate: p.createdAt,
+                                                                                })}
                                                                                 className="btn btn-accent btn-sm"
-                                                                                style={{ padding: '4px 8px', fontSize: 11 }}
+                                                                                style={{ padding: '4px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                                                                title="Download Fee Receipt"
                                                                             >
-                                                                                📄 PDF
-                                                                            </a>
+                                                                                📥 Download Receipt
+                                                                            </button>
                                                                         ) : null}
                                                                         {['SUPERADMIN', 'ADMIN', 'DEVELOPER', 'BRANCH_ADMIN'].includes(effectiveRole || '') && p.status !== 'REFUNDED' && (
                                                                             <button
@@ -2014,6 +2021,17 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                     </div>
                 </div>
             )}
+
+            
+            {/* Modal for selecting With Letterhead or Without Letterhead pattern */}
+            <ReceiptDownloadModal
+                isOpen={Boolean(receiptModalData)}
+                onClose={() => setReceiptModalData(null)}
+                receiptNumber={receiptModalData?.receiptNumber || ''}
+                studentName={receiptModalData?.studentName}
+                amount={receiptModalData?.amount}
+                receiptDate={receiptModalData?.receiptDate}
+            />
 
             {/* Toast */}
             {toast && (

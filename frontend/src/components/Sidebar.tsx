@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import ThemeToggle from './ThemeToggle';
 
 interface NavItem {
     href: string;
@@ -255,7 +254,6 @@ function SidebarInner() {
                     <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>Shri Sai I.T.I</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <ThemeToggle variant="switch" />
                     <button
                         className={`hamburger-btn ${mobileOpen ? 'open' : ''}`}
                         onClick={() => setMobileOpen(!mobileOpen)}
@@ -624,7 +622,6 @@ function SidebarInner() {
                 {/* User Profile Badge (Click to open Profile Modal) */}
                 {user && (
                     <div className="sidebar-footer">
-                        <ThemeToggle variant="sidebar" />
                         <div
                             className="user-badge"
                             style={{ cursor: 'pointer' }}
@@ -683,14 +680,63 @@ function SidebarInner() {
                                     <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)' }}>PWA</span>
                                 </button>
 
-                                <button
-                                    onClick={() => { toggleTheme(); setShowProfileModal(false); }}
-                                    className="btn btn-secondary w-full"
-                                    style={{ justifyContent: 'space-between', padding: '10px 14px' }}
-                                >
-                                    <span>Theme Appearance</span>
-                                    <span>{isDark ? '☀️ Switch to Light' : '🌙 Switch to Dark'}</span>
-                                </button>
+                                {/* Blank Letterhead Generator for Admin/Staff */}
+                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT', 'BRANCH_ADMIN'].includes(user.role) && (
+                                    <div style={{ background: 'var(--surface-2, rgba(2,132,199,0.06))', border: '1px solid var(--border, #cbd5e1)', borderRadius: 10, padding: '10px 12px' }}>
+                                        <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary, #0284c7)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span>📜</span> Blank Letterhead
+                                        </div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted, #64748b)', marginBottom: 8, lineHeight: 1.3 }}>
+                                            Download official blank letterhead (header & footer spread to corners, blank center for notices/letters).
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+                                                        ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+                                                        : 'http://localhost:4000';
+                                                    window.open(`${base}/api/receipts/blank-letterhead?orientation=portrait`, '_blank');
+                                                }}
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ fontSize: 11, padding: '6px 8px', justifyContent: 'center', fontWeight: 700 }}
+                                                title="Download A4 Portrait Blank Letterhead"
+                                            >
+                                                📄 Portrait A4
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const base = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+                                                        ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
+                                                        : 'http://localhost:4000';
+                                                    window.open(`${base}/api/receipts/blank-letterhead?orientation=landscape`, '_blank');
+                                                }}
+                                                className="btn btn-secondary btn-sm"
+                                                style={{ fontSize: 11, padding: '6px 8px', justifyContent: 'center', fontWeight: 700 }}
+                                                title="Download A4 Landscape Blank Letterhead"
+                                            >
+                                                📜 Landscape
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Theme Appearance (Kept exclusively in profile settings) */}
+                                <div style={{ background: 'var(--surface-2, #f1f5f9)', border: '1px solid var(--border, #cbd5e1)', borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Theme Appearance</div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{isDark ? 'Dark Mode Active' : 'Light Mode Active'}</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={toggleTheme}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ fontSize: 12, padding: '6px 12px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                                    >
+                                        {isDark ? '☀️ Switch to Light' : '🌙 Switch to Dark'}
+                                    </button>
+                                </div>
 
                                 <button
                                     onClick={() => { logout(); setShowProfileModal(false); }}
