@@ -146,14 +146,14 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                             <table className="table responsive-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ verticalAlign: 'middle', textAlign: 'center', width: 80, fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>RECEIPT NO.</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>STUDENT</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>AMOUNT PAID</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>PAYMENT MODE</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>REMARKS / NOTES</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>ISSUED DATE</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em' }}>CLERK / CASHIER</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 12, fontWeight: 800, letterSpacing: '0.05em', textAlign: 'center', width: 150 }}>ACTIONS</th>
+                                        <th style={{ verticalAlign: 'middle', textAlign: 'center', width: 55, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 4px' }}>RECEIPT NO.</th>
+                                        <th style={{ verticalAlign: 'middle', minWidth: 130, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>STUDENT</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>AMOUNT PAID</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>PAYMENT MODE</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>REMARKS / NOTES</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>ISSUED DATE</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>CLERK / CASHIER</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', textAlign: 'center', width: 120, minWidth: 120, padding: '8px 4px' }}>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -163,68 +163,75 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                         <tr><td colSpan={8} className="text-center text-muted" style={{ padding: 40 }}>No receipts found</td></tr>
                                     ) : filtered.map((r) => (
                                         <tr key={r.id}>
-                                             <td data-label="RECEIPT NO." style={{ verticalAlign: 'middle', textAlign: 'center' }}>
+                                             <td data-label="RECEIPT NO." style={{ verticalAlign: 'middle', textAlign: 'center', width: 55, padding: '8px 4px' }}>
                                                  <span style={{
                                                      display: 'inline-flex',
                                                      alignItems: 'center',
                                                      justifyContent: 'center',
-                                                     width: 36,
-                                                     height: 36,
+                                                     width: 32,
+                                                     height: 32,
                                                      borderRadius: '50%',
                                                      backgroundColor: 'rgba(14, 165, 233, 0.15)',
                                                      color: '#0284c7',
                                                      fontWeight: 800,
-                                                     fontSize: 14
+                                                     fontSize: 13
                                                  }}>
                                                      {r.receiptNumber}
                                                  </span>
                                              </td>
-                                             <td data-label="STUDENT" style={{ verticalAlign: 'middle', minWidth: 170 }}>
-                                                 <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.35 }}>
+                                             <td data-label="STUDENT" style={{ verticalAlign: 'middle', minWidth: 130, padding: '8px 6px' }}>
+                                                 <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text-primary)', lineHeight: 1.25 }}>
                                                      {r.payment?.studentFee?.student?.name || '—'}
                                                  </div>
-                                                 <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3 }}>
+                                                 <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
                                                      {r.payment?.studentFee?.student?.studentId} • {r.payment?.studentFee?.student?.class}
                                                  </div>
                                              </td>
-                                             <td data-label="AMOUNT PAID" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                                                 <b style={{ color: '#f59e0b', fontSize: 15, fontWeight: 800 }}>
+                                             <td data-label="AMOUNT PAID" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '8px 6px' }}>
+                                                 <b style={{ color: '#f59e0b', fontSize: 14, fontWeight: 800 }}>
                                                      {formatRupees(r.payment?.amount || 0)}
                                                  </b>
                                              </td>
-                                             <td data-label="PAYMENT MODE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                                                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                             <td data-label="PAYMENT MODE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '8px 6px' }}>
+                                                 <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                                      {r.payment?.mode || '—'}
                                                  </span>
                                              </td>
-                                             <td data-label="REMARKS / NOTES" style={{ verticalAlign: 'middle' }}>
+                                             <td data-label="REMARKS / NOTES" style={{ verticalAlign: 'middle', padding: '8px 6px' }}>
                                                  {r.payment?.remarks ? (
-                                                     <span style={{
-                                                         fontSize: 12,
-                                                         fontWeight: 600,
-                                                         color: 'var(--text-secondary)',
-                                                         background: 'var(--surface-2, rgba(0,0,0,0.06))',
-                                                         border: '1px solid var(--border)',
-                                                         padding: '4px 10px',
-                                                         borderRadius: 8,
-                                                         display: 'inline-flex',
-                                                         alignItems: 'center',
-                                                         gap: 6
-                                                     }}>
+                                                     <span
+                                                         title={r.payment.remarks}
+                                                         style={{
+                                                             fontSize: 11.5,
+                                                             fontWeight: 600,
+                                                             color: 'var(--text-secondary)',
+                                                             background: 'var(--surface-2, rgba(0,0,0,0.06))',
+                                                             border: '1px solid var(--border)',
+                                                             padding: '3px 8px',
+                                                             borderRadius: 6,
+                                                             display: 'inline-flex',
+                                                             alignItems: 'center',
+                                                             gap: 5,
+                                                             maxWidth: 150,
+                                                             whiteSpace: 'nowrap',
+                                                             overflow: 'hidden',
+                                                             textOverflow: 'ellipsis'
+                                                         }}
+                                                     >
                                                          📑 {r.payment.remarks}
                                                      </span>
                                                  ) : <span className="text-muted text-xs">—</span>}
                                              </td>
-                                             <td data-label="ISSUED DATE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 13 }}>
+                                             <td data-label="ISSUED DATE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 12, padding: '8px 6px' }}>
                                                  {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                              </td>
-                                             <td data-label="CLERK / CASHIER" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                                                 <span style={{ fontWeight: 800, fontSize: 13 }}>
+                                             <td data-label="CLERK / CASHIER" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '8px 6px' }}>
+                                                 <span style={{ fontWeight: 800, fontSize: 12 }}>
                                                      {r.generatedBy?.name || 'Fee Accountant'}
                                                  </span>
                                              </td>
-                                             <td data-label="ACTIONS" style={{ verticalAlign: 'middle', width: 150, minWidth: 150, padding: '12px 14px' }}>
-                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', alignItems: 'stretch' }}>
+                                             <td data-label="ACTIONS" className="cell-actions" style={{ verticalAlign: 'middle', width: 120, minWidth: 120, padding: '8px 4px' }}>
+                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', alignItems: 'stretch' }}>
                                                      <button
                                                          onClick={() => setViewReceipt(r)}
                                                          className="btn btn-secondary btn-sm"
@@ -232,13 +239,13 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                          style={{
                                                              width: '100%',
                                                              justifyContent: 'center',
-                                                             borderRadius: 8,
+                                                             borderRadius: 6,
                                                              fontWeight: 700,
-                                                             padding: '7px 12px',
-                                                             fontSize: 12,
+                                                             padding: '5px 8px',
+                                                             fontSize: 11.5,
                                                              display: 'inline-flex',
                                                              alignItems: 'center',
-                                                             gap: 6
+                                                             gap: 4
                                                          }}
                                                      >
                                                          👁️ View / Print
@@ -250,16 +257,16 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                          style={{
                                                              width: '100%',
                                                              justifyContent: 'center',
-                                                             borderRadius: 8,
+                                                             borderRadius: 6,
                                                              background: '#f59e0b',
                                                              color: '#ffffff',
                                                              border: 'none',
                                                              fontWeight: 800,
-                                                             padding: '7px 12px',
-                                                             fontSize: 12,
+                                                             padding: '5px 8px',
+                                                             fontSize: 11.5,
                                                              display: 'inline-flex',
                                                              alignItems: 'center',
-                                                             gap: 6,
+                                                             gap: 4,
                                                              boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                                          }}
                                                      >
@@ -271,13 +278,13 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                              style={{
                                                                  width: '100%',
                                                                  justifyContent: 'center',
-                                                                 borderRadius: 8,
-                                                                 padding: '6px 12px',
-                                                                 fontSize: 12,
+                                                                 borderRadius: 6,
+                                                                 padding: '5px 8px',
+                                                                 fontSize: 11.5,
                                                                  fontWeight: 700,
                                                                  display: 'inline-flex',
                                                                  alignItems: 'center',
-                                                                 gap: 6
+                                                                 gap: 4
                                                              }}
                                                              onClick={async () => {
                                                                  const reason = prompt('Reason for fee refund:');
@@ -300,16 +307,16 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                              style={{
                                                                  width: '100%',
                                                                  justifyContent: 'center',
-                                                                 borderRadius: 8,
-                                                                 padding: '6px 12px',
-                                                                 fontSize: 12,
+                                                                 borderRadius: 6,
+                                                                 padding: '5px 8px',
+                                                                 fontSize: 11.5,
                                                                  background: '#fee2e2',
                                                                  color: '#dc2626',
                                                                  border: '1px solid #fca5a5',
                                                                  fontWeight: 700,
                                                                  display: 'inline-flex',
                                                                  alignItems: 'center',
-                                                                 gap: 6
+                                                                 gap: 4
                                                              }}
                                                              disabled={deletingId === r.id}
                                                              onClick={() => handleDeleteReceipt(r)}
