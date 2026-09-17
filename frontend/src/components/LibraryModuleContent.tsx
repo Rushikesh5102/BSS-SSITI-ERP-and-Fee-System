@@ -801,7 +801,7 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
             {showWelcome && <WelcomeOverlay role={user.role} />}
             <Sidebar />
 
-            <div className="main-content" style={{ paddingBottom: '40px', overflowX: 'hidden' }}>
+            <div className="main-content" style={{ overflowX: 'hidden' }}>
                 {/* Standard Page Header */}
                 <div className="page-header" style={{
                     background: 'var(--surface-card)',

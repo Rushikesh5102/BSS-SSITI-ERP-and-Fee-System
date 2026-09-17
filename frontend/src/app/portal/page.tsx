@@ -81,7 +81,7 @@ export default function PortalHubPage() {
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            padding: '40px 16px',
+            padding: '40px 16px 0',
             fontFamily: "'Inter', sans-serif",
             position: 'relative',
             transition: 'background 0.3s ease'
@@ -394,7 +394,7 @@ export default function PortalHubPage() {
                 🚪 Sign Out
             </button>
             
-            <div style={{ marginTop: '30px', width: '100%', maxWidth: '960px' }}>
+            <div style={{ marginTop: 'auto', width: '100%', maxWidth: '960px', paddingTop: '32px' }}>
                 <Footer />
             </div>
         </div>

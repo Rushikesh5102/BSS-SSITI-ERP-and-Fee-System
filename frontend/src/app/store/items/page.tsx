@@ -249,7 +249,7 @@ function AssetRegisterContent() {
             {showWelcome && <WelcomeOverlay role={user.role} />}
             <Sidebar />
 
-            <div className="main-content" style={{ paddingBottom: '40px' }}>
+            <div className="main-content">
                 {/* Header */}
                 <div className="page-header" style={{
                     background: 'var(--surface-card)',

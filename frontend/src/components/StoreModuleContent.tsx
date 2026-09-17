@@ -658,7 +658,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
             {showWelcome && <WelcomeOverlay role={user.role} />}
             <Sidebar />
 
-            <div className="main-content" style={{ paddingBottom: '40px', overflowX: 'hidden' }}>
+            <div className="main-content" style={{ overflowX: 'hidden' }}>
                 {/* Page Header */}
                 <div className="page-header" style={{
                     background: 'var(--surface-card)',

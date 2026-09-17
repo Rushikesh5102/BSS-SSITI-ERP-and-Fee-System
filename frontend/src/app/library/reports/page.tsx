@@ -152,7 +152,7 @@ function LibraryReportsPageContent() {
             {showWelcome && <WelcomeOverlay role={user.role} />}
             <Sidebar />
 
-            <div className="main-content" style={{ paddingBottom: '40px' }}>
+            <div className="main-content">
                 {/* Standard Header */}
                 <div className="page-header" style={{
                     background: 'var(--surface-card)',

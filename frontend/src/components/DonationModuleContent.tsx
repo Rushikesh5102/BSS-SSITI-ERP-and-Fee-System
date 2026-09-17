@@ -574,7 +574,7 @@ export default function DonationModuleContent({
     <div className="layout">
       <Sidebar />
 
-      <div className="main-content" style={{ paddingBottom: '40px', overflowX: 'hidden' }}>
+      <div className="main-content" style={{ overflowX: 'hidden' }}>
         
         {/* Standard ERP Header */}
         <header className="header">

@@ -159,6 +159,8 @@ body.sidebar-collapsed .sidebar {
   max-width: calc(100% - var(--sidebar-width));
   min-width: 0;
   overflow-x: hidden;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
   transition: margin-left var(--transition-md), width var(--transition-md), max-width var(--transition-md);
 }
 
@@ -250,7 +252,7 @@ body.sidebar-collapsed .user-badge {
 
 .page-content {
   flex: 1;
-  padding: 24px 28px;
+  padding: 24px 28px 40px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -260,6 +262,7 @@ body.sidebar-collapsed .user-badge {
 .footer,
 .app-footer {
   margin-top: auto;
+  margin-bottom: 0 !important;
   min-height: 52px;
   padding: 16px 28px;
   border-top: 1px solid rgba(255, 255, 255, 0.22);

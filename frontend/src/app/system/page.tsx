@@ -431,7 +431,7 @@ export default function SystemHealthPage() {
         <div className="layout" style={{ background: '#07090e', color: '#f1f5f9' }}>
             <Sidebar />
             
-            <div className="main-content" style={{ paddingBottom: '40px' }}>
+            <div className="main-content">
                 {/* Sleek Minimalist Action Bar */}
                 <div style={{
                     position: 'sticky', top: '0', zIndex: 100,

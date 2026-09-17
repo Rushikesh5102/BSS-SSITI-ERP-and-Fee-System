@@ -31,9 +31,15 @@
   font-family: var(--bss-font-body);
   line-height: 1.55;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+.bss-legal-page {
+  flex: 1;
 }
 
 /* Cool Animations & Visual FX */
@@ -1196,6 +1202,7 @@ h1, h2, h3, h4, h5, h6,
 /* Footer */
 .bss-footer {
   width: 100%;
+  margin-top: auto;
   padding-top: 4.5rem;
   padding-bottom: 3rem;
   background-color: var(--bss-navy);
