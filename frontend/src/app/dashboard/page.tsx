@@ -461,7 +461,7 @@ function DashboardContent() {
                             </div>
                         </div>
                         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                            {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT', 'BRANCH_ADMIN'].includes(effectiveRole || '') && (
+                            {['ADMIN', 'SUPERADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--surface-2)', padding: '6px 12px', borderRadius: 10, border: '1px solid var(--border)' }}>
                                     <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary-dark)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                                         📜 Blank Letterhead:
