@@ -42,8 +42,7 @@ interface StoreItem {
 }
 
 const categoriesList = [
-    'Electrical Tools',
-    'Fitter & Machining',
+    'Workshop Tools & Equipment',
     'Welding Equipment',
     'Electronics & IT',
     'Automotive & Mechanic',
@@ -162,7 +161,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     const [itemName, setItemName] = useState('');
     const [itemSku, setItemSku] = useState('');
     const [itemDescription, setItemDescription] = useState('');
-    const [itemCategory, setItemCategory] = useState('Electrical Tools');
+    const [itemCategory, setItemCategory] = useState('Workshop Tools & Equipment');
     const [itemQuantity, setItemQuantity] = useState('1');
     const [itemUnit, setItemUnit] = useState('pcs');
     const [itemReorderLevel, setItemReorderLevel] = useState('5');
@@ -347,7 +346,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         setItemName('');
         setItemSku('');
         setItemDescription('');
-        setItemCategory('Electrical Tools');
+        setItemCategory('Workshop Tools & Equipment');
         setItemQuantity('1');
         setItemUnit('pcs');
         setItemReorderLevel('5');
@@ -1310,7 +1309,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                 const fee = getStudentFeeBadge(s);
                                                 return (
                                                     <option key={s.id} value={s.id}>
-                                                        {s.name} ({s.studentId}) — {s.class} [{fee.tag}]
+                                                        {s.name} ({s.studentId}) [{fee.tag}]
                                                     </option>
                                                 );
                                             })}
@@ -1356,10 +1355,10 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                             <div>
                                 <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <span>🎒</span>
-                                    <span>Issue Student Material Kit & Uniform Package (24 Items)</span>
+                                    <span>Issue Common Student Material Kit & Uniform Package (24 Items)</span>
                                 </h3>
                                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                                    Standard ITI academic stationery, drawing instruments, and dress package.
+                                    Standard ITI academic stationery, drawing instruments, and dress package common for all students.
                                 </div>
                             </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowKitIssueModal(false)}>✕</button>
@@ -1383,7 +1382,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                             const fee = getStudentFeeBadge(s);
                                             return (
                                                 <option key={s.id} value={s.id}>
-                                                    {s.name} ({s.studentId}) — {s.class} [{fee.tag}]
+                                                    {s.name} ({s.studentId}) [{fee.tag}]
                                                 </option>
                                             );
                                         })}
@@ -1421,7 +1420,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                 </span>
                                             </div>
                                             <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
-                                                <b>Trade:</b> {currentStudent.class} | <b>Roll No:</b> {currentStudent.rollNumber || '—'} | <b>Parent:</b> {currentStudent.parent?.name || '—'} ({currentStudent.parent?.phone || '—'})
+                                                <b>Roll No:</b> {currentStudent.rollNumber || '—'} | <b>Parent:</b> {currentStudent.parent?.name || '—'} ({currentStudent.parent?.phone || '—'})
                                             </div>
                                             <div style={{ fontSize: 12, fontWeight: 600, color: fee.color, marginTop: 2 }}>
                                                 💳 {fee.label}

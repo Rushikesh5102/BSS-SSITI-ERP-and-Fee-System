@@ -29,8 +29,7 @@ interface StoreItem {
 }
 
 const categoriesList = [
-    'Electrical Tools',
-    'Fitter & Machining',
+    'Workshop Tools & Equipment',
     'Welding Equipment',
     'Electronics & IT',
     'Automotive & Mechanic',
@@ -75,7 +74,7 @@ function AssetRegisterContent() {
     const [itemName, setItemName] = useState('');
     const [itemSku, setItemSku] = useState('');
     const [itemDescription, setItemDescription] = useState('');
-    const [itemCategory, setItemCategory] = useState('Electrical Tools');
+    const [itemCategory, setItemCategory] = useState('Workshop Tools & Equipment');
     const [itemQuantity, setItemQuantity] = useState('1');
     const [itemUnit, setItemUnit] = useState('pcs');
     const [itemReorderLevel, setItemReorderLevel] = useState('5');
@@ -133,7 +132,7 @@ function AssetRegisterContent() {
         setItemName('');
         setItemSku('');
         setItemDescription('');
-        setItemCategory('Electrical Tools');
+        setItemCategory('Workshop Tools & Equipment');
         setItemQuantity('1');
         setItemUnit('pcs');
         setItemReorderLevel('5');
