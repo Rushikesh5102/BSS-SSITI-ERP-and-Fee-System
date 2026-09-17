@@ -17,6 +17,7 @@ interface ReceiptData {
     studentName: string;
     studentId: string;
     className: string;
+    academicSession?: string;
     parentName?: string;
     parentPhone?: string;
     paymentDate: Date;
@@ -139,7 +140,8 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
         // Row 2: Student ID & Trade / Class
         y -= 26;
         drawField('Student ID', data.studentId, leftX, y);
-        drawField('Class / Trade', data.className, rightX, y);
+        const classTradeDisplay = data.academicSession ? `${data.className} (${data.academicSession})` : data.className;
+        drawField('Class / Trade', classTradeDisplay, rightX, y);
 
         // Row 3: Parent Name (or Back paper) & Clean Payment Mode
         y -= 26;

@@ -1896,8 +1896,8 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                                                     if (found) {
                                                         setIssueForm({
                                                             ...issueForm,
-                                                            borrowerName: `${found.name} (${found.rollNumber || found.trade || 'Student'})`,
-                                                            borrowerContact: found.mobile || found.contact || issueForm.borrowerContact
+                                                            borrowerName: `${found.name} (${found.studentId} — ${found.class})`,
+                                                            borrowerContact: found.parent?.phone || found.landline || issueForm.borrowerContact
                                                         });
                                                     }
                                                 }
@@ -1906,7 +1906,7 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                                             <option value="">-- Select Enrolled Student or Enter Below --</option>
                                             {students.map(s => (
                                                 <option key={s.id} value={s.id}>
-                                                    👤 {s.name} ({s.rollNumber || s.trade || 'Student'})
+                                                    👤 {s.name} ({s.studentId} — {s.class})
                                                 </option>
                                             ))}
                                             <option value="CUSTOM">✍️ Enter Custom Name / Unregistered Borrower</option>
@@ -1919,7 +1919,7 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="e.g. Rushikesh Pattiwar (SAI-2024-001)"
+                                        placeholder="e.g. Rushikesh Pattiwar (SSITI-2026-E01)"
                                         value={issueForm.borrowerName}
                                         onChange={e => setIssueForm({ ...issueForm, borrowerName: e.target.value })}
                                         required

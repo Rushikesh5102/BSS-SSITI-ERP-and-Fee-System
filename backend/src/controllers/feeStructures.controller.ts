@@ -4,6 +4,7 @@ import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
 
 import { AuditAction } from '../types/enums';
+import { getStudentSession } from './students.controller';
 
 
 export const feeStructuresController = {
@@ -103,14 +104,25 @@ export const feeStructuresController = {
     assignToStudent: asyncHandler(async (req: Request, res: Response) => {
         const { studentId, feeStructureId, customTotalAmount, dueDate, academicYear } = req.body;
 
-        const feeStructure = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
+        const [feeStructure, student] = await Promise.all([
+            prisma.feeStructure.findUnique({ where: { id: feeStructureId } }),
+            prisma.student.findUnique({ where: { id: studentId } })
+        ]);
         if (!feeStructure) throw new AppError(404, 'Fee structure not found');
+        if (!student) throw new AppError(404, 'Student not found');
 
+        const studentSession = getStudentSession(student);
         const totalAmount = customTotalAmount !== undefined ? Number(customTotalAmount) : feeStructure.totalAmount;
-        const year = academicYear || feeStructure.academicYear;
+        const year = academicYear || studentSession || feeStructure.academicYear;
 
         const existingFee = await prisma.studentFee.findFirst({
-            where: { studentId, feeStructureId, academicYear: year }
+            where: {
+                studentId,
+                OR: [
+                    { academicYear: year },
+                    { feeStructureId }
+                ]
+            }
         });
 
         if (existingFee && req.user?.role === 'ACCOUNTANT') {
@@ -122,6 +134,8 @@ export const feeStructuresController = {
             studentFee = await prisma.studentFee.update({
                 where: { id: existingFee.id },
                 data: {
+                    feeStructureId,
+                    academicYear: year,
                     totalAmount,
                     dueDate: dueDate ? new Date(dueDate) : existingFee.dueDate,
                 },

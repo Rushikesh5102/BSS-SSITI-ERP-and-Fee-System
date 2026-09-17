@@ -248,7 +248,7 @@ export const reportsController = {
             'Student Name': sf.student.name,
             Class: sf.student.class,
             'Fee Structure': sf.feeStructure.name,
-            'Academic Year': sf.feeStructure.academicYear,
+            'Academic Year': sf.academicYear || sf.feeStructure.academicYear,
             'Total (₹)': paiseToRupees(sf.totalAmount),
             'Paid (₹)': paiseToRupees(sf.paidAmount),
             'Pending (₹)': paiseToRupees(sf.totalAmount - sf.paidAmount),

@@ -25,10 +25,13 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [toast, setToast] = useState('');
     
+    const currentYear = new Date().getFullYear();
+    const defaultAY = `${currentYear}-${currentYear + 2}`;
+    
     // Form state without course box; streamlined fee items with custom write-in support
     const [form, setForm] = useState({ 
         name: '', 
-        academicYear: '2024-2026', 
+        academicYear: defaultAY, 
         tuitionFee: '15000',
         examFee: '2000',
         dressMaterialFee: '3000',
@@ -98,7 +101,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
         setEditingId(null);
         setForm({ 
             name: '', 
-            academicYear: '2024-2026', 
+            academicYear: defaultAY, 
             tuitionFee: '15000',
             examFee: '2000',
             dressMaterialFee: '3000',
@@ -127,7 +130,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
 
         setForm({
             name: s.name || '',
-            academicYear: s.academicYear || '2024-2026',
+            academicYear: s.academicYear || defaultAY,
             tuitionFee: t,
             examFee: ex,
             dressMaterialFee: dr,
@@ -244,7 +247,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                                         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                             <div>
                                                 <div className="font-bold" style={{ fontSize: 15 }}>{s.name}</div>
-                                                <div className="text-sm text-muted">Session: {s.academicYear || '2024-2026'} (2-Year)</div>
+                                                <div className="text-sm text-muted">Session: {s.academicYear || defaultAY} (2-Year)</div>
                                             </div>
                                             <span className={`badge ${s.isActive ? 'badge-success' : 'badge-neutral'}`}>{s.isActive ? 'Active' : 'Inactive'}</span>
                                         </div>
@@ -297,11 +300,11 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                                 <div className="grid grid-2">
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label">Structure Package Name <span className="required">*</span></label>
-                                        <input className="form-control" required value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Electrician 2024-2026 Master Fee" />
+                                        <input className="form-control" required value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder={`e.g. Electrician ${defaultAY} Master Fee`} />
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label">Academic Session (2 Years) <span className="required">*</span></label>
-                                        <input className="form-control" required value={form.academicYear} onChange={(e) => setForm(f => ({ ...f, academicYear: e.target.value }))} placeholder="e.g. 2024-2026" />
+                                        <input className="form-control" required value={form.academicYear} onChange={(e) => setForm(f => ({ ...f, academicYear: e.target.value }))} placeholder={`e.g. ${defaultAY}`} />
                                     </div>
                                 </div>
 

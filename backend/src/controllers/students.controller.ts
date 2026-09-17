@@ -12,6 +12,18 @@ import bcrypt from 'bcryptjs';
 // Receipt storage directory for unlinking cached student receipt PDFs upon deletion
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
 
+export function getStudentSession(student: { educationDetails?: any; createdAt?: Date | string } | null | undefined): string {
+    const raw = (student?.educationDetails as any)?.academicSession;
+    if (raw && typeof raw === 'string' && raw.trim()) {
+        const cleaned = raw.replace(/\s+/g, '');
+        if (cleaned.includes('-')) return cleaned;
+        const yr = parseInt(cleaned);
+        if (!isNaN(yr)) return `${yr}-${yr + 2}`;
+    }
+    const year = student?.createdAt ? new Date(student.createdAt).getFullYear() : new Date().getFullYear();
+    return `${year}-${year + 2}`;
+}
+
 export const studentsController = {
     // GET /students - Returns paginated list of students filtered by branch, trade, or search string
     list: asyncHandler(async (req: Request, res: Response) => {
@@ -48,8 +60,14 @@ export const studentsController = {
                     parent: { select: { name: true, phone: true, email: true } },
                     branch: { select: { name: true } },
                     studentFees: {
-              select: { id: true, totalAmount: true, paidAmount: true, academicYear: true },
-            },
+                        select: {
+                            id: true,
+                            totalAmount: true,
+                            paidAmount: true,
+                            academicYear: true,
+                            feeStructure: { select: { id: true, name: true, academicYear: true, class: true } },
+                        },
+                    },
                 },
             }),
             prisma.student.count({ where }),
@@ -170,27 +188,46 @@ export const studentsController = {
             include: { parent: true, branch: { select: { name: true } } },
         });
 
-        // ─── Auto Assign Fee Structure if Selected During Admission ──────────────
-        if (feeStructureId) {
+        // ─── Auto Assign Fee Structure (Strictly Synced with Student's Trade & Session) ──
+        const studentSession = getStudentSession({ educationDetails: studentData.educationDetails, createdAt: student.createdAt });
+        let targetFeeStructId = feeStructureId;
+
+        if (!targetFeeStructId) {
+            const matchingStruct = await prisma.feeStructure.findFirst({
+                where: {
+                    class: { equals: tradeClass, mode: 'insensitive' },
+                    academicYear: studentSession,
+                }
+            }) || await prisma.feeStructure.findFirst({
+                where: {
+                    class: { equals: tradeClass, mode: 'insensitive' },
+                }
+            });
+            if (matchingStruct) {
+                targetFeeStructId = matchingStruct.id;
+            }
+        }
+
+        if (targetFeeStructId) {
             try {
-                const feeStruct = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
+                const feeStruct = await prisma.feeStructure.findUnique({ where: { id: targetFeeStructId } });
                 if (feeStruct) {
                     const finalAmount = customTotalAmount ? Number(customTotalAmount) : feeStruct.totalAmount;
                     await prisma.studentFee.upsert({
                         where: {
                             studentId_feeStructureId_academicYear: {
                                 studentId: student.id,
-                                feeStructureId,
-                                academicYear: feeStruct.academicYear,
+                                feeStructureId: feeStruct.id,
+                                academicYear: studentSession,
                             }
                         },
                         update: { totalAmount: finalAmount },
                         create: {
                             studentId: student.id,
-                            feeStructureId,
+                            feeStructureId: feeStruct.id,
                             totalAmount: finalAmount,
                             paidAmount: 0,
-                            academicYear: feeStruct.academicYear,
+                            academicYear: studentSession,
                         }
                     });
                 }
@@ -298,6 +335,14 @@ export const studentsController = {
             where: { id: req.params.id },
             data: sanitizedUpdate,
         });
+
+        if (updateData.educationDetails && updateData.educationDetails.academicSession) {
+            const newSession = getStudentSession({ educationDetails: updateData.educationDetails });
+            await prisma.studentFee.updateMany({
+                where: { studentId: student.id },
+                data: { academicYear: newSession }
+            });
+        }
 
         try {
             await createAuditLog(req.user!.id, AuditAction.STUDENT_UPDATED, 'Student', student.id, updateData, req.ip);

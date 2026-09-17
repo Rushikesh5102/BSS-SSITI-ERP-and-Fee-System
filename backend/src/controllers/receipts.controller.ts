@@ -183,6 +183,7 @@ export const receiptsController = {
             studentName: studentFee?.student?.name || 'Student',
             studentId: studentFee?.student?.studentId || 'N/A',
             className: studentFee?.student?.class || 'ITI Trade',
+            academicSession: studentFee?.academicYear || '2026-2028',
             parentName: studentFee?.student?.parent?.name,
             parentPhone: studentFee?.student?.parent?.phone,
             paymentDate: receipt.createdAt,

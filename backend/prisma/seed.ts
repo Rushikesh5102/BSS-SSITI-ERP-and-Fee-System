@@ -218,12 +218,14 @@ async function main() {
         await prisma.feeStructure.upsert({
             where: { id: tr.id },
             update: {
+                name: `${tr.name} — 2026-2028`,
+                academicYear: '2026-2028',
                 totalAmount: 2000000, // ₹20,000 in paise
             },
             create: {
                 id: tr.id,
-                name: `${tr.name} — 2024-2026`,
-                academicYear: '2024-2026',
+                name: `${tr.name} — 2026-2028`,
+                academicYear: '2026-2028',
                 class: tr.class,
                 totalAmount: 2000000, // ₹20,000 in paise
                 branchId: branch.id,

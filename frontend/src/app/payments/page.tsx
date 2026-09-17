@@ -301,6 +301,8 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
     const handleQuickAddStudent = async (e: React.FormEvent) => {
         e.preventDefault();
         setQuickAdding(true);
+        const currentYear = new Date().getFullYear();
+        const defaultSession = `${currentYear}-${currentYear + 2}`;
         try {
             const { data } = await api.post('/students', {
                 name: quickAddForm.name,
@@ -308,6 +310,9 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                 section: quickAddForm.section,
                 rollNumber: quickAddForm.rollNumber || undefined,
                 photo: quickAddForm.photo || undefined,
+                educationDetails: {
+                    academicSession: defaultSession,
+                },
                 parent: quickAddForm.parentName ? {
                     name: quickAddForm.parentName,
                     phone: quickAddForm.parentPhone,
@@ -316,13 +321,22 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
             });
             const newStudent = data.data;
 
-            // Auto-assign default fee structure to new student
+            // Auto-assign default fee structure matching student trade to new student
             try {
                 const feeRes = await api.get('/fee-structures');
-                if (feeRes.data.data && feeRes.data.data.length > 0) {
+                const structures = feeRes.data.data || [];
+                const matchingFee = structures.find((fs: any) =>
+                    (fs.class?.toLowerCase() === quickAddForm.class?.toLowerCase()) &&
+                    (fs.academicYear === defaultSession || fs.academicYear?.replace(/\s/g, '') === defaultSession)
+                ) || structures.find((fs: any) =>
+                    fs.class?.toLowerCase() === quickAddForm.class?.toLowerCase()
+                ) || structures[0];
+
+                if (matchingFee) {
                     await api.post('/fee-structures/assign', {
                         studentId: newStudent.id,
-                        feeStructureId: feeRes.data.data[0].id,
+                        feeStructureId: matchingFee.id,
+                        academicYear: defaultSession,
                     });
                 }
             } catch { }
@@ -380,7 +394,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
 
             const effectiveFeesFor = isSupplementary && feeItems.length === 1
                 ? `Supplementary / Back Paper Exam Fee: ${supplementarySubject}`
-                : feeBreakdown.map(b => `${b.name} (₹${(b.amount / 100).toLocaleString('en-IN')})`).join(', ') || selectedFee.feeStructure?.name || 'Academic Course Fee';
+                : feeBreakdown.map(b => `${b.name} (₹${(b.amount / 100).toLocaleString('en-IN')})`).join(', ') || selectedFee.feeStructure?.name?.replace(/\s*—\s*\d{4}[-–]\d{2,4}/g, '') || 'Academic Course Fee';
 
             // Split Payment validation & payload construction
             let splitPaymentPayload: any = undefined;
@@ -552,11 +566,16 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                     setSelectedFee(fee || null);
                                                 }}
                                             >
-                                                {(selectedStudent.studentFees || []).map((f: any) => (
-                                                    <option key={f.id} value={f.id}>
-                                                        {f.feeStructure?.name || 'Trade Fee'} ({f.academicYear}) — Pending: {formatRupees(f.totalAmount - f.paidAmount)}
-                                                    </option>
-                                                ))}
+                                                {(selectedStudent.studentFees || []).map((f: any) => {
+                                                    const rawName = f.feeStructure?.name || (selectedStudent.class ? `${selectedStudent.class} Trade Fee` : 'Trade Fee');
+                                                    const cleanName = rawName.replace(/\s*—\s*\d{4}[-–]\d{2,4}/g, '').trim();
+                                                    const sessionLabel = f.academicYear || (selectedStudent.educationDetails?.academicSession ? String(selectedStudent.educationDetails.academicSession).replace(/\s+/g, '') : '2026-2028');
+                                                    return (
+                                                        <option key={f.id} value={f.id}>
+                                                            {cleanName} ({sessionLabel}) — Pending: {formatRupees(f.totalAmount - f.paidAmount)}
+                                                        </option>
+                                                    );
+                                                })}
                                             </select>
                                         </div>
                                     )}

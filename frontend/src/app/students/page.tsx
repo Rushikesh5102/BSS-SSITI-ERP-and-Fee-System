@@ -48,7 +48,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [showModal, setShowModal] = useState(false);
 
     const currentYear = new Date().getFullYear();
-    const defaultSession = `${currentYear} - ${currentYear + 2}`;
+    const defaultSession = `${currentYear}-${currentYear + 2}`;
 
     const initialFormState = {
         name: '', class: 'Electrician', section: 'A', rollNumber: '', photo: '', signature: '', email: '',
@@ -161,7 +161,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             class: student.class || 'Electrician',
             section: student.section || '',
             rollNumber: student.rollNumber || '',
-            academicSession: `${new Date(student.createdAt).getFullYear()} - ${new Date(student.createdAt).getFullYear() + 2}`,
+            academicSession: edu.academicSession ? String(edu.academicSession).replace(/\s+/g, '') : `${new Date(student.createdAt).getFullYear()}-${new Date(student.createdAt).getFullYear() + 2}`,
             dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '',
             gender: student.gender || 'Male',
             bloodGroup: student.bloodGroup || '',
@@ -226,6 +226,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 signature: editProfileForm.signature || null,
                 educationDetails: {
                     ...editProfileForm.educationDetails,
+                    academicSession: (editProfileForm.academicSession || defaultSession).replace(/\s+/g, ''),
                     subcaste: editProfileForm.subcaste || null
                 },
                 submittedDocuments: editProfileForm.submittedDocuments,
@@ -387,10 +388,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             const rawAmount = calcTotal > 0 ? calcTotal.toString() : feeForm.customAmountRupees;
             const amountInPaise = rawAmount ? Math.round(parseFloat(rawAmount) * 100) : undefined;
 
+            const studentSession = (selectedStudent.educationDetails?.academicSession || defaultSession).replace(/\s+/g, '');
             await api.post('/fee-structures/assign', {
                 studentId: selectedStudent.id,
                 feeStructureId: feeForm.feeStructureId,
                 customTotalAmount: amountInPaise,
+                academicYear: studentSession,
                 dueDate: feeForm.dueDate || undefined,
             });
             showToast('✅ Student fee updated successfully!');
@@ -461,7 +464,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                     otherFee: form.otherFee,
                 },
                 submittedDocuments: form.submittedDocuments,
-                feeStructureId: form.feeStructureId || (feeStructures[0]?.id || undefined),
+                feeStructureId: form.feeStructureId || (
+                    feeStructures.find(fs => fs.class?.toLowerCase() === form.class?.toLowerCase() && (fs.academicYear === form.academicSession || fs.academicYear?.replace(/\s/g, '') === form.academicSession?.replace(/\s/g, '')))?.id
+                    || feeStructures.find(fs => fs.class?.toLowerCase() === form.class?.toLowerCase())?.id
+                    || feeStructures[0]?.id
+                    || undefined
+                ),
                 customTotalAmount: amountInPaise,
                 parent: (form.parentName && form.parentName.trim()) || (form.parentPhone && form.parentPhone.trim()) ? {
                     name: form.parentName.trim() || 'Parent / Guardian',
@@ -644,10 +652,13 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             const feeAlreadyAssigned = Boolean(s.feeAssignment);
                                             const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
                                             const startYr = s.createdAt ? new Date(s.createdAt).getFullYear() : currentYear;
+                                            const sessionDisplay = s.educationDetails?.academicSession
+                                                ? String(s.educationDetails.academicSession).replace(/\s+/g, '')
+                                                : `${startYr}-${startYr + 2}`;
 
                                             return (
                                                 <tr key={s.id}>
-                                                    <td data-label="Student ID"><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-2024-${s.rollNumber || '01'}` : s.studentId}</span></td>
+                                                    <td data-label="Student ID"><span className="badge badge-primary">{s.studentId?.includes('e+') || s.studentId?.includes('E+') ? `SSITI-${currentYear}-${s.rollNumber || '01'}` : s.studentId}</span></td>
                                                     <td data-label="Student">
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                             {s.photo ? (
@@ -674,7 +685,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                     <td data-label="Trade & Session">
                                                         <b>{s.class}{s.section ? ` - ${s.section}` : ''}</b>
                                                         <br />
-                                                        <span className="text-sm text-muted">{startYr} - {startYr + 2} (2-Yr)</span>
+                                                        <span className="text-sm text-muted">{sessionDisplay} (2-Yr)</span>
                                                     </td>
                                                     <td data-label="Category / Subcaste">
                                                         <span className="badge badge-neutral" style={{ fontWeight: 600 }}>

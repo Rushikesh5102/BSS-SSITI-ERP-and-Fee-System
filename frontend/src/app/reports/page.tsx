@@ -399,7 +399,7 @@ export default function ReportsPage() {
                                                         <td><span className="badge badge-primary">{sf.student?.studentId}</span></td>
                                                         <td><b>{sf.student?.name}</b></td>
                                                         <td>{sf.student?.class}</td>
-                                                        <td>{sf.feeStructure?.name}</td>
+                                                        <td>{(sf.feeStructure?.name || 'Trade Fee').replace(/\s*—\s*\d{4}[-–]\d{2,4}/g, '')} ({sf.academicYear || '2026-2028'})</td>
                                                         <td>{formatRupees(sf.totalAmount)}</td>
                                                         <td className="text-success">{formatRupees(sf.paidAmount)}</td>
                                                         <td><b className="text-danger">{formatRupees(pendingAmt)}</b></td>

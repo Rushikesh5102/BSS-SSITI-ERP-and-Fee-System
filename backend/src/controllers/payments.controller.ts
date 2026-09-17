@@ -14,6 +14,7 @@ import { notificationService } from '../services/notification.service';
 import { getNextReceiptNumber } from '../utils/uuid';
 import { razorpayService } from '../services/razorpay.service';
 import { stripeService } from '../services/stripe.service';
+import { getStudentSession } from './students.controller';
 
 // Local disk cache for generated receipt PDFs (accessible by express static / download handlers)
 const RECEIPTS_DIR = path.join(process.cwd(), 'uploads', 'receipts');
@@ -62,7 +63,7 @@ export const paymentsController = {
         if (isSupplementary) {
             const student = studentFee.student;
             const branchId = student.branchId || studentFee.feeStructure.branchId || '00000000-0000-0000-0000-000000000001';
-            const academicYear = studentFee.academicYear || '2024-2026';
+            const academicYear = studentFee.academicYear || getStudentSession(student);
 
             // Find or create a dedicated Supplementary Fee Structure
             let suppFeeStructure = await prisma.feeStructure.findFirst({
@@ -233,6 +234,7 @@ export const paymentsController = {
                 studentName: studentFee.student.name,
                 studentId: studentFee.student.studentId,
                 className: studentFee.student.class,
+                academicSession: studentFee.academicYear,
                 parentName: studentFee.student.parent?.name,
                 parentPhone: studentFee.student.parent?.phone,
                 paymentDate: effectivePaymentDate,

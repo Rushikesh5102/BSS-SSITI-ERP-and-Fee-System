@@ -276,6 +276,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                 <div><span className="text-muted">Student Name:</span> <b>{viewReceipt.payment?.studentFee?.student?.name}</b></div>
                                 <div><span className="text-muted">Student ID:</span> <span className="badge badge-primary">{viewReceipt.payment?.studentFee?.student?.studentId}</span></div>
                                 <div><span className="text-muted">Trade / Course:</span> <b>{viewReceipt.payment?.studentFee?.student?.class}</b></div>
+                                <div><span className="text-muted">Academic Session:</span> <b>{viewReceipt.payment?.studentFee?.academicYear || '2026-2028'}</b></div>
                                 <div><span className="text-muted">Payment Mode:</span> <span className="badge badge-info">{viewReceipt.payment?.mode}</span></div>
                                 {viewReceipt.payment?.transactionRef && (
                                     <div style={{ gridColumn: '1 / -1' }}><span className="text-muted">Ref / Trx No:</span> <b>{viewReceipt.payment.transactionRef}</b></div>
