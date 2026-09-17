@@ -56,6 +56,26 @@ export default function PwaInstallerAndOfflineSync() {
             }
         };
 
+        (window as any).shareApp = async () => {
+            const shareData = {
+                title: 'Shri Sai ITI & BSS Foundation ERP Portal',
+                text: 'Official Fee Management, Student Admission & Campus Portal for Shri Sai Private ITI, Bhadravati.',
+                url: window.location.origin,
+            };
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {}
+            } else {
+                try {
+                    await navigator.clipboard.writeText(window.location.origin);
+                    alert('🔗 Application link copied to clipboard!\n\nYou can now paste and share it on WhatsApp, Telegram, or any platform.');
+                } catch (e) {
+                    prompt('Copy this link to share the application:', window.location.origin);
+                }
+            }
+        };
+
         const checkPending = async () => {
             const count = await getPendingOfflineCount();
             setPendingCount(count);

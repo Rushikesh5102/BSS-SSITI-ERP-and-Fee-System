@@ -656,8 +656,44 @@ export default function LoginPage() {
                 <p className="brand-subtitle">Institutional Management Portal</p>
             </div>
 
-            {/* Theme Toggle Button */}
-            <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100 }}>
+            {/* Top Bar Actions (Share App & Theme Toggle) */}
+            <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (typeof window !== 'undefined' && (window as any).shareApp) {
+                            (window as any).shareApp();
+                        } else if (navigator.share) {
+                            navigator.share({
+                                title: 'Shri Sai ITI & BSS Foundation ERP Portal',
+                                text: 'Official Fee Management, Student Admission & Campus Portal for Shri Sai Private ITI, Bhadravati.',
+                                url: window.location.origin,
+                            }).catch(() => {});
+                        } else {
+                            navigator.clipboard?.writeText(window.location.origin);
+                            alert('🔗 Application link copied to clipboard!');
+                        }
+                    }}
+                    title="Share Application (With official logo preview)"
+                    style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                        backdropFilter: 'blur(10px)',
+                        color: '#f1f5f9',
+                        padding: '7px 13px',
+                        borderRadius: '20px',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
+                >
+                    <span style={{ fontSize: '14px' }}>📤</span>
+                    <span>Share App</span>
+                </button>
                 <ThemeToggle variant="switch" />
             </div>
 

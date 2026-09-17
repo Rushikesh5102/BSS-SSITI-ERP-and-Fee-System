@@ -62,13 +62,28 @@ export const metadata: Metadata = {
         siteName: 'Shri Sai ITI & BSS ERP System',
         title: 'Shri Sai ITI & BSS ERP | Fee & Campus Management Portal',
         description:
-            'Official ERP and Fee Management Portal for Shri Sai Private Industrial Training Institute, Bhadravati. Manage student admissions, fee structures, receipts, and workshop store inventory.',
+            'Official ERP, Student Admission, Workshop Asset Register, and Fee Management Portal for Shri Sai Private Industrial Training Institute, Bhadravati. Manage student admissions, fee structures, receipts, and workshop store inventory.',
         images: [
+            {
+                url: '/logo-preview.png',
+                width: 800,
+                height: 800,
+                alt: 'Shri Sai ITI Official Logo Emblem',
+                type: 'image/png',
+            },
             {
                 url: '/og-image.png',
                 width: 1200,
                 height: 630,
-                alt: 'Shri Sai ITI ERP System Banner',
+                alt: 'Shri Sai ITI & BSS Foundation ERP Portal',
+                type: 'image/png',
+            },
+            {
+                url: '/sai_iti_logo.png',
+                width: 1021,
+                height: 1011,
+                alt: 'Shri Sai ITI Official Logo',
+                type: 'image/png',
             },
         ],
     },
@@ -77,7 +92,7 @@ export const metadata: Metadata = {
         title: 'Shri Sai ITI & BSS ERP | Fee & Campus Management Portal',
         description:
             'Official ERP and Fee Management Portal for Shri Sai Private Industrial Training Institute, Bhadravati. Automated DVET student admissions and digital fee receipts.',
-        images: ['/og-image.png'],
+        images: ['/logo-preview.png', '/og-image.png'],
     },
     robots: {
         index: true,
@@ -106,8 +121,8 @@ const jsonLdData = {
     name: 'Shri Sai Private Industrial Training Institute',
     alternateName: ['Shri Sai ITI', 'Sai ITI Bhadravati', 'BSS ITI'],
     url: SITE_URL,
-    logo: `${SITE_URL}/sai_iti_logo.png`,
-    image: `${SITE_URL}/og-image.png`,
+    logo: `${SITE_URL}/logo-preview.png`,
+    image: `${SITE_URL}/logo-preview.png`,
     description:
         'Premier vocational training institute affiliated with DVET Maharashtra and NCVT New Delhi offering Electrician and Wireman trades.',
     address: {
@@ -133,6 +148,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
                 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
                 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+                {/* Social Share & Link Preview Meta Tags */}
+                <link rel="image_src" href={`${SITE_URL}/logo-preview.png`} />
+                <meta property="og:image" content={`${SITE_URL}/logo-preview.png`} />
+                <meta property="og:image:secure_url" content={`${SITE_URL}/logo-preview.png`} />
+                <meta property="og:image:type" content="image/png" />
+                <meta property="og:image:width" content="800" />
+                <meta property="og:image:height" content="800" />
+                <meta property="og:image:alt" content="Shri Sai ITI Official Logo Emblem" />
+                <meta name="twitter:image" content={`${SITE_URL}/logo-preview.png`} />
+                <meta name="twitter:image:alt" content="Shri Sai ITI Official Logo Emblem" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
                 <link rel="dns-prefetch" href="https://bss-ssiti-erp-and-fee-system.onrender.com" />

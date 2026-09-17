@@ -738,6 +738,35 @@ function SidebarInner() {
                                     </button>
                                 </div>
 
+                                {/* Share Portal */}
+                                <div style={{ background: 'var(--surface-2, #f1f5f9)', border: '1px solid var(--border, #cbd5e1)', borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Share Software Portal</div>
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Share app link with emblem preview</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (typeof window !== 'undefined' && (window as any).shareApp) {
+                                                (window as any).shareApp();
+                                            } else if (navigator.share) {
+                                                navigator.share({
+                                                    title: 'Shri Sai ITI & BSS Foundation ERP Portal',
+                                                    text: 'Official Fee Management, Student Admission & Campus Portal for Shri Sai Private ITI, Bhadravati.',
+                                                    url: window.location.origin,
+                                                }).catch(() => {});
+                                            } else {
+                                                navigator.clipboard.writeText(window.location.origin);
+                                                alert('🔗 Portal link copied to clipboard!');
+                                            }
+                                        }}
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ fontSize: 12, padding: '6px 12px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                                    >
+                                        📤 Share App
+                                    </button>
+                                </div>
+
                                 <button
                                     onClick={() => { logout(); setShowProfileModal(false); }}
                                     className="btn btn-primary w-full"
