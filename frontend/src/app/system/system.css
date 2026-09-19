@@ -1,0 +1,173 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEV SYSTEM TERMINAL // LIGHT & DARK THEME ENGINE
+   Provides seamless, high-contrast Light and Dark modes for all subsystems
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base Layout Container */
+.dev-system-layout {
+    min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ─── Light Mode Styles ─────────────────────────────────────────────────── */
+.dev-system-layout.light-theme {
+    background: #f4f6f8 !important;
+    color: #0f172a !important;
+}
+
+.dev-system-layout.light-theme .main-content {
+    background: #f4f6f8 !important;
+}
+
+.dev-system-layout.light-theme .dev-top-action-bar {
+    background: rgba(255, 255, 255, 0.94) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.dev-system-layout.light-theme .card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+.dev-system-layout.light-theme .card-header {
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.dev-system-layout.light-theme .card-title {
+    color: #0f172a !important;
+}
+
+/* Force dark text for titles, numbers, labels inside cards */
+.dev-system-layout.light-theme .card h1,
+.dev-system-layout.light-theme .card h2,
+.dev-system-layout.light-theme .card h3,
+.dev-system-layout.light-theme .card h4,
+.dev-system-layout.light-theme .card h5,
+.dev-system-layout.light-theme .card h6,
+.dev-system-layout.light-theme .card strong,
+.dev-system-layout.light-theme .card b {
+    color: #0f172a !important;
+}
+
+/* Vitals & Metrics Cards */
+.dev-system-layout.light-theme .sys-vitals-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Universal RGB & HEX Color Overrides for Inline Styles in Light Mode */
+.dev-system-layout.light-theme [style*="rgb(248, 250, 252)"],
+.dev-system-layout.light-theme [style*="rgb(241, 245, 249)"],
+.dev-system-layout.light-theme [style*="#f8fafc"],
+.dev-system-layout.light-theme [style*="#f1f5f9"] {
+    color: #0f172a !important;
+}
+
+.dev-system-layout.light-theme [style*="rgb(203, 213, 225)"],
+.dev-system-layout.light-theme [style*="#cbd5e1"] {
+    color: #334155 !important;
+}
+
+.dev-system-layout.light-theme [style*="rgb(148, 163, 184)"],
+.dev-system-layout.light-theme [style*="#94a3b8"] {
+    color: #475569 !important;
+}
+
+.dev-system-layout.light-theme [style*="rgb(199, 210, 254)"],
+.dev-system-layout.light-theme [style*="#c7d2fe"] {
+    color: #3730a3 !important;
+}
+
+.dev-system-layout.light-theme [style*="rgb(165, 180, 252)"],
+.dev-system-layout.light-theme [style*="#a5b4fc"] {
+    color: #4338ca !important;
+}
+
+/* Background Box Overrides */
+.dev-system-layout.light-theme [style*="rgb(15, 23, 42)"],
+.dev-system-layout.light-theme [style*="#0f172a"],
+.dev-system-layout.light-theme [style*="rgba(15, 18, 30"],
+.dev-system-layout.light-theme [style*="rgba(13, 18, 28"] {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+.dev-system-layout.light-theme [style*="rgb(2, 6, 23)"],
+.dev-system-layout.light-theme [style*="#020617"],
+.dev-system-layout.light-theme [style*="rgb(11, 15, 25)"],
+.dev-system-layout.light-theme [style*="#0b0f19"],
+.dev-system-layout.light-theme [style*="rgb(9, 13, 22)"],
+.dev-system-layout.light-theme [style*="#090d16"] {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+/* Tracks & Progress Bars */
+.dev-system-layout.light-theme [style*="rgb(30, 41, 59)"],
+.dev-system-layout.light-theme [style*="#1e293b"] {
+    background: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Tab Navigation */
+.dev-system-layout.light-theme .dev-tab-nav {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.dev-system-layout.light-theme .dev-tab-btn {
+    color: #64748b !important;
+}
+
+.dev-system-layout.light-theme .dev-tab-btn:hover {
+    color: #0f172a !important;
+}
+
+.dev-system-layout.light-theme .dev-tab-btn.active {
+    color: #0284c7 !important;
+}
+
+/* Tables */
+.dev-system-layout.light-theme .table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border-color: #e2e8f0 !important;
+}
+
+.dev-system-layout.light-theme .table tbody tr td {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border-color: #f1f5f9 !important;
+}
+
+.dev-system-layout.light-theme .table tbody tr:hover td {
+    background: #f8fafc !important;
+}
+
+/* Buttons in Light Mode */
+.dev-system-layout.light-theme .btn-ghost {
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+.dev-system-layout.light-theme .btn-ghost:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Dark Mode Preservation */
+.dev-system-layout.dark-theme {
+    background: #07090e;
+    color: #f1f5f9;
+}
+
+.dev-system-layout.dark-theme .dev-top-action-bar {
+    background: rgba(7, 9, 14, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}

@@ -14,20 +14,18 @@ export default function PortalHubPage() {
     const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
-        setIsDark(document.documentElement.classList.contains('dark'));
-    }, []);
+        const updateTheme = () => {
+            setIsDark(document.documentElement.classList.contains('dark'));
+        };
+        updateTheme();
 
-    const toggleTheme = () => {
-        if (isDark) {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-            setIsDark(false);
-        } else {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-            setIsDark(true);
-        }
-    };
+        window.addEventListener('theme-change', updateTheme);
+        window.addEventListener('storage', updateTheme);
+        return () => {
+            window.removeEventListener('theme-change', updateTheme);
+            window.removeEventListener('storage', updateTheme);
+        };
+    }, []);
 
     useEffect(() => {
         if (user && sessionStorage.getItem('showWelcomeAnimation')) {
@@ -88,7 +86,7 @@ export default function PortalHubPage() {
         }}>
             {/* Theme Toggle */}
             <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
-                <ThemeToggle variant="switch" />
+                <ThemeToggle variant="switch" onToggle={(d) => setIsDark(d)} />
             </div>
 
             {showWelcome && <WelcomeOverlay role={user.role} />}

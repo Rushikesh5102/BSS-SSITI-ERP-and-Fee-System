@@ -40,7 +40,8 @@ export default function LoginPage() {
         pullProgress: 0,
         sprayRepeatCounter: 0,
         emailValid: false,
-        passValid: false
+        passValid: false,
+        isSubmitting: false
     });
 
     // 1. Theme and clean initialization
@@ -101,25 +102,40 @@ export default function LoginPage() {
 
         const animatePullingLine = () => {
             const buttonOriginPoint = [260, -76];
-            const btnWidth = 270;
-            const deg = (gsap.getProperty(submitBtn, "rotation") - 4) * Math.PI / 180;
+            let rotDeg = -90;
+            if (submitBtn) {
+                const propRot = gsap.getProperty(submitBtn, "rotation");
+                const parsed = parseFloat(String(propRot));
+                if (!isNaN(parsed)) {
+                    rotDeg = parsed;
+                } else if (machineState.current.pullProgress !== undefined) {
+                    rotDeg = -90 + machineState.current.pullProgress * 90;
+                }
+            }
+            const deg = rotDeg * Math.PI / 180;
+            // Button width is 270, height is 42.
+            // Vector from pivot (top-right = [270, 0]) to attachment handle (8px inside left edge, vertically centered [8, 21]):
+            // dx = 8 - 270 = -262, dy = 21.
+            const dx = -262;
+            const dy = 21;
             const btnEnd = [
-                buttonOriginPoint[0] - (btnWidth - 20) * Math.cos(deg),
-                buttonOriginPoint[1] - (btnWidth - 20) * Math.sin(deg),
+                buttonOriginPoint[0] + dx * Math.cos(deg) - dy * Math.sin(deg),
+                buttonOriginPoint[1] + dx * Math.sin(deg) + dy * Math.cos(deg),
             ];
+
             if (btnHandlerCircle) {
                 gsap.set(btnHandlerCircle, { attr: { cx: btnEnd[0], cy: btnEnd[1] } });
             }
+
             const handle = 7;
             const r = 10;
-            let btnPullLinePath = "M" + (-r - handle) + "," + (250 - (isFixed ? 0 : machineState.current.pullProgress * 300));
+            const pullProg = machineState.current.pullProgress || 0;
+            const pulleyY = 44 - pullProg * 130;
+            let btnPullLinePath = "M" + (-r - handle) + "," + (250 - (isFixed ? 0 : pullProg * 300));
             btnPullLinePath += "h" + (2 * handle);
             btnPullLinePath += "h" + (-handle);
-            btnPullLinePath += " V" + (44 - machineState.current.pullProgress * 130);
-            const slideAngle = 0.3 * Math.PI * (1 - (isFixed ? 1 : 0.5) * machineState.current.pullProgress);
-            const dx = r * Math.cos(slideAngle);
-            const dy = -r * Math.sin(slideAngle);
-            btnPullLinePath += "a" + r + ', ' + r + " 0 0 1 " + (r + dx) + " " + dy;
+            btnPullLinePath += " V" + pulleyY;
+            btnPullLinePath += " a" + r + ',' + r + " 0 0 1 " + (2 * r) + " 0";
             btnPullLinePath += " L" + btnEnd[0] + "," + btnEnd[1];
 
             if (btnPullLine) {
@@ -132,24 +148,23 @@ export default function LoginPage() {
             onUpdate: animatePullingLine
         });
 
-        if (isFixed && btnPulled) {
+        const shouldPull = Boolean(
+            btnPulled || 
+            rememberMe || 
+            machineState.current.isSubmitting || 
+            (machineState.current.emailValid && machineState.current.passValid)
+        );
+
+        if (shouldPull) {
             tl.to(machineState.current, { pullProgress: 1 }, 0)
               .to(submitBtn, { rotation: 0 }, 0)
               .to(machineState.current, { duration: 0.1, submitBtnOnPlace: 1 }, 0.9)
               .to(checkboxPullLine, { attr: { y2: 44 - 130 } }, 0)
               .to(checkboxPullCircle, { y: 44 - 130 }, 0);
-        } else if (!isFixed && btnPulled) {
-            tl.to(machineState.current, { pullProgress: 1 }, 0)
-              .to(checkboxPullLine, { attr: { y2: 44 - 130 } }, 0)
-              .to(checkboxPullCircle, { y: 44 - 130 }, 0);
-        } else if (isFixed && !btnPulled) {
+        } else {
             tl.to(machineState.current, { pullProgress: 0 }, 0)
               .to(submitBtn, { rotation: -90 }, 0)
               .to(machineState.current, { duration: 0.1, submitBtnOnPlace: 0 }, 0)
-              .to(checkboxPullLine, { attr: { y2: 44 } }, 0)
-              .to(checkboxPullCircle, { y: 44 }, 0);
-        } else {
-            tl.to(machineState.current, { pullProgress: 0 }, 0)
               .to(checkboxPullLine, { attr: { y2: 44 } }, 0)
               .to(checkboxPullCircle, { y: 44 }, 0);
         }
@@ -193,6 +208,13 @@ export default function LoginPage() {
 
         if (!gearsContainer || !spiralPath) return;
 
+        // Reset element visibility in case returning from sign out
+        if (svgRef.current) {
+            gsap.set(svgRef.current.querySelectorAll('*'), { opacity: 1 });
+        }
+        gsap.set('.form-row', { opacity: 1 });
+        machineState.current.isSubmitting = false;
+
         // Reset positions
         gsap.set(pullSystemContainer, { x: 375, y: 646 });
         gsap.set(sprayHandContainer, { x: 700, y: 621 });
@@ -201,6 +223,7 @@ export default function LoginPage() {
         gsap.set(scalesContainer, { x: 170, y: 710 });
         gsap.set(grabbingHand, { x: 297, y: 830 });
         gsap.set(grabbingHandClosedFingers, { opacity: 0 });
+        gsap.set(grabbingHandOpenFingers, { opacity: 1 });
         gsap.set(spiralContainer, { x: 305, y: 435, svgOrigin: "14 14", scaleX: -1 });
         gsap.set(weightBigContainer, { x: 305, y: 435 });
         gsap.set([sprayLines, sprayBubbles], { opacity: 0 });
@@ -286,7 +309,7 @@ export default function LoginPage() {
                 duration: 0.01,
                 handClosed: true,
                 onComplete: () => {
-                    createPullingTimeline(true, rememberMe);
+                    createPullingTimeline(true, true);
                 }
             }, ">")
               .to(grabbingHand, { duration: fingersTimeDelta * 5, x: "+=20" }, hammerTimeStart + fingersDelay);
@@ -449,7 +472,14 @@ export default function LoginPage() {
         window.addEventListener('resize', scaleToFit);
     };
 
-    // Watch GSAP script ready
+    // Watch GSAP script ready and re-init immediately if already in window
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.gsap) {
+            setGsapLoaded(true);
+            initMechanicalAnimation();
+        }
+    }, []);
+
     useEffect(() => {
         if (gsapLoaded) {
             initMechanicalAnimation();
@@ -514,6 +544,7 @@ export default function LoginPage() {
     const performLogin = async (targetEmail: string, targetPass: string, isAutoRetry: boolean = false) => {
         setError('');
         setLoading(true);
+        machineState.current.isSubmitting = true;
 
         try {
             // Save or clear remember me in localStorage
@@ -532,6 +563,7 @@ export default function LoginPage() {
                 window.gsap.to(".form-row", { delay: 0.3, duration: 0.1, opacity: 0, stagger: 0.1 });
             }
         } catch (err: any) {
+            machineState.current.isSubmitting = false;
             const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
             const isNetworkOrColdStart = 
                 !err.response || 
@@ -577,6 +609,8 @@ export default function LoginPage() {
             setError('Please enter both email and password.');
             return;
         }
+
+        machineState.current.isSubmitting = true;
 
         // Trigger complete mechanical animation sequence on submit / enter key
         if (typeof window !== 'undefined' && window.gsap) {
@@ -656,44 +690,8 @@ export default function LoginPage() {
                 <p className="brand-subtitle">Institutional Management Portal</p>
             </div>
 
-            {/* Top Bar Actions (Share App & Theme Toggle) */}
-            <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button
-                    type="button"
-                    onClick={() => {
-                        if (typeof window !== 'undefined' && (window as any).shareApp) {
-                            (window as any).shareApp();
-                        } else if (navigator.share) {
-                            navigator.share({
-                                title: 'Shri Sai ITI & BSS Foundation ERP Portal',
-                                text: 'Official Fee Management, Student Admission & Campus Portal for Shri Sai Private ITI, Bhadravati.',
-                                url: window.location.origin,
-                            }).catch(() => {});
-                        } else {
-                            navigator.clipboard?.writeText(window.location.origin);
-                            alert('🔗 Application link copied to clipboard!');
-                        }
-                    }}
-                    title="Share Application (With official logo preview)"
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        backdropFilter: 'blur(10px)',
-                        color: '#f1f5f9',
-                        padding: '7px 13px',
-                        borderRadius: '20px',
-                        fontSize: '12.5px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    }}
-                >
-                    <span style={{ fontSize: '14px' }}>📤</span>
-                    <span>Share App</span>
-                </button>
+            {/* Theme Toggle Button */}
+            <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100 }}>
                 <ThemeToggle variant="switch" />
             </div>
 

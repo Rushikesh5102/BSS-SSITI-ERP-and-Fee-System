@@ -254,7 +254,7 @@ html.dark .form-container .form-row label.checkbox-label {
     justify-content: center;
     gap: 8px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
     transform-origin: 100% 0%;
 }
 
