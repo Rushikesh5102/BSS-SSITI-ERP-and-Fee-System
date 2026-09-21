@@ -716,6 +716,36 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                     </td>
                                                     <td data-label="Actions" className="cell-actions" style={{ width: 285, minWidth: 285, verticalAlign: 'middle' }}>
                                                         <div className="student-actions-grid">
+                                                            {/* Row 1: Primary Documents & Records */}
+                                                            <button
+                                                                type="button"
+                                                                className="student-action-btn btn-pdf"
+                                                                onClick={async () => await generateAdmissionFormPdf(s)}
+                                                                title="Download Official Admission Form PDF"
+                                                            >
+                                                                <span>📄</span>
+                                                                <span>Form PDF</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="student-action-btn btn-idcard"
+                                                                onClick={async () => await generateStudentIdCardPdf(s)}
+                                                                title="Download Student Identity Card PDF"
+                                                            >
+                                                                <span>🪪</span>
+                                                                <span>ID Card</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="student-action-btn btn-history"
+                                                                onClick={() => openHistoryModal(s.id)}
+                                                                title="View Full Student Master History & Admission Record"
+                                                            >
+                                                                <span>📜</span>
+                                                                <span>History</span>
+                                                            </button>
+
+                                                            {/* Row 2: Management & Financial Operations */}
                                                             {canShowFeeBtn ? (
                                                                 <button
                                                                     type="button"
@@ -729,15 +759,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             ) : <div />}
                                                             <button
                                                                 type="button"
-                                                                className="student-action-btn btn-history"
-                                                                onClick={() => openHistoryModal(s.id)}
-                                                                title="View Full Student Master History & Admission Record"
-                                                            >
-                                                                <span>📜</span>
-                                                                <span>History</span>
-                                                            </button>
-                                                            <button
-                                                                type="button"
                                                                 className="student-action-btn btn-edit"
                                                                 onClick={() => openEditProfileModal(s)}
                                                                 title="Edit Student Admission Profile"
@@ -745,25 +766,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>✏️</span>
                                                                 <span>Edit</span>
                                                             </button>
-                                                            <button
-                                                                type="button"
-                                                                className="student-action-btn btn-idcard"
-                                                                onClick={async () => await generateStudentIdCardPdf(s)}
-                                                                title="Download Student Identity Card PDF"
-                                                            >
-                                                                <span>🪪</span>
-                                                                <span>ID Card</span>
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="student-action-btn btn-pdf"
-                                                                onClick={async () => await generateAdmissionFormPdf(s)}
-                                                                title="Download Official Admission Form PDF"
-                                                            >
-                                                                <span>📄</span>
-                                                                <span>Form PDF</span>
-                                                            </button>
-                                                            {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
+                                                            {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-delete"
@@ -776,7 +779,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                     <span>🗑️</span>
                                                                     <span>Delete</span>
                                                                 </button>
-                                                            )}
+                                                            ) : <div />}
                                                         </div>
                                                     </td>
                                                 </tr>
