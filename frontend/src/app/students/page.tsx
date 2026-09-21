@@ -11,6 +11,7 @@ import AutoRecoverBanner from '../../components/AutoRecoverBanner';
 import { safeStorage } from '../../utils/safeStorage';
 import { useDebounce } from '../../hooks/useDebounce';
 import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
+import { calculateStudentFeeStructure, formatPaymentAllocation } from '../../utils/feeStructureHelper';
 
 // Lazy-load PDF generator utilities on demand so heavy PDF-Lib chunks
 // aren't included in the initial students page bundle load
@@ -397,6 +398,11 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 customTotalAmount: amountInPaise,
                 academicYear: studentSession,
                 dueDate: feeForm.dueDate || undefined,
+                tuitionFee: feeForm.tuitionFee || undefined,
+                examFee: feeForm.examFee || undefined,
+                dressMaterialFee: feeForm.dressMaterialFee || undefined,
+                otherFee: feeForm.otherFee || undefined,
+                otherFeeLabel: feeForm.otherFeeLabel || undefined,
             });
             showToast('✅ Student fee updated successfully!');
             setShowFeeModal(false);
@@ -412,10 +418,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [historyStudentDetail, setHistoryStudentDetail] = useState<any>(null);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [historyTab, setHistoryTab] = useState<'all' | 'admission' | 'ledger' | 'transactions' | 'inventory' | 'documents' | 'timeline'>('all');
 
     const openHistoryModal = async (studentId: string) => {
         setLoadingHistory(true);
         setShowHistoryModal(true);
+        setHistoryTab('all');
         try {
             const { data } = await api.get(`/students/${studentId}`);
             setHistoryStudentDetail(data.data);
@@ -1619,169 +1627,940 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                 </div>
             )}
 
-            {/* Student History & Profile Modal */}
+            {/* Student History & Master Profile Modal (From Admission Till Date) */}
             {showHistoryModal && (
                 <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
-                    <div className="modal" style={{ maxWidth: 900, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div className="modal-title">📜 Student Complete History & Profile</div>
+                    <div className="modal" style={{ maxWidth: 1040, width: '96vw', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header" style={{ borderBottom: '1px solid var(--border)', padding: '14px 20px' }}>
+                            <div>
+                                <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16 }}>
+                                    <span>📜</span>
+                                    <span>Student Complete Master Record & History</span>
+                                    <span className="badge badge-primary" style={{ fontSize: 11, letterSpacing: '0.5px' }}>ADMISSION TILL DATE</span>
+                                </div>
+                                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                                    Official institutional dossier detailing admission data, academic qualifications, document verification, fee ledger, and all transactions.
+                                </div>
+                            </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowHistoryModal(false)}>✕</button>
                         </div>
-                        <div className="modal-body">
+                        <div className="modal-body" style={{ overflowY: 'auto', padding: '16px 20px', flex: 1 }}>
                             {loadingHistory ? (
-                                <div className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-                            ) : historyStudentDetail ? (
-                                <div>
-                                    {/* Overview Header */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-2)', padding: 16, borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                            {historyStudentDetail.photo ? (
-                                                <img src={historyStudentDetail.photo} alt={historyStudentDetail.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
-                                            ) : (
-                                                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 20 }}>
-                                                    {historyStudentDetail.name[0]}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
-                                                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                                                    ID: <b>{historyStudentDetail.studentId}</b> | Trade: <b>{historyStudentDetail.class}</b> | Category: <b>{historyStudentDetail.category || 'OPEN'} {historyStudentDetail.subcaste && `(${historyStudentDetail.subcaste})`}</b>
-                                                </div>
-                                                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>
-                                                    📅 DOB: <b>{historyStudentDetail.dateOfBirth ? new Date(historyStudentDetail.dateOfBirth).toLocaleDateString('en-IN') : '—'}</b> | 🩸 Blood Group: <b>{historyStudentDetail.bloodGroup || '—'}</b>
-                                                </div>
-                                                {historyStudentDetail.address && (
-                                                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
-                                                        📍 {historyStudentDetail.address}
+                                <div className="text-center" style={{ padding: 60 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+                            ) : historyStudentDetail ? (() => {
+                                const edu = historyStudentDetail.educationDetails || {};
+                                const docs = historyStudentDetail.submittedDocuments || {};
+                                const feeStruct = calculateStudentFeeStructure(historyStudentDetail);
+                                const allPayments = (historyStudentDetail.studentFees?.flatMap((sf: any) => sf.payments || []) || [])
+                                    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                                const admissionDate = new Date(historyStudentDetail.createdAt);
+                                const currentSession = edu.academicSession || `${admissionDate.getFullYear()}-${admissionDate.getFullYear() + 2}`;
+
+                                const calculateAge = (dobString?: string | null) => {
+                                    if (!dobString) return null;
+                                    const dob = new Date(dobString);
+                                    if (isNaN(dob.getTime())) return null;
+                                    const diffMs = Date.now() - dob.getTime();
+                                    return Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+                                };
+
+                                const admissionDocuments = [
+                                    { label: '10th (SSC) Marksheet / Certificate', submitted: !!(docs.marklist || docs.sscMarksheet), icon: '📄' },
+                                    { label: 'School Leaving Certificate (TC)', submitted: !!(docs.tc || docs.leavingCertificate), icon: '🏫' },
+                                    { label: 'Aadhar Card (Identity Proof)', submitted: !!(docs.aadhar || docs.aadharCard), icon: '🪪' },
+                                    { label: 'Domicile / Nationality Certificate', submitted: !!(docs.domicile || docs.domicileCertificate), icon: '🏛️' },
+                                    { label: 'Caste Certificate', submitted: !!(docs.caste || docs.casteCertificate), icon: '📑' },
+                                    { label: 'Non-Creamy Layer Certificate', submitted: !!(docs.nonCreamy || docs.nonCreamyLayer), icon: '📜' },
+                                    { label: 'Income Certificate (Tahsildar)', submitted: !!(docs.income || docs.incomeCertificate), icon: '💵' },
+                                    { label: '12th (HSC) Marksheet / Certificate', submitted: !!docs.marksheet12th, icon: '🎓' },
+                                    { label: 'Passport Size Photographs (4 Copies)', submitted: !!(docs.photo4 || docs.passportPhotos), icon: '🖼️' },
+                                    { label: 'Nationalized Bank Passbook Copy', submitted: !!docs.bankPassbook, icon: '🏦' },
+                                    { label: 'Gap Certificate (Affidavit)', submitted: !!(docs.gap || docs.affidavit), icon: '⚖️' },
+                                    { label: 'EWS Category Certificate', submitted: !!(docs.ewsCertificate || docs.ews), icon: '🎖️' },
+                                    { label: 'Disability (PWD) Certificate', submitted: !!(docs.pwdCertificate || docs.pwd || docs.disability), icon: '♿' },
+                                    { label: 'Degree Certificate (BA/B.Com/B.Tech)', submitted: !!(docs.baDegree || docs.bcomDegree || docs.btechDegree), icon: '📚' },
+                                ];
+
+                                const verifiedDocsCount = admissionDocuments.filter(d => d.submitted).length;
+
+                                return (
+                                    <div id="printable-student-history">
+                                        {/* ─── Hero Overview Card ──────────────────────────────── */}
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%)',
+                                            border: '1.5px solid var(--border)',
+                                            borderRadius: 12,
+                                            padding: 16,
+                                            marginBottom: 16,
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            flexWrap: 'wrap',
+                                            gap: 14
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                                {historyStudentDetail.photo ? (
+                                                    <img 
+                                                        src={historyStudentDetail.photo} 
+                                                        alt={historyStudentDetail.name} 
+                                                        style={{ width: 64, height: 64, borderRadius: 10, objectFit: 'cover', border: '2.5px solid #0284c7', cursor: 'pointer', boxShadow: '0 4px 12px rgba(2,132,199,0.15)' }} 
+                                                        onClick={() => setViewImageModal({ url: historyStudentDetail.photo, title: `${historyStudentDetail.name} — Student Photo`, filename: `${historyStudentDetail.studentId}_photo.jpg` })}
+                                                        title="Click to view full photo"
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: 64, height: 64, borderRadius: 10, background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, boxShadow: '0 4px 12px rgba(2,132,199,0.2)' }}>
+                                                        {historyStudentDetail.name[0]}
                                                     </div>
                                                 )}
+                                                <div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                                        <h3 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: 'var(--text-primary)' }}>{historyStudentDetail.name}</h3>
+                                                        <span className="badge badge-primary" style={{ fontSize: 11.5, fontWeight: 800 }}>
+                                                            {historyStudentDetail.studentId}
+                                                        </span>
+                                                        <span className={`badge ${historyStudentDetail.isActive ? 'badge-success' : 'badge-neutral'}`} style={{ fontSize: 11 }}>
+                                                            {historyStudentDetail.isActive ? '🟢 Enrolled & Active' : '⚪ Inactive / Archive'}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                                        <span>Trade: <b style={{ color: 'var(--primary)' }}>{historyStudentDetail.class}</b>{historyStudentDetail.section ? ` (${historyStudentDetail.section})` : ''}</span>
+                                                        <span>Roll No: <b>{historyStudentDetail.rollNumber || '01'}</b></span>
+                                                        <span>Session: <b>{currentSession}</b></span>
+                                                        <span>Category: <b>{historyStudentDetail.category || 'OPEN'} {historyStudentDetail.subcaste || edu.subcaste ? `(${historyStudentDetail.subcaste || edu.subcaste})` : ''}</b></span>
+                                                    </div>
+                                                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 3 }}>
+                                                        🏛️ Campus: <b>{historyStudentDetail.branch?.name || 'Sai ITI Main Campus'}</b> | 📅 Admitted: <b>{admissionDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</b>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-secondary btn-sm"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                                                    onClick={() => window.print()}
+                                                    title="Print complete student history dossier"
+                                                >
+                                                    🖨️ Print Dossier
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-secondary btn-sm" 
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }} 
+                                                    onClick={() => generateStudentIdCardPdf(historyStudentDetail)}
+                                                >
+                                                    🪪 ID Card PDF
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-primary btn-sm" 
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }} 
+                                                    onClick={() => generateAdmissionFormPdf(historyStudentDetail)}
+                                                >
+                                                    📄 Admission Form PDF
+                                                </button>
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                            <button className="btn btn-secondary btn-sm" onClick={() => generateStudentIdCardPdf(historyStudentDetail)}>
-                                                🪪 ID Card PDF
+
+                                        {/* ─── Key Lifecycle Metrics Bar (From Admission Till Date) ─ */}
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                            gap: 10,
+                                            marginBottom: 16
+                                        }}>
+                                            <div style={{ padding: '10px 14px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.5px' }}>📅 Enrolled On</div>
+                                                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
+                                                    {admissionDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Session: {currentSession}</div>
+                                            </div>
+
+                                            <div style={{ padding: '10px 14px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.5px' }}>💰 Total Course Fees</div>
+                                                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
+                                                    ₹{feeStruct.totalAssigned.toLocaleString('en-IN')}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Assigned at Admission</div>
+                                            </div>
+
+                                            <div style={{ padding: '10px 14px', background: 'rgba(16, 185, 129, 0.06)', borderRadius: 8, border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                                <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#047857', fontWeight: 700, letterSpacing: '0.5px' }}>💳 Total Fees Paid</div>
+                                                <div style={{ fontSize: 15, fontWeight: 800, color: '#10b981', marginTop: 2 }}>
+                                                    ₹{feeStruct.totalPaid.toLocaleString('en-IN')}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: '#047857', marginTop: 2 }}>
+                                                    {feeStruct.totalAssigned > 0 ? `${Math.min(100, Math.round((feeStruct.totalPaid / feeStruct.totalAssigned) * 100))}% collected` : 'No dues set'}
+                                                </div>
+                                            </div>
+
+                                            <div style={{ padding: '10px 14px', background: feeStruct.totalBalance > 0 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(16, 185, 129, 0.06)', borderRadius: 8, border: `1px solid ${feeStruct.totalBalance > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}` }}>
+                                                <div style={{ fontSize: 11, textTransform: 'uppercase', color: feeStruct.totalBalance > 0 ? '#b91c1c' : '#047857', fontWeight: 700, letterSpacing: '0.5px' }}>⏳ Balance Outstanding</div>
+                                                <div style={{ fontSize: 15, fontWeight: 800, color: feeStruct.totalBalance > 0 ? '#ef4444' : '#10b981', marginTop: 2 }}>
+                                                    {feeStruct.totalBalance > 0 ? `₹${feeStruct.totalBalance.toLocaleString('en-IN')}` : '✅ Fully Paid (₹0)'}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: feeStruct.totalBalance > 0 ? '#b91c1c' : '#047857', marginTop: 2 }}>
+                                                    {allPayments.length} receipts generated
+                                                </div>
+                                            </div>
+
+                                            <div style={{ padding: '10px 14px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.5px' }}>📁 Documents Verified</div>
+                                                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary)', marginTop: 2 }}>
+                                                    {verifiedDocsCount} / {admissionDocuments.length}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Submitted at Admission</div>
+                                            </div>
+                                        </div>
+
+                                        {/* ─── Tab Segmented Control (Hidden in Print) ─────────── */}
+                                        <div className="no-print" style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8, overflowX: 'auto' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('all')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'all' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'all' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                📜 Complete Master History (All)
                                             </button>
-                                            <button className="btn btn-secondary btn-sm" onClick={() => generateAdmissionFormPdf(historyStudentDetail)}>
-                                                📄 Admission PDF
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('admission')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'admission' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'admission' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                🎓 Admission & Student Details
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('ledger')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'ledger' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'ledger' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                📊 Fee Structure & Component Ledger
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('transactions')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'transactions' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'transactions' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                💳 Payment Receipts ({allPayments.length})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('inventory')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'inventory' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'inventory' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                🎒 Store & Library Items ({(historyStudentDetail.issuedItems?.length || 0) + (historyStudentDetail.bookIssues?.length || 0)})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('documents')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'documents' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'documents' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                📁 Documents ({verifiedDocsCount})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHistoryTab('timeline')}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    borderRadius: 6,
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: historyTab === 'timeline' ? 'var(--primary)' : 'var(--surface-2)',
+                                                    color: historyTab === 'timeline' ? '#ffffff' : 'var(--text-secondary)'
+                                                }}
+                                            >
+                                                ⏱️ Timeline
                                             </button>
                                         </div>
-                                    </div>
 
-                                    {/* Parent Info */}
-                                    <div className="card mb-3" style={{ padding: 12, background: 'var(--surface)' }}>
-                                        <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 700 }}>Parent / Guardian Contact</div>
-                                        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13 }}>
-                                            <div><b>Name:</b> {historyStudentDetail.parent?.name || '—'}</div>
-                                            <div><b>Phone:</b> {historyStudentDetail.parent?.phone || '—'}</div>
-                                            <div><b>Email:</b> {historyStudentDetail.parent?.email || '—'}</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Allocated Fee Summary */}
-                                    <div className="card mb-4" style={{ padding: 12 }}>
-                                        <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, fontWeight: 700 }}>Fee Allocations & Outstanding Balance</div>
-                                        {historyStudentDetail.studentFees?.length === 0 ? (
-                                            <div className="text-muted text-sm">No fee structure assigned to this student yet.</div>
-                                        ) : historyStudentDetail.studentFees.map((sf: any) => {
-                                            const due = sf.totalAmount - sf.paidAmount;
-                                            return (
-                                                <div key={sf.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                                                    <div>
-                                                        <b>{sf.feeStructure?.name || 'Trade Fee'}</b> ({sf.academicYear})
-                                                        {sf.dueDate && <div className="text-sm text-muted">Due Date: {new Date(sf.dueDate).toLocaleDateString('en-IN')}</div>}
+                                        {/* ─── SECTION 1: Official Admission & Enrolment Master Card ─── */}
+                                        {(historyTab === 'all' || historyTab === 'admission') && (
+                                            <div className="card mb-3" style={{ padding: 18, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottom: '1.5px solid var(--border)', paddingBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+                                                    <div style={{ fontSize: 13.5, textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span>🏢</span>
+                                                        <span>Official Institutional Admission & Enrolment Record</span>
                                                     </div>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <div>Total: <b>₹{(sf.totalAmount / 100).toLocaleString('en-IN')}</b> | Paid: <span className="text-success">₹{(sf.paidAmount / 100).toLocaleString('en-IN')}</span></div>
-                                                        <div style={{ fontSize: 12, fontWeight: 700, color: due > 0 ? 'var(--danger)' : 'var(--accent)' }}>
-                                                            {due > 0 ? `Outstanding Balance: ₹${(due / 100).toLocaleString('en-IN')}` : '✅ Fully Paid'}
+                                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                        <span className="badge badge-primary" style={{ fontSize: 11.5, fontWeight: 700 }}>
+                                                            App No: ADM-{historyStudentDetail.studentId}
+                                                        </span>
+                                                        <span className="badge badge-success" style={{ fontSize: 11.5, fontWeight: 700 }}>
+                                                            ✅ Admission Confirmed
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Enrolled Trade / Course</div>
+                                                        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{historyStudentDetail.class}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, marginTop: 1 }}>{historyStudentDetail.class?.toLowerCase().includes('welder') ? '1-Year Trade (2 Semesters)' : '2-Year Trade (4 Semesters)'}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Section & Roll Number</div>
+                                                        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>Section {historyStudentDetail.section || 'A'} — Roll No: {historyStudentDetail.rollNumber || '01'}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Permanent PRN: {historyStudentDetail.studentId}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Academic Session</div>
+                                                        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{currentSession}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Batch Year: {admissionDate.getFullYear()}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Date & Time of Admission</div>
+                                                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{admissionDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Time: {admissionDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Admission Quota / Authority</div>
+                                                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>DVET Institutional Quota</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Govt. of Maharashtra Approved</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Institute & Campus</div>
+                                                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{historyStudentDetail.branch?.name || 'Sai ITI Main Campus'}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{historyStudentDetail.branch?.address || 'Near ITI Square, Bhadravati, Dist. Chandrapur'}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Course Fee at Entry</div>
+                                                        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>₹{feeStruct.totalAssigned.toLocaleString('en-IN')}</div>
+                                                        <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginTop: 1 }}>Paid: ₹{feeStruct.totalPaid.toLocaleString('en-IN')} | Due: ₹{feeStruct.totalBalance.toLocaleString('en-IN')}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Student Portal Credentials</div>
+                                                        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--primary)', marginTop: 2, wordBreak: 'break-all' }}>{historyStudentDetail.email || `${historyStudentDetail.studentId.toLowerCase()}@student.saiiti.edu.in`}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Default Password: <code>{historyStudentDetail.studentId}</code></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ─── SECTION 2: Complete Student Demographics & Family Profile ─ */}
+                                        {(historyTab === 'all' || historyTab === 'admission') && (
+                                            <div className="card mb-3" style={{ padding: 18, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottom: '1.5px solid var(--border)', paddingBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+                                                    <div style={{ fontSize: 13.5, textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span>👤</span>
+                                                        <span>Student Demographics & Parent / Guardian Profile</span>
+                                                    </div>
+                                                    <span className="badge badge-neutral" style={{ fontSize: 11 }}>Official Bio-Data Record</span>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                                                    {/* Student Personal Bio-Data */}
+                                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <span>🪪</span>
+                                                            <span>Student Personal Details</span>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 14px', fontSize: 12.5 }}>
+                                                            <div><span className="text-muted">Full Legal Name:</span> <b style={{ display: 'block', fontSize: 13.5 }}>{historyStudentDetail.name}</b></div>
+                                                            <div><span className="text-muted">Student ID / PRN:</span> <b style={{ display: 'block', color: 'var(--primary)' }}>{historyStudentDetail.studentId}</b></div>
+                                                            <div><span className="text-muted">Gender:</span> <b>{historyStudentDetail.gender || 'Male'}</b></div>
+                                                            <div><span className="text-muted">Blood Group:</span> <b style={{ color: '#ef4444' }}>🩸 {historyStudentDetail.bloodGroup || '—'}</b></div>
+                                                            <div><span className="text-muted">Date of Birth:</span> <b>{historyStudentDetail.dateOfBirth ? new Date(historyStudentDetail.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</b></div>
+                                                            <div><span className="text-muted">Age:</span> <b>{calculateAge(historyStudentDetail.dateOfBirth) ? `${calculateAge(historyStudentDetail.dateOfBirth)} Years` : '—'}</b></div>
+                                                            <div><span className="text-muted">Social Category:</span> <b>{historyStudentDetail.category || 'OPEN'}</b></div>
+                                                            <div><span className="text-muted">Sub-caste:</span> <b>{historyStudentDetail.subcaste || edu.subcaste || '—'}</b></div>
+                                                            <div style={{ gridColumn: '1 / -1' }}><span className="text-muted">Personal Email:</span> <b>{historyStudentDetail.email || '—'}</b></div>
+                                                            <div><span className="text-muted">Student Phone / Landline:</span> <b>{historyStudentDetail.landline || '—'}</b></div>
+                                                            <div><span className="text-muted">City / District:</span> <b>{edu.city || 'Bhadravati, Chandrapur'}</b></div>
+                                                            <div style={{ gridColumn: '1 / -1' }}><span className="text-muted">Permanent Address:</span> <b>{historyStudentDetail.address || '—'}</b></div>
+                                                        </div>
+
+                                                        {/* Photo & Signature Preview Bar */}
+                                                        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--border)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                                                            {historyStudentDetail.photo && (
+                                                                <div>
+                                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>📷 Passport Photo:</div>
+                                                                    <img 
+                                                                        src={historyStudentDetail.photo} 
+                                                                        alt="Student Photo" 
+                                                                        style={{ width: 56, height: 64, objectFit: 'cover', borderRadius: 6, border: '1.5px solid var(--border)', cursor: 'pointer' }}
+                                                                        onClick={() => setViewImageModal({ url: historyStudentDetail.photo, title: `${historyStudentDetail.name} — Student Photo`, filename: `${historyStudentDetail.studentId}_photo.jpg` })}
+                                                                        title="Click to view full image"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                            {historyStudentDetail.signature && (
+                                                                <div>
+                                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>✍️ Digital Signature:</div>
+                                                                    <img 
+                                                                        src={historyStudentDetail.signature} 
+                                                                        alt="Signature" 
+                                                                        style={{ height: 44, maxWidth: 150, objectFit: 'contain', background: '#fff', padding: '2px 6px', borderRadius: 4, border: '1.5px solid var(--border)', cursor: 'pointer' }} 
+                                                                        onClick={() => setViewImageModal({ url: historyStudentDetail.signature, title: `${historyStudentDetail.name} — Digital Signature`, filename: `${historyStudentDetail.studentId}_signature.jpg` })}
+                                                                        title="Click to view signature"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Parent / Guardian Profile */}
+                                                    <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 8, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                <span>👨‍👩‍👦</span>
+                                                                <span>Parent / Legal Guardian Details</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5 }}>
+                                                                <div>
+                                                                    <span className="text-muted" style={{ display: 'block', fontSize: 11 }}>Parent / Guardian Full Name</span>
+                                                                    <b style={{ fontSize: 14, color: 'var(--text-primary)' }}>{historyStudentDetail.parent?.name || 'Parent / Guardian'}</b>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-muted" style={{ display: 'block', fontSize: 11 }}>Relationship</span>
+                                                                    <b>Father / Legal Guardian</b>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-muted" style={{ display: 'block', fontSize: 11 }}>Primary Mobile Contact</span>
+                                                                    {historyStudentDetail.parent?.phone ? (
+                                                                        <a href={`tel:${historyStudentDetail.parent.phone}`} style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>
+                                                                            📞 {historyStudentDetail.parent.phone}
+                                                                        </a>
+                                                                    ) : <b>—</b>}
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-muted" style={{ display: 'block', fontSize: 11 }}>Email Address</span>
+                                                                    {historyStudentDetail.parent?.email ? (
+                                                                        <a href={`mailto:${historyStudentDetail.parent.email}`} style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', textDecoration: 'none' }}>
+                                                                            ✉️ {historyStudentDetail.parent.email}
+                                                                        </a>
+                                                                    ) : <b>—</b>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div style={{ marginTop: 14, padding: 10, background: 'var(--surface)', borderRadius: 6, border: '1px solid var(--border)', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                                                            ℹ️ Official fee receipts and attendance SMS alerts are dispatched to this registered guardian contact number.
                                                         </div>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+                                            </div>
+                                        )}
 
-                                    {/* Complete Payment & Receipt History */}
-                                    <div className="card" style={{ padding: 12 }}>
-                                        <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, fontWeight: 700 }}>Complete Transaction & Receipt Timeline</div>
-                                        {historyStudentDetail.studentFees?.flatMap((sf: any) => sf.payments || []).length === 0 ? (
-                                            <div className="text-muted text-sm" style={{ padding: 10 }}>No payments recorded for this student.</div>
-                                        ) : (
-                                            <div className="table-wrap" style={{ border: 'none', overflowX: 'visible' }}>
-                                                <table className="table" style={{ fontSize: 12, width: '100%' }}>
-                                                    <thead>
-                                                        <tr>
-                                                            <th style={{ width: '22%' }}>Receipt No.</th>
-                                                            <th style={{ width: '12%' }}>Date</th>
-                                                            <th style={{ width: '12%' }}>Mode</th>
-                                                            <th style={{ width: '15%' }}>Amount</th>
-                                                            <th style={{ width: '24%' }}>Ref No.</th>
-                                                            <th style={{ width: '25%', textAlign: 'center' }}>Download Receipt</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {historyStudentDetail.studentFees.flatMap((sf: any) => sf.payments || []).map((p: any) => (
-                                                            <tr key={p.id}>
-                                                                <td><span className="badge badge-primary" style={{ fontSize: 11 }}>{p.receipt?.receiptNumber || 'N/A'}</span></td>
-                                                                <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
-                                                                <td><span className="badge badge-info">{p.mode}</span></td>
-                                                                <td><b className="text-success">₹{(p.amount / 100).toLocaleString('en-IN')}</b></td>
-                                                                <td style={{ wordBreak: 'break-all' }}>{p.transactionRef || '—'}</td>
+                                        {/* ─── SECTION 3: Prior Academic Qualifications (At Admission) ─ */}
+                                        {(historyTab === 'all' || historyTab === 'admission') && (
+                                            <div className="card mb-3" style={{ padding: 18, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottom: '1.5px solid var(--border)', paddingBottom: 10 }}>
+                                                    <div style={{ fontSize: 13.5, textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span>📚</span>
+                                                        <span>Prior Academic Qualifications & Schooling (Captured at Admission)</span>
+                                                    </div>
+                                                    <span className="badge badge-info" style={{ fontSize: 11 }}>Qualifying Examination Record</span>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Qualifying Examination</div>
+                                                        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{edu.qualification || '10th (SSC / Matriculation)'}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Eligibility Benchmark</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Board of Examination</div>
+                                                        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{edu.board || 'Maharashtra State Board (MSBSHSE)'}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>State Examination Council</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', gridColumn: 'span 2' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>School / Junior College Name</div>
+                                                        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{edu.school || edu.schoolName || '—'}</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>City / Location: {edu.city || '—'}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Passing Year & Roll No</div>
+                                                        <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{edu.passingYear || '—'} (Seat: {edu.rollNo || '—'})</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Medium: {edu.medium || 'English'}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Marks Percentage & Result</div>
+                                                        <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981', marginTop: 2 }}>
+                                                            {edu.percentage ? (edu.percentage.includes('%') ? edu.percentage : `${edu.percentage}%`) : '—'}
+                                                        </div>
+                                                        <div style={{ fontSize: 11, marginTop: 1 }}>
+                                                            Result: <span className="badge badge-success" style={{ fontSize: 10 }}>{edu.result || 'PASSED'}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {edu.higherEducation && (
+                                                        <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', gridColumn: '1 / -1' }}>
+                                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Additional / Higher Education</div>
+                                                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{edu.higherEducation}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ─── SECTION 4: Documents Verification Checklist ─────── */}
+                                        {(historyTab === 'all' || historyTab === 'documents' || historyTab === 'admission') && (
+                                            <div className="card mb-3" style={{ padding: 16, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '1px solid var(--border)', paddingBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                                                    <div style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <span>📁</span>
+                                                        <span>DVET Admission Documents Verification Checklist</span>
+                                                    </div>
+                                                    <span className="badge badge-info" style={{ fontSize: 11.5, fontWeight: 700 }}>
+                                                        {verifiedDocsCount} of {admissionDocuments.length} Verified
+                                                    </span>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 8 }}>
+                                                    {admissionDocuments.map((doc, idx) => (
+                                                        <div 
+                                                            key={idx} 
+                                                            style={{ 
+                                                                display: 'flex', 
+                                                                justifyContent: 'space-between', 
+                                                                alignItems: 'center', 
+                                                                padding: '8px 12px', 
+                                                                background: doc.submitted ? 'rgba(16, 185, 129, 0.04)' : 'var(--surface-2)', 
+                                                                borderRadius: 6, 
+                                                                border: doc.submitted ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border)' 
+                                                            }}
+                                                        >
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+                                                                <span>{doc.icon}</span>
+                                                                <span>{doc.label}</span>
+                                                            </div>
+                                                            {doc.submitted ? (
+                                                                <span className="badge badge-success" style={{ fontSize: 10.5, fontWeight: 700 }}>
+                                                                    ✅ Verified
+                                                                </span>
+                                                            ) : (
+                                                                <span className="badge badge-neutral" style={{ fontSize: 10.5, opacity: 0.6 }}>
+                                                                    ⬜ Pending
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ─── SECTION 5: Institutional Store & Library Register ── */}
+                                        {(historyTab === 'all' || historyTab === 'inventory') && (
+                                            <div className="card mb-3" style={{ padding: 18, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottom: '1.5px solid var(--border)', paddingBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+                                                    <div style={{ fontSize: 13.5, textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span>🎒</span>
+                                                        <span>Institutional Materials, Uniform & Library Register</span>
+                                                    </div>
+                                                    <span className="badge badge-neutral" style={{ fontSize: 11 }}>
+                                                        {(historyStudentDetail.issuedItems?.length || 0) + (historyStudentDetail.bookIssues?.length || 0)} Items Recorded
+                                                    </span>
+                                                </div>
+
+                                                {/* Issued Inventory / Uniforms / Kits */}
+                                                <div style={{ marginBottom: 16 }}>
+                                                    <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <span>👔</span>
+                                                        <span>Workshop Materials & Uniform Kits Issued</span>
+                                                    </div>
+                                                    {(!historyStudentDetail.issuedItems || historyStudentDetail.issuedItems.length === 0) ? (
+                                                        <div style={{ padding: '12px 16px', background: 'var(--surface-2)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+                                                            📦 No store items or workshop kits recorded as issued yet for this student.
+                                                        </div>
+                                                    ) : (
+                                                        <div className="table-wrap" style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                                                            <table className="table" style={{ fontSize: 12, width: '100%', marginBottom: 0 }}>
+                                                                <thead style={{ background: 'var(--surface-2)' }}>
+                                                                    <tr>
+                                                                        <th>Item / Kit Name</th>
+                                                                        <th>Category / Code</th>
+                                                                        <th style={{ textAlign: 'center' }}>Qty</th>
+                                                                        <th>Issue Date</th>
+                                                                        <th>Remarks</th>
+                                                                        <th style={{ textAlign: 'center' }}>Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {historyStudentDetail.issuedItems.map((tx: any) => (
+                                                                        <tr key={tx.id}>
+                                                                            <td><b style={{ color: 'var(--text-primary)' }}>{tx.item?.name || 'Issued Item'}</b></td>
+                                                                            <td><span className="badge badge-neutral" style={{ fontSize: 10.5 }}>{tx.item?.code || tx.item?.category || 'Kit'}</span></td>
+                                                                            <td style={{ textAlign: 'center', fontWeight: 700 }}>{tx.quantity}</td>
+                                                                            <td>{new Date(tx.issuedDate || tx.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                                                            <td style={{ color: 'var(--text-muted)' }}>{tx.remarks || 'Handed over to student'}</td>
+                                                                            <td style={{ textAlign: 'center' }}><span className="badge badge-success" style={{ fontSize: 10.5 }}>✅ Issued</span></td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Issued Library Books */}
+                                                <div>
+                                                    <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <span>📖</span>
+                                                        <span>Library Books Issued</span>
+                                                    </div>
+                                                    {(!historyStudentDetail.bookIssues || historyStudentDetail.bookIssues.length === 0) ? (
+                                                        <div style={{ padding: '12px 16px', background: 'var(--surface-2)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+                                                            📚 No library books issued currently.
+                                                        </div>
+                                                    ) : (
+                                                        <div className="table-wrap" style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                                                            <table className="table" style={{ fontSize: 12, width: '100%', marginBottom: 0 }}>
+                                                                <thead style={{ background: 'var(--surface-2)' }}>
+                                                                    <tr>
+                                                                        <th>Book Title</th>
+                                                                        <th>Author</th>
+                                                                        <th>Issue Date</th>
+                                                                        <th>Due Date</th>
+                                                                        <th>Return Date</th>
+                                                                        <th style={{ textAlign: 'center' }}>Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {historyStudentDetail.bookIssues.map((b: any) => (
+                                                                        <tr key={b.id}>
+                                                                            <td><b style={{ color: 'var(--text-primary)' }}>{b.book?.title || 'Library Book'}</b></td>
+                                                                            <td>{b.book?.author || '—'}</td>
+                                                                            <td>{new Date(b.issueDate).toLocaleDateString('en-IN')}</td>
+                                                                            <td>{new Date(b.dueDate).toLocaleDateString('en-IN')}</td>
+                                                                            <td>{b.returnDate ? new Date(b.returnDate).toLocaleDateString('en-IN') : '—'}</td>
+                                                                            <td style={{ textAlign: 'center' }}>
+                                                                                <span className={`badge ${b.status === 'RETURNED' ? 'badge-success' : b.status === 'OVERDUE' ? 'badge-danger' : 'badge-warning'}`} style={{ fontSize: 10.5 }}>
+                                                                                    {b.status}
+                                                                                </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ─── SECTION 6: Fee Structure & Component Ledger ─────── */}
+                                        {(historyTab === 'all' || historyTab === 'ledger') && (
+                                            <div className="card mb-4" style={{ padding: 18, border: '1.5px solid var(--border)', background: 'var(--surface)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                                                    <div>
+                                                        <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <span>📊 Course Fee Structure & Component Ledger</span>
+                                                            <span className={`badge ${feeStruct.overallStatus === 'PAID' ? 'badge-success' : feeStruct.overallStatus === 'PARTIAL' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: 11 }}>
+                                                                {feeStruct.overallStatus === 'PAID' ? '✅ Full Dues Settled' : feeStruct.overallStatus === 'PARTIAL' ? '⏳ Partially Paid' : '❌ Unpaid'}
+                                                            </span>
+                                                        </h4>
+                                                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                            Itemized breakdown showing assigned course components, collections to date, and balance due.
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Total Course Fee: <b style={{ color: 'var(--text-primary)', fontSize: 13 }}>₹{feeStruct.totalAssigned.toLocaleString('en-IN')}</b></div>
+                                                        <div style={{ fontSize: 12, fontWeight: 800, color: feeStruct.totalBalance > 0 ? '#ef4444' : '#10b981' }}>
+                                                            {feeStruct.totalBalance > 0 ? `Total Dues Outstanding: ₹${feeStruct.totalBalance.toLocaleString('en-IN')}` : '✅ Fully Paid (₹0)'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="table-wrap" style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                                                    <table className="table" style={{ fontSize: 12.5, width: '100%', marginBottom: 0 }}>
+                                                        <thead style={{ background: 'var(--surface-2)' }}>
+                                                            <tr>
+                                                                <th style={{ width: '32%' }}>Fee Component</th>
+                                                                <th style={{ width: '18%', textAlign: 'right' }}>Total Assigned (₹)</th>
+                                                                <th style={{ width: '18%', textAlign: 'right' }}>Paid to Date (₹)</th>
+                                                                <th style={{ width: '18%', textAlign: 'right' }}>Balance Due (₹)</th>
+                                                                <th style={{ width: '14%', textAlign: 'center' }}>Status</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {feeStruct.components.map((comp) => (
+                                                                <tr key={comp.key} style={{ background: comp.status === 'PAID' ? 'rgba(16, 185, 129, 0.04)' : comp.status === 'PARTIAL' ? 'rgba(245, 158, 11, 0.04)' : 'transparent' }}>
+                                                                    <td>
+                                                                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                            <span>{comp.icon}</span>
+                                                                            <span>{comp.name}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                                                                        ₹{comp.assigned.toLocaleString('en-IN')}
+                                                                    </td>
+                                                                    <td style={{ textAlign: 'right', fontWeight: 700, color: comp.paid > 0 ? '#10b981' : 'var(--text-muted)' }}>
+                                                                        ₹{comp.paid.toLocaleString('en-IN')}
+                                                                    </td>
+                                                                    <td style={{ textAlign: 'right', fontWeight: 800, color: comp.balance > 0 ? '#ef4444' : '#10b981' }}>
+                                                                        {comp.balance > 0 ? `₹${comp.balance.toLocaleString('en-IN')}` : '₹0'}
+                                                                    </td>
+                                                                    <td style={{ textAlign: 'center' }}>
+                                                                        {comp.status === 'PAID' ? (
+                                                                            <span className="badge badge-success" style={{ fontSize: 11, fontWeight: 700 }}>
+                                                                                ✅ Paid
+                                                                            </span>
+                                                                        ) : comp.status === 'PARTIAL' ? (
+                                                                            <span className="badge badge-warning" style={{ fontSize: 11, fontWeight: 700, background: '#fef3c7', color: '#b45309', border: '1px solid #f59e0b' }}>
+                                                                                ⏳ Due: ₹{comp.balance.toLocaleString('en-IN')}
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="badge badge-danger" style={{ fontSize: 11, fontWeight: 700, background: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444' }}>
+                                                                                ❌ Unpaid
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                        <tfoot style={{ background: 'var(--surface-2)', fontWeight: 800 }}>
+                                                            <tr>
+                                                                <td>Total Course Fees</td>
+                                                                <td style={{ textAlign: 'right' }}>₹{feeStruct.totalAssigned.toLocaleString('en-IN')}</td>
+                                                                <td style={{ textAlign: 'right', color: '#10b981' }}>₹{feeStruct.totalPaid.toLocaleString('en-IN')}</td>
+                                                                <td style={{ textAlign: 'right', color: feeStruct.totalBalance > 0 ? '#ef4444' : '#10b981', fontSize: 13 }}>
+                                                                    ₹{feeStruct.totalBalance.toLocaleString('en-IN')}
+                                                                </td>
                                                                 <td style={{ textAlign: 'center' }}>
-                                                                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                                                                        {p.receipt ? (
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => setReceiptModalData({
-                                                                                    receiptNumber: p.receipt.receiptNumber,
-                                                                                    studentName: historyStudentDetail?.name,
-                                                                                    amount: p.amount,
-                                                                                    receiptDate: p.createdAt,
-                                                                                })}
-                                                                                className="btn btn-accent btn-sm"
-                                                                                style={{ padding: '4px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                                                                                title="Download Fee Receipt"
-                                                                            >
-                                                                                📥 Download Receipt
-                                                                            </button>
-                                                                        ) : null}
-                                                                        {['SUPERADMIN', 'ADMIN', 'DEVELOPER', 'BRANCH_ADMIN'].includes(effectiveRole || '') && p.status !== 'REFUNDED' && (
-                                                                            <button
-                                                                                className="btn btn-danger btn-sm"
-                                                                                style={{ padding: '4px 8px', fontSize: 11 }}
-                                                                                onClick={async () => {
-                                                                                    const reason = prompt('Reason for fee refund:');
-                                                                                    if (!reason) return;
-                                                                                    try {
-                                                                                        await api.post(`/payments/${p.id}/refund`, { reason });
-                                                                                        showToast('✅ Fee refunded successfully!');
-                                                                                        openHistoryModal(historyStudentDetail.id);
-                                                                                        fetchStudents();
-                                                                                    } catch (err: any) {
-                                                                                        showToast(`❌ ${err.response?.data?.message || 'Refund failed'}`);
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                💸 Refund
-                                                                            </button>
-                                                                        )}
-                                                                        {p.status === 'REFUNDED' && (
-                                                                            <span className="badge badge-danger">REFUNDED</span>
-                                                                        )}
-                                                                    </div>
+                                                                    <span className={`badge ${feeStruct.totalBalance === 0 ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 11 }}>
+                                                                        {feeStruct.totalBalance === 0 ? '✅ All Paid' : `Due: ₹${feeStruct.totalBalance.toLocaleString('en-IN')}`}
+                                                                    </span>
                                                                 </td>
                                                             </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ─── SECTION 7: Complete Financial Transactions Register ─ */}
+                                        {(historyTab === 'all' || historyTab === 'ledger' || historyTab === 'transactions') && (
+                                            <div className="card mb-3" style={{ padding: 16, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                                    <div style={{ fontSize: 12.5, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 800 }}>
+                                                        💳 Complete Transaction & Official Receipt Timeline ({allPayments.length})
+                                                    </div>
+                                                    <span style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>From Admission Till Date</span>
+                                                </div>
+                                                {allPayments.length === 0 ? (
+                                                    <div className="text-muted text-sm" style={{ padding: 20, textAlign: 'center', background: 'var(--surface-2)', borderRadius: 8 }}>
+                                                        No payments recorded yet for this student since admission.
+                                                    </div>
+                                                ) : (
+                                                    <div className="table-wrap" style={{ border: 'none', overflowX: 'auto' }}>
+                                                        <table className="table" style={{ fontSize: 12, width: '100%' }}>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style={{ width: '18%' }}>Receipt No.</th>
+                                                                    <th style={{ width: '12%' }}>Date</th>
+                                                                    <th style={{ width: '10%' }}>Mode</th>
+                                                                    <th style={{ width: '13%' }}>Amount</th>
+                                                                    <th style={{ width: '25%' }}>Purpose / Allocation</th>
+                                                                    <th style={{ width: '10%' }}>Ref No.</th>
+                                                                    <th className="no-print" style={{ width: '12%', textAlign: 'center' }}>Download</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {allPayments.map((p: any) => (
+                                                                    <tr key={p.id}>
+                                                                        <td><span className="badge badge-primary" style={{ fontSize: 11 }}>{p.receipt?.receiptNumber || 'N/A'}</span></td>
+                                                                        <td>{new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                                                        <td><span className="badge badge-info">{p.mode}</span></td>
+                                                                        <td><b className="text-success">₹{(p.amount / 100).toLocaleString('en-IN')}</b></td>
+                                                                        <td>
+                                                                            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0369a1', background: '#f0f9ff', padding: '2px 8px', borderRadius: 4, display: 'inline-block' }}>
+                                                                                {formatPaymentAllocation(p)}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td style={{ wordBreak: 'break-all' }}>{p.transactionRef || '—'}</td>
+                                                                        <td className="no-print" style={{ textAlign: 'center' }}>
+                                                                            <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                                                                                {p.receipt ? (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => setReceiptModalData({
+                                                                                            receiptNumber: p.receipt.receiptNumber,
+                                                                                            studentName: historyStudentDetail?.name,
+                                                                                            amount: p.amount,
+                                                                                            receiptDate: p.createdAt,
+                                                                                        })}
+                                                                                        className="btn btn-accent btn-sm"
+                                                                                        style={{ padding: '3px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                                                                        title="Download Fee Receipt PDF"
+                                                                                    >
+                                                                                        📥 Slip
+                                                                                    </button>
+                                                                                ) : null}
+                                                                                {['SUPERADMIN', 'ADMIN', 'DEVELOPER', 'BRANCH_ADMIN'].includes(effectiveRole || '') && p.status !== 'REFUNDED' && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className="btn btn-danger btn-sm"
+                                                                                        style={{ padding: '3px 6px', fontSize: 10.5 }}
+                                                                                        onClick={async () => {
+                                                                                            const reason = prompt('Reason for fee refund:');
+                                                                                            if (!reason) return;
+                                                                                            try {
+                                                                                                await api.post(`/payments/${p.id}/refund`, { reason });
+                                                                                                showToast('✅ Fee refunded successfully!');
+                                                                                                openHistoryModal(historyStudentDetail.id);
+                                                                                                fetchStudents();
+                                                                                            } catch (err: any) {
+                                                                                                showToast(`❌ ${err.response?.data?.message || 'Refund failed'}`);
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        💸 Refund
+                                                                                    </button>
+                                                                                )}
+                                                                                {p.status === 'REFUNDED' && (
+                                                                                    <span className="badge badge-danger" style={{ fontSize: 10 }}>REFUNDED</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* ─── SECTION 8: Chronological Journey Timeline ──────── */}
+                                        {(historyTab === 'all' || historyTab === 'timeline') && (
+                                            <div className="card" style={{ padding: 18, background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+                                                <div style={{ fontSize: 13, textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <span>⏱️</span>
+                                                    <span>Chronological Journey Timeline (Admission to Date)</span>
+                                                </div>
+
+                                                <div style={{ position: 'relative', paddingLeft: 24, borderLeft: '2px solid var(--border)' }}>
+                                                    {/* Milestone 1: Admission */}
+                                                    <div style={{ position: 'relative', marginBottom: 20 }}>
+                                                        <div style={{ position: 'absolute', left: -31, top: 0, width: 14, height: 14, borderRadius: '50%', background: '#0284c7', border: '3px solid var(--surface)' }} />
+                                                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
+                                                            🟢 Milestone 1: Admission & Enrolment
+                                                        </div>
+                                                        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
+                                                            Admitted to {historyStudentDetail.class} Trade (Roll No: {historyStudentDetail.rollNumber || '01'})
+                                                        </div>
+                                                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                            Date: {admissionDate.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} | Session: {currentSession} | Total Course Fee: ₹{feeStruct.totalAssigned.toLocaleString('en-IN')}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Milestones: Each Payment */}
+                                                    {allPayments.slice().reverse().map((p: any, idx: number) => (
+                                                        <div key={p.id} style={{ position: 'relative', marginBottom: 20 }}>
+                                                            <div style={{ position: 'absolute', left: -31, top: 0, width: 14, height: 14, borderRadius: '50%', background: '#10b981', border: '3px solid var(--surface)' }} />
+                                                            <div style={{ fontSize: 11, fontWeight: 700, color: '#047857', textTransform: 'uppercase' }}>
+                                                                💳 Payment Milestone #{idx + 1} — Receipt {p.receipt?.receiptNumber || 'N/A'}
+                                                            </div>
+                                                            <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
+                                                                Received ₹{(p.amount / 100).toLocaleString('en-IN')} via {p.mode}
+                                                            </div>
+                                                            <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                                Date: {new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} | Allocation: <b>{formatPaymentAllocation(p)}</b> {p.remarks ? `| Remarks: "${p.remarks}"` : ''}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    {/* Final Milestone: Present Status */}
+                                                    <div style={{ position: 'relative' }}>
+                                                        <div style={{ position: 'absolute', left: -31, top: 0, width: 14, height: 14, borderRadius: '50%', background: feeStruct.totalBalance === 0 ? '#10b981' : '#f59e0b', border: '3px solid var(--surface)' }} />
+                                                        <div style={{ fontSize: 11, fontWeight: 700, color: feeStruct.totalBalance === 0 ? '#047857' : '#b45309', textTransform: 'uppercase' }}>
+                                                            🏁 Present Status (Today)
+                                                        </div>
+                                                        <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>
+                                                            {feeStruct.totalBalance === 0 ? '✅ All Course Fee Dues Fully Settled' : `⏳ Active Enrolment — Outstanding Dues: ₹${feeStruct.totalBalance.toLocaleString('en-IN')}`}
+                                                        </div>
+                                                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                            Total Collected: ₹{feeStruct.totalPaid.toLocaleString('en-IN')} across {allPayments.length} transactions.
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                            ) : null}
+                                );
+                            })() : null}
                         </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" onClick={() => setShowHistoryModal(false)}>Close</button>
+                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                Shri Sai Private Industrial Training Institute (Bhadravati)
+                            </div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
+                                    🖨️ Print Full Dossier
+                                </button>
+                                <button type="button" className="btn btn-primary" onClick={() => setShowHistoryModal(false)}>
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -195,7 +195,7 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             page.drawText('Charge Type: Independent Supplementary Exam Fee', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: primary });
             page.drawText(formatCurrencyForPdf(data.amount), { x: leftX + 270, y: y - 2, font: boldFont, size: 8, color: black });
         } else {
-            page.drawText('Total Agreed Course Fee:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
+            page.drawText('Total Course Fee:', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: black });
             page.drawText(formatCurrencyForPdf(totalFeePaise), { x: leftX + 270, y: y - 2, font: boldFont, size: 8, color: black });
         }
 
@@ -213,24 +213,25 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
             page.drawText('Course Dues: Maintained Separately', { x: leftX + 210, y: y - 2, font: regularFont, size: 7, color: gray });
         } else {
             // Left column: Total Paid Till Date
-            page.drawText('Total Paid Till Date:', { x: leftX + 10, y: y - 2, font: regularFont, size: 7.5, color: black });
-            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 96, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
+            page.drawText('Total Course Fees Paid:', { x: leftX + 10, y: y - 2, font: boldFont, size: 7.5, color: black });
+            page.drawText(formatCurrencyForPdf(totalPaidPaise), { x: leftX + 106, y: y - 2, font: boldFont, size: 7.5, color: successGreen });
 
             // Right column: Remaining Balance Due
             page.drawText('Balance Due:', { x: leftX + 210, y: y - 2, font: boldFont, size: 7.5, color: black });
             page.drawText(formatCurrencyForPdf(balanceDuePaise), { x: leftX + 270, y: y - 2, font: boldFont, size: 8, color: balanceDuePaise > 0 ? warnRed : successGreen });
         }
 
-        // Amount in Words
+        // Amount in Words - Highly visible and prominent
         y -= 16;
         const amountInWords = cleanAscii(numberToWords(paiseToRupees(data.amount)));
-        page.drawText(`Amount in Words: ${amountInWords} Rupees Only`, { x: leftX, y, font: regularFont, size: 7, color: gray });
+        page.drawText('Amount in Words:', { x: leftX, y, font: boldFont, size: 8, color: black });
+        page.drawText(`${amountInWords} Rupees Only`, { x: leftX + 78, y, font: boldFont, size: 8, color: primary });
 
         // Itemized Fee Components (if present and not just generic)
         if (Array.isArray(data.feeBreakdown) && data.feeBreakdown.length > 0) {
-            y -= 11;
+            y -= 12;
             const feeItems = data.feeBreakdown.map(fb => `${cleanAscii(fb.name)}: ${formatCurrencyForPdf(fb.amount)}`).join('  |  ');
-            page.drawText(`Fee Heads: ${feeItems}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.8, color: primary });
+            page.drawText(`Fee Heads: ${feeItems}`.substring(0, 95), { x: leftX, y, font: boldFont, size: 7.2, color: primary });
         }
 
         // Transaction References / Bank info (only if ref or split details exist)
@@ -251,15 +252,14 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
         if (refText) {
             y -= 11;
-            page.drawText(refText.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
+            page.drawText(refText.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.8, color: gray });
         }
 
-        // Accountant Custom Remarks / Notes (Only if non-default)
-        const customRemarks = cleanAscii(data.remarks);
-        if (customRemarks && !customRemarks.startsWith('Paid towards') && customRemarks !== 'Fee Payment Received') {
-            y -= 10;
-            page.drawText(`Remarks: ${customRemarks}`.substring(0, 95), { x: leftX, y, font: regularFont, size: 6.5, color: gray });
-        }
+        // Accountant Custom Remarks / Notes - High visibility, bold label
+        const customRemarks = cleanAscii(data.remarks || 'Fee Payment Received with Thanks.');
+        y -= 12;
+        page.drawText('Remarks: ', { x: leftX, y, font: boldFont, size: 7.8, color: black });
+        page.drawText(customRemarks.substring(0, 85), { x: leftX + 46, y, font: boldFont, size: 7.8, color: black });
 
         // ─── 3 SIGNATURE SECTIONS (Student, Clerk, Principal) ─────────────────
         y -= 34;

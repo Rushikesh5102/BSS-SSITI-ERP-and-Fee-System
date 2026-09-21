@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { safeStorage } from '../../utils/safeStorage';
 import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
+import { numberToWords } from '../../utils/numberToWords';
 
 const PAYMENT_MODES = ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'DD', 'CARD', 'NET_BANKING', 'RAZORPAY', 'OTHER'];
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
@@ -1337,9 +1338,20 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                             <span className="text-muted">Transaction Date</span>
                                             <b>{new Date(result.payment?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</b>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                                            <span className="text-muted">Remarks / Fee Head</span>
-                                            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{result.payment?.remarks || 'Fee Payment Received'}</span>
+                                        {/* Amount in Words (Prominent) */}
+                                        <div style={{ padding: '8px 12px', background: 'rgba(2, 132, 199, 0.08)', borderRadius: 8, margin: '8px 0', border: '1.5px solid #0284c7' }}>
+                                            <div style={{ fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.5px', marginBottom: 2 }}>✍️ Amount in Words</div>
+                                            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary)' }}>
+                                                {numberToWords(Math.round((result.payment?.amount || 0) / 100))}
+                                            </div>
+                                        </div>
+
+                                        {/* Remarks */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                                            <span className="text-muted" style={{ fontWeight: 700 }}>Remarks / Fee Head:</span>
+                                            <span style={{ fontSize: 13.5, fontWeight: 800, color: '#78350f', background: '#fef3c7', padding: '3px 10px', borderRadius: 6, border: '1px solid #f59e0b' }}>
+                                                {result.payment?.remarks || 'Fee Payment Received'}
+                                            </span>
                                         </div>
 
                                         {/* ─── Clear Total, Received, and Balance Ledger Breakdown ─── */}
@@ -1354,7 +1366,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         📊 Official Account Balance Summary
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
-                                                        <span className="text-muted">Total Agreed Course Fee:</span>
+                                                        <span className="text-muted">Total Course Fee:</span>
                                                         <b>{formatRupees(totalAmt)}</b>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
@@ -1362,7 +1374,7 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                         <b style={{ color: 'var(--accent)' }}>{formatRupees(result.payment?.amount || 0)}</b>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
-                                                        <span className="text-muted">Total Paid Till Date:</span>
+                                                        <span className="text-muted">Total Course Fees Paid:</span>
                                                         <b style={{ color: '#10b981' }}>{formatRupees(totalPaid)}</b>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, paddingTop: 6, borderTop: '1px dashed var(--border)', marginTop: 4 }}>
@@ -1460,14 +1472,32 @@ function PaymentsContent({ simulateParam }: { simulateParam: string | null }) {
                                                 <span className="badge badge-info">{isSplitPayment ? '🔀 Split Payment' : form.mode}</span>
                                             </div>
 
+                                            {/* Prominent Amount in Words Preview */}
+                                            {inputAmountPaise > 0 && (
+                                                <div style={{ padding: '8px 12px', background: 'rgba(2, 132, 199, 0.08)', borderRadius: 8, margin: '10px 0', border: '1.5px solid #0284c7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                                                    <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.5px' }}>✍️ Amount in Words:</span>
+                                                    <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--primary)', textAlign: 'right' }}>
+                                                        {numberToWords(Math.round(inputAmountPaise / 100))}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Prominent Remarks / Fee Purpose in Preview */}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                                                <span className="text-muted" style={{ fontWeight: 700 }}>Remarks / Note:</span>
+                                                <span style={{ fontSize: 12.5, fontWeight: 800, color: '#78350f', background: '#fef3c7', padding: '3px 8px', borderRadius: 6, border: '1px solid #f59e0b', maxWidth: '65%', textAlign: 'right', wordBreak: 'break-word' }}>
+                                                    {form.remarks || (feeItems.some(i => (parseFloat(i.amount) || 0) > 0) ? feeItems.filter(i => (parseFloat(i.amount) || 0) > 0).map(i => i.type).join(', ') : 'Academic Fee')}
+                                                </span>
+                                            </div>
+
                                             {selectedFee && (
                                                 <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--border)' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                                                        <span className="text-muted">Total Agreed Fee:</span>
+                                                        <span className="text-muted">Total Course Fee:</span>
                                                         <b>{formatRupees(selectedFee.totalAmount)}</b>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                                                        <span className="text-muted">Paid Till Date:</span>
+                                                        <span className="text-muted">Total Course Fees Paid:</span>
                                                         <b style={{ color: '#10b981' }}>{formatRupees(selectedFee.paidAmount)}</b>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--accent)', fontWeight: 800, padding: '4px 0', borderTop: '1px dashed var(--border)', borderBottom: '1px dashed var(--border)', margin: '4px 0' }}>

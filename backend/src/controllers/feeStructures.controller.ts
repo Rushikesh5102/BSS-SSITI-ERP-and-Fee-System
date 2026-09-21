@@ -98,11 +98,8 @@ export const feeStructuresController = {
         res.json({ success: true, data: structure });
     }),
 
-    /**
-     * POST /fee-structures/assign - Assign or update fee structure / custom fee for a student
-     */
     assignToStudent: asyncHandler(async (req: Request, res: Response) => {
-        const { studentId, feeStructureId, customTotalAmount, dueDate, academicYear } = req.body;
+        const { studentId, feeStructureId, customTotalAmount, dueDate, academicYear, tuitionFee, examFee, dressMaterialFee, otherFee, otherFeeLabel } = req.body;
 
         const [feeStructure, student] = await Promise.all([
             prisma.feeStructure.findUnique({ where: { id: feeStructureId } }),
@@ -110,6 +107,23 @@ export const feeStructuresController = {
         ]);
         if (!feeStructure) throw new AppError(404, 'Fee structure not found');
         if (!student) throw new AppError(404, 'Student not found');
+
+        if (tuitionFee !== undefined || examFee !== undefined || dressMaterialFee !== undefined || otherFee !== undefined) {
+            const currentEdu = (student.educationDetails as any) || {};
+            await prisma.student.update({
+                where: { id: student.id },
+                data: {
+                    educationDetails: {
+                        ...currentEdu,
+                        ...(tuitionFee !== undefined ? { tuitionFee: String(tuitionFee) } : {}),
+                        ...(examFee !== undefined ? { examFee: String(examFee) } : {}),
+                        ...(dressMaterialFee !== undefined ? { dressMaterialFee: String(dressMaterialFee) } : {}),
+                        ...(otherFee !== undefined ? { otherFee: String(otherFee) } : {}),
+                        ...(otherFeeLabel !== undefined ? { otherFeeLabel: String(otherFeeLabel) } : {}),
+                    }
+                }
+            });
+        }
 
         const studentSession = getStudentSession(student);
         const totalAmount = customTotalAmount !== undefined ? Number(customTotalAmount) : feeStructure.totalAmount;

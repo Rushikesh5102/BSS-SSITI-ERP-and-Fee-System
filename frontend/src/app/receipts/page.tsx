@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
+import { numberToWords } from '../../utils/numberToWords';
+import { formatPaymentAllocation } from '../../utils/feeStructureHelper';
 
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
@@ -374,21 +376,46 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                 )}
                             </div>
 
-                            {/* ─── Remarks / Notes & Itemized Breakdown ──────────────────── */}
+                            {/* ─── Amount in Words (Prominent Display) ────────────────────── */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(3, 105, 161, 0.12) 100%)',
+                                border: '1.5px solid #0284c7',
+                                borderRadius: 8,
+                                padding: '10px 14px',
+                                marginBottom: 14,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 10
+                            }}>
+                                <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.5px' }}>
+                                    ✍️ Amount in Words:
+                                </span>
+                                <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--primary)', textAlign: 'right' }}>
+                                    {numberToWords(Math.round((viewReceipt.payment?.amount || 0) / 100))}
+                                </span>
+                            </div>
+
+                            {/* ─── Remarks / Notes & Itemized Breakdown (High Visibility) ──── */}
                             <div style={{
                                 background: viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') ? '#fffbeb' : '#fef3c7',
-                                border: `1px solid ${viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') ? '#f59e0b' : '#f59e0b'}`,
-                                borderRadius: 8, padding: '10px 14px', marginBottom: 16
+                                border: '1.5px solid #f59e0b',
+                                borderRadius: 8, padding: '12px 16px', marginBottom: 16
                             }}>
-                                <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: '#b45309', marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: 11.5, fontWeight: 800, textTransform: 'uppercase', color: '#b45309', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>{viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') ? '🛡️ Supplementary / Back Paper Exam Details:' : '📝 Payment Fee Breakdown & Notes:'}</span>
                                     {viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') && (
                                         <span className="badge" style={{ background: '#d97706', color: '#ffffff', fontSize: 10 }}>Independent Exam Fee</span>
                                     )}
                                 </div>
-                                <div style={{ fontSize: 13, color: '#78350f', fontWeight: 600 }}>
+                                <div style={{ fontSize: 14, color: '#78350f', fontWeight: 800, lineHeight: 1.4 }}>
                                     {viewReceipt.payment?.remarks || 'Fee Payment Received with Thanks.'}
                                 </div>
+                                {viewReceipt.payment?.feeBreakdown && Array.isArray(viewReceipt.payment.feeBreakdown) && viewReceipt.payment.feeBreakdown.length > 0 && (
+                                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #d97706', fontSize: 12.5, color: '#92400e', fontWeight: 700 }}>
+                                        {formatPaymentAllocation(viewReceipt.payment)}
+                                    </div>
+                                )}
                                 {viewReceipt.payment?.remarks?.toLowerCase().includes('supplementary') && (
                                     <div style={{ fontSize: 11, color: '#92400e', marginTop: 4 }}>
                                         * Note: Back Paper Examination Fee is an independent assessment charge and does not reduce or affect standard course tuition dues.
@@ -413,7 +440,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                         
                                         {!isSupp && (
                                             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
-                                                <span className="text-muted">Total Agreed Course Fee:</span>
+                                                <span className="text-muted">Total Course Fee:</span>
                                                 <b>{formatRupees(totalPaise)}</b>
                                             </div>
                                         )}
@@ -431,7 +458,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                         ) : (
                                             <>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>
-                                                    <span className="text-muted">Total Course Fee Paid Till Date:</span>
+                                                    <span className="text-muted">Total Course Fees Paid:</span>
                                                     <b style={{ color: '#10b981' }}>{formatRupees(paidPaise)}</b>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13 }}>

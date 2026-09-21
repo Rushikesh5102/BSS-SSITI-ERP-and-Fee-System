@@ -192,6 +192,7 @@ export const paymentsController = {
                 chequeDate: validChequeDate,
                 bankName: effectiveBankName || null,
                 remarks: effectiveRemarks,
+                feeBreakdown: Array.isArray(feeBreakdown) ? feeBreakdown : undefined,
                 recordedById: req.user!.id,
                 approvedById: req.user!.id,
                 approvedAt: effectivePaymentDate,

@@ -225,6 +225,7 @@ model Payment {
   chequeDate       DateTime?     @map("cheque_date")
   bankName         String?       @map("bank_name")
   remarks          String?
+  feeBreakdown     Json?         @map("fee_breakdown")
   recordedById     String        @map("recorded_by_id")
   approvedById     String?       @map("approved_by_id")
   approvedAt       DateTime?     @map("approved_at")

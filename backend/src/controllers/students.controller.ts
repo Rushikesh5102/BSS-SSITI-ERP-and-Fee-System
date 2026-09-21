@@ -281,10 +281,24 @@ export const studentsController = {
             where: { id: req.params.id },
             include: {
                 parent: true,
-                branch: { select: { name: true } },
+                branch: true,
+                issuedItems: {
+                    include: { item: true },
+                    orderBy: { createdAt: 'desc' }
+                },
+                bookIssues: {
+                    include: { book: true },
+                    orderBy: { issueDate: 'desc' }
+                },
                 studentFees: {
                     include: {
-                        feeStructure: { select: { name: true, academicYear: true } },
+                        feeStructure: { 
+                            select: { 
+                                name: true, 
+                                academicYear: true,
+                                items: { include: { feeCategory: true } } 
+                            } 
+                        },
                         payments: {
                             include: { receipt: true },
                             orderBy: { createdAt: 'desc' },
