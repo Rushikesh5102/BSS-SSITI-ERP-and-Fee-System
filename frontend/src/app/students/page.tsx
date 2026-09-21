@@ -1735,15 +1735,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             </div>
 
                                             <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-secondary btn-sm"
-                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
-                                                    onClick={() => window.print()}
-                                                    title="Print complete student history dossier"
-                                                >
-                                                    🖨️ Print Dossier
-                                                </button>
                                                 <button 
                                                     type="button" 
                                                     className="btn btn-secondary btn-sm" 
@@ -2554,9 +2545,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                 Shri Sai Private Industrial Training Institute (Bhadravati)
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
-                                <button type="button" className="btn btn-secondary" onClick={() => window.print()}>
-                                    🖨️ Print Full Dossier
-                                </button>
                                 <button type="button" className="btn btn-primary" onClick={() => setShowHistoryModal(false)}>
                                     Close
                                 </button>
