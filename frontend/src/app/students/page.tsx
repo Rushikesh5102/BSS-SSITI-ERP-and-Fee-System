@@ -648,7 +648,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <th>Category / Subcaste</th>
                                             <th>Parent & Contact</th>
                                             <th>Fee Status</th>
-                                            <th style={{ minWidth: 210 }}>Actions</th>
+                                            <th style={{ width: 285, minWidth: 285, textAlign: 'center' }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -714,35 +714,40 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             </span>
                                                         ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                     </td>
-                                                    <td data-label="Actions" className="cell-actions" style={{ minWidth: 220 }}>
-                                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                            {canShowFeeBtn && (
-                                                                <button className="btn btn-primary btn-xs" style={{ padding: '4px 8px', fontSize: 11.5, fontWeight: 700 }} onClick={() => openAssignFeeModal(s)} title={feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}>
-                                                                    💳 {feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}
+                                                    <td data-label="Actions" className="cell-actions" style={{ width: 285, minWidth: 285, verticalAlign: 'middle' }}>
+                                                        <div className="student-actions-grid">
+                                                            {canShowFeeBtn ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className="student-action-btn btn-fee"
+                                                                    onClick={() => openAssignFeeModal(s)}
+                                                                    title={feeAlreadyAssigned ? 'Edit Fee Structure' : 'Assign Fee Structure'}
+                                                                >
+                                                                    <span>💳</span>
+                                                                    <span>{feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}</span>
                                                                 </button>
-                                                            )}
-                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5, fontWeight: 600 }} onClick={() => openHistoryModal(s.id)} title="View Fee History">
-                                                                📜 History
-                                                            </button>
-                                                            <button className="btn btn-secondary btn-xs" style={{ padding: '4px 7px', fontSize: 11.5, fontWeight: 600 }} onClick={() => openEditProfileModal(s)} title="Edit Student Admission Profile">
-                                                                ✏️ Edit
+                                                            ) : <div />}
+                                                            <button
+                                                                type="button"
+                                                                className="student-action-btn btn-history"
+                                                                onClick={() => openHistoryModal(s.id)}
+                                                                title="View Full Student Master History & Admission Record"
+                                                            >
+                                                                <span>📜</span>
+                                                                <span>History</span>
                                                             </button>
                                                             <button
-                                                                className="btn btn-xs"
-                                                                style={{
-                                                                    padding: '4px 8px',
-                                                                    fontSize: 11.5,
-                                                                    fontWeight: 700,
-                                                                    background: 'rgba(2, 132, 199, 0.12)',
-                                                                    color: '#0284c7',
-                                                                    border: '1px solid rgba(2, 132, 199, 0.4)',
-                                                                    borderRadius: '6px',
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '4px',
-                                                                    cursor: 'pointer',
-                                                                    transition: 'all 0.15s ease'
-                                                                }}
+                                                                type="button"
+                                                                className="student-action-btn btn-edit"
+                                                                onClick={() => openEditProfileModal(s)}
+                                                                title="Edit Student Admission Profile"
+                                                            >
+                                                                <span>✏️</span>
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="student-action-btn btn-idcard"
                                                                 onClick={async () => await generateStudentIdCardPdf(s)}
                                                                 title="Download Student Identity Card PDF"
                                                             >
@@ -750,21 +755,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>ID Card</span>
                                                             </button>
                                                             <button
-                                                                className="btn btn-xs"
-                                                                style={{
-                                                                    padding: '4px 8px',
-                                                                    fontSize: 11.5,
-                                                                    fontWeight: 700,
-                                                                    background: 'rgba(168, 85, 247, 0.12)',
-                                                                    color: '#7e22ce',
-                                                                    border: '1px solid rgba(168, 85, 247, 0.4)',
-                                                                    borderRadius: '6px',
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '4px',
-                                                                    cursor: 'pointer',
-                                                                    transition: 'all 0.15s ease'
-                                                                }}
+                                                                type="button"
+                                                                className="student-action-btn btn-pdf"
                                                                 onClick={async () => await generateAdmissionFormPdf(s)}
                                                                 title="Download Official Admission Form PDF"
                                                             >
@@ -773,23 +765,16 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             </button>
                                                             {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
                                                                 <button
-                                                                    className="btn btn-danger btn-xs"
-                                                                    style={{
-                                                                        padding: '4px 7px',
-                                                                        fontSize: 11.5,
-                                                                        fontWeight: 700,
-                                                                        color: 'var(--danger)',
-                                                                        border: '1px solid var(--danger)',
-                                                                        background: 'rgba(239, 68, 68, 0.08)',
-                                                                        borderRadius: '6px'
-                                                                    }}
+                                                                    type="button"
+                                                                    className="student-action-btn btn-delete"
                                                                     onClick={() => {
                                                                         setEditingStudent(s);
                                                                         setShowDeleteConfirmModal(true);
                                                                     }}
                                                                     title="Delete Student and Cascade Records"
                                                                 >
-                                                                    🗑️ Delete
+                                                                    <span>🗑️</span>
+                                                                    <span>Delete</span>
                                                                 </button>
                                                             )}
                                                         </div>
