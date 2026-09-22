@@ -486,4 +486,169 @@ router.post('/cache/flush', async (req, res) => {
     res.json({ success: true, evicted, message: `Successfully flushed ${evicted} cached response entry(ies).` });
 });
 
+// ── Activity / Audit Log Endpoints ─────────────────────────────────────────────
+
+/**
+ * GET /api/system/audit-logs
+ * Paginated, filterable audit log feed for Activity Log page.
+ * Query params: page, limit, userId, entityType, action, from, to, search
+ */
+router.get('/audit-logs', async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 30,
+            userId,
+            entityType,
+            action,
+            from,
+            to,
+            search,
+        } = req.query;
+
+        const parsedPage = Math.max(1, Number(page));
+        const parsedLimit = Math.min(100, Math.max(1, Number(limit)));
+        const skip = (parsedPage - 1) * parsedLimit;
+
+        const where: any = {};
+        if (userId) where.userId = String(userId);
+        if (entityType) where.entityType = String(entityType);
+        if (action) where.action = String(action);
+        if (from || to) {
+            where.createdAt = {};
+            if (from) where.createdAt.gte = new Date(String(from));
+            if (to) {
+                const toDate = new Date(String(to));
+                toDate.setHours(23, 59, 59, 999);
+                where.createdAt.lte = toDate;
+            }
+        }
+        if (search) {
+            where.OR = [
+                { entityId: { contains: String(search), mode: 'insensitive' } },
+                { action: { contains: String(search), mode: 'insensitive' } },
+                { entityType: { contains: String(search), mode: 'insensitive' } },
+                { metadata: { contains: String(search), mode: 'insensitive' } },
+            ];
+        }
+
+        const [logs, total] = await Promise.all([
+            prisma.auditLog.findMany({
+                where,
+                skip,
+                take: parsedLimit,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    user: {
+                        select: { id: true, name: true, email: true, role: true },
+                    },
+                },
+            }),
+            prisma.auditLog.count({ where }),
+        ]);
+
+        // Parse metadata JSON string for frontend convenience
+        const enrichedLogs = logs.map((log) => ({
+            ...log,
+            metadata: (() => {
+                try {
+                    return log.metadata ? JSON.parse(log.metadata) : null;
+                } catch {
+                    return log.metadata;
+                }
+            })(),
+        }));
+
+        res.json({
+            success: true,
+            data: enrichedLogs,
+            pagination: {
+                page: parsedPage,
+                limit: parsedLimit,
+                total,
+                pages: Math.ceil(total / parsedLimit),
+            },
+        });
+    } catch (error) {
+        logger.error('Failed to fetch audit logs', { error });
+        res.status(500).json({ success: false, message: 'Failed to fetch activity logs' });
+    }
+});
+
+/**
+ * GET /api/system/audit-logs/summary
+ * Returns aggregate counts by action and entity type for dashboard stats.
+ */
+router.get('/audit-logs/summary', async (_req, res) => {
+    try {
+        const [byAction, byEntity, recentUsers] = await Promise.all([
+            prisma.auditLog.groupBy({
+                by: ['action'],
+                _count: { id: true },
+                orderBy: { _count: { id: 'desc' } },
+                take: 20,
+            }),
+            prisma.auditLog.groupBy({
+                by: ['entityType'],
+                _count: { id: true },
+                orderBy: { _count: { id: 'desc' } },
+            }),
+            prisma.auditLog.findMany({
+                distinct: ['userId'],
+                select: { userId: true, createdAt: true, user: { select: { name: true, email: true, role: true } } },
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+            }),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                byAction: byAction.map((a) => ({ action: a.action, count: a._count.id })),
+                byEntity: byEntity.map((e) => ({ entityType: e.entityType, count: e._count.id })),
+                recentActiveUsers: recentUsers,
+            },
+        });
+    } catch (error) {
+        logger.error('Failed to fetch audit log summary', { error });
+        res.status(500).json({ success: false, message: 'Failed to fetch audit summary' });
+    }
+});
+
+/**
+ * GET /api/system/audit-logs/:id
+ * Retrieve a single audit log entry with full metadata for the detail panel.
+ */
+router.get('/audit-logs/:id', async (req, res) => {
+    try {
+        const log = await prisma.auditLog.findUnique({
+            where: { id: req.params.id },
+            include: {
+                user: { select: { id: true, name: true, email: true, role: true } },
+            },
+        });
+
+        if (!log) {
+            res.status(404).json({ success: false, message: 'Audit log entry not found' });
+            return;
+        }
+
+        const enriched = {
+            ...log,
+            metadata: (() => {
+                try {
+                    return log.metadata ? JSON.parse(log.metadata) : null;
+                } catch {
+                    return log.metadata;
+                }
+            })(),
+        };
+
+        res.json({ success: true, data: enriched });
+    } catch (error) {
+        logger.error('Failed to fetch audit log', { error });
+        res.status(500).json({ success: false, message: 'Failed to fetch audit log entry' });
+    }
+});
+
 export default router;

@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
     { href: '/portal', label: 'Portal Hub', icon: '🏛️', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
     { href: '/system', label: 'Dev Home', icon: '💻', roles: ['DEVELOPER'], module: 'COMMON' },
     { href: '/access', label: 'Access Control', icon: '🔑', roles: ['ADMIN', 'DEVELOPER'], module: 'COMMON' },
+    { href: '/activity-log', label: 'Activity Log', icon: '📋', roles: ['ADMIN', 'SUPERADMIN', 'DEVELOPER'], module: 'COMMON' },
     { href: '/404', label: '404 Experience', icon: '⚡', roles: ['DEVELOPER'], module: 'COMMON' },
 
     // FEES WORKSPACE & FEES DEVELOPER SIMULATIONS

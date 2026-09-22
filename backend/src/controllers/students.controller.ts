@@ -319,6 +319,17 @@ export const studentsController = {
     update: asyncHandler(async (req: Request, res: Response) => {
         const { parent, ...updateData } = req.body;
 
+        // ── Capture before-state for audit diff ────────────────────────────────
+        const beforeStudent = await prisma.student.findUnique({
+            where: { id: req.params.id },
+            select: {
+                name: true, class: true, section: true, rollNumber: true,
+                email: true, gender: true, address: true, category: true,
+                bloodGroup: true, landline: true, isActive: true,
+                dateOfBirth: true, educationDetails: true,
+            }
+        });
+
         let dateOfBirth: Date | null | undefined = undefined;
         if ('dateOfBirth' in updateData) {
             if (updateData.dateOfBirth) {
@@ -358,8 +369,26 @@ export const studentsController = {
             });
         }
 
+        // Build after-state for diff (only fields that were actually changed)
+        const afterState: Record<string, unknown> = {};
+        for (const field of validFields) {
+            if (field in sanitizedUpdate) afterState[field] = sanitizedUpdate[field];
+        }
+
         try {
-            await createAuditLog(req.user!.id, AuditAction.STUDENT_UPDATED, 'Student', student.id, updateData, req.ip);
+            await createAuditLog(
+                req.user!.id,
+                AuditAction.STUDENT_UPDATED,
+                'Student',
+                student.id,
+                {
+                    studentName: student.name,
+                    studentCode: (student as any).studentId,
+                    before: beforeStudent || {},
+                    after: afterState,
+                },
+                req.ip
+            );
         } catch {}
         res.json({ success: true, data: student });
     }),

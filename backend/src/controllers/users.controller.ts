@@ -118,6 +118,9 @@ export const usersController = {
             throw new AppError(400, 'You cannot deactivate your own account.');
         }
 
+        // Capture before state for diff
+        const beforeState = { name: target.name, email: target.email, role: target.role, isActive: target.isActive, branchId: target.branchId };
+
         const updated = await prisma.user.update({
             where: { id: req.params.id },
             data: {
@@ -130,7 +133,8 @@ export const usersController = {
             select: { id: true, name: true, email: true, role: true, isActive: true, branchId: true },
         });
 
-        await createAuditLog(req.user!.id, AuditAction.USER_UPDATED, 'User', updated.id, req.body, req.ip);
+        const afterState = { name: updated.name, email: updated.email, role: updated.role, isActive: updated.isActive, branchId: updated.branchId };
+        await createAuditLog(req.user!.id, AuditAction.USER_UPDATED, 'User', updated.id, { before: beforeState, after: afterState }, req.ip);
         res.json({ success: true, data: updated });
     }),
 
@@ -168,9 +172,12 @@ export const usersController = {
             throw new AppError(403, 'Administrators cannot revoke Developer accounts.');
         }
 
+        const snapshot = { name: target.name, email: target.email, role: target.role, isActive: target.isActive };
+
         try {
             // Attempt to hard delete user first
             await prisma.user.delete({ where: { id: req.params.id } });
+            await createAuditLog(req.user!.id, AuditAction.USER_DELETED, 'User', req.params.id, { ...snapshot, deletionType: 'HARD_DELETE' }, req.ip);
             res.json({ success: true, message: 'User permanently deleted from system database.' });
         } catch (err) {
             // Fall back to deactivating (lockout) if referenced in relations (foreign keys)
@@ -178,6 +185,7 @@ export const usersController = {
                 where: { id: req.params.id },
                 data: { isActive: false }
             });
+            await createAuditLog(req.user!.id, AuditAction.USER_DELETED, 'User', req.params.id, { ...snapshot, deletionType: 'SOFT_DELETE_DEACTIVATED' }, req.ip);
             res.json({ success: true, message: 'User access revoked (account deactivated to preserve historical transaction history).' });
         }
     }),
