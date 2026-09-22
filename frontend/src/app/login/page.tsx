@@ -71,28 +71,28 @@ export default function LoginPage() {
         }
     };
 
-    // Responsive scaling to fit viewports
+    // Responsive scaling to fit viewports seamlessly while keeping mechanical animation intact
     const scaleToFit = () => {
         if (!containerRef.current || !window.gsap) return;
-        if (typeof window !== 'undefined' && window.innerWidth <= 768) {
-            window.gsap.set(containerRef.current, {
-                clearProps: "scale,transformOrigin,transform"
-            });
-            if (submitBtnRef.current) {
-                window.gsap.set(submitBtnRef.current, {
-                    rotation: 0,
-                    clearProps: "rotation"
-                });
-            }
-            return;
-        }
-        const totalNeededWidth = 1040;
-        const scaleH = (window.innerHeight - 150) / 720;
-        const scaleW = window.innerWidth / totalNeededWidth;
-        const targetScale = Math.min(1, scaleH, scaleW);
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+        
+        // Exact viewport dimensions with breathing room
+        const availWidth = window.innerWidth - (isMobile ? 12 : 36);
+        const availHeight = window.innerHeight - (isMobile ? 96 : 140);
+        
+        const scaleW = availWidth / 1000;
+        const scaleH = availHeight / 940;
+        const targetScale = Math.min(scaleW, scaleH);
+        
+        // Allow mobile to scale down to 0.32 - 0.70 so the entire machine fits on all phone screens
+        const finalScale = isMobile
+            ? Math.max(0.32, Math.min(0.70, targetScale))
+            : Math.max(0.48, Math.min(0.95, targetScale));
 
         window.gsap.set(containerRef.current, {
-            scale: Math.max(0.48, Math.min(0.95, targetScale)),
+            xPercent: -50,
+            yPercent: -50,
+            scale: finalScale,
             transformOrigin: "50% 50%"
         });
     };
@@ -160,7 +160,9 @@ export default function LoginPage() {
             onUpdate: animatePullingLine
         });
 
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
         const shouldPull = Boolean(
+            isMobile ||
             btnPulled || 
             rememberMe || 
             machineState.current.isSubmitting || 
@@ -247,10 +249,12 @@ export default function LoginPage() {
             gsap.set(timingChains[1], { attr: { "stroke-width": "5", "stroke-dasharray": "0 12" } });
         }
         if (checkboxPullLine) {
-            gsap.set(checkboxPullLine, { attr: { y1: -105, y2: 44 } });
+            const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+            gsap.set(checkboxPullLine, { attr: { y1: -105, y2: (rememberMe || isMobile) ? 44 - 130 : 44 } });
         }
         if (checkboxPullCircle) {
-            gsap.set(checkboxPullCircle, { y: 44 });
+            const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+            gsap.set(checkboxPullCircle, { y: (rememberMe || isMobile) ? 44 - 130 : 44 });
         }
         if (submitBtn) {
             const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -479,7 +483,7 @@ export default function LoginPage() {
 
         emailTlRef.current = createPasswordTl();
         gearsTlsRef.current = createGearsTimelines();
-        createPullingTimeline(machineState.current.handClosed, rememberMe);
+        createPullingTimeline(machineState.current.handClosed, rememberMe || (typeof window !== 'undefined' && window.innerWidth <= 768));
 
         scaleToFit();
         window.addEventListener('resize', scaleToFit);
