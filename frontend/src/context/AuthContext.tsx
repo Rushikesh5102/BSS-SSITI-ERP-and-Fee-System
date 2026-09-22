@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
-            const { data } = await api.post('/auth/login', { email, password });
+            const { data } = await api.post('/auth/login', { email, password }, { timeout: isOfflineFallbackAllowed ? 35000 : 15000 });
             const { accessToken, refreshToken, user: userData } = data.data;
             safeStorage.set('accessToken', accessToken);
             safeStorage.set('refreshToken', refreshToken);
@@ -151,12 +151,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setUser(offlineUser);
                     redirectUser(offlineUser);
                     return;
-                } else {
-                    throw new Error('Invalid email or password. Please check your credentials.');
                 }
             }
 
-            // Propagate network/timeout error so LoginPage can activate 30s cold-start timer
+            // Propagate network/timeout error so LoginPage can keep 30s cold-start timer and retry active
             throw err;
         }
     };

@@ -74,6 +74,18 @@ export default function LoginPage() {
     // Responsive scaling to fit viewports
     const scaleToFit = () => {
         if (!containerRef.current || !window.gsap) return;
+        if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+            window.gsap.set(containerRef.current, {
+                clearProps: "scale,transformOrigin,transform"
+            });
+            if (submitBtnRef.current) {
+                window.gsap.set(submitBtnRef.current, {
+                    rotation: 0,
+                    clearProps: "rotation"
+                });
+            }
+            return;
+        }
         const totalNeededWidth = 1040;
         const scaleH = (window.innerHeight - 150) / 720;
         const scaleW = window.innerWidth / totalNeededWidth;
@@ -241,7 +253,8 @@ export default function LoginPage() {
             gsap.set(checkboxPullCircle, { y: 44 });
         }
         if (submitBtn) {
-            gsap.set(submitBtn, { transformOrigin: "100% 0%", rotation: rememberMe ? 0 : -90 });
+            const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+            gsap.set(submitBtn, { transformOrigin: "100% 0%", rotation: (rememberMe || isMobile) ? 0 : -90 });
         }
 
         // Helper: Spiral path generator
@@ -572,12 +585,13 @@ export default function LoginPage() {
                 err.message?.includes('timeout') ||
                 [502, 503, 504].includes(err.response?.status);
 
-            if (isNetworkOrColdStart && !isAutoRetry) {
+            if (isNetworkOrColdStart) {
                 if (isLocalhost) {
                     // On localhost, immediately attempt offline fallback without 30s delay
                     try {
                         await login(targetEmail, targetPass, true);
                         setIsWakingUp(false);
+                        retryCredentialsRef.current = null;
                         if (window.gsap && svgRef.current) {
                             window.gsap.to("svg > *", { duration: 0.1, opacity: 0, stagger: { each: 0.03, from: 'random', ease: 'none' } });
                             window.gsap.to(".form-row", { delay: 0.3, duration: 0.1, opacity: 0, stagger: 0.1 });
@@ -590,10 +604,12 @@ export default function LoginPage() {
                     // In cloud production, Render free-tier spins down after inactivity
                     retryCredentialsRef.current = { email: targetEmail, pass: targetPass };
                     setIsWakingUp(true);
-                    setCountdown(30);
+                    // If already countdown expired, reset with 10s grace and keep retrying
+                    setCountdown((prev) => (prev <= 1 ? 10 : prev || 30));
                 }
             } else {
                 setIsWakingUp(false);
+                retryCredentialsRef.current = null;
                 setError(err.response?.data?.message || err.message || 'Login failed. Please check credentials.');
             }
         } finally {
@@ -652,14 +668,14 @@ export default function LoginPage() {
         return () => clearInterval(timer);
     }, [isWakingUp, countdown]);
 
-    // Active Health Probing every 4s during countdown
+    // Active Health Probing every 3s during countdown
     useEffect(() => {
-        if (isWakingUp && countdown > 0 && countdown % 4 === 0) {
-            api.get('/health', { timeout: 3000 })
+        if (isWakingUp && countdown > 0 && countdown % 3 === 0) {
+            api.get('/health', { timeout: 4000 })
                 .then(() => {
                     if (retryCredentialsRef.current) {
                         const creds = retryCredentialsRef.current;
-                        performLogin(creds.email, creds.pass, false);
+                        performLogin(creds.email, creds.pass, true);
                     }
                 })
                 .catch(() => {});

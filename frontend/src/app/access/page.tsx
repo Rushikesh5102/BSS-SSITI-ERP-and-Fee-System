@@ -277,16 +277,6 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                 📄 Landscape
                             </button>
                         </div>
-                        <button 
-                            className="btn btn-secondary" 
-                            onClick={handleSyncStudents}
-                            disabled={syncingStudents}
-                            title="Scan student registry and ensure login credentials exist for every enrolled student"
-                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                        >
-                            {syncingStudents ? <span className="spinner spinner-sm" /> : '🔄'}
-                            <span>{syncingStudents ? 'Syncing...' : 'Sync Student Nodes'}</span>
-                        </button>
                         <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                             ➕ Provision New Node
                         </button>
@@ -295,16 +285,11 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
 
                 <div className="page-content">
                     {/* Role statistics cards */}
-                    <div className="grid grid-4 mb-6" style={{ gap: 20 }}>
+                    <div className="grid grid-3 mb-6" style={{ gap: 20 }}>
                         <div className="card text-white" style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)', border: 'none', borderRadius: 12, padding: '20px 24px', boxShadow: 'var(--shadow-md)' }}>
                             <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>Total Directory size</div>
                             <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8 }}>{totalUsers}</div>
-                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Staff + enrolled student logins</div>
-                        </div>
-                        <div className="card text-white" style={{ background: 'linear-gradient(135deg, #0f766e, #14b8a6)', border: 'none', borderRadius: 12, padding: '20px 24px', boxShadow: 'var(--shadow-md)' }}>
-                            <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>🎓 Enrolled Student Nodes</div>
-                            <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8 }}>{stats.STUDENT}</div>
-                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Self-service student portal logins</div>
+                            <div style={{ fontSize: 12, marginTop: 6, opacity: 0.8 }}>Institutional Staff & Operators</div>
                         </div>
                         <div className="card text-white" style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)', border: 'none', borderRadius: 12, padding: '20px 24px', boxShadow: 'var(--shadow-md)' }}>
                             <div style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85 }}>👩‍💼 Staff Access</div>
@@ -338,7 +323,6 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                     <option value="ACCOUNTANT">Accountant</option>
                                     <option value="STORE_MANAGER">Store Manager</option>
                                     <option value="LIBRARIAN">Librarian</option>
-                                    <option value="STUDENT">Student</option>
                                     <option value="DEVELOPER">Developer/System Health</option>
                                 </select>
                             </div>
@@ -522,7 +506,6 @@ function AccessContent({ simulateParam }: { simulateParam: string | null }) {
                                             <option value="ACCOUNTANT">Accountant</option>
                                             <option value="STORE_MANAGER">Store Manager</option>
                                             <option value="LIBRARIAN">Librarian</option>
-                                            <option value="STUDENT">Student</option>
                                             <option value="ADMIN">Administrator</option>
                                             {currentUser.role === 'DEVELOPER' && <option value="DEVELOPER">Developer/Architect</option>}
                                         </select>

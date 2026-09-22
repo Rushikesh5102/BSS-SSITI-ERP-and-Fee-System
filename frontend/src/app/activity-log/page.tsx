@@ -404,25 +404,13 @@ export default function ActivityLogPage() {
                 {/* Single-Line Filter Bar */}
                 <div className="al-filters-bar" ref={filterRef}>
                     <div className="al-filters-row">
-                        {/* Quick Category Chips */}
-                        <div className="al-chips-scroll">
-                            <button className={"al-chip chip-all" + (typeChip === "" ? " active-chip" : "")} onClick={() => applyChip("")}>All</button>
-                            <button className={"al-chip chip-create" + (typeChip === "c" ? " active-chip" : "")} onClick={() => applyChip("c")}>✨ Created</button>
-                            <button className={"al-chip chip-update" + (typeChip === "u" ? " active-chip" : "")} onClick={() => applyChip("u")}>✏️ Edited</button>
-                            <button className={"al-chip chip-delete" + (typeChip === "d" ? " active-chip" : "")} onClick={() => applyChip("d")}>🗑️ Deleted</button>
-                            <button className={"al-chip chip-payment" + (typeChip === "p" ? " active-chip" : "")} onClick={() => applyChip("p")}>💰 Payments</button>
-                            <button className={"al-chip chip-auth" + (typeChip === "a" ? " active-chip" : "")} onClick={() => applyChip("a")}>🔐 Auth</button>
-                        </div>
-
-                        <div className="al-filter-divider" />
-
-                        {/* Search Input */}
+                        {/* 1. Search Input First (Left) */}
                         <div className="al-search-box">
                             <span className="al-search-icon">🔍</span>
                             <input
                                 id="al-search-input"
                                 className="al-search-input"
-                                placeholder="Search actions, students, users, IDs..."
+                                placeholder="Search actions, students, users, remarks, IDs..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearchChange(e.target.value)}
                             />
@@ -431,29 +419,69 @@ export default function ActivityLogPage() {
                             )}
                         </div>
 
-                        {/* Filter Dropdown Button */}
+                        {/* 2. Date Filter (Middle - Beside Search Bar) */}
+                        <div className="al-date-filter-group" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                            <span style={{ fontSize: 13 }}>📅</span>
+                            <select
+                                className="al-pop-select"
+                                style={{ padding: '6px 10px', fontSize: 12.5, minWidth: 120, height: 36, borderRadius: 8, background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+                                value={filters.from || 'all'}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val === 'all') applyDatePreset('all');
+                                    else if (val === 'today') applyDatePreset('today');
+                                    else if (val === '7d') applyDatePreset('7d');
+                                    else if (val === '30d') applyDatePreset('30d');
+                                    else if (val === 'month') applyDatePreset('month');
+                                }}
+                            >
+                                <option value="all">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="7d">Last 7 Days</option>
+                                <option value="30d">Last 30 Days</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+
+                        {/* 3. Filter Dropdown Button (Right - Beside Date Filter) */}
                         <button
                             id="al-filter-dropdown-btn"
                             className={"al-dropdown-toggle" + (showFilterDropdown ? " open" : "")}
                             onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                            title="Filter by entity and date range"
+                            title="Filter by action category, entity type, and custom date range"
+                            style={{ height: 36, flexShrink: 0 }}
                         >
-                            <span>📅 Date & Entity</span>
-                            {activeFiltersCount > 0 && <span className="al-filter-badge">{activeFiltersCount}</span>}
+                            <span>⚡ Filters</span>
+                            {(activeFiltersCount > 0 || typeChip) && (
+                                <span className="al-filter-badge">{activeFiltersCount + (typeChip ? 1 : 0)}</span>
+                            )}
                             <span>{showFilterDropdown ? "▲" : "▼"}</span>
                         </button>
 
-                        {/* Reset All Filters Button */}
+                        {/* 4. Reset All Filters Button */}
                         {hasAnyFilterActive && (
-                            <button className="al-reset-btn" onClick={resetAllFilters} title="Reset all active filters">
+                            <button className="al-reset-btn" onClick={resetAllFilters} title="Reset all active filters" style={{ height: 36, flexShrink: 0 }}>
                                 ✕ Reset
                             </button>
                         )}
                     </div>
 
-                    {/* Filter Popover Dropdown Drawer */}
+                    {/* Filter Popover Dropdown Drawer (Contains All Category Filters & Entity Types) */}
                     {showFilterDropdown && (
                         <div className="al-filter-popover">
+                            {/* Action Category Chips */}
+                            <div className="al-pop-group" style={{ gridColumn: "1 / -1" }}>
+                                <label className="al-pop-label">Action Category</label>
+                                <div className="al-chips-scroll" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '4px 0' }}>
+                                    <button className={"al-chip chip-all" + (typeChip === "" ? " active-chip" : "")} onClick={() => applyChip("")}>All</button>
+                                    <button className={"al-chip chip-create" + (typeChip === "c" ? " active-chip" : "")} onClick={() => applyChip("c")}>✨ Created</button>
+                                    <button className={"al-chip chip-update" + (typeChip === "u" ? " active-chip" : "")} onClick={() => applyChip("u")}>✏️ Edited</button>
+                                    <button className={"al-chip chip-delete" + (typeChip === "d" ? " active-chip" : "")} onClick={() => applyChip("d")}>🗑️ Deleted</button>
+                                    <button className={"al-chip chip-payment" + (typeChip === "p" ? " active-chip" : "")} onClick={() => applyChip("p")}>💰 Payments</button>
+                                    <button className={"al-chip chip-auth" + (typeChip === "a" ? " active-chip" : "")} onClick={() => applyChip("a")}>🔐 Auth</button>
+                                </div>
+                            </div>
+
                             {/* Entity Type Filter */}
                             <div className="al-pop-group">
                                 <label className="al-pop-label">Entity Type</label>
@@ -470,7 +498,7 @@ export default function ActivityLogPage() {
                                 </select>
                             </div>
 
-                            {/* Date From */}
+                            {/* Custom Date Range */}
                             <div className="al-pop-group">
                                 <label className="al-pop-label">From Date</label>
                                 <input
@@ -482,7 +510,6 @@ export default function ActivityLogPage() {
                                 />
                             </div>
 
-                            {/* Date To */}
                             <div className="al-pop-group">
                                 <label className="al-pop-label">To Date</label>
                                 <input

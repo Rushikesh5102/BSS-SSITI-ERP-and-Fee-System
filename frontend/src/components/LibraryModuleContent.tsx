@@ -877,71 +877,71 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                        gap: 12
+                        gap: 10
                     }}>
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(14, 165, 233, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(14, 165, 233, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 📚
                             </div>
                             <div>
-                                <div className="stat-label">Total Books</div>
-                                <div className="stat-value">{stats.totalCopies}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{stats.totalTitles} titles</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Total Books</div>
+                                <div className="stat-value" style={{ fontSize: 20 }}>{stats.totalCopies}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{stats.totalTitles} titles</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 💰
                             </div>
                             <div>
-                                <div className="stat-label">Stock Valuation</div>
-                                <div className="stat-value" style={{ color: '#8b5cf6', fontSize: 18 }}>₹{stats.totalCatalogValue.toLocaleString('en-IN')}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>₹{stats.issuedValue.toLocaleString('en-IN')} issued value</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Stock Valuation</div>
+                                <div className="stat-value" style={{ color: '#8b5cf6', fontSize: 17 }}>₹{stats.totalCatalogValue.toLocaleString('en-IN')}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>₹{stats.issuedValue.toLocaleString('en-IN')} issued</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 ✅
                             </div>
                             <div>
-                                <div className="stat-label">Available Copies</div>
-                                <div className="stat-value" style={{ color: '#10b981' }}>{stats.availableCopies}</div>
-                                <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>₹{stats.availableValue.toLocaleString('en-IN')} value</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Available Copies</div>
+                                <div className="stat-value" style={{ color: '#10b981', fontSize: 20 }}>{stats.availableCopies}</div>
+                                <div style={{ fontSize: 10.5, color: '#10b981', fontWeight: 700 }}>₹{stats.availableValue.toLocaleString('en-IN')} value</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(2, 132, 199, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(2, 132, 199, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 📖
                             </div>
                             <div>
-                                <div className="stat-label">Issued Books</div>
-                                <div className="stat-value" style={{ color: '#0284c7' }}>{stats.issuedCopies}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>with borrowers</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Issued Books</div>
+                                <div className="stat-value" style={{ color: '#0284c7', fontSize: 20 }}>{stats.issuedCopies}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>with borrowers</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 🚨
                             </div>
                             <div>
-                                <div className="stat-label">Overdue Books</div>
-                                <div className="stat-value" style={{ color: '#ef4444' }}>{stats.overdueCount}</div>
-                                <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>₹{stats.totalPendingFines} fines</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Overdue Books</div>
+                                <div className="stat-value" style={{ color: '#ef4444', fontSize: 20 }}>{stats.overdueCount}</div>
+                                <div style={{ fontSize: 10.5, color: '#ef4444', fontWeight: 700 }}>₹{stats.totalPendingFines} fines</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 ⚠️
                             </div>
                             <div>
-                                <div className="stat-label">Lost / Damaged</div>
-                                <div className="stat-value" style={{ color: '#f59e0b' }}>{stats.lostCopies + stats.damagedCopies}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{stats.lostCopies} lost, {stats.damagedCopies} damaged</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Lost / Damaged</div>
+                                <div className="stat-value" style={{ color: '#f59e0b', fontSize: 20 }}>{stats.lostCopies + stats.damagedCopies}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{stats.lostCopies} lost, {stats.damagedCopies} dmg</div>
                             </div>
                         </div>
                     </div>

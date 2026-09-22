@@ -1611,9 +1611,9 @@ body.mobile-drawer-open {
     background: var(--surface-card) !important;
     border: 1px solid var(--border) !important;
     border-radius: 12px !important;
-    padding: 14px 16px !important;
-    gap: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    padding: 10px 12px !important;
+    gap: 5px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
@@ -1621,26 +1621,27 @@ body.mobile-drawer-open {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 4px 0 !important;
+    padding: 2px 0 !important;
     border: none !important;
     width: 100% !important;
     text-align: right !important;
     box-sizing: border-box !important;
+    font-size: 12.5px !important;
   }
   .responsive-table td[data-label]::before {
     content: attr(data-label);
     font-weight: 700;
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 12px;
+    letter-spacing: 0.4px;
+    margin-right: 10px;
     flex-shrink: 0;
     text-align: left;
   }
   .responsive-table td.cell-actions {
-    margin-top: 6px;
-    padding-top: 10px !important;
+    margin-top: 4px;
+    padding-top: 6px !important;
     border-top: 1px solid var(--border) !important;
     justify-content: space-between !important;
   }
@@ -1985,6 +1986,24 @@ html.dark .student-action-btn.btn-delete:hover {
     color: #0f172a !important;
     background: #f1f5f9 !important;
   }
+}
+
+/* ─── Global Responsive & Touch Table Scrollers ────────────────────────── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 12px;
+}
+
+.table-compact th {
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+}
+
+.table-compact td {
+  padding: 6px 10px !important;
+  font-size: 12.5px !important;
 }
 
 

@@ -137,7 +137,23 @@ export default function ReceiptDownloadModal({
                 </div>
 
                 {/* Modal Body */}
-                <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', overflow: 'hidden' }}>
+                    {/* Institutional Logo Watermark */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 200,
+                        height: 200,
+                        backgroundImage: "url('/sai_iti_logo.png')",
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        backgroundSize: 'contain',
+                        opacity: 0.05,
+                        pointerEvents: 'none',
+                        zIndex: 0
+                    }} />
                     <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary, #475569)', lineHeight: 1.5 }}>
                         Select the receipt pattern you want to download or print. Both patterns contain official counterfoils for student and accounts office copies.
                     </p>

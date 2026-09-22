@@ -10,7 +10,8 @@ export const stockTransactionsController = {
      * Dashboard stats for ITI Asset & Tool Management System
      */
     getDashboardStats: asyncHandler(async (req: Request, res: Response) => {
-        const whereBranch: any = req.user?.branchId ? { branchId: req.user.branchId } : {};
+        const isAdminOrDev = req.user?.role === 'ADMIN' || req.user?.role === 'DEVELOPER' || req.user?.role === 'SUPERADMIN';
+        const whereBranch: any = (!isAdminOrDev && req.user?.branchId) ? { branchId: req.user.branchId } : {};
 
         // Fetch active items
         const items = await prisma.storeItem.findMany({
@@ -27,11 +28,11 @@ export const stockTransactionsController = {
         const damagedCount = items.filter(i => i.status === 'DAMAGED' || i.status === 'LOST').length;
         const maintenanceCount = items.filter(i => i.status === 'UNDER_MAINTENANCE').length;
 
-        // Active issued transactions (status = ISSUED or ACTIVE with type = ISSUE)
-        const issuedTransactions = activeTransactions.filter(t => t.type === 'ISSUE' && t.status === 'ISSUED');
+        // Active issued transactions: type === ISSUE and not returned yet
+        const issuedTransactions = activeTransactions.filter(t => t.type === 'ISSUE' && t.status !== 'RETURNED');
         const totalIssuedItems = issuedTransactions.reduce((acc, t) => acc + t.quantity, 0);
 
-        // Overdue count: issued items where expectedReturnDate < now and status === 'ISSUED'
+        // Overdue count: issued items where expectedReturnDate < now and not returned
         const now = new Date();
         const overdueTransactions = issuedTransactions.filter(t => t.expectedReturnDate && new Date(t.expectedReturnDate) < now);
         const overdueCount = overdueTransactions.length;

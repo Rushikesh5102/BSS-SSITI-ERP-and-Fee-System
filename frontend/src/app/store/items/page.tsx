@@ -347,47 +347,47 @@ function AssetRegisterContent() {
                         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                         gap: 12
                     }}>
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
-                                <span style={{ fontSize: 18 }}>📋</span>
+                        <div className="stat-card" style={{ padding: '8px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
+                                <span style={{ fontSize: 16 }}>📋</span>
                             </div>
                             <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL ASSETS</div>
-                                <div style={{ color: '#10b981', fontSize: 22, fontWeight: 800 }}>{items.length}</div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL ASSETS</div>
+                                <div style={{ color: '#10b981', fontSize: 18, fontWeight: 800 }}>{items.length}</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(2, 132, 199, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
-                                <span style={{ fontSize: 18 }}>📦</span>
+                        <div className="stat-card" style={{ padding: '8px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(2, 132, 199, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
+                                <span style={{ fontSize: 16 }}>📦</span>
                             </div>
                             <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL QUANTITY</div>
-                                <div style={{ color: '#0284c7', fontSize: 22, fontWeight: 800 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL QUANTITY</div>
+                                <div style={{ color: '#0284c7', fontSize: 18, fontWeight: 800 }}>
                                     {items.reduce((acc, curr) => acc + curr.quantity, 0)}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
-                                <span style={{ fontSize: 18 }}>💰</span>
+                        <div className="stat-card" style={{ padding: '8px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
+                                <span style={{ fontSize: 16 }}>💰</span>
                             </div>
                             <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL STOCK VALUATION</div>
-                                <div style={{ color: '#8b5cf6', fontSize: 20, fontWeight: 800 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL VALUATION</div>
+                                <div style={{ color: '#8b5cf6', fontSize: 17, fontWeight: 800 }}>
                                     ₹{items.reduce((acc, curr) => acc + ((curr.quantity || 0) * (curr.pricePerUnit || 0)), 0).toLocaleString('en-IN')}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
-                                <span style={{ fontSize: 18 }}>📉</span>
+                        <div className="stat-card" style={{ padding: '8px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
+                                <span style={{ fontSize: 16 }}>📉</span>
                             </div>
                             <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>LOW STOCK ALERTS</div>
-                                <div style={{ color: lowStockItems.length > 0 ? '#f59e0b' : 'var(--text-primary)', fontSize: 22, fontWeight: 800 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>LOW STOCK</div>
+                                <div style={{ color: lowStockItems.length > 0 ? '#f59e0b' : 'var(--text-primary)', fontSize: 18, fontWeight: 800 }}>
                                     {lowStockItems.length}
                                 </div>
                             </div>
@@ -395,33 +395,34 @@ function AssetRegisterContent() {
                     </div>
 
                     {/* Search & Filters */}
-                    <div className="card" style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, alignItems: 'center' }}>
+                    <div className="card" style={{ padding: '10px 14px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, alignItems: 'center' }}>
                             <div>
-                                <label className="form-label" style={{ fontSize: 11 }}>Search Workshop Assets</label>
+                                <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>Search Workshop Assets</label>
                                 <input
                                     type="text"
                                     className="form-control"
                                     placeholder="🔍 Search asset name or notes..."
                                     value={itemSearch}
                                     onChange={(e) => setItemSearch(e.target.value)}
+                                    style={{ height: 36, fontSize: 12.5 }}
                                 />
                             </div>
 
                             <div>
-                                <label className="form-label" style={{ fontSize: 11 }}>Status Filter</label>
-                                <select className="form-control" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                                <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>Status Filter</label>
+                                <select className="form-control" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ height: 36, fontSize: 12.5 }}>
                                     <option value="">All Statuses</option>
                                     {statusOptions.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
                                 </select>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%', paddingTop: 20 }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%', paddingTop: 16 }}>
                                 <button
                                     type="button"
                                     onClick={() => setOnlyLowStock(!onlyLowStock)}
                                     className={`btn ${onlyLowStock ? 'btn-primary' : 'btn-secondary'}`}
-                                    style={{ width: '100%', fontSize: 12, justifyContent: 'center' }}
+                                    style={{ width: '100%', fontSize: 12, height: 36, justifyContent: 'center' }}
                                 >
                                     {onlyLowStock ? '⚠️ Showing Low Stock Only' : '📉 Filter Low Stock Alerts'}
                                 </button>
@@ -431,30 +432,30 @@ function AssetRegisterContent() {
 
                     {/* Asset Table */}
                     {fetching ? (
-                        <div style={{ padding: '60px 0', textAlign: 'center' }}>
-                            <div className="spinner" style={{ margin: '0 auto', width: 36, height: 36 }} />
-                            <p style={{ marginTop: 12, color: 'var(--text-muted)' }}>Loading Asset Register...</p>
+                        <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                            <div className="spinner" style={{ margin: '0 auto', width: 32, height: 32 }} />
+                            <p style={{ marginTop: 10, color: 'var(--text-muted)', fontSize: 13 }}>Loading Asset Register...</p>
                         </div>
                     ) : displayedItems.length === 0 ? (
-                        <div className="card" style={{ padding: '50px 20px', textAlign: 'center' }}>
-                            <div style={{ fontSize: 36, marginBottom: 8 }}>🛠️</div>
-                            <h3 style={{ fontSize: 16, fontWeight: 700 }}>No Assets Found</h3>
+                        <div className="card" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                            <div style={{ fontSize: 32, marginBottom: 6 }}>🛠️</div>
+                            <h3 style={{ fontSize: 15, fontWeight: 700 }}>No Assets Found</h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 4 }}>
                                 {onlyLowStock ? 'No assets are currently low in stock!' : 'Adjust your filters or click "Add New Workshop Asset".'}
                             </p>
                         </div>
                     ) : (
-                        <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%' }}>
+                        <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                             <table className="table responsive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
-                                        <th style={{ textAlign: 'left', padding: '14px 16px', whiteSpace: 'nowrap' }}>Item Name</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Quantity</th>
-                                        <th style={{ textAlign: 'right', padding: '14px 12px', whiteSpace: 'nowrap' }}>Unit Price (₹)</th>
-                                        <th style={{ textAlign: 'right', padding: '14px 12px', whiteSpace: 'nowrap' }}>Total Asset Value (₹)</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Reorder Level</th>
-                                        <th style={{ textAlign: 'center', padding: '14px 12px', whiteSpace: 'nowrap' }}>Status</th>
-                                        <th style={{ textAlign: 'right', padding: '14px 16px', whiteSpace: 'nowrap' }}>Actions</th>
+                                        <th style={{ textAlign: 'left', padding: '8px 12px', whiteSpace: 'nowrap', fontSize: 12 }}>Item Name</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Quantity</th>
+                                        <th style={{ textAlign: 'right', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Unit Price (₹)</th>
+                                        <th style={{ textAlign: 'right', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Total Asset Value (₹)</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Reorder Level</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Status</th>
+                                        <th style={{ textAlign: 'right', padding: '8px 12px', whiteSpace: 'nowrap', fontSize: 12 }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -467,10 +468,10 @@ function AssetRegisterContent() {
 
                                         return (
                                             <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: isLow ? 'rgba(245, 158, 11, 0.04)' : 'transparent' }}>
-                                                <td data-label="Item Name" style={{ padding: '14px 16px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <td data-label="Item Name" style={{ padding: '6px 12px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <div style={{
-                                                            width: '40px', height: '40px', borderRadius: '8px',
+                                                             width: '28px', height: '28px', borderRadius: '6px',
                                                             background: 'var(--surface-2)', display: 'flex', alignItems: 'center',
                                                             justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border)',
                                                             flexShrink: 0
@@ -483,46 +484,46 @@ function AssetRegisterContent() {
                                                                     onError={(e) => {
                                                                         (e.target as HTMLElement).style.display = 'none';
                                                                         if ((e.target as HTMLElement).parentElement) {
-                                                                            (e.target as HTMLElement).parentElement!.innerHTML = '<span style="font-size: 18px;">🛠️</span>';
+                                                                            (e.target as HTMLElement).parentElement!.innerHTML = '<span style="font-size: 14px;">🛠️</span>';
                                                                         }
                                                                     }}
                                                                 />
                                                             ) : (
-                                                                <span style={{ fontSize: '18px' }}>🛠️</span>
+                                                                <span style={{ fontSize: '14px' }}>🛠️</span>
                                                             )}
                                                         </div>
                                                         <div style={{ minWidth: 0, flex: 1 }}>
-                                                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                                                 <span>{item.name}</span>
                                                                 {isLow && (
-                                                                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#f59e0b', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                                                                        ⚠️ Low Stock Reorder
+                                                                    <span style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: '#f59e0b', color: '#ffffff', whiteSpace: 'nowrap' }}>
+                                                                        ⚠️ Low Stock
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td data-label="Quantity" style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                                    <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
+                                                <td data-label="Quantity" style={{ padding: '6px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)' }}>
                                                         {item.quantity} {cleanUnit}
                                                     </span>
                                                 </td>
-                                                <td data-label="Unit Price (₹)" style={{ padding: '14px 12px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                <td data-label="Unit Price (₹)" style={{ padding: '6px 10px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>
                                                     ₹{unitPrice.toLocaleString('en-IN')} / {cleanUnit}
                                                 </td>
-                                                <td data-label="Total Asset Value (₹)" style={{ padding: '14px 12px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 800, color: '#10b981' }}>
+                                                <td data-label="Total Asset Value (₹)" style={{ padding: '6px 10px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700, fontSize: 12, color: '#10b981' }}>
                                                     ₹{totalVal.toLocaleString('en-IN')}
                                                 </td>
-                                                <td data-label="Reorder Level" style={{ padding: '14px 12px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Reorder Level" style={{ padding: '6px 10px', textAlign: 'center', fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                                     {item.reorderLevel} {cleanUnit}
                                                 </td>
-                                                <td data-label="Status" style={{ padding: '14px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <td data-label="Status" style={{ padding: '6px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                     <span style={{
-                                                        fontSize: 11,
+                                                        fontSize: 10.5,
                                                         fontWeight: 700,
-                                                        padding: '4px 10px',
-                                                        borderRadius: '12px',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '10px',
                                                         background: `${stObj.color}18`,
                                                         color: stObj.color,
                                                         border: `1px solid ${stObj.color}40`,
@@ -534,40 +535,40 @@ function AssetRegisterContent() {
                                                         ● {stObj.label}
                                                     </span>
                                                 </td>
-                                                <td data-label="Actions" className="cell-actions" style={{ padding: '14px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                                    <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
+                                                <td data-label="Actions" className="cell-actions" style={{ padding: '6px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                    <div style={{ display: 'inline-flex', gap: 5, alignItems: 'center', justifyContent: 'flex-end' }}>
                                                         <button
-                                                            onClick={() => openEditModal(item)}
-                                                            className="btn"
-                                                            style={{
-                                                                padding: '5px 10px',
-                                                                fontSize: 11,
-                                                                fontWeight: 700,
-                                                                background: 'rgba(2, 132, 199, 0.12)',
-                                                                color: '#0284c7',
-                                                                border: '1px solid rgba(2, 132, 199, 0.3)',
-                                                                borderRadius: '6px',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                        >
-                                                            ✏️ Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleSoftArchiveAsset(item.id, item.name)}
-                                                            className="btn"
-                                                            style={{
-                                                                padding: '5px 10px',
-                                                                fontSize: 11,
-                                                                fontWeight: 700,
-                                                                background: 'rgba(239, 68, 68, 0.12)',
-                                                                color: '#ef4444',
-                                                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                                borderRadius: '6px',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                        >
-                                                            📦 Archive
-                                                        </button>
+                                                             onClick={() => openEditModal(item)}
+                                                             className="btn"
+                                                             style={{
+                                                                 padding: '3px 8px',
+                                                                 fontSize: 11,
+                                                                 fontWeight: 700,
+                                                                 background: 'rgba(2, 132, 199, 0.12)',
+                                                                 color: '#0284c7',
+                                                                 border: '1px solid rgba(2, 132, 199, 0.3)',
+                                                                 borderRadius: '5px',
+                                                                 cursor: 'pointer'
+                                                             }}
+                                                         >
+                                                             ✏️ Edit
+                                                         </button>
+                                                         <button
+                                                             onClick={() => handleSoftArchiveAsset(item.id, item.name)}
+                                                             className="btn"
+                                                             style={{
+                                                                 padding: '3px 8px',
+                                                                 fontSize: 11,
+                                                                 fontWeight: 700,
+                                                                 background: 'rgba(239, 68, 68, 0.12)',
+                                                                 color: '#ef4444',
+                                                                 border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                 borderRadius: '5px',
+                                                                 cursor: 'pointer'
+                                                             }}
+                                                         >
+                                                             📦 Archive
+                                                         </button>
                                                     </div>
                                                 </td>
                                             </tr>

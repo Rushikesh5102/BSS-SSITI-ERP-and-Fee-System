@@ -16,7 +16,7 @@ export const usersController = {
             ...(includeInactive === 'true' ? {} : { isActive: true }),
             ...(req.user?.branchId ? { branchId: req.user.branchId } : {}),
             ...(queryBranch ? { branchId: String(queryBranch) } : {}),
-            ...(role ? { role: role as Role } : {}),
+            role: role ? (role as Role) : { not: 'STUDENT' as Role },
         };
 
         const users = await prisma.user.findMany({
@@ -47,8 +47,9 @@ export const usersController = {
         }, {
             ADMIN: 0,
             ACCOUNTANT: 0,
+            STORE_MANAGER: 0,
+            LIBRARIAN: 0,
             TEACHER: 0,
-            STUDENT: 0,
             DEVELOPER: 0
         });
 
@@ -76,6 +77,10 @@ export const usersController = {
      */
     create: asyncHandler(async (req: Request, res: Response) => {
         const { name, email, password, role, branchId } = req.body;
+
+        if (role === 'STUDENT') {
+            throw new AppError(400, 'Student nodes cannot be provisioned as user access accounts');
+        }
 
         if (!password || password.length < 8) {
             throw new AppError(400, 'Password must be at least 8 characters long');
@@ -194,61 +199,20 @@ export const usersController = {
      * POST /users/sync-students - Synchronize all students as system login credentials
      */
     syncStudents: asyncHandler(async (_req: Request, res: Response) => {
-        const students = await prisma.student.findMany({
-            select: { id: true, studentId: true, name: true, email: true, branchId: true, isActive: true }
+        // Permanently purge any student login accounts
+        const deleted = await prisma.user.deleteMany({
+            where: { role: 'STUDENT' }
         });
-
-        let createdCount = 0;
-        let updatedCount = 0;
-
-        for (const student of students) {
-            const cleanStudentId = student.studentId.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const generatedEmail = `${cleanStudentId}@student.saiiti.edu.in`;
-            const primaryEmail = (student.email && student.email.trim().length > 0) ? student.email.trim().toLowerCase() : generatedEmail;
-
-            const existingUser = await prisma.user.findFirst({
-                where: {
-                    OR: [
-                        { email: primaryEmail },
-                        { email: generatedEmail }
-                    ]
-                }
-            });
-
-            if (!existingUser) {
-                const passwordHash = await authService.hashPassword(student.studentId);
-                await prisma.user.create({
-                    data: {
-                        name: student.name,
-                        email: primaryEmail,
-                        passwordHash,
-                        role: 'STUDENT',
-                        branchId: student.branchId,
-                        isActive: student.isActive,
-                    }
-                });
-                createdCount++;
-            } else {
-                await prisma.user.update({
-                    where: { id: existingUser.id },
-                    data: {
-                        name: student.name,
-                        isActive: student.isActive,
-                        role: 'STUDENT'
-                    }
-                });
-                updatedCount++;
-            }
-        }
 
         res.json({
             success: true,
             data: {
-                totalStudents: students.length,
-                createdCount,
-                updatedCount
+                totalStudents: 0,
+                createdCount: 0,
+                updatedCount: 0,
+                purgedCount: deleted.count
             },
-            message: `Student credentials synchronized: ${createdCount} new account(s) provisioned, ${updatedCount} account(s) verified.`
+            message: 'Student nodes removed. Software access is configured for administrative and staff roles.'
         });
     }),
 };

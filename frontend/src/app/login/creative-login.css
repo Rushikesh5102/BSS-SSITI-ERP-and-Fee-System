@@ -304,3 +304,68 @@ html.dark .form-container .form-row label.checkbox-label {
     color: #ffffff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
+
+/* Responsive Mobile Layout (< 768px) */
+@media (max-width: 768px) {
+    .unboxed-brand-header {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin-top: 24px;
+        margin-bottom: 20px;
+        padding: 0 16px;
+    }
+
+    .unboxed-brand-header .free-logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .unboxed-brand-header .brand-title {
+        font-size: 20px;
+    }
+
+    .machine-svg {
+        display: none !important;
+    }
+
+    .machine-container {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 380px !important;
+        height: auto !important;
+        margin: 0 auto 30px !important;
+        padding: 0 16px !important;
+        box-sizing: border-box !important;
+        pointer-events: auto !important;
+    }
+
+    .form-container {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        background: rgba(15, 23, 42, 0.75) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        padding: 24px 20px !important;
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    .form-container .form-row .submit-btn {
+        transform: none !important;
+        transform-origin: 50% 50% !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 100% !important;
+    }
+}

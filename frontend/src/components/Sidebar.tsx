@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -92,6 +92,26 @@ function SidebarInner() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [activeWorkspace, setActiveWorkspace] = useState<'FEES' | 'STORE' | 'LIBRARY' | 'DONATION'>(() => getWorkspaceFromPath(pathname));
+    const sidebarRef = useRef<HTMLElement>(null);
+
+    // Save & Restore Sidebar scroll position across route navigation
+    useEffect(() => {
+        const savedScroll = sessionStorage.getItem('sidebar_scroll_pos');
+        if (savedScroll && sidebarRef.current) {
+            sidebarRef.current.scrollTop = parseInt(savedScroll, 10);
+        } else if (sidebarRef.current) {
+            const activeItem = sidebarRef.current.querySelector('.sidebar-nav-item.active');
+            if (activeItem) {
+                activeItem.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }, [pathname]);
+
+    const handleSidebarScroll = () => {
+        if (sidebarRef.current) {
+            sessionStorage.setItem('sidebar_scroll_pos', String(sidebarRef.current.scrollTop));
+        }
+    };
 
     useEffect(() => {
         const nextWs = getWorkspaceFromPath(pathname);
@@ -305,7 +325,7 @@ function SidebarInner() {
                 </div>
             )}
 
-            <aside className={`sidebar ${mobileOpen ? 'active' : ''}`}>
+            <aside className={`sidebar ${mobileOpen ? 'active' : ''}`} ref={sidebarRef} onScroll={handleSidebarScroll}>
                 {/* Logo & Retract Collapse Header */}
                 <div className="sidebar-header-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px' }}>
                     <Link href={simulateParam ? `/dashboard?simulate=${simulateParam}` : '/dashboard'} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }} onClick={() => setMobileOpen(false)} title="Home / Dashboard Shortcut">
@@ -537,7 +557,10 @@ function SidebarInner() {
                                 key={item.href}
                                 href={targetHref}
                                 className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                                onClick={() => setMobileOpen(false)}
+                                onClick={() => {
+                                    if (sidebarRef.current) sessionStorage.setItem('sidebar_scroll_pos', String(sidebarRef.current.scrollTop));
+                                    setMobileOpen(false);
+                                }}
                             >
                                 <span style={{ fontSize: 18 }}>{item.icon}</span>
                                 {item.label}

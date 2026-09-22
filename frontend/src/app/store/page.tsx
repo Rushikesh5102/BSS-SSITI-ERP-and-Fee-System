@@ -150,74 +150,74 @@ function StoreDashboardContent() {
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                        gap: 12
+                        gap: 10
                     }}>
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 📋
                             </div>
                             <div>
-                                <div className="stat-label">Total Asset Types</div>
-                                <div className="stat-value">{stats?.totalItems || items.length}</div>
-                                <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>active inventory</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Total Asset Types</div>
+                                <div className="stat-value" style={{ fontSize: 20 }}>{stats?.totalItems || items.length}</div>
+                                <div style={{ fontSize: 10.5, color: '#10b981', fontWeight: 700 }}>active inventory</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(2, 132, 199, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(2, 132, 199, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 📤
                             </div>
                             <div>
-                                <div className="stat-label">Issued Tools</div>
-                                <div className="stat-value" style={{ color: '#0284c7' }}>{stats?.issuedCount || 0}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>with trainees/staff</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Issued Tools</div>
+                                <div className="stat-value" style={{ color: '#0284c7', fontSize: 20 }}>{stats?.issuedCount || 0}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>with trainees/staff</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 🚨
                             </div>
                             <div>
-                                <div className="stat-label">Overdue Returns</div>
-                                <div className="stat-value" style={{ color: '#ef4444' }}>{stats?.overdueCount || 0}</div>
-                                <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>require return</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Overdue Returns</div>
+                                <div className="stat-value" style={{ color: '#ef4444', fontSize: 20 }}>{stats?.overdueCount || 0}</div>
+                                <div style={{ fontSize: 10.5, color: '#ef4444', fontWeight: 700 }}>require return</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 ⚠️
                             </div>
                             <div>
-                                <div className="stat-label">Low Stock Alerts</div>
-                                <div className="stat-value" style={{ color: '#f59e0b' }}>{lowStockItems.length}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>reorder level hit</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Low Stock Alerts</div>
+                                <div className="stat-value" style={{ color: '#f59e0b', fontSize: 20 }}>{lowStockItems.length}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>reorder level hit</div>
                             </div>
                         </div>
 
-                        <div className="stat-card" style={{ padding: '14px' }}>
-                            <div className="stat-icon" style={{ background: 'rgba(168, 85, 247, 0.1)', width: 38, height: 38, borderRadius: 10 }}>
+                        <div className="stat-card" style={{ padding: '10px 14px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(168, 85, 247, 0.1)', width: 32, height: 32, borderRadius: 8, fontSize: 16 }}>
                                 🔧
                             </div>
                             <div>
-                                <div className="stat-label">Damaged / Maint.</div>
-                                <div className="stat-value" style={{ color: '#a855f7' }}>{(stats?.damagedCount || 0) + (stats?.maintenanceCount || 0)}</div>
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>out for repair</div>
+                                <div className="stat-label" style={{ fontSize: 11 }}>Damaged / Maint.</div>
+                                <div className="stat-value" style={{ color: '#a855f7', fontSize: 20 }}>{(stats?.damagedCount || 0) + (stats?.maintenanceCount || 0)}</div>
+                                <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>out for repair</div>
                             </div>
                         </div>
                     </div>
 
                     {/* Quick Shortcuts Bar */}
-                    <div className="card" style={{ padding: 18 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 14, color: 'var(--text-primary)' }}>
+                    <div className="card" style={{ padding: '12px 16px' }}>
+                        <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 10, color: 'var(--text-primary)' }}>
                             ⚡ Quick Store Actions
                         </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
                             <button
                                 onClick={() => router.push(simulateParam ? `/store/items?action=add&simulate=${simulateParam}` : '/store/items?action=add')}
                                 className="btn btn-secondary"
-                                style={{ justifyContent: 'flex-start', padding: 14, borderRadius: 12, gap: 12 }}
+                                style={{ justifyContent: 'flex-start', padding: '10px 12px', borderRadius: 10, gap: 10 }}
                             >
                                 <span style={{ fontSize: 22 }}>➕</span>
                                 <div style={{ textAlign: 'left' }}>

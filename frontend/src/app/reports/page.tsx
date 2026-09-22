@@ -23,7 +23,7 @@ export default function ReportsPage() {
     const [purging, setPurging] = useState(false);
     const [purgeYear, setPurgeYear] = useState(new Date().getFullYear() - 1);
     const [purgeLogsOnly, setPurgeLogsOnly] = useState(true);
-    const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'pending' | 'storage'>('monthly');
+    const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'pending'>('monthly');
     const [toast, setToast] = useState('');
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
@@ -67,7 +67,6 @@ export default function ReportsPage() {
             if (activeTab === 'monthly') fetchMonthly();
             else if (activeTab === 'yearly') fetchYearly();
             else if (activeTab === 'pending') fetchPending();
-            else if (activeTab === 'storage') fetchStorageStats();
         }
     }, [user, activeTab, month, year]);
 
@@ -207,30 +206,27 @@ export default function ReportsPage() {
         <div className="layout">
             <Sidebar />
             <div className="main-content">
-                <header className="header">
+                <header className="header" style={{ flexWrap: 'wrap', gap: 12 }}>
                     <div>
-                        <div className="header-title">📈 Reports & Storage Management</div>
-                        <div className="header-subtitle">Export collection reports and manage free database storage</div>
+                        <div className="header-title">📈 Fee Collection Reports</div>
+                        <div className="header-subtitle">Official collection registers, yearly reports & fee ledger audits</div>
                     </div>
-                    {activeTab !== 'storage' && (
-                        <div className="header-actions">
-                            <button className="btn btn-secondary btn-sm" onClick={() => downloadReport('excel')}>📥 Excel</button>
-                            <button className="btn btn-secondary btn-sm" onClick={() => downloadReport('csv')}>📄 CSV</button>
-                            <button className="btn btn-primary btn-sm" onClick={() => downloadReport('pdf')}>📕 PDF Report</button>
-                        </div>
-                    )}
+                    <div className="header-actions" style={{ flexWrap: 'wrap', gap: 8 }}>
+                        <button className="btn btn-secondary btn-sm" onClick={() => downloadReport('excel')}>📥 Excel</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => downloadReport('csv')}>📄 CSV</button>
+                        <button className="btn btn-primary btn-sm" onClick={() => downloadReport('pdf')}>📕 PDF Report</button>
+                    </div>
                 </header>
 
                 <div className="page-content">
                     {/* Tabs */}
                     <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-                        {(['monthly', 'yearly', 'pending', ...(user.role === 'DEVELOPER' ? ['storage'] : [])] as const).map((tab) => (
+                        {(['monthly', 'yearly', 'pending'] as const).map((tab) => (
                             <button key={tab} className={`btn ${activeTab === tab ? 'btn-primary' : 'btn-secondary'}`}
                                 onClick={() => setActiveTab(tab as any)}>
                                 {tab === 'monthly' && '📅 Monthly Collection'}
                                 {tab === 'yearly' && '📊 Annual / Yearly Collection'}
                                 {tab === 'pending' && '⏳ Outstanding Fees'}
-                                {tab === 'storage' && '⚡ Storage & Free Quota Clear (Dev)'}
                             </button>
                         ))}
                     </div>
@@ -239,10 +235,10 @@ export default function ReportsPage() {
                         <>
                             {/* Filters */}
                             <div className="card mb-4">
-                                <div className="card-body" style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
-                                    <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 120 }}>
+                                <div className="card-body" style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                    <div className="form-group" style={{ marginBottom: 0, flex: '1 1 160px', minWidth: 140 }}>
                                         <label className="form-label">Month</label>
-                                        <select className="form-control" value={month} onChange={(e) => setMonth(parseInt(e.target.value))}>
+                                        <select className="form-control" style={{ paddingRight: '28px' }} value={month} onChange={(e) => setMonth(parseInt(e.target.value))}>
                                             {Array.from({ length: 12 }, (_, i) => (
                                                 <option key={i + 1} value={i + 1}>
                                                     {new Date(0, i).toLocaleString('en-IN', { month: 'long' })}
@@ -250,13 +246,13 @@ export default function ReportsPage() {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 100 }}>
+                                    <div className="form-group" style={{ marginBottom: 0, flex: '1 1 140px', minWidth: 120 }}>
                                         <label className="form-label">Year</label>
-                                        <select className="form-control" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
+                                        <select className="form-control" style={{ paddingRight: '28px' }} value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
                                             {[2024, 2025, 2026].map((y) => <option key={y}>{y}</option>)}
                                         </select>
                                     </div>
-                                    <button className="btn btn-primary" onClick={fetchMonthly} style={{ whiteSpace: 'nowrap', height: 42 }}>🔍 Generate Report</button>
+                                    <button className="btn btn-primary" onClick={fetchMonthly} style={{ whiteSpace: 'nowrap', height: 42, flexShrink: 0 }}>🔍 Generate Report</button>
                                 </div>
                             </div>
 
@@ -275,10 +271,10 @@ export default function ReportsPage() {
                             )}
 
                             <div className="card">
-                                <div className="table-wrap" style={{ border: 'none' }}>
+                                <div className="table-wrap" style={{ border: 'none', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
                                     <table className="table">
                                         <thead><tr>
-                                            <th>Date</th><th>Student</th><th>Student ID</th><th>Class</th>
+                                            <th style={{ paddingLeft: '16px' }}>Date</th><th>Student</th><th>Student ID</th><th>Class</th>
                                             <th>Amount</th><th>Mode</th><th>Transaction Ref</th><th>Recorded By</th>
                                         </tr></thead>
                                         <tbody>
@@ -288,7 +284,7 @@ export default function ReportsPage() {
                                                 <tr><td colSpan={8} className="text-center text-muted" style={{ padding: 40 }}>No payments found for this period</td></tr>
                                             ) : (report?.payments || []).map((p: any) => (
                                                 <tr key={p.id}>
-                                                    <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+                                                    <td style={{ paddingLeft: '16px' }}>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
                                                     <td><b>{p.studentFee?.student?.name}</b></td>
                                                     <td>{p.studentFee?.student?.studentId}</td>
                                                     <td>{p.studentFee?.student?.class}</td>
@@ -309,14 +305,14 @@ export default function ReportsPage() {
                         <>
                             {/* Filters */}
                             <div className="card mb-4">
-                                <div className="card-body" style={{ display: 'flex', gap: 16, alignItems: 'flex-end' }}>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                <div className="card-body" style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                    <div className="form-group" style={{ marginBottom: 0, flex: '1 1 160px', minWidth: 140 }}>
                                         <label className="form-label">Academic / Financial Year</label>
-                                        <select className="form-control" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
+                                        <select className="form-control" style={{ paddingRight: '28px' }} value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
                                             {[2024, 2025, 2026].map((y) => <option key={y}>{y}</option>)}
                                         </select>
                                     </div>
-                                    <button className="btn btn-primary" onClick={fetchYearly}>🔍 Generate Annual Report</button>
+                                    <button className="btn btn-primary" onClick={fetchYearly} style={{ whiteSpace: 'nowrap', height: 42, flexShrink: 0 }}>🔍 Generate Annual Report</button>
                                 </div>
                             </div>
 
@@ -335,10 +331,10 @@ export default function ReportsPage() {
                             )}
 
                             <div className="card">
-                                <div className="table-wrap" style={{ border: 'none' }}>
+                                <div className="table-wrap" style={{ border: 'none', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
                                     <table className="table">
                                         <thead><tr>
-                                            <th>Date</th><th>Student</th><th>Student ID</th><th>Class</th>
+                                            <th style={{ paddingLeft: '16px' }}>Date</th><th>Student</th><th>Student ID</th><th>Class</th>
                                             <th>Amount</th><th>Mode</th><th>Transaction Ref</th><th>Recorded By</th>
                                         </tr></thead>
                                         <tbody>
@@ -348,7 +344,7 @@ export default function ReportsPage() {
                                                 <tr><td colSpan={8} className="text-center text-muted" style={{ padding: 40 }}>No payments found for year {year}</td></tr>
                                             ) : (yearlyReport?.payments || []).map((p: any) => (
                                                 <tr key={p.id}>
-                                                    <td>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+                                                    <td style={{ paddingLeft: '16px' }}>{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
                                                     <td><b>{p.studentFee?.student?.name}</b></td>
                                                     <td>{p.studentFee?.student?.studentId}</td>
                                                     <td>{p.studentFee?.student?.class}</td>
@@ -381,10 +377,10 @@ export default function ReportsPage() {
                             )}
 
                             <div className="card">
-                                <div className="table-wrap" style={{ border: 'none' }}>
+                                <div className="table-wrap" style={{ border: 'none', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
                                     <table className="table">
                                         <thead><tr>
-                                            <th>Student ID</th><th>Name</th><th>Class</th><th>Fee Structure</th>
+                                            <th style={{ paddingLeft: '16px' }}>Student ID</th><th>Name</th><th>Class</th><th>Fee Structure</th>
                                             <th>Total</th><th>Paid</th><th>Pending</th><th>Due Date</th><th>Parent Phone</th>
                                         </tr></thead>
                                         <tbody>
@@ -396,7 +392,7 @@ export default function ReportsPage() {
                                                 const pendingAmt = sf.totalAmount - sf.paidAmount;
                                                 return (
                                                     <tr key={sf.id}>
-                                                        <td><span className="badge badge-primary">{sf.student?.studentId}</span></td>
+                                                        <td style={{ paddingLeft: '16px' }}><span className="badge badge-primary">{sf.student?.studentId}</span></td>
                                                         <td><b>{sf.student?.name}</b></td>
                                                         <td>{sf.student?.class}</td>
                                                         <td>{(sf.feeStructure?.name || 'Trade Fee').replace(/\s*—\s*\d{4}[-–]\d{2,4}/g, '')} ({sf.academicYear || '2026-2028'})</td>
@@ -415,96 +411,7 @@ export default function ReportsPage() {
                         </>
                     )}
 
-                    {activeTab === 'storage' && (
-                        <div>
-                            <div className="card mb-4">
-                                <div className="card-header"><div className="card-title">⚡ Database & Disk Storage Monitoring</div></div>
-                                <div className="card-body">
-                                    {fetching ? (
-                                        <div className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-                                    ) : storageStats ? (
-                                        <div>
-                                            <div style={{ marginBottom: 20 }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
-                                                    <span><b>Storage Quota Usage:</b> {storageStats.dbUsedMb + storageStats.fileUsedMb} MB / {storageStats.dbLimitMb + storageStats.fileLimitMb} MB</span>
-                                                    <b>{storageStats.totalUsedPercent}%</b>
-                                                </div>
-                                                <div style={{ height: 12, background: 'var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-                                                    <div style={{ height: '100%', width: `${Math.max(5, storageStats.totalUsedPercent)}%`, background: storageStats.totalUsedPercent > 80 ? 'var(--danger)' : 'var(--primary)', transition: 'width 0.3s' }} />
-                                                </div>
-                                            </div>
 
-                                            <div className="grid grid-4 mb-4" style={{ gap: 16 }}>
-                                                <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8 }}>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>DATABASE ROWS</div>
-                                                    <div style={{ fontSize: 20, fontWeight: 700 }}>{storageStats.counts.students + storageStats.counts.payments + storageStats.counts.receipts + storageStats.counts.auditLogs}</div>
-                                                    <small className="text-muted">Est. {storageStats.dbUsedMb} MB / 500 MB</small>
-                                                </div>
-                                                <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8 }}>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>PAYMENT RECORDS</div>
-                                                    <div style={{ fontSize: 20, fontWeight: 700 }}>{storageStats.counts.payments}</div>
-                                                </div>
-                                                <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8 }}>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>GENERATED RECEIPT PDFS</div>
-                                                    <div style={{ fontSize: 20, fontWeight: 700 }}>{storageStats.counts.pdfFiles}</div>
-                                                    <small className="text-muted">{storageStats.fileUsedMb} MB disk</small>
-                                                </div>
-                                                <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8 }}>
-                                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>SYSTEM AUDIT LOGS</div>
-                                                    <div style={{ fontSize: 20, fontWeight: 700 }}>{storageStats.counts.auditLogs}</div>
-                                                </div>
-                                            </div>
-                                            {storageStats.totalUsedPercent >= 75 && (
-                                                <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#991b1b', padding: '12px 16px', borderRadius: 8, marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                    <span style={{ fontSize: 24 }}>⚠️</span>
-                                                    <div>
-                                                        <b>Timely Storage Warning:</b> Database and file storage usage has exceeded {storageStats.totalUsedPercent}%. Please contact system Developer/Architect to purge old historical logs to prevent service interruption.
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Purge & Clear Storage Utility (ADMIN and DEVELOPER) */}
-                                            {['ADMIN', 'DEVELOPER'].includes(user.role) ? (
-                                                <div className="card mt-4">
-                                                    <div className="card-header"><div className="card-title">🧹 Clear Historical Data & Clean Production Reset</div></div>
-                                                    <div className="card-body">
-                                                        <p className="text-muted" style={{ fontSize: 13, marginBottom: 16 }}>
-                                                            Export your monthly/yearly Excel & PDF backups first. Then use these tools to clear old audit logs, transaction history, or perform a complete 100% clean reset for production launch.
-                                                        </p>
-                                                        <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                                <label className="form-label">Purge Data For Year</label>
-                                                                <select className="form-control" value={purgeYear} onChange={(e) => setPurgeYear(parseInt(e.target.value))}>
-                                                                    {[2024, 2025, 2026].map((y) => <option key={y} value={y}>Year {y} & Earlier</option>)}
-                                                                </select>
-                                                            </div>
-                                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                                <label className="form-label">Purge Scope</label>
-                                                                <select className="form-control" value={purgeLogsOnly ? 'logs' : 'all'} onChange={(e) => setPurgeLogsOnly(e.target.value === 'logs')}>
-                                                                    <option value="logs">Clear System Audit Logs Only (Safe)</option>
-                                                                    <option value="all">Clear Audit Logs + Old Receipts & Payments</option>
-                                                                </select>
-                                                            </div>
-                                                            <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handlePurgeData} disabled={purging}>
-                                                                {purging ? 'Purging Storage...' : '🧹 Purge Storage & Clear Space'}
-                                                            </button>
-                                                            <button className="btn btn-danger" style={{ fontWeight: 700 }} onClick={handleClearMockData} disabled={purging}>
-                                                                {purging ? 'Wiping Mock Data...' : '🗑️ Wipe All Mock & Test Data (Clean Reset)'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="card card-body text-center text-muted" style={{ padding: 20, marginTop: 16 }}>
-                                                    🔒 Storage clearing and cache purging tools are managed exclusively by Administrators and System Developers.
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : null}
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 <Footer />

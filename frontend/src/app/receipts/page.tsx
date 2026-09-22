@@ -145,17 +145,27 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
 
                     <div className="card">
                         <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
-                            <table className="table responsive-table">
+                            <table className="table responsive-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+                                <colgroup>
+                                    <col style={{ width: '8%' }} />
+                                    <col style={{ width: '23%' }} />
+                                    <col style={{ width: '12%' }} />
+                                    <col style={{ width: '10%' }} />
+                                    <col style={{ width: '15%' }} />
+                                    <col style={{ width: '11%' }} />
+                                    <col style={{ width: '10%' }} />
+                                    <col style={{ width: '11%' }} />
+                                </colgroup>
                                 <thead>
                                     <tr>
-                                        <th style={{ verticalAlign: 'middle', textAlign: 'center', width: 55, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 4px' }}>RECEIPT NO.</th>
-                                        <th style={{ verticalAlign: 'middle', minWidth: 130, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>STUDENT</th>
-                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>AMOUNT PAID</th>
-                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>PAYMENT MODE</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>REMARKS / NOTES</th>
-                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>ISSUED DATE</th>
-                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', padding: '8px 6px' }}>CLERK / CASHIER</th>
-                                        <th style={{ verticalAlign: 'middle', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', textAlign: 'center', width: 120, minWidth: 120, padding: '8px 4px' }}>ACTIONS</th>
+                                        <th style={{ verticalAlign: 'middle', textAlign: 'center', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 4px' }}>RCPT NO.</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 8px' }}>STUDENT</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 6px' }}>AMOUNT PAID</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 6px' }}>PAYMENT MODE</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 6px' }}>REMARKS / NOTES</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 6px' }}>ISSUED DATE</th>
+                                        <th style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', padding: '10px 6px' }}>CLERK / CASHIER</th>
+                                        <th style={{ verticalAlign: 'middle', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textAlign: 'center', padding: '10px 4px' }}>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -165,56 +175,56 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                         <tr><td colSpan={8} className="text-center text-muted" style={{ padding: 40 }}>No receipts found</td></tr>
                                     ) : filtered.map((r) => (
                                         <tr key={r.id}>
-                                             <td data-label="RECEIPT NO." style={{ verticalAlign: 'middle', textAlign: 'center', width: 55, padding: '8px 4px' }}>
+                                             <td data-label="RECEIPT NO." style={{ verticalAlign: 'middle', textAlign: 'center', padding: '10px 4px' }}>
                                                  <span style={{
                                                      display: 'inline-flex',
                                                      alignItems: 'center',
                                                      justifyContent: 'center',
-                                                     width: 32,
-                                                     height: 32,
+                                                     width: 28,
+                                                     height: 28,
                                                      borderRadius: '50%',
                                                      backgroundColor: 'rgba(14, 165, 233, 0.15)',
                                                      color: '#0284c7',
                                                      fontWeight: 800,
-                                                     fontSize: 13
+                                                     fontSize: 12
                                                  }}>
                                                      {r.receiptNumber}
                                                  </span>
                                              </td>
-                                             <td data-label="STUDENT" style={{ verticalAlign: 'middle', minWidth: 130, padding: '8px 6px' }}>
-                                                 <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text-primary)', lineHeight: 1.25 }}>
+                                             <td data-label="STUDENT" style={{ verticalAlign: 'middle', padding: '10px 8px', overflow: 'hidden' }}>
+                                                 <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                      {r.payment?.studentFee?.student?.name || '—'}
                                                  </div>
-                                                 <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                      {r.payment?.studentFee?.student?.studentId} • {r.payment?.studentFee?.student?.class}
                                                  </div>
                                              </td>
-                                             <td data-label="AMOUNT PAID" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '8px 6px' }}>
-                                                 <b style={{ color: '#f59e0b', fontSize: 14, fontWeight: 800 }}>
+                                             <td data-label="AMOUNT PAID" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '10px 6px' }}>
+                                                 <b style={{ color: '#f59e0b', fontSize: 13.5, fontWeight: 800 }}>
                                                      {formatRupees(r.payment?.amount || 0)}
                                                  </b>
                                              </td>
-                                             <td data-label="PAYMENT MODE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '8px 6px' }}>
-                                                 <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                             <td data-label="PAYMENT MODE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '10px 6px' }}>
+                                                 <span style={{ fontWeight: 800, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                                      {r.payment?.mode || '—'}
                                                  </span>
                                              </td>
-                                             <td data-label="REMARKS / NOTES" style={{ verticalAlign: 'middle', padding: '8px 6px' }}>
+                                             <td data-label="REMARKS / NOTES" style={{ verticalAlign: 'middle', padding: '10px 6px', overflow: 'hidden' }}>
                                                  {r.payment?.remarks ? (
                                                      <span
                                                          title={r.payment.remarks}
                                                          style={{
-                                                             fontSize: 11.5,
+                                                             fontSize: 11,
                                                              fontWeight: 600,
                                                              color: 'var(--text-secondary)',
                                                              background: 'var(--surface-2, rgba(0,0,0,0.06))',
                                                              border: '1px solid var(--border)',
-                                                             padding: '3px 8px',
+                                                             padding: '2px 7px',
                                                              borderRadius: 6,
                                                              display: 'inline-flex',
                                                              alignItems: 'center',
-                                                             gap: 5,
-                                                             maxWidth: 150,
+                                                             gap: 4,
+                                                             maxWidth: '100%',
                                                              whiteSpace: 'nowrap',
                                                              overflow: 'hidden',
                                                              textOverflow: 'ellipsis'
@@ -224,69 +234,68 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                      </span>
                                                  ) : <span className="text-muted text-xs">—</span>}
                                              </td>
-                                             <td data-label="ISSUED DATE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 12, padding: '8px 6px' }}>
+                                             <td data-label="ISSUED DATE" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: 11.5, padding: '10px 6px' }}>
                                                  {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                              </td>
-                                             <td data-label="CLERK / CASHIER" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '8px 6px' }}>
-                                                 <span style={{ fontWeight: 800, fontSize: 12 }}>
+                                             <td data-label="CLERK / CASHIER" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', padding: '10px 6px', overflow: 'hidden' }}>
+                                                 <span style={{ fontWeight: 800, fontSize: 11.5 }}>
                                                      {r.generatedBy?.name || 'Fee Accountant'}
                                                  </span>
                                              </td>
-                                             <td data-label="ACTIONS" className="cell-actions" style={{ verticalAlign: 'middle', width: 120, minWidth: 120, padding: '8px 4px' }}>
-                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', alignItems: 'stretch' }}>
+                                             <td data-label="ACTIONS" className="cell-actions" style={{ verticalAlign: 'middle', padding: '6px 4px' }}>
+                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, width: '100%' }}>
                                                      <button
                                                          onClick={() => setViewReceipt(r)}
                                                          className="btn btn-secondary btn-sm"
-                                                         title="View full printable receipt with balance & clerk signature"
+                                                         title="View / Print"
                                                          style={{
-                                                             width: '100%',
                                                              justifyContent: 'center',
-                                                             borderRadius: 6,
+                                                             borderRadius: 5,
                                                              fontWeight: 700,
-                                                             padding: '5px 8px',
-                                                             fontSize: 11.5,
+                                                             padding: '4px 3px',
+                                                             fontSize: 10.5,
                                                              display: 'inline-flex',
                                                              alignItems: 'center',
-                                                             gap: 4
+                                                             gap: 2,
+                                                             whiteSpace: 'nowrap'
                                                          }}
                                                      >
-                                                         👁️ View / Print
+                                                         👁️ View
                                                      </button>
                                                      <button
                                                          onClick={() => setDownloadModalReceipt(r)}
                                                          className="btn btn-sm"
                                                          title="Download Fee Receipt"
                                                          style={{
-                                                             width: '100%',
                                                              justifyContent: 'center',
-                                                             borderRadius: 6,
+                                                             borderRadius: 5,
                                                              background: '#f59e0b',
                                                              color: '#ffffff',
                                                              border: 'none',
                                                              fontWeight: 800,
-                                                             padding: '5px 8px',
-                                                             fontSize: 11.5,
+                                                             padding: '4px 3px',
+                                                             fontSize: 10.5,
                                                              display: 'inline-flex',
                                                              alignItems: 'center',
-                                                             gap: 4,
-                                                             boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                             gap: 2,
+                                                             whiteSpace: 'nowrap'
                                                          }}
                                                      >
-                                                         📥 Download Receipt
+                                                         📥 PDF
                                                      </button>
                                                      {canRefund && r.payment?.status !== 'REFUNDED' && (
                                                          <button
                                                              className="btn btn-ghost btn-sm"
                                                              style={{
-                                                                 width: '100%',
                                                                  justifyContent: 'center',
-                                                                 borderRadius: 6,
-                                                                 padding: '5px 8px',
-                                                                 fontSize: 11.5,
+                                                                 borderRadius: 5,
+                                                                 padding: '4px 3px',
+                                                                 fontSize: 10.5,
                                                                  fontWeight: 700,
                                                                  display: 'inline-flex',
                                                                  alignItems: 'center',
-                                                                 gap: 4
+                                                                 gap: 2,
+                                                                 whiteSpace: 'nowrap'
                                                              }}
                                                              onClick={async () => {
                                                                  const reason = prompt('Reason for fee refund:');
@@ -307,24 +316,24 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                          <button
                                                              className="btn btn-sm"
                                                              style={{
-                                                                 width: '100%',
                                                                  justifyContent: 'center',
-                                                                 borderRadius: 6,
-                                                                 padding: '5px 8px',
-                                                                 fontSize: 11.5,
+                                                                 borderRadius: 5,
+                                                                 padding: '4px 3px',
+                                                                 fontSize: 10.5,
                                                                  background: '#fee2e2',
                                                                  color: '#dc2626',
                                                                  border: '1px solid #fca5a5',
                                                                  fontWeight: 700,
                                                                  display: 'inline-flex',
                                                                  alignItems: 'center',
-                                                                 gap: 4
+                                                                 gap: 2,
+                                                                 whiteSpace: 'nowrap'
                                                              }}
                                                              disabled={deletingId === r.id}
                                                              onClick={() => handleDeleteReceipt(r)}
-                                                             title="Permanently delete receipt and adjust student balance"
+                                                             title="Permanently delete receipt and adjust balance"
                                                          >
-                                                             {deletingId === r.id ? '⏳ Deleting...' : '🗑️ Delete'}
+                                                             {deletingId === r.id ? '...' : '🗑️ Del'}
                                                          </button>
                                                      )}
                                                  </div>
@@ -348,7 +357,24 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                             <button className="btn btn-ghost btn-icon" onClick={() => setViewReceipt(null)}>✕</button>
                         </div>
                         
-                        <div className="modal-body print-area" style={{ padding: 24, background: 'var(--surface)' }}>
+                        <div className="modal-body print-area" style={{ padding: 24, background: 'var(--surface)', position: 'relative', overflow: 'hidden' }}>
+                            {/* Light Institutional Logo Watermark Behind Data */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '55%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: 260,
+                                height: 260,
+                                backgroundImage: "url('/sai_iti_logo.png')",
+                                backgroundRepeat: 'no-repeat',
+                                backgroundPosition: 'center',
+                                backgroundSize: 'contain',
+                                opacity: 0.07,
+                                pointerEvents: 'none',
+                                zIndex: 0
+                            }} />
+
                             {/* Header & Logo */}
                             <div style={{ textAlign: 'center', borderBottom: '2px solid var(--primary)', paddingBottom: 14, marginBottom: 16 }}>
                                 <img src="/sai_iti_logo.png" alt="Shri Sai ITI" style={{ height: 50, objectFit: 'contain', margin: '0 auto 8px' }} />

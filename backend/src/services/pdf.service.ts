@@ -139,6 +139,22 @@ export const generateReceiptPdf = async (data: ReceiptData): Promise<Buffer> => 
 
         page.drawLine({ start: { x: leftX, y: height - 138 }, end: { x: xOffset + 390, y: height - 138 }, thickness: 0.75, color: primary });
 
+        // Draw light institutional logo watermark behind the data
+        if (logoImage) {
+            const wmSize = 160;
+            const wmX = xOffset + 110;
+            const wmY = height / 2 - 80;
+            try {
+                page.drawImage(logoImage, {
+                    x: wmX,
+                    y: wmY,
+                    width: wmSize,
+                    height: wmSize,
+                    opacity: 0.08
+                });
+            } catch { /* graceful fallback */ }
+        }
+
         let y = height - 158;
         const drawField = (label: string, val: string, fx: number, fy: number) => {
             page.drawText(label, { x: fx, y: fy, font: regularFont, size: 7.5, color: gray });
