@@ -23,6 +23,11 @@ interface SummaryData {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ALLOWED_ROLES = ["ADMIN", "SUPERADMIN", "DEVELOPER"];
 
+const FALLBACK_ENTITIES = [
+    "STUDENT", "PAYMENT", "RECEIPT", "FEE_STRUCTURE", "STUDENT_FEE",
+    "USER", "BRANCH", "STORE_ITEM", "STOCK_TRANSACTION", "BOOK", "BOOK_ISSUE", "INQUIRY"
+];
+
 const ACTION_TYPE: Record<string, string> = {
     STUDENT_CREATED:"c", FEE_STRUCTURE_CREATED:"c", USER_CREATED:"c",
     ITEM_CREATED:"c", SUPPLIER_ADDED:"c", BRANCH_CREATED:"c", BOOK_CREATED:"c",
@@ -163,7 +168,7 @@ export default function ActivityLogPage() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [isRefetching, setIsRefetching] = useState(false);
     
-    // Expanded Accordion Card IDs (allows multiple or single expansion down)
+    // Expanded Accordion Card IDs
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     const [showRawJson, setShowRawJson] = useState<Record<string, boolean>>({});
 
@@ -194,18 +199,16 @@ export default function ActivityLogPage() {
 
         try {
             const params: Record<string, string> = { page: String(pg), limit: "30" };
-            if (query) params.search = query;
+            if (query && query.trim()) params.search = query.trim();
             if (filt.entityType) params.entityType = filt.entityType;
             if (filt.from) params.from = filt.from;
             if (filt.to) params.to = filt.to;
+            if (chip) params.type = chip;
 
             const qs = new URLSearchParams(params).toString();
             const { data } = await api.get("/system/audit-logs?" + qs);
-            let rows: AuditLog[] = data.data || [];
-            if (chip) {
-                rows = rows.filter((l) => getType(l.action) === chip);
-            }
-            setLogs(rows);
+            
+            setLogs(data.data || []);
             setPagination(data.pagination || null);
         } catch (e) {
             console.error("Failed to load audit logs", e);
@@ -243,7 +246,7 @@ export default function ActivityLogPage() {
         searchTimer.current = setTimeout(() => {
             setPage(1);
             fetchLogs(1, val, filters, typeChip, true);
-        }, 350);
+        }, 320);
     };
 
     const handleClearSearch = () => {
@@ -321,14 +324,19 @@ export default function ActivityLogPage() {
         URL.revokeObjectURL(url);
     };
 
-    // Stats
+    // Aggregate summary statistics
     const total = pagination?.total || 0;
     const created  = summary?.byAction.filter((a) => getType(a.action) === "c").reduce((s, a) => s + a.count, 0) || 0;
     const updated  = summary?.byAction.filter((a) => getType(a.action) === "u").reduce((s, a) => s + a.count, 0) || 0;
     const deleted  = summary?.byAction.filter((a) => getType(a.action) === "d").reduce((s, a) => s + a.count, 0) || 0;
     const payments = summary?.byAction.filter((a) => getType(a.action) === "p").reduce((s, a) => s + a.count, 0) || 0;
 
-    const entityTypes = summary?.byEntity.map((e) => e.entityType) || [];
+    // Available entities for dropdown
+    const availableEntities = Array.from(new Set([
+        ...(summary?.byEntity.map((e) => e.entityType) || []),
+        ...FALLBACK_ENTITIES
+    ])).sort();
+
     const activeFiltersCount = (filters.entityType ? 1 : 0) + (filters.from || filters.to ? 1 : 0);
     const hasAnyFilterActive = !!(searchQuery || typeChip || filters.entityType || filters.from || filters.to);
 
@@ -384,7 +392,7 @@ export default function ActivityLogPage() {
                     </div>
                 </div>
 
-                {/* Stats Row (Cleaned up, no profile name badge) */}
+                {/* Stats Row */}
                 <div className="al-stats">
                     <div className="al-stat"><span className="al-stat-dot" style={{ background: "#0ea5e9" }} />{total.toLocaleString()} Total</div>
                     <div className="al-stat"><span className="al-stat-dot" style={{ background: "#22c55e" }} />{created.toLocaleString()} Created</div>
@@ -414,7 +422,7 @@ export default function ActivityLogPage() {
                             <input
                                 id="al-search-input"
                                 className="al-search-input"
-                                placeholder="Search actions, students, users..."
+                                placeholder="Search actions, students, users, IDs..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearchChange(e.target.value)}
                             />
@@ -456,7 +464,7 @@ export default function ActivityLogPage() {
                                     onChange={(e) => handleFilterChange("entityType", e.target.value)}
                                 >
                                     <option value="">All Entities</option>
-                                    {entityTypes.map((et) => (
+                                    {availableEntities.map((et) => (
                                         <option key={et} value={et}>{et}</option>
                                     ))}
                                 </select>

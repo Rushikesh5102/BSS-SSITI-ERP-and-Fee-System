@@ -501,6 +501,7 @@ router.get('/audit-logs', async (req, res) => {
             userId,
             entityType,
             action,
+            type,
             from,
             to,
             search,
@@ -510,25 +511,77 @@ router.get('/audit-logs', async (req, res) => {
         const parsedLimit = Math.min(100, Math.max(1, Number(limit)));
         const skip = (parsedPage - 1) * parsedLimit;
 
+        const ACTION_GROUPS: Record<string, string[]> = {
+            c: [
+                'STUDENT_CREATED', 'FEE_STRUCTURE_CREATED', 'USER_CREATED',
+                'ITEM_CREATED', 'SUPPLIER_ADDED', 'BRANCH_CREATED', 'BOOK_CREATED',
+                'INQUIRY_CREATED', 'FEE_CATEGORY_CREATED'
+            ],
+            u: [
+                'STUDENT_UPDATED', 'FEE_STRUCTURE_MODIFIED', 'USER_UPDATED',
+                'ITEM_UPDATED', 'BRANCH_UPDATED', 'BOOK_UPDATED', 'INQUIRY_UPDATED',
+                'FEE_ASSIGNED', 'STOCK_ADJUSTED', 'SUPPLIER_UPDATED', 'FEE_CATEGORY_UPDATED'
+            ],
+            d: [
+                'STUDENT_DELETED', 'FEE_STRUCTURE_DELETED', 'USER_DELETED',
+                'ITEM_DELETED', 'BOOK_DELETED', 'INQUIRY_DELETED', 'SUPPLIER_DELETED',
+                'PAYMENT_DELETED'
+            ],
+            p: [
+                'PAYMENT_RECORDED', 'PAYMENT_APPROVED', 'PAYMENT_UPDATED',
+                'PAYMENT_DELETED', 'PAYMENT_FAILED', 'RECEIPT_GENERATED',
+                'STOCK_INWARD', 'STOCK_OUTWARD', 'BOOK_ISSUED', 'BOOK_RETURNED'
+            ],
+            a: ['LOGIN', 'LOGOUT'],
+        };
+
         const where: any = {};
         if (userId) where.userId = String(userId);
-        if (entityType) where.entityType = String(entityType);
-        if (action) where.action = String(action);
-        if (from || to) {
-            where.createdAt = {};
-            if (from) where.createdAt.gte = new Date(String(from));
-            if (to) {
-                const toDate = new Date(String(to));
-                toDate.setHours(23, 59, 59, 999);
-                where.createdAt.lte = toDate;
+        if (entityType) {
+            if (String(entityType).includes(',')) {
+                where.entityType = { in: String(entityType).split(',').map((s) => s.trim()) };
+            } else {
+                where.entityType = String(entityType);
             }
         }
+
+        if (action) {
+            if (String(action).includes(',')) {
+                where.action = { in: String(action).split(',').map((s) => s.trim()) };
+            } else {
+                where.action = String(action);
+            }
+        } else if (type && ACTION_GROUPS[String(type)]) {
+            where.action = { in: ACTION_GROUPS[String(type)] };
+        }
+
+        if (from || to) {
+            where.createdAt = {};
+            if (from) {
+                const fromDate = new Date(String(from));
+                if (!isNaN(fromDate.getTime())) {
+                    fromDate.setHours(0, 0, 0, 0);
+                    where.createdAt.gte = fromDate;
+                }
+            }
+            if (to) {
+                const toDate = new Date(String(to));
+                if (!isNaN(toDate.getTime())) {
+                    toDate.setHours(23, 59, 59, 999);
+                    where.createdAt.lte = toDate;
+                }
+            }
+        }
+
         if (search) {
+            const searchStr = String(search).trim();
             where.OR = [
-                { entityId: { contains: String(search), mode: 'insensitive' } },
-                { action: { contains: String(search), mode: 'insensitive' } },
-                { entityType: { contains: String(search), mode: 'insensitive' } },
-                { metadata: { contains: String(search), mode: 'insensitive' } },
+                { entityId: { contains: searchStr, mode: 'insensitive' } },
+                { action: { contains: searchStr, mode: 'insensitive' } },
+                { entityType: { contains: searchStr, mode: 'insensitive' } },
+                { metadata: { contains: searchStr, mode: 'insensitive' } },
+                { user: { name: { contains: searchStr, mode: 'insensitive' } } },
+                { user: { email: { contains: searchStr, mode: 'insensitive' } } },
             ];
         }
 
