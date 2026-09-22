@@ -95,7 +95,7 @@ function fullTime(d: string): string {
 
 // ─── Diff Viewer ──────────────────────────────────────────────────────────────
 function DiffViewer({ before, after }: { before: Record<string, any>; after: Record<string, any> }) {
-    const skip = new Set(["photo","signature","passwordHash","password_hash","submittedDocuments"]);
+    const skip = new Set(["photo", "signature", "passwordHash", "password_hash", "submittedDocuments"]);
     const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])) as string[];
     const changed = keys.filter((k) => !skip.has(k) && JSON.stringify(before[k]) !== JSON.stringify(after[k]));
     if (!changed.length) return null;
@@ -105,15 +105,15 @@ function DiffViewer({ before, after }: { before: Record<string, any>; after: Rec
         return String(v);
     };
     return (
-        <div className="al-diff">
-            <div className="al-diff-lbl">✏️ Changes detected</div>
+        <div className="al-diff-box">
+            <div className="al-diff-header">✏️ Field Modifications Detected ({changed.length})</div>
             <div className="al-diff-rows">
                 {changed.map((k) => (
-                    <div key={k} className="al-diff-row changed">
-                        <span className="al-diff-field">{k.replace(/([A-Z])/g, " $1").trim()}</span>
-                        <span className="al-diff-before">{fmt(before[k])}</span>
+                    <div key={k} className="al-diff-item">
+                        <span className="al-diff-key">{k.replace(/([A-Z])/g, " $1").trim()}</span>
+                        <span className="al-diff-old">{fmt(before[k])}</span>
                         <span className="al-diff-arrow">→</span>
-                        <span className="al-diff-after">{fmt(after[k])}</span>
+                        <span className="al-diff-new">{fmt(after[k])}</span>
                     </div>
                 ))}
             </div>
@@ -123,7 +123,7 @@ function DiffViewer({ before, after }: { before: Record<string, any>; after: Rec
 
 // ─── Deleted Snapshot ─────────────────────────────────────────────────────────
 function DelSnap({ meta }: { meta: Record<string, any> }) {
-    const skip = new Set(["deletedReceiptsCount","deletedPaymentsCount","deletedFeesCount","deletedBy","reason","role","before","after","deletionType"]);
+    const skip = new Set(["deletedReceiptsCount", "deletedPaymentsCount", "deletedFeesCount", "deletedBy", "reason", "role", "before", "after", "deletionType"]);
     const keys = Object.keys(meta).filter((k) => !skip.has(k) && meta[k] !== null && meta[k] !== undefined && meta[k] !== "");
     if (!keys.length) return null;
     const fmt = (v: any): string => {
@@ -133,108 +133,191 @@ function DelSnap({ meta }: { meta: Record<string, any> }) {
         return String(v);
     };
     return (
-        <div className="al-snap">
-            <div className="al-snap-box">
-                <div className="al-snap-lbl">🗑️ Deleted Record Snapshot</div>
-                <div className="al-snap-grid">
-                    {keys.map((k) => (
-                        <div key={k} className="al-snap-field">
-                            <span className="al-snap-key">{k.replace(/([A-Z])/g, " $1").trim()}</span>
-                            <span className="al-snap-val">{fmt(meta[k])}</span>
-                        </div>
-                    ))}
-                </div>
-                {meta.deletedReceiptsCount !== undefined && (
-                    <div style={{ marginTop: "0.4rem", fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                        Purged: {meta.deletedReceiptsCount} receipt(s), {meta.deletedPaymentsCount} payment(s), {meta.deletedFeesCount} fee record(s)
+        <div className="al-del-box">
+            <div className="al-del-header">🗑️ Preserved Deleted Record Snapshot</div>
+            <div className="al-del-grid">
+                {keys.map((k) => (
+                    <div key={k} className="al-del-item">
+                        <span className="al-del-k">{k.replace(/([A-Z])/g, " $1").trim()}</span>
+                        <span className="al-del-v">{fmt(meta[k])}</span>
                     </div>
-                )}
+                ))}
             </div>
+            {meta.deletedReceiptsCount !== undefined && (
+                <div style={{ marginTop: "0.5rem", fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Purged Sub-records: {meta.deletedReceiptsCount} receipt(s), {meta.deletedPaymentsCount} payment(s), {meta.deletedFeesCount} fee record(s)
+                </div>
+            )}
         </div>
     );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ActivityLogPage() {
-    const { user, loading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [summary, setSummary] = useState<SummaryData | null>(null);
-    const [fetching, setFetching] = useState(true);
-    const [selected, setSelected] = useState<AuditLog | null>(null);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [isRefetching, setIsRefetching] = useState(false);
+    
+    // Expanded Accordion Card IDs (allows multiple or single expansion down)
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+    const [showRawJson, setShowRawJson] = useState<Record<string, boolean>>({});
+
     const [page, setPage] = useState(1);
     const [typeChip, setTypeChip] = useState("");
-    const [filters, setFilters] = useState({ search: "", entityType: "", action: "", from: "", to: "" });
-    const timer = useRef<ReturnType<typeof setTimeout>>();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState({ entityType: "", from: "", to: "" });
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-    const isAllowed = !loading && !!user && ALLOWED_ROLES.includes(user.role);
+    const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+    const filterRef = useRef<HTMLDivElement>(null);
 
-    const fetchLogs = useCallback(async (pg: number, filt: typeof filters, chip: string) => {
-        setFetching(true);
+    const isAllowed = !authLoading && !!user && ALLOWED_ROLES.includes(user.role);
+
+    // Toggle expand-down accordion
+    const toggleExpand = (id: string) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const fetchLogs = useCallback(async (pg: number, query: string, filt: typeof filters, chip: string, isSilent = false) => {
+        if (isSilent) setIsRefetching(true);
+        else setInitialLoading(true);
+
         try {
             const params: Record<string, string> = { page: String(pg), limit: "30" };
-            if (filt.search) params.search = filt.search;
+            if (query) params.search = query;
             if (filt.entityType) params.entityType = filt.entityType;
-            if (filt.action) params.action = filt.action;
             if (filt.from) params.from = filt.from;
             if (filt.to) params.to = filt.to;
+
             const qs = new URLSearchParams(params).toString();
             const { data } = await api.get("/system/audit-logs?" + qs);
             let rows: AuditLog[] = data.data || [];
-            if (chip && !filt.action) {
+            if (chip) {
                 rows = rows.filter((l) => getType(l.action) === chip);
             }
             setLogs(rows);
             setPagination(data.pagination || null);
-        } catch (e) { console.error(e); }
-        finally { setFetching(false); }
+        } catch (e) {
+            console.error("Failed to load audit logs", e);
+        } finally {
+            setInitialLoading(false);
+            setIsRefetching(false);
+        }
     }, []);
 
     const fetchSummary = useCallback(async () => {
-        try { const { data } = await api.get("/system/audit-logs/summary"); setSummary(data.data); } catch {}
+        try {
+            const { data } = await api.get("/system/audit-logs/summary");
+            setSummary(data.data);
+        } catch {}
     }, []);
 
     useEffect(() => {
-        if (!loading) {
+        if (!authLoading) {
             if (!user) { router.push("/login"); return; }
             if (!ALLOWED_ROLES.includes(user.role)) { router.push("/dashboard"); return; }
         }
-    }, [user, loading, router]);
+    }, [user, authLoading, router]);
 
-    useEffect(() => { if (isAllowed) fetchSummary(); }, [isAllowed, fetchSummary]);
-    useEffect(() => { if (isAllowed) fetchLogs(page, filters, typeChip); }, [page, isAllowed, filters, typeChip, fetchLogs]);
+    useEffect(() => {
+        if (isAllowed) {
+            fetchSummary();
+            fetchLogs(1, "", filters, "", false);
+        }
+    }, [isAllowed, fetchSummary, fetchLogs]);
 
-    const applyFilter = (key: keyof typeof filters, val: string) => {
-        clearTimeout(timer.current);
-        const nf = { ...filters, [key]: val };
-        setFilters(nf); setPage(1);
-        if (key === "search") { timer.current = setTimeout(() => fetchLogs(1, nf, typeChip), 380); }
-        else fetchLogs(1, nf, typeChip);
+    // Handle search input with debouncing without clearing current logs
+    const handleSearchChange = (val: string) => {
+        setSearchQuery(val);
+        clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(() => {
+            setPage(1);
+            fetchLogs(1, val, filters, typeChip, true);
+        }, 350);
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery("");
+        setPage(1);
+        fetchLogs(1, "", filters, typeChip, true);
     };
 
     const applyChip = (chip: string) => {
-        const nc = typeChip === chip ? "" : chip;
-        setTypeChip(nc); setPage(1);
-        fetchLogs(1, filters, nc);
+        const nextChip = typeChip === chip ? "" : chip;
+        setTypeChip(nextChip);
+        setPage(1);
+        fetchLogs(1, searchQuery, filters, nextChip, true);
     };
 
-    const clearAll = () => {
-        const cleared = { search: "", entityType: "", action: "", from: "", to: "" };
-        setFilters(cleared); setTypeChip(""); setPage(1);
-        fetchLogs(1, cleared, "");
+    const handleFilterChange = (key: keyof typeof filters, val: string) => {
+        const nextFilters = { ...filters, [key]: val };
+        setFilters(nextFilters);
+        setPage(1);
+        fetchLogs(1, searchQuery, nextFilters, typeChip, true);
+    };
+
+    const applyDatePreset = (preset: "today" | "7d" | "30d" | "month" | "all") => {
+        const now = new Date();
+        const toStr = now.toISOString().split("T")[0];
+        let fromStr = "";
+
+        if (preset === "today") {
+            fromStr = toStr;
+        } else if (preset === "7d") {
+            const d = new Date(now.getTime() - 7 * 86400000);
+            fromStr = d.toISOString().split("T")[0];
+        } else if (preset === "30d") {
+            const d = new Date(now.getTime() - 30 * 86400000);
+            fromStr = d.toISOString().split("T")[0];
+        } else if (preset === "month") {
+            fromStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+        } else if (preset === "all") {
+            fromStr = "";
+        }
+
+        const nextFilters = { ...filters, from: fromStr, to: preset === "all" ? "" : toStr };
+        setFilters(nextFilters);
+        setPage(1);
+        fetchLogs(1, searchQuery, nextFilters, typeChip, true);
+    };
+
+    const resetAllFilters = () => {
+        const cleared = { entityType: "", from: "", to: "" };
+        setFilters(cleared);
+        setSearchQuery("");
+        setTypeChip("");
+        setPage(1);
+        setShowFilterDropdown(false);
+        fetchLogs(1, "", cleared, "", true);
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+        fetchLogs(newPage, searchQuery, filters, typeChip, true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const exportCSV = () => {
         if (!logs.length) return;
-        const hdrs = ["Timestamp","Action","Entity","Entity ID","Performed By","Role","IP Address","Description"];
+        const hdrs = ["Timestamp", "Action", "Entity", "Entity ID", "Performed By", "Role", "IP Address", "Description"];
         const rows = logs.map((l) => [fullTime(l.createdAt), l.action, l.entityType, l.entityId, l.user?.name || l.userId, l.user?.role || "", l.ipAddress || "", describe(l)]);
         const csv = [hdrs, ...rows].map((r) => r.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\n");
         const blob = new Blob([csv], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a"); a.href = url;
-        a.download = "activity-log-" + new Date().toISOString().split("T")[0] + ".csv"; a.click();
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "activity-log-" + new Date().toISOString().split("T")[0] + ".csv";
+        a.click();
         URL.revokeObjectURL(url);
     };
 
@@ -246,14 +329,17 @@ export default function ActivityLogPage() {
     const payments = summary?.byAction.filter((a) => getType(a.action) === "p").reduce((s, a) => s + a.count, 0) || 0;
 
     const entityTypes = summary?.byEntity.map((e) => e.entityType) || [];
-    const hasFilters = !!(filters.search || filters.entityType || filters.action || filters.from || filters.to || typeChip);
+    const activeFiltersCount = (filters.entityType ? 1 : 0) + (filters.from || filters.to ? 1 : 0);
+    const hasAnyFilterActive = !!(searchQuery || typeChip || filters.entityType || filters.from || filters.to);
 
-    if (loading) {
+    if (authLoading) {
         return (
             <div className="al-page">
                 <Sidebar />
                 <div className="al-content">
-                    <div className="al-skeleton-wrap">{[1,2,3,4,5].map((i) => <div key={i} className="al-skel-card" />)}</div>
+                    <div className="al-body">
+                        <div className="al-skeleton-wrap">{[1, 2, 3, 4, 5].map((i) => <div key={i} className="al-skel-card" />)}</div>
+                    </div>
                 </div>
             </div>
         );
@@ -274,6 +360,9 @@ export default function ActivityLogPage() {
         <div className="al-page">
             <Sidebar />
             <div className="al-content">
+                {/* Seamless loading progress bar without screen flickering */}
+                {isRefetching && <div className="al-loading-bar" />}
+
                 {/* Header */}
                 <div className="al-header">
                     <div className="al-header-row">
@@ -281,172 +370,325 @@ export default function ActivityLogPage() {
                             <div className="al-title-icon-wrap">📋</div>
                             <div>
                                 <div className="al-page-title">Activity Log</div>
-                                <div className="al-page-subtitle">Complete system audit trail — all operations, sorted by time</div>
+                                <div className="al-page-subtitle">Complete system audit trail — all operations, sorted chronologically</div>
                             </div>
                         </div>
                         <div className="al-header-btns">
-                            <button className="al-btn al-btn-ghost" onClick={() => fetchLogs(page, filters, typeChip)} title="Refresh">🔄 Refresh</button>
-                            <button className="al-btn al-btn-primary" onClick={exportCSV}>⬇️ Export CSV</button>
+                            <button className="al-btn al-btn-ghost" onClick={() => fetchLogs(page, searchQuery, filters, typeChip, true)} title="Refresh logs">
+                                🔄 {isRefetching ? "Refreshing..." : "Refresh"}
+                            </button>
+                            <button className="al-btn al-btn-primary" onClick={exportCSV}>
+                                ⬇️ Export CSV
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Stats */}
+                {/* Stats Row (Cleaned up, no profile name badge) */}
                 <div className="al-stats">
-                    <div className="al-stat"><span className="al-stat-dot" style={{ background:"#0ea5e9" }} />{total.toLocaleString()} Total</div>
-                    <div className="al-stat"><span className="al-stat-dot" style={{ background:"#22c55e" }} />{created.toLocaleString()} Created</div>
-                    <div className="al-stat"><span className="al-stat-dot" style={{ background:"#d97706" }} />{updated.toLocaleString()} Updated</div>
-                    <div className="al-stat"><span className="al-stat-dot" style={{ background:"#dc2626" }} />{deleted.toLocaleString()} Deleted</div>
-                    <div className="al-stat"><span className="al-stat-dot" style={{ background:"#7c3aed" }} />{payments.toLocaleString()} Payments</div>
-                    {summary?.recentActiveUsers?.[0]?.user?.name && (
-                        <div className="al-stat" style={{ marginLeft:"auto" }}>👤 {summary.recentActiveUsers[0].user.name}</div>
+                    <div className="al-stat"><span className="al-stat-dot" style={{ background: "#0ea5e9" }} />{total.toLocaleString()} Total</div>
+                    <div className="al-stat"><span className="al-stat-dot" style={{ background: "#22c55e" }} />{created.toLocaleString()} Created</div>
+                    <div className="al-stat"><span className="al-stat-dot" style={{ background: "#d97706" }} />{updated.toLocaleString()} Updated</div>
+                    <div className="al-stat"><span className="al-stat-dot" style={{ background: "#dc2626" }} />{deleted.toLocaleString()} Deleted</div>
+                    <div className="al-stat"><span className="al-stat-dot" style={{ background: "#7c3aed" }} />{payments.toLocaleString()} Payments</div>
+                </div>
+
+                {/* Single-Line Filter Bar */}
+                <div className="al-filters-bar" ref={filterRef}>
+                    <div className="al-filters-row">
+                        {/* Quick Category Chips */}
+                        <div className="al-chips-scroll">
+                            <button className={"al-chip chip-all" + (typeChip === "" ? " active-chip" : "")} onClick={() => applyChip("")}>All</button>
+                            <button className={"al-chip chip-create" + (typeChip === "c" ? " active-chip" : "")} onClick={() => applyChip("c")}>✨ Created</button>
+                            <button className={"al-chip chip-update" + (typeChip === "u" ? " active-chip" : "")} onClick={() => applyChip("u")}>✏️ Edited</button>
+                            <button className={"al-chip chip-delete" + (typeChip === "d" ? " active-chip" : "")} onClick={() => applyChip("d")}>🗑️ Deleted</button>
+                            <button className={"al-chip chip-payment" + (typeChip === "p" ? " active-chip" : "")} onClick={() => applyChip("p")}>💰 Payments</button>
+                            <button className={"al-chip chip-auth" + (typeChip === "a" ? " active-chip" : "")} onClick={() => applyChip("a")}>🔐 Auth</button>
+                        </div>
+
+                        <div className="al-filter-divider" />
+
+                        {/* Search Input */}
+                        <div className="al-search-box">
+                            <span className="al-search-icon">🔍</span>
+                            <input
+                                id="al-search-input"
+                                className="al-search-input"
+                                placeholder="Search actions, students, users..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearchChange(e.target.value)}
+                            />
+                            {searchQuery && (
+                                <button className="al-search-clear" onClick={handleClearSearch} title="Clear search">✕</button>
+                            )}
+                        </div>
+
+                        {/* Filter Dropdown Button */}
+                        <button
+                            id="al-filter-dropdown-btn"
+                            className={"al-dropdown-toggle" + (showFilterDropdown ? " open" : "")}
+                            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                            title="Filter by entity and date range"
+                        >
+                            <span>📅 Date & Entity</span>
+                            {activeFiltersCount > 0 && <span className="al-filter-badge">{activeFiltersCount}</span>}
+                            <span>{showFilterDropdown ? "▲" : "▼"}</span>
+                        </button>
+
+                        {/* Reset All Filters Button */}
+                        {hasAnyFilterActive && (
+                            <button className="al-reset-btn" onClick={resetAllFilters} title="Reset all active filters">
+                                ✕ Reset
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Popover Dropdown Drawer */}
+                    {showFilterDropdown && (
+                        <div className="al-filter-popover">
+                            {/* Entity Type Filter */}
+                            <div className="al-pop-group">
+                                <label className="al-pop-label">Entity Type</label>
+                                <select
+                                    id="al-entity-select"
+                                    className="al-pop-select"
+                                    value={filters.entityType}
+                                    onChange={(e) => handleFilterChange("entityType", e.target.value)}
+                                >
+                                    <option value="">All Entities</option>
+                                    {entityTypes.map((et) => (
+                                        <option key={et} value={et}>{et}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Date From */}
+                            <div className="al-pop-group">
+                                <label className="al-pop-label">From Date</label>
+                                <input
+                                    type="date"
+                                    id="al-date-from"
+                                    className="al-pop-input"
+                                    value={filters.from}
+                                    onChange={(e) => handleFilterChange("from", e.target.value)}
+                                />
+                            </div>
+
+                            {/* Date To */}
+                            <div className="al-pop-group">
+                                <label className="al-pop-label">To Date</label>
+                                <input
+                                    type="date"
+                                    id="al-date-to"
+                                    className="al-pop-input"
+                                    value={filters.to}
+                                    onChange={(e) => handleFilterChange("to", e.target.value)}
+                                />
+                            </div>
+
+                            {/* Date Presets */}
+                            <div className="al-pop-group" style={{ gridColumn: "1 / -1" }}>
+                                <div className="al-pop-label">Quick Date Presets</div>
+                                <div className="al-date-presets">
+                                    <button className="al-date-pill" onClick={() => applyDatePreset("today")}>Today</button>
+                                    <button className="al-date-pill" onClick={() => applyDatePreset("7d")}>Last 7 Days</button>
+                                    <button className="al-date-pill" onClick={() => applyDatePreset("30d")}>Last 30 Days</button>
+                                    <button className="al-date-pill" onClick={() => applyDatePreset("month")}>This Month</button>
+                                    <button className="al-date-pill" onClick={() => applyDatePreset("all")}>All Time</button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* Filters */}
-                <div className="al-filters">
-                    {/* Type chip filters */}
-                    <div className="al-filter-chips">
-                        <button className={"al-chip chip-all" + (typeChip === "" ? " active-chip" : "")} onClick={() => applyChip("")}>All</button>
-                        <button className={"al-chip chip-create" + (typeChip === "c" ? " active-chip" : "")} onClick={() => applyChip("c")}>✨ Created</button>
-                        <button className={"al-chip chip-update" + (typeChip === "u" ? " active-chip" : "")} onClick={() => applyChip("u")}>✏️ Edited</button>
-                        <button className={"al-chip chip-delete" + (typeChip === "d" ? " active-chip" : "")} onClick={() => applyChip("d")}>🗑️ Deleted</button>
-                        <button className={"al-chip chip-payment" + (typeChip === "p" ? " active-chip" : "")} onClick={() => applyChip("p")}>💰 Payments</button>
-                        <button className={"al-chip chip-auth" + (typeChip === "a" ? " active-chip" : "")} onClick={() => applyChip("a")}>🔐 Auth</button>
-                    </div>
-                    <div className="al-filter-sep" />
-                    {/* Search */}
-                    <div className="al-search-wrap">
-                        <span className="al-search-ico">🔍</span>
-                        <input id="al-search" className="al-search" placeholder="Search..." value={filters.search} onChange={(e) => applyFilter("search", e.target.value)} />
-                    </div>
-                    {/* Entity */}
-                    <select id="al-entity-filter" className="al-select" value={filters.entityType} onChange={(e) => applyFilter("entityType", e.target.value)}>
-                        <option value="">All Entities</option>
-                        {entityTypes.map((et) => <option key={et} value={et}>{et}</option>)}
-                    </select>
-                    {/* Date from/to */}
-                    <input id="al-from" type="date" className="al-date" value={filters.from} onChange={(e) => applyFilter("from", e.target.value)} title="From" />
-                    <input id="al-to" type="date" className="al-date" value={filters.to} onChange={(e) => applyFilter("to", e.target.value)} title="To" />
-                    {hasFilters && <button className="al-clear" onClick={clearAll}>✕ Clear</button>}
-                </div>
-
-                {/* Body */}
+                {/* Main Body Feed (Full Width Accordion List) */}
                 <div className="al-body">
-                    {/* Feed */}
-                    <div>
-                        {fetching ? (
-                            <div className="al-skeleton-wrap">{[1,2,3,4].map((i) => <div key={i} className="al-skel-card" />)}</div>
-                        ) : logs.length === 0 ? (
-                            <div className="al-empty">
-                                <div className="al-empty-ico">📬</div>
-                                <div className="al-empty-h">No activity found</div>
-                                <div className="al-empty-sub">{hasFilters ? "No events match your current filters. Try clearing them." : "No system events have been recorded yet."}</div>
+                    {initialLoading && logs.length === 0 ? (
+                        <div className="al-skeleton-wrap">
+                            {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="al-skel-card" />)}
+                        </div>
+                    ) : logs.length === 0 ? (
+                        <div className="al-empty">
+                            <div className="al-empty-ico">📬</div>
+                            <div className="al-empty-h">No activity logs found</div>
+                            <div className="al-empty-sub">
+                                {hasAnyFilterActive ? "No events match your current filter criteria. Try resetting your search or filters." : "No system activity events have been recorded yet."}
                             </div>
-                        ) : (
-                            <div className="al-feed">
-                                {logs.map((log, idx) => {
-                                    const t = getType(log.action);
-                                    const emoji = DOT_EMOJI[log.action] || DOT_EMOJI[t] || "⚙️";
-                                    const hasDiff = log.metadata?.before && log.metadata?.after;
-                                    const isDel = t === "d";
-                                    const isSel = selected?.id === log.id;
-                                    const isLast = idx === logs.length - 1;
-                                    return (
-                                        <div key={log.id} className="al-entry">
-                                            <div className="al-entry-left">
-                                                <div className={"al-dot dot-" + t}><span>{emoji}</span></div>
-                                                {!isLast && <div className="al-line" />}
+                        </div>
+                    ) : (
+                        <div className="al-feed">
+                            {logs.map((log) => {
+                                const t = getType(log.action);
+                                const emoji = DOT_EMOJI[log.action] || DOT_EMOJI[t] || "⚙️";
+                                const isExpanded = expandedIds.has(log.id);
+                                const hasDiff = log.metadata?.before && log.metadata?.after;
+                                const isDel = t === "d";
+
+                                return (
+                                    <div key={log.id} className={"al-card" + (isExpanded ? " expanded" : "")}>
+                                        {/* Card Summary Header (Clicking expands down) */}
+                                        <div className="al-card-summary" onClick={() => toggleExpand(log.id)}>
+                                            <div className={"al-card-left-dot dot-" + t}>
+                                                <span>{emoji}</span>
                                             </div>
-                                            <div className={"al-card" + (isSel ? " al-selected" : "")} onClick={() => setSelected(isSel ? null : log)}>
-                                                <div className="al-card-top">
-                                                    <div className="al-card-body">
-                                                        <div className="al-card-row1">
-                                                            <span className={"al-badge badge-" + t}>{humanize(log.action)}</span>
-                                                            <span className="al-entity-lbl">{log.entityType}</span>
-                                                        </div>
-                                                        <div className="al-card-desc" title={describe(log)}>{describe(log)}</div>
-                                                        <div className="al-card-meta">
-                                                            <span className="al-meta-user">👤 {log.user?.name || log.userId}</span>
-                                                            {log.user?.role && (<><span className="al-meta-sep">·</span><span className={"al-role r-" + (log.user.role || "").toLowerCase()}>{log.user.role}</span></>)}
-                                                            {log.ipAddress && (<><span className="al-meta-sep">·</span><span>🌐 {log.ipAddress}</span></>)}
-                                                        </div>
-                                                    </div>
-                                                    <div className="al-card-time" title={fullTime(log.createdAt)}>{relTime(log.createdAt)}</div>
+
+                                            <div className="al-card-main">
+                                                <div className="al-card-row1">
+                                                    <span className={"al-badge badge-" + t}>{humanize(log.action)}</span>
+                                                    <span className="al-entity-lbl">{log.entityType}</span>
                                                 </div>
-                                                {hasDiff && <DiffViewer before={log.metadata!.before} after={log.metadata!.after} />}
-                                                {isDel && log.metadata && <DelSnap meta={log.metadata} />}
+
+                                                <div className="al-card-desc" title={describe(log)}>
+                                                    {describe(log)}
+                                                </div>
+
+                                                <div className="al-card-meta">
+                                                    <span className="al-meta-user">👤 {log.user?.name || log.userId}</span>
+                                                    {log.user?.role && (
+                                                        <>
+                                                            <span className="al-meta-sep">·</span>
+                                                            <span className={"al-role r-" + (log.user.role || "").toLowerCase()}>{log.user.role}</span>
+                                                        </>
+                                                    )}
+                                                    {log.ipAddress && (
+                                                        <>
+                                                            <span className="al-meta-sep">·</span>
+                                                            <span>🌐 {log.ipAddress}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="al-card-right">
+                                                <div className="al-card-time" title={fullTime(log.createdAt)}>
+                                                    {relTime(log.createdAt)}
+                                                </div>
+                                                <div className="al-card-chevron">
+                                                    ▼
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Expand Down Drawer (Revealed beneath the card) */}
+                                        {isExpanded && (
+                                            <div className="al-card-drawer">
+                                                <div className="al-drawer-grid">
+                                                    {/* Event Information */}
+                                                    <div className="al-drawer-sec">
+                                                        <div className="al-drawer-sec-title">📌 Event Details</div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Action</span>
+                                                            <span className="al-drawer-val">
+                                                                <span className={"al-badge badge-" + t}>{humanize(log.action)}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Entity</span>
+                                                            <span className="al-drawer-val">{log.entityType}</span>
+                                                        </div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Entity ID</span>
+                                                            <span className="al-drawer-val" style={{ fontFamily: "monospace", fontSize: "0.72rem" }}>
+                                                                {log.entityId}
+                                                            </span>
+                                                        </div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Timestamp</span>
+                                                            <span className="al-drawer-val">{fullTime(log.createdAt)}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Actor Information */}
+                                                    <div className="al-drawer-sec">
+                                                        <div className="al-drawer-sec-title">👤 Performed By</div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Name</span>
+                                                            <span className="al-drawer-val">{log.user?.name || "—"}</span>
+                                                        </div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Email</span>
+                                                            <span className="al-drawer-val" style={{ fontSize: "0.72rem" }}>{log.user?.email || "—"}</span>
+                                                        </div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">Role</span>
+                                                            <span className="al-drawer-val">
+                                                                <span className={"al-role r-" + (log.user?.role || "").toLowerCase()}>{log.user?.role || "—"}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div className="al-drawer-field">
+                                                            <span className="al-drawer-key">IP Address</span>
+                                                            <span className="al-drawer-val">{log.ipAddress || "—"}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Field-by-Field Modification Diff */}
+                                                {hasDiff && (
+                                                    <DiffViewer before={log.metadata!.before} after={log.metadata!.after} />
+                                                )}
+
+                                                {/* Deleted Record Snapshot */}
+                                                {isDel && log.metadata && (
+                                                    <DelSnap meta={log.metadata} />
+                                                )}
+
+                                                {/* Raw JSON Toggle */}
+                                                {log.metadata && (
+                                                    <div className="al-raw-box">
+                                                        <button
+                                                            className="al-raw-toggle"
+                                                            onClick={() => setShowRawJson((prev) => ({ ...prev, [log.id]: !prev[log.id] }))}
+                                                        >
+                                                            <span>{showRawJson[log.id] ? "▼" : "▶"} Raw Metadata Payload</span>
+                                                        </button>
+                                                        {showRawJson[log.id] && (
+                                                            <pre className="al-raw-json">
+                                                                {JSON.stringify(log.metadata, null, 2)}
+                                                            </pre>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Pagination */}
+                    {pagination && pagination.pages > 1 && (
+                        <div className="al-pager">
+                            <div className="al-pager-info">
+                                Showing {((page - 1) * 30) + 1}–{Math.min(page * 30, pagination.total)} of {pagination.total.toLocaleString()} records
+                            </div>
+                            <div className="al-pager-btns">
+                                <button id="al-prev-btn" className="al-pg-btn" disabled={page <= 1} onClick={() => handlePageChange(page - 1)}>
+                                    ←
+                                </button>
+                                {Array.from({ length: Math.min(pagination.pages, 7) }, (_, i) => {
+                                    let p = i + 1;
+                                    if (pagination.pages > 7) {
+                                        if (page <= 4) p = i + 1;
+                                        else if (page >= pagination.pages - 3) p = pagination.pages - 6 + i;
+                                        else p = page - 3 + i;
+                                    }
+                                    return (
+                                        <button
+                                            key={p}
+                                            className={"al-pg-btn" + (p === page ? " pg-active" : "")}
+                                            onClick={() => handlePageChange(p)}
+                                        >
+                                            {p}
+                                        </button>
                                     );
                                 })}
+                                <button id="al-next-btn" className="al-pg-btn" disabled={page >= pagination.pages} onClick={() => handlePageChange(page + 1)}>
+                                    →
+                                </button>
                             </div>
-                        )}
-
-                        {/* Pagination */}
-                        {pagination && pagination.pages > 1 && (
-                            <div className="al-pager">
-                                <div className="al-pager-info">Showing {((page-1)*30)+1}–{Math.min(page*30, pagination.total)} of {pagination.total.toLocaleString()} events</div>
-                                <div className="al-pager-btns">
-                                    <button id="al-prev" className="al-pg-btn" disabled={page <= 1} onClick={() => setPage((p) => p-1)}>←</button>
-                                    {Array.from({ length: Math.min(pagination.pages, 7) }, (_, i) => {
-                                        let p = i+1;
-                                        if (pagination.pages > 7) {
-                                            if (page <= 4) p = i+1;
-                                            else if (page >= pagination.pages-3) p = pagination.pages-6+i;
-                                            else p = page-3+i;
-                                        }
-                                        return <button key={p} id={"al-p-" + p} className={"al-pg-btn" + (p===page?" pg-active":"")} onClick={() => setPage(p)}>{p}</button>;
-                                    })}
-                                    <button id="al-next" className="al-pg-btn" disabled={page >= pagination.pages} onClick={() => setPage((p) => p+1)}>→</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Detail Panel */}
-                    <div className="al-panel">
-                        {!selected ? (
-                            <div className="al-panel-empty">
-                                <div className="al-panel-empty-ico">👆</div>
-                                <div className="al-panel-empty-txt">Click any entry to see full event details</div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="al-panel-head">
-                                    <div className="al-panel-title">Event Detail</div>
-                                    <button className="al-panel-close" onClick={() => setSelected(null)}>✕</button>
-                                </div>
-                                <div className="al-panel-sec">
-                                    <div className="al-panel-sec-title">📌 Event Info</div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Action</span><span className="al-panel-val"><span className={"al-badge badge-" + getType(selected.action)}>{humanize(selected.action)}</span></span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Entity</span><span className="al-panel-val">{selected.entityType}</span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Entity ID</span><span className="al-panel-val" style={{ fontFamily:"monospace", fontSize:"0.68rem" }}>{selected.entityId}</span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Log ID</span><span className="al-panel-val" style={{ fontFamily:"monospace", fontSize:"0.65rem" }}>{selected.id}</span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Timestamp</span><span className="al-panel-val">{fullTime(selected.createdAt)}</span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">IP Address</span><span className="al-panel-val">{selected.ipAddress || "—"}</span></div>
-                                </div>
-                                <div className="al-panel-sec">
-                                    <div className="al-panel-sec-title">👤 Performed By</div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Name</span><span className="al-panel-val">{selected.user?.name || "—"}</span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Email</span><span className="al-panel-val" style={{ fontSize:"0.72rem" }}>{selected.user?.email || "—"}</span></div>
-                                    <div className="al-panel-field"><span className="al-panel-key">Role</span><span className="al-panel-val"><span className={"al-role r-" + (selected.user?.role || "").toLowerCase()}>{selected.user?.role || "—"}</span></span></div>
-                                </div>
-                                {selected.metadata?.before && selected.metadata?.after && (
-                                    <div className="al-panel-sec">
-                                        <div className="al-panel-sec-title">✏️ Field Changes</div>
-                                        <DiffViewer before={selected.metadata.before} after={selected.metadata.after} />
-                                    </div>
-                                )}
-                                {selected.metadata && (
-                                    <div className="al-panel-sec">
-                                        <div className="al-panel-sec-title">📄 Raw Metadata</div>
-                                        <pre className="al-panel-json">{JSON.stringify(selected.metadata, null, 2)}</pre>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
