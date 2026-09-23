@@ -347,8 +347,8 @@ function AssetRegisterContent() {
                     {/* Summary metrics cards */}
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                        gap: 12
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gap: 10
                     }}>
                         <div className="stat-card" style={{ padding: '8px 12px' }}>
                             <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
@@ -367,7 +367,31 @@ function AssetRegisterContent() {
                             <div>
                                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL QUANTITY</div>
                                 <div style={{ color: '#0284c7', fontSize: 18, fontWeight: 800 }}>
-                                    {items.reduce((acc, curr) => acc + curr.quantity, 0)}
+                                    {items.reduce((acc, curr) => acc + (curr.totalQuantity ?? (curr.quantity + (curr.issuedQuantity || 0))), 0)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card" style={{ padding: '8px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(217, 119, 6, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
+                                <span style={{ fontSize: 16 }}>📤</span>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>ISSUED ITEMS</div>
+                                <div style={{ color: '#d97706', fontSize: 18, fontWeight: 800 }}>
+                                    {items.reduce((acc, curr) => acc + (curr.issuedQuantity || 0), 0)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card" style={{ padding: '8px 12px' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', width: 32, height: 32, borderRadius: 8 }}>
+                                <span style={{ fontSize: 16 }}>⚖️</span>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>BALANCE IN STORE</div>
+                                <div style={{ color: '#10b981', fontSize: 18, fontWeight: 800 }}>
+                                    {items.reduce((acc, curr) => acc + (curr.balanceQuantity ?? curr.quantity), 0)}
                                 </div>
                             </div>
                         </div>
@@ -378,8 +402,8 @@ function AssetRegisterContent() {
                             </div>
                             <div>
                                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL VALUATION</div>
-                                <div style={{ color: '#8b5cf6', fontSize: 17, fontWeight: 800 }}>
-                                    ₹{items.reduce((acc, curr) => acc + ((curr.quantity || 0) * (curr.pricePerUnit || 0)), 0).toLocaleString('en-IN')}
+                                <div style={{ color: '#8b5cf6', fontSize: 16, fontWeight: 800 }}>
+                                    ₹{items.reduce((acc, curr) => acc + ((curr.totalQuantity ?? (curr.quantity + (curr.issuedQuantity || 0))) * (curr.pricePerUnit || 0)), 0).toLocaleString('en-IN')}
                                 </div>
                             </div>
                         </div>

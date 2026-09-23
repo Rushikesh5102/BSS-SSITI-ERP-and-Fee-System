@@ -37,6 +37,9 @@ interface StoreItem {
     notes: string | null;
     branchId: string;
     image: string | null;
+    totalQuantity?: number;
+    issuedQuantity?: number;
+    balanceQuantity?: number;
     createdBy?: { name: string; email: string } | null;
     branch?: { name: string };
 }
@@ -1274,11 +1277,15 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                 <div className="form-group">
                                     <label className="form-label">Select Asset / Tool *</label>
                                     <select className="form-control" required value={issueItemId} onChange={e => setIssueItemId(e.target.value)}>
-                                        {items.map(item => (
-                                            <option key={item.id} value={item.id} disabled={item.quantity <= 0}>
-                                                {item.name} — Available: {item.quantity} {item.unit}
-                                            </option>
-                                        ))}
+                                        {items.map(item => {
+                                            const bal = item.balanceQuantity ?? item.quantity;
+                                            const iss = item.issuedQuantity ?? 0;
+                                            return (
+                                                <option key={item.id} value={item.id} disabled={bal <= 0}>
+                                                    {item.name} — Balance: {bal} {item.unit} (Issued: {iss})
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
 
