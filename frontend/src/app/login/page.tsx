@@ -73,28 +73,36 @@ export default function LoginPage() {
 
     // Responsive scaling to fit viewports seamlessly while keeping mechanical animation intact
     const scaleToFit = () => {
-        if (!containerRef.current || !window.gsap) return;
+        if (!containerRef.current) return;
         const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
         
         // Exact viewport dimensions with breathing room
+        // On a 6-inch phone (e.g. 360px - 412px wide, 600px - 750px usable height),
+        // we scale proportionally to ensure the full 1000x1000 machine fits without clipping.
         const availWidth = window.innerWidth - (isMobile ? 12 : 36);
-        const availHeight = window.innerHeight - (isMobile ? 96 : 140);
+        const availHeight = window.innerHeight - (isMobile ? 90 : 130);
         
         const scaleW = availWidth / 1000;
-        const scaleH = availHeight / 940;
+        const scaleH = availHeight / 980;
         const targetScale = Math.min(scaleW, scaleH);
         
-        // Allow mobile to scale down to 0.32 - 0.70 so the entire machine fits on all phone screens
+        // Allow mobile to scale down to 0.24 - 0.70 so the entire machine fits on all phone screens
         const finalScale = isMobile
-            ? Math.max(0.32, Math.min(0.70, targetScale))
+            ? Math.max(0.24, Math.min(0.68, targetScale))
             : Math.max(0.48, Math.min(0.95, targetScale));
 
-        window.gsap.set(containerRef.current, {
-            xPercent: -50,
-            yPercent: -50,
-            scale: finalScale,
-            transformOrigin: "50% 50%"
-        });
+        if (window.gsap) {
+            window.gsap.set(containerRef.current, {
+                xPercent: -50,
+                yPercent: -50,
+                scale: finalScale,
+                transformOrigin: "50% 50%"
+            });
+        }
+
+        // Set inline style with !important to strictly ensure scale is applied and never overridden by CSS
+        containerRef.current.style.setProperty('transform', `translate(-50%, -50%) scale(${finalScale})`, 'important');
+        containerRef.current.style.setProperty('transform-origin', '50% 50%', 'important');
     };
 
     // Pulling Wire Timeline Creator (Calculates fluid physics and wire attachment)
@@ -487,23 +495,41 @@ export default function LoginPage() {
 
         scaleToFit();
         window.addEventListener('resize', scaleToFit);
+        window.addEventListener('orientationchange', scaleToFit);
     };
 
     // Watch GSAP script ready and re-init immediately if already in window
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.gsap) {
-            setGsapLoaded(true);
-            initMechanicalAnimation();
+        if (typeof window !== 'undefined') {
+            scaleToFit();
+            window.addEventListener('resize', scaleToFit);
+            window.addEventListener('orientationchange', scaleToFit);
+            const t1 = setTimeout(scaleToFit, 100);
+            const t2 = setTimeout(scaleToFit, 400);
+
+            if (window.gsap) {
+                setGsapLoaded(true);
+                initMechanicalAnimation();
+            }
+
+            return () => {
+                window.removeEventListener('resize', scaleToFit);
+                window.removeEventListener('orientationchange', scaleToFit);
+                clearTimeout(t1);
+                clearTimeout(t2);
+            };
         }
     }, []);
 
     useEffect(() => {
         if (gsapLoaded) {
             initMechanicalAnimation();
+            scaleToFit();
         }
         return () => {
             if (typeof window !== 'undefined') {
                 window.removeEventListener('resize', scaleToFit);
+                window.removeEventListener('orientationchange', scaleToFit);
             }
         };
     }, [gsapLoaded]);

@@ -523,7 +523,7 @@ function SidebarInner() {
                 {/* Categorized Navigation */}
                 {(() => {
                     const isDev = user?.role === 'DEVELOPER';
-                    const isCommonDevOp = (href: string) => href === '/portal' || href === '/system' || href === '/access' || href === '/404';
+                    const isCommonDevOp = (href: string) => href === '/portal' || href === '/system' || href === '/access' || href === '/activity-log' || href === '/404';
                     
                     const devOperationsItems = isDev 
                         ? visibleItems.filter(item => isCommonDevOp(item.href))
@@ -532,7 +532,7 @@ function SidebarInner() {
                         ? visibleItems.filter(item => item.href.includes('simulate')) 
                         : [];
                     const systemOperationsItems = visibleItems.filter(item => !item.href.includes('simulate') && !isCommonDevOp(item.href));
-                    const adminAccessItems = !isDev ? visibleItems.filter(item => item.href === '/access' || item.href === '/portal') : [];
+                    const adminAccessItems = !isDev ? visibleItems.filter(item => item.href === '/access' || item.href === '/portal' || item.href === '/activity-log') : [];
 
                     const renderNavItem = (item: any) => {
                         const targetHref = (simulateParam && !item.href.includes('simulate') && item.href !== '/system') 

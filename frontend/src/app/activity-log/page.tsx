@@ -342,9 +342,9 @@ export default function ActivityLogPage() {
 
     if (authLoading) {
         return (
-            <div className="al-page">
+            <div className="layout al-page">
                 <Sidebar />
-                <div className="al-content">
+                <div className="main-content al-content">
                     <div className="al-body">
                         <div className="al-skeleton-wrap">{[1, 2, 3, 4, 5].map((i) => <div key={i} className="al-skel-card" />)}</div>
                     </div>
@@ -355,19 +355,24 @@ export default function ActivityLogPage() {
 
     if (!isAllowed) {
         return (
-            <div className="al-denied">
-                <div className="al-denied-ico">🔒</div>
-                <div className="al-denied-h">Access Restricted</div>
-                <div className="al-denied-sub">The Activity Log is only accessible to Administrators and Developers.</div>
-                <Link href="/dashboard" className="al-denied-btn">Go to Dashboard</Link>
+            <div className="layout al-page">
+                <Sidebar />
+                <div className="main-content al-content">
+                    <div className="al-denied">
+                        <div className="al-denied-ico">🔒</div>
+                        <div className="al-denied-h">Access Restricted</div>
+                        <div className="al-denied-sub">The Activity Log is only accessible to Administrators and Developers.</div>
+                        <Link href="/dashboard" className="al-denied-btn">Go to Dashboard</Link>
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="al-page">
+        <div className="layout al-page">
             <Sidebar />
-            <div className="al-content">
+            <div className="main-content al-content">
                 {/* Seamless loading progress bar without screen flickering */}
                 {isRefetching && <div className="al-loading-bar" />}
 
