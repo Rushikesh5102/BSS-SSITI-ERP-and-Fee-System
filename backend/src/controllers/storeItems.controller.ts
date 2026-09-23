@@ -49,11 +49,37 @@ export const storeItemsController = {
             orderBy: { name: 'asc' },
         });
 
+        // Compute active unreturned issued quantities for each item
+        const itemIds = items.map(i => i.id);
+        const activeIssues = itemIds.length > 0 ? await prisma.stockTransaction.groupBy({
+            by: ['itemId'],
+            where: {
+                itemId: { in: itemIds },
+                type: 'ISSUE',
+                status: { not: 'RETURNED' }
+            },
+            _sum: { quantity: true }
+        }) : [];
+
+        const issueMap = new Map(activeIssues.map(g => [g.itemId, g._sum.quantity || 0]));
+
+        let enhancedItems = items.map(item => {
+            const issuedQty = issueMap.get(item.id) || 0;
+            const balanceQty = item.quantity || 0;
+            const totalQty = balanceQty + issuedQty;
+            return {
+                ...item,
+                totalQuantity: totalQty,
+                issuedQuantity: issuedQty,
+                balanceQuantity: balanceQty,
+            };
+        });
+
         if (lowStock === 'true') {
-            items = items.filter(item => item.quantity <= item.reorderLevel);
+            enhancedItems = enhancedItems.filter(item => item.balanceQuantity <= item.reorderLevel);
         }
 
-        res.json({ success: true, data: items });
+        res.json({ success: true, data: enhancedItems });
     }),
 
     /**
@@ -77,7 +103,29 @@ export const storeItemsController = {
             },
         });
         if (!item) throw new AppError(404, 'Item not found');
-        res.json({ success: true, data: item });
+
+        const activeIssues = await prisma.stockTransaction.aggregate({
+            where: {
+                itemId: item.id,
+                type: 'ISSUE',
+                status: { not: 'RETURNED' }
+            },
+            _sum: { quantity: true }
+        });
+
+        const issuedQty = activeIssues._sum.quantity || 0;
+        const balanceQty = item.quantity || 0;
+        const totalQty = balanceQty + issuedQty;
+
+        res.json({
+            success: true,
+            data: {
+                ...item,
+                totalQuantity: totalQty,
+                issuedQuantity: issuedQty,
+                balanceQuantity: balanceQty,
+            }
+        });
     }),
 
     /**

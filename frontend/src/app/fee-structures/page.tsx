@@ -214,7 +214,7 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
         } finally { setSaving(false); }
     };
 
-    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN' || effectiveRole === 'ACCOUNTANT';
+    const canEdit = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
 
     if (loading || !user) return null;
 
@@ -227,12 +227,24 @@ function FeeStructuresContent({ simulateParam }: { simulateParam: string | null 
                         <div className="header-title">📋 Fee Structures Master</div>
                         <div className="header-subtitle">Standard tuition, exam, dress & custom fee packages</div>
                     </div>
-                    {canEdit && (
+                    {canEdit ? (
                         <button className="btn btn-primary" onClick={openCreateModal}>➕ Create Fee Structure</button>
+                    ) : (
+                        <div className="badge badge-warning" style={{ padding: '8px 14px', fontSize: 12 }}>
+                            🔒 Read-Only Access (Admin Managed)
+                        </div>
                     )}
                 </header>
 
                 <div className="page-content">
+                    {effectiveRole === 'ACCOUNTANT' && (
+                        <div className="card mb-3" style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 20 }}>🔒</span>
+                            <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+                                <b>Accountant Access Notice:</b> Standard fee structures and assigned student fees are locked and cannot be altered by Accountants. Changes or custom fee overrides require Administrator / Developer approval.
+                            </div>
+                        </div>
+                    )}
                     {structures.length === 0 ? (
                         <div className="card" style={{ padding: 60, textAlign: 'center' }}>
                             <div style={{ fontSize: 50 }}>📋</div>

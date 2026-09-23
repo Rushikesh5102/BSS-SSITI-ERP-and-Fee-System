@@ -108,23 +108,6 @@ export const feeStructuresController = {
         if (!feeStructure) throw new AppError(404, 'Fee structure not found');
         if (!student) throw new AppError(404, 'Student not found');
 
-        if (tuitionFee !== undefined || examFee !== undefined || dressMaterialFee !== undefined || otherFee !== undefined) {
-            const currentEdu = (student.educationDetails as any) || {};
-            await prisma.student.update({
-                where: { id: student.id },
-                data: {
-                    educationDetails: {
-                        ...currentEdu,
-                        ...(tuitionFee !== undefined ? { tuitionFee: String(tuitionFee) } : {}),
-                        ...(examFee !== undefined ? { examFee: String(examFee) } : {}),
-                        ...(dressMaterialFee !== undefined ? { dressMaterialFee: String(dressMaterialFee) } : {}),
-                        ...(otherFee !== undefined ? { otherFee: String(otherFee) } : {}),
-                        ...(otherFeeLabel !== undefined ? { otherFeeLabel: String(otherFeeLabel) } : {}),
-                    }
-                }
-            });
-        }
-
         const studentSession = getStudentSession(student);
         const totalAmount = customTotalAmount !== undefined ? Number(customTotalAmount) : feeStructure.totalAmount;
         const year = academicYear || studentSession || feeStructure.academicYear;
@@ -140,7 +123,24 @@ export const feeStructuresController = {
         });
 
         if (existingFee && req.user?.role === 'ACCOUNTANT') {
-            throw new AppError(403, 'Accountants cannot modify fee structures once set. Only Administrators can update set fee structures.');
+            throw new AppError(403, 'Assigned fees cannot be changed by Accountants. Only Administrators and Developers can modify set student fee packages (requires Admin approval).');
+        }
+
+        if (tuitionFee !== undefined || examFee !== undefined || dressMaterialFee !== undefined || otherFee !== undefined) {
+            const currentEdu = (student.educationDetails as any) || {};
+            await prisma.student.update({
+                where: { id: student.id },
+                data: {
+                    educationDetails: {
+                        ...currentEdu,
+                        ...(tuitionFee !== undefined ? { tuitionFee: String(tuitionFee) } : {}),
+                        ...(examFee !== undefined ? { examFee: String(examFee) } : {}),
+                        ...(dressMaterialFee !== undefined ? { dressMaterialFee: String(dressMaterialFee) } : {}),
+                        ...(otherFee !== undefined ? { otherFee: String(otherFee) } : {}),
+                        ...(otherFeeLabel !== undefined ? { otherFeeLabel: String(otherFeeLabel) } : {}),
+                    }
+                }
+            });
         }
 
         let studentFee;

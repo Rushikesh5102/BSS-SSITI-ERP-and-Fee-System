@@ -380,6 +380,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const handleAssignFee = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedStudent || !feeForm.feeStructureId) return;
+
+        if (effectiveRole === 'ACCOUNTANT' && selectedStudent.studentFees && selectedStudent.studentFees.length > 0) {
+            showToast('❌ Assigned fees cannot be changed by Accountants. Admin approval required.');
+            return;
+        }
+
         setAssigningFee(true);
         try {
             const calcTotal = (
@@ -1496,10 +1502,20 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     <div className="text-sm text-muted">Class/Trade: {selectedStudent.class} {selectedStudent.section && `(${selectedStudent.section})`}</div>
                                 </div>
 
+                                {effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0 && (
+                                    <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <span style={{ fontSize: 20 }}>🔒</span>
+                                        <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+                                            <b>Assigned Fees Locked:</b> Accountants cannot modify student fees once set. Any adjustments or fee revisions require Administrator / Developer approval.
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="form-group mb-3">
                                     <label className="form-label">Select Fee Structure <span className="required">*</span></label>
                                     <select
                                         className="form-control"
+                                        disabled={Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
                                         value={feeForm.feeStructureId}
                                         onChange={(e) => {
                                             const id = e.target.value;
@@ -1540,6 +1556,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     <label className="form-label">Payment Due Date</label>
                                     <input
                                         type="date"
+                                        disabled={Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
                                         className="form-control"
                                         value={feeForm.dueDate}
                                         onChange={(e) => setFeeForm(f => ({ ...f, dueDate: e.target.value }))}
@@ -1561,6 +1578,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <label className="form-label" style={{ fontSize: 12 }}>🎓 Tuition Fees (₹)</label>
                                             <input
                                                 type="number"
+                                                disabled={Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
                                                 className="form-control"
                                                 style={{ fontSize: 13 }}
                                                 placeholder="e.g. 15000"
@@ -1572,6 +1590,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <label className="form-label" style={{ fontSize: 12 }}>📝 Exam Fees (₹)</label>
                                             <input
                                                 type="number"
+                                                disabled={Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
                                                 className="form-control"
                                                 style={{ fontSize: 13 }}
                                                 placeholder="e.g. 2000"
@@ -1583,6 +1602,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <label className="form-label" style={{ fontSize: 12 }}>🥼 Dress & Material (₹)</label>
                                             <input
                                                 type="number"
+                                                disabled={Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
                                                 className="form-control"
                                                 style={{ fontSize: 13 }}
                                                 placeholder="e.g. 3000"
@@ -1594,6 +1614,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             <label className="form-label" style={{ fontSize: 12 }}>📦 Other Charges (₹)</label>
                                             <input
                                                 type="number"
+                                                disabled={Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
                                                 className="form-control"
                                                 style={{ fontSize: 13 }}
                                                 placeholder="e.g. 1000"
@@ -1606,8 +1627,14 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowFeeModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={assigningFee}>
-                                    {assigningFee ? 'Updating...' : '💾 Save Student Fee'}
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={assigningFee || Boolean(effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0)}
+                                >
+                                    {effectiveRole === 'ACCOUNTANT' && selectedStudent?.studentFees && selectedStudent.studentFees.length > 0
+                                        ? '🔒 Admin Approval Required'
+                                        : (assigningFee ? 'Updating...' : '💾 Save Student Fee')}
                                 </button>
                             </div>
                         </form>

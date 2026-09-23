@@ -356,6 +356,28 @@ export const studentsController = {
             sanitizedUpdate.dateOfBirth = dateOfBirth;
         }
 
+        // Enforce fee permission: Accountants cannot modify assigned fee components in educationDetails
+        if (req.user?.role === 'ACCOUNTANT' && sanitizedUpdate.educationDetails) {
+            const beforeEdu = (beforeStudent?.educationDetails as any) || {};
+            const feeFields = ['tuitionFee', 'examFee', 'dressMaterialFee', 'otherFee', 'otherFeeLabel', 'totalFee', 'customTotalFee'];
+            
+            // Check if existing student already has studentFees assigned
+            const hasAssignedFee = await prisma.studentFee.count({ where: { studentId: req.params.id } }) > 0;
+            
+            if (hasAssignedFee) {
+                // Restore existing fee breakdown fields so accountant edits to profile do not change assigned fees
+                const safeEdu = { ...sanitizedUpdate.educationDetails };
+                for (const f of feeFields) {
+                    if (beforeEdu[f] !== undefined) {
+                        safeEdu[f] = beforeEdu[f];
+                    } else {
+                        delete safeEdu[f];
+                    }
+                }
+                sanitizedUpdate.educationDetails = safeEdu;
+            }
+        }
+
         const student = await prisma.student.update({
             where: { id: req.params.id },
             data: sanitizedUpdate,

@@ -24,6 +24,9 @@ interface StoreItem {
     notes: string | null;
     branchId: string;
     image: string | null;
+    totalQuantity?: number;
+    issuedQuantity?: number;
+    balanceQuantity?: number;
     createdBy?: { name: string; email: string } | null;
     branch?: { name: string };
 }
@@ -447,13 +450,15 @@ function AssetRegisterContent() {
                     ) : (
                         <div className="table-wrap" style={{ border: 'none', background: 'transparent', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                             <table className="table responsive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead>
+                                <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--surface-2)' }}>
                                     <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2)' }}>
                                         <th style={{ textAlign: 'left', padding: '8px 12px', whiteSpace: 'nowrap', fontSize: 12 }}>Item Name</th>
-                                        <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Quantity</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 8px', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--primary)' }}>Total Qty</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 8px', whiteSpace: 'nowrap', fontSize: 12, color: '#d97706' }}>Issued</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 8px', whiteSpace: 'nowrap', fontSize: 12, color: '#10b981' }}>Balance</th>
                                         <th style={{ textAlign: 'right', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Unit Price (₹)</th>
-                                        <th style={{ textAlign: 'right', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Total Asset Value (₹)</th>
-                                        <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Reorder Level</th>
+                                        <th style={{ textAlign: 'right', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Total Value (₹)</th>
+                                        <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Reorder</th>
                                         <th style={{ textAlign: 'center', padding: '8px 10px', whiteSpace: 'nowrap', fontSize: 12 }}>Status</th>
                                         <th style={{ textAlign: 'right', padding: '8px 12px', whiteSpace: 'nowrap', fontSize: 12 }}>Actions</th>
                                     </tr>
@@ -504,9 +509,19 @@ function AssetRegisterContent() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td data-label="Quantity" style={{ padding: '6px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                                    <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)' }}>
-                                                        {item.quantity} {cleanUnit}
+                                                <td data-label="Total Qty" style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--primary)' }}>
+                                                        {item.totalQuantity ?? ((item.quantity || 0) + (item.issuedQuantity || 0))} {cleanUnit}
+                                                    </span>
+                                                </td>
+                                                <td data-label="Issued" style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ fontSize: 12.5, fontWeight: 800, color: '#d97706' }}>
+                                                        {item.issuedQuantity ?? 0} {cleanUnit}
+                                                    </span>
+                                                </td>
+                                                <td data-label="Balance" style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ fontSize: 12.5, fontWeight: 800, color: '#10b981' }}>
+                                                        {item.balanceQuantity ?? (item.quantity || 0)} {cleanUnit}
                                                     </span>
                                                 </td>
                                                 <td data-label="Unit Price (₹)" style={{ padding: '6px 10px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>

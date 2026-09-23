@@ -1923,7 +1923,12 @@ html.dark .student-action-btn.btn-delete:hover {
 
 /* ─── Official Print Dossier Media Rules ─────────────────────────────────── */
 @media print {
-  .sidebar, .topbar, footer, .no-print, .btn, .modal-header button, .modal-footer {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 8mm;
+  }
+
+  .sidebar, .topbar, footer, .no-print, .btn, .modal-header button, .modal-footer, .header {
     display: none !important;
   }
 
@@ -1931,7 +1936,18 @@ html.dark .student-action-btn.btn-delete:hover {
     background: #ffffff !important;
     color: #0f172a !important;
     overflow: visible !important;
-    font-size: 11pt !important;
+    height: auto !important;
+    font-size: 10pt !important;
+  }
+
+  .layout, .main-content, .page-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
   }
 
   .modal-overlay {
@@ -1957,34 +1973,66 @@ html.dark .student-action-btn.btn-delete:hover {
     padding: 0 !important;
   }
 
-  #printable-student-history {
+  #printable-student-history,
+  #printable-report,
+  .printable-report,
+  .printable-dossier {
     display: block !important;
     width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   .card {
     border: 1px solid #cbd5e1 !important;
     box-shadow: none !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
     margin-bottom: 12px !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   table {
     width: 100% !important;
     border-collapse: collapse !important;
+    page-break-inside: auto !important;
+    font-size: 9pt !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tbody tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
   }
 
   th, td {
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
     color: #0f172a !important;
-    padding: 6px 8px !important;
+    padding: 5px 6px !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .badge {
     border: 1px solid #cbd5e1 !important;
     color: #0f172a !important;
     background: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
 
