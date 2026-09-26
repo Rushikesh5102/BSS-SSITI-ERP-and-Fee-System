@@ -47,6 +47,11 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
+    // Global filter state
+    const [filterTrade, setFilterTrade] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterFeeStatus, setFilterFeeStatus] = useState('');
+    const [showFilterPanel, setShowFilterPanel] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [receiptModalData, setReceiptModalData] = useState<any | null>(null);
 
@@ -334,7 +339,11 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const fetchStudents = async () => {
         setFetching(true);
         try {
-            const { data } = await api.get(`/students?page=${page}&limit=25&search=${encodeURIComponent(debouncedSearch)}`);
+            let url = `/students?page=${page}&limit=25&search=${encodeURIComponent(debouncedSearch)}`;
+            if (filterTrade) url += `&class=${encodeURIComponent(filterTrade)}`;
+            if (filterCategory) url += `&category=${encodeURIComponent(filterCategory)}`;
+            if (filterFeeStatus) url += `&feeStatus=${encodeURIComponent(filterFeeStatus)}`;
+            const { data } = await api.get(url);
             setStudents(data.data || []);
             setTotal(data.pagination?.total || 0);
         } catch { } finally { setFetching(false); }
@@ -352,7 +361,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         fetchStudents();
         fetchFeeStructures();
         if (actionParam === 'new') setShowModal(true);
-    }, [user, page, debouncedSearch, actionParam]);
+    }, [user, page, debouncedSearch, actionParam, filterTrade, filterCategory, filterFeeStatus]);
 
     useEffect(() => {
         if (user && activeTab === 'inquiries') {
@@ -381,8 +390,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         e.preventDefault();
         if (!selectedStudent || !feeForm.feeStructureId) return;
 
-        if (effectiveRole !== 'ADMIN' && effectiveRole !== 'DEVELOPER') {
-            showToast('❌ Only Administrators and Developers can assign or modify student fees.');
+        // Accountants can ONLY assign fee for the first time; editing is Admin/Developer only
+        if (effectiveRole === 'ACCOUNTANT' && (
+            (selectedStudent.studentFees && selectedStudent.studentFees.length > 0) ||
+            Boolean(selectedStudent.feeAssignment)
+        )) {
+            showToast('❌ Assigned fees cannot be changed by Accountants. Admin or Developer approval required.');
             return;
         }
 
@@ -518,14 +531,14 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
     const isAdminOrDev = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
     const isAccountant = effectiveRole === 'ACCOUNTANT';
-    // Only Admin and Developer can admit students
-    const canAdmitStudent = ['ADMIN', 'DEVELOPER'].includes(effectiveRole || '');
-    // Only Admin and Developer can assign or edit fees
-    const canManageFees = isAdminOrDev;
+    const canAdmitStudent = ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(effectiveRole || '');
+    // Only Admin & Developer can edit student profile
+    const canEditStudentProfile = isAdminOrDev;
 
     if (loading || !user) return null;
 
     const totalPages = Math.ceil(total / 25);
+    const hasActiveFilters = !!(filterTrade || filterCategory || filterFeeStatus);
     const getBaseUrl = () => {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
             ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
@@ -639,10 +652,77 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                         <>
                         <div className="card mb-4">
                             <div className="card-body" style={{ padding: '12px 16px' }}>
-                                <input
-                                    type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or subcaste..."
-                                    value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                                />
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <input
+                                        type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or subcaste..."
+                                        value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                                        style={{ flex: 1, minWidth: 220 }}
+                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <button
+                                            className={`btn ${hasActiveFilters ? 'btn-primary' : 'btn-secondary'}`}
+                                            onClick={() => setShowFilterPanel(v => !v)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}
+                                        >
+                                            🎛️ Filters {hasActiveFilters ? `(${[filterTrade, filterCategory, filterFeeStatus].filter(Boolean).length} active)` : ''}
+                                        </button>
+                                        {showFilterPanel && (
+                                            <div style={{
+                                                position: 'absolute', top: '110%', right: 0, zIndex: 200,
+                                                background: 'var(--surface)', border: '1px solid var(--border)',
+                                                borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+                                                padding: 20, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 14
+                                            }}>
+                                                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>🎛️ Global Filters</div>
+                                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                                    <label className="form-label" style={{ fontSize: 12 }}>Trade / Class</label>
+                                                    <select className="form-control" value={filterTrade} onChange={e => { setFilterTrade(e.target.value); setPage(1); }}>
+                                                        <option value="">All Trades</option>
+                                                        <option value="Electrician">Electrician</option>
+                                                        <option value="Fitter">Fitter</option>
+                                                        <option value="Welder">Welder</option>
+                                                        <option value="Mechanic">Mechanic (Motor Vehicle)</option>
+                                                        <option value="COPA">COPA (Computer Operator)</option>
+                                                        <option value="Wireman">Wireman</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                                    <label className="form-label" style={{ fontSize: 12 }}>Category</label>
+                                                    <select className="form-control" value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}>
+                                                        <option value="">All Categories</option>
+                                                        <option value="OPEN">OPEN / General</option>
+                                                        <option value="OBC">OBC</option>
+                                                        <option value="SC">SC</option>
+                                                        <option value="ST">ST</option>
+                                                        <option value="VJNT">VJ / NT</option>
+                                                        <option value="SBC">SBC</option>
+                                                        <option value="EWS">EWS</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                                    <label className="form-label" style={{ fontSize: 12 }}>Fee Status</label>
+                                                    <select className="form-control" value={filterFeeStatus} onChange={e => { setFilterFeeStatus(e.target.value); setPage(1); }}>
+                                                        <option value="">All Fee Statuses</option>
+                                                        <option value="PAID">Fully Paid</option>
+                                                        <option value="PENDING">Has Pending Dues</option>
+                                                        <option value="NOT_ASSIGNED">Fee Not Assigned</option>
+                                                    </select>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
+                                                    <button className="btn btn-ghost btn-sm" onClick={() => { setFilterTrade(''); setFilterCategory(''); setFilterFeeStatus(''); setPage(1); }}>↺ Clear All</button>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => setShowFilterPanel(false)}>✓ Apply</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {hasActiveFilters && (
+                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                                        {filterTrade && <span className="badge badge-primary" style={{ cursor: 'pointer' }} onClick={() => { setFilterTrade(''); setPage(1); }}>Trade: {filterTrade} ✕</span>}
+                                        {filterCategory && <span className="badge badge-neutral" style={{ cursor: 'pointer' }} onClick={() => { setFilterCategory(''); setPage(1); }}>Category: {filterCategory} ✕</span>}
+                                        {filterFeeStatus && <span className="badge badge-warning" style={{ cursor: 'pointer' }} onClick={() => { setFilterFeeStatus(''); setPage(1); }}>Fee: {filterFeeStatus} ✕</span>}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -669,8 +749,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             const pending = s.feeAssignment?.pendingAmount ?? 0;
                                             const totalFee = s.feeAssignment?.totalAmount ?? 0;
                                             const feeAlreadyAssigned = Boolean(s.feeAssignment);
-                                            // Fee button: Admin/Developer only for both assign and edit
-                                            const canShowFeeBtn = canManageFees;
                                             const startYr = s.createdAt ? new Date(s.createdAt).getFullYear() : currentYear;
                                             const sessionDisplay = s.educationDetails?.academicSession
                                                 ? String(s.educationDetails.academicSession).replace(/\s+/g, '')
@@ -755,30 +833,43 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>History</span>
                                                             </button>
 
-                                                            {/* Row 2: Management & Financial Operations (Admin/Developer only) */}
-                                                            {canShowFeeBtn ? (
+                                                            {/* Row 2: Management & Financial Operations */}
+                                                            {/* Fee button: Admin/Dev always; Accountant only if fee NOT yet assigned */}
+                                                            {(isAdminOrDev || (isAccountant && !feeAlreadyAssigned)) ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-fee"
                                                                     onClick={() => openAssignFeeModal(s)}
-                                                                    title={feeAlreadyAssigned ? 'Edit Fee Structure (Admin/Dev Only)' : 'Assign Fee Structure (Admin/Dev Only)'}
+                                                                    title={feeAlreadyAssigned ? (isAdminOrDev ? 'Edit Fee Structure (Admin/Dev only)' : 'Fee already assigned') : 'Assign Fee Structure'}
                                                                 >
                                                                     <span>💳</span>
                                                                     <span>{feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}</span>
                                                                 </button>
+                                                            ) : feeAlreadyAssigned && isAccountant ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className="student-action-btn btn-fee"
+                                                                    style={{ opacity: 0.45, cursor: 'not-allowed' }}
+                                                                    title="Fee editing requires Admin or Developer approval"
+                                                                    disabled
+                                                                >
+                                                                    <span>🔒</span>
+                                                                    <span>Fee Locked</span>
+                                                                </button>
                                                             ) : <div />}
-                                                            {isAdminOrDev ? (
+                                                            {/* Edit student profile: Admin/Developer only */}
+                                                            {canEditStudentProfile ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-edit"
                                                                     onClick={() => openEditProfileModal(s)}
-                                                                    title="Edit Student Admission Profile (Admin/Dev Only)"
+                                                                    title="Edit Student Admission Profile (Admin / Developer only)"
                                                                 >
                                                                     <span>✏️</span>
                                                                     <span>Edit</span>
                                                                 </button>
                                                             ) : <div />}
-                                                            {isAdminOrDev ? (
+                                                            {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-delete"
@@ -786,7 +877,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                         setEditingStudent(s);
                                                                         setShowDeleteConfirmModal(true);
                                                                     }}
-                                                                    title="Delete Student and Cascade Records (Admin/Dev Only)"
+                                                                    title="Delete Student and Cascade Records"
                                                                 >
                                                                     <span>🗑️</span>
                                                                     <span>Delete</span>
@@ -800,27 +891,60 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     </tbody>
                                 </table>
                             </div>
-                            {/* Pagination – 25 per page with smart page range */}
-                            {totalPages >= 1 && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 8 }}>
-                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                                        Showing students {((page - 1) * 25) + 1}–{Math.min(page * 25, total)} of <b>{total}</b>
-                                    </div>
-                                    <div className="pagination">
-                                        <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1} title="First page">«</button>
-                                        <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} title="Previous 25">‹ Prev</button>
-                                        {(() => {
-                                            const startPage = Math.max(1, Math.min(page - 2, totalPages - 4));
-                                            const endPage = Math.min(totalPages, startPage + 4);
-                                            return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((p) => (
-                                                <button key={p} className={`pagination-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
-                                            ));
-                                        })()}
-                                        <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} title="Next 25">Next ›</button>
-                                        <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages} title="Last page">»</button>
-                                    </div>
+                            {/* Pagination - 25 per page */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 8 }}>
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                                    Showing {students.length === 0 ? 0 : (page - 1) * 25 + 1}–{Math.min(page * 25, total)} of <b>{total}</b> students
                                 </div>
-                            )}
+                                {totalPages > 1 && (
+                                    <div className="pagination" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                        <button
+                                            className="pagination-btn"
+                                            onClick={() => setPage(1)}
+                                            disabled={page === 1}
+                                            title="First page"
+                                            style={{ fontWeight: 700, padding: '4px 10px' }}
+                                        >«</button>
+                                        <button
+                                            className="pagination-btn"
+                                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                                            disabled={page === 1}
+                                            title="Previous 25"
+                                        >‹ Prev</button>
+                                        {/* Smart page numbers */}
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                            .filter(p => p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2))
+                                            .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                                                if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...');
+                                                acc.push(p);
+                                                return acc;
+                                            }, [])
+                                            .map((p, idx) => p === '...' ? (
+                                                <span key={`ellipsis-${idx}`} style={{ padding: '4px 6px', color: 'var(--text-muted)' }}>…</span>
+                                            ) : (
+                                                <button
+                                                    key={p}
+                                                    className={`pagination-btn ${page === p ? 'active' : ''}`}
+                                                    onClick={() => setPage(p as number)}
+                                                >{p}</button>
+                                            ))
+                                        }
+                                        <button
+                                            className="pagination-btn"
+                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={page === totalPages}
+                                            title="Next 25"
+                                        >Next ›</button>
+                                        <button
+                                            className="pagination-btn"
+                                            onClick={() => setPage(totalPages)}
+                                            disabled={page === totalPages}
+                                            title="Last page"
+                                            style={{ fontWeight: 700, padding: '4px 10px' }}
+                                        >»</button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         </>
                     )}
@@ -1442,7 +1566,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                 </div>
                             </div>
                             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-                                {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
+                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT'].includes(effectiveRole || '') && (
                                     <button 
                                         type="button" 
                                         className="btn btn-danger btn-sm" 

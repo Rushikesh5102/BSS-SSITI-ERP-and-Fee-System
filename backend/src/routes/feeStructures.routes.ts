@@ -21,8 +21,8 @@ router.post('/', authorize(Role.ADMIN, Role.DEVELOPER), feeStructuresController.
 // PUT /fee-structures/:id - Admin and Developer
 router.put('/:id', authorize(Role.ADMIN, Role.DEVELOPER), feeStructuresController.update);
 
-// POST /fee-structures/assign - Admin and Developer only
-router.post('/assign', authorize(Role.ADMIN, Role.DEVELOPER), feeStructuresController.assignToStudent);
+// POST /fee-structures/assign - Admin, Accountant, Developer (Initial stage only for Accountant)
+router.post('/assign', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER), feeStructuresController.assignToStudent);
 
 // PUT /fee-structures/student-fee/:id - Admin, Developer only
 router.put('/student-fee/:id', authorize(Role.ADMIN, Role.DEVELOPER), feeStructuresController.updateStudentFee);

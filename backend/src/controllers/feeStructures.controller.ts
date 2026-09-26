@@ -3,7 +3,7 @@ import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
 
-import { AuditAction, Role } from '../types/enums';
+import { AuditAction } from '../types/enums';
 import { getStudentSession } from './students.controller';
 
 
@@ -99,11 +99,6 @@ export const feeStructuresController = {
     }),
 
     assignToStudent: asyncHandler(async (req: Request, res: Response) => {
-        const userRole = req.user?.role;
-        if (userRole !== Role.ADMIN && userRole !== Role.DEVELOPER && (userRole as string) !== 'SUPERADMIN') {
-            throw new AppError(403, 'Access denied. Only Administrators and Developers have authority to assign or edit fees.');
-        }
-
         const { studentId, feeStructureId, customTotalAmount, dueDate, academicYear, tuitionFee, examFee, dressMaterialFee, otherFee, otherFeeLabel } = req.body;
 
         const [feeStructure, student] = await Promise.all([
@@ -126,6 +121,10 @@ export const feeStructuresController = {
                 ]
             }
         });
+
+        if (existingFee && req.user?.role === 'ACCOUNTANT') {
+            throw new AppError(403, 'Assigned fees cannot be changed by Accountants. Only Administrators and Developers can modify set student fee packages (requires Admin approval).');
+        }
 
         if (tuitionFee !== undefined || examFee !== undefined || dressMaterialFee !== undefined || otherFee !== undefined) {
             const currentEdu = (student.educationDetails as any) || {};
