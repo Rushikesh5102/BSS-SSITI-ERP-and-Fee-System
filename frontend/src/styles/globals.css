@@ -2079,95 +2079,115 @@ html.dark .student-action-btn.btn-delete:hover {
   position: relative;
 }
 
+.students-search-wrapper input.students-search-input,
+.students-search-wrapper input[type="text"],
+input[type="text"].students-search-input,
 .students-search-input {
-  width: 100%;
-  padding: 10px 42px 10px 38px;
-  font-size: 13.5px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  transition: all 0.2s ease;
+  width: 100% !important;
+  height: 42px !important;
+  padding: 8px 42px 8px 44px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--surface-2) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
 }
 
+.students-search-wrapper input.students-search-input:focus,
+.students-search-wrapper input[type="text"]:focus,
+input[type="text"].students-search-input:focus,
 .students-search-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: var(--surface);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  outline: none !important;
+  border-color: var(--primary) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18) !important;
 }
 
 .students-search-icon {
-  position: absolute;
-  left: 12px;
-  font-size: 14px;
-  color: var(--text-muted);
-  pointer-events: none;
+  position: absolute !important;
+  left: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  color: var(--text-muted) !important;
+  pointer-events: none !important;
+  z-index: 5 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .students-search-clear {
-  position: absolute;
-  right: 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  z-index: 5 !important;
+  line-height: 1 !important;
 }
 
 .students-search-clear:hover {
-  color: var(--text);
-  background: var(--surface-2);
+  color: var(--text) !important;
+  background: var(--surface-2) !important;
 }
 
 .students-search-btn {
-  height: 40px;
-  padding: 0 16px;
-  font-weight: 700;
-  font-size: 13px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
-  transition: all 0.15s ease;
-  white-space: nowrap;
+  height: 42px !important;
+  padding: 0 18px !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
 }
 
 .students-search-btn:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+  filter: brightness(1.08) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35) !important;
 }
 
 .students-global-filter-select {
-  height: 40px;
-  padding: 0 14px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  cursor: pointer;
-  min-width: 180px;
-  transition: all 0.2s ease;
+  height: 42px !important;
+  padding: 0 14px !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--surface-2) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  min-width: 180px !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
 }
 
 .students-global-filter-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: var(--surface);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  outline: none !important;
+  border-color: var(--primary) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18) !important;
 }
 
 .filter-badge-pill {
