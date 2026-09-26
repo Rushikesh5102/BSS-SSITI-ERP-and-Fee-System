@@ -25,37 +25,86 @@ export function getStudentSession(student: { educationDetails?: any; createdAt?:
 }
 
 export const studentsController = {
-    // GET /students - Returns paginated list of students filtered by branch, trade, or search string
+    // GET /students - Returns paginated list of students (recent first, 25 per page default) filtered by branch, trade, category, feeStatus, or search string
     list: asyncHandler(async (req: Request, res: Response) => {
-        const { page = 1, limit = 20, search = '', class: cls = '' } = req.query;
+        const { 
+            page = 1, 
+            limit = 25, 
+            search = '', 
+            class: cls = '', 
+            trade = '', 
+            category = '', 
+            feeStatus = '',
+            session = '',
+            sortBy = 'recent'
+        } = req.query;
+
         let parsedPage = Number(page);
         let parsedLimit = Number(limit);
         
         if (isNaN(parsedPage) || parsedPage < 1) parsedPage = 1;
-        if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 20;
+        if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 25;
 
         const skip = (parsedPage - 1) * parsedLimit;
+        const targetTrade = String(trade || cls || '').trim();
+        const searchStr = String(search || '').trim();
+        const categoryStr = String(category || '').trim();
+        const feeStatusStr = String(feeStatus || '').trim().toLowerCase();
 
-        const where: any = {
-            isActive: true,
-            ...(req.user?.branchId ? { branchId: req.user.branchId } : {}),
-            ...(search ? {
+        const andConditions: any[] = [
+            { isActive: true },
+            ...(req.user?.branchId ? [{ branchId: req.user.branchId }] : [])
+        ];
+
+        if (targetTrade && targetTrade !== 'ALL') {
+            andConditions.push({ class: { equals: targetTrade, mode: 'insensitive' } });
+        }
+
+        if (categoryStr && categoryStr !== 'ALL') {
+            andConditions.push({ category: { equals: categoryStr, mode: 'insensitive' } });
+        }
+
+        if (searchStr) {
+            andConditions.push({
                 OR: [
-                    { name: { contains: String(search), mode: 'insensitive' } },
-                    { studentId: { contains: String(search), mode: 'insensitive' } },
-                    { rollNumber: { contains: String(search), mode: 'insensitive' } },
-                    { class: { contains: String(search), mode: 'insensitive' } },
+                    { name: { contains: searchStr, mode: 'insensitive' } },
+                    { studentId: { contains: searchStr, mode: 'insensitive' } },
+                    { rollNumber: { contains: searchStr, mode: 'insensitive' } },
+                    { class: { contains: searchStr, mode: 'insensitive' } },
+                    { category: { contains: searchStr, mode: 'insensitive' } },
+                    { address: { contains: searchStr, mode: 'insensitive' } },
+                    { parent: { name: { contains: searchStr, mode: 'insensitive' } } },
+                    { parent: { phone: { contains: searchStr, mode: 'insensitive' } } },
                 ]
-            } : {}),
-            ...(cls ? { class: String(cls) } : {}),
-        };
+            });
+        }
+
+        if (session && session !== 'ALL') {
+            andConditions.push({
+                OR: [
+                    { studentFees: { some: { academicYear: String(session) } } },
+                ]
+            });
+        }
+
+        if (feeStatusStr === 'unassigned') {
+            andConditions.push({ studentFees: { none: {} } });
+        } else if (feeStatusStr === 'assigned') {
+            andConditions.push({ studentFees: { some: {} } });
+        }
+
+        const where: any = andConditions.length > 0 ? { AND: andConditions } : {};
+
+        const orderClause = sortBy === 'name' 
+            ? { name: 'asc' as const } 
+            : { createdAt: 'desc' as const };
 
         const [students, total] = await Promise.all([
             prisma.student.findMany({
                 where,
                 skip,
                 take: parsedLimit,
-                orderBy: { name: 'asc' },
+                orderBy: orderClause,
                 include: {
                     parent: { select: { name: true, phone: true, email: true } },
                     branch: { select: { name: true } },
@@ -65,6 +114,7 @@ export const studentsController = {
                             totalAmount: true,
                             paidAmount: true,
                             academicYear: true,
+                            dueDate: true,
                             feeStructure: { select: { id: true, name: true, academicYear: true, class: true } },
                         },
                     },
@@ -73,9 +123,25 @@ export const studentsController = {
             prisma.student.count({ where }),
         ]);
 
+        // If client requested specific fee status like 'paid' or 'pending', filter on derived balances if needed
+        let filteredStudents = students;
+        if (feeStatusStr === 'paid') {
+            filteredStudents = students.filter(s => {
+                const totalFee = s.studentFees?.[0]?.totalAmount ?? 0;
+                const paidFee = s.studentFees?.[0]?.paidAmount ?? 0;
+                return totalFee > 0 && paidFee >= totalFee;
+            });
+        } else if (feeStatusStr === 'pending' || feeStatusStr === 'due') {
+            filteredStudents = students.filter(s => {
+                const totalFee = s.studentFees?.[0]?.totalAmount ?? 0;
+                const paidFee = s.studentFees?.[0]?.paidAmount ?? 0;
+                return totalFee > 0 && paidFee < totalFee;
+            });
+        }
+
         res.json({
             success: true,
-            data: students,
+            data: filteredStudents,
             pagination: { page: parsedPage, limit: parsedLimit, total, pages: Math.ceil(total / parsedLimit) },
         });
     }),
@@ -381,7 +447,87 @@ export const studentsController = {
         const student = await prisma.student.update({
             where: { id: req.params.id },
             data: sanitizedUpdate,
+            include: {
+                parent: true,
+                studentFees: {
+                    include: {
+                        feeStructure: true,
+                        payments: true
+                    }
+                }
+            }
         });
+
+        // Update Parent details if provided
+        if (parent && (parent.name || parent.phone || parent.email !== undefined)) {
+            if (student.parentId) {
+                await prisma.parent.update({
+                    where: { id: student.parentId },
+                    data: {
+                        ...(parent.name ? { name: String(parent.name).trim() } : {}),
+                        ...(parent.phone ? { phone: String(parent.phone).trim() } : {}),
+                        ...(parent.email !== undefined ? { email: parent.email ? String(parent.email).trim() : null } : {}),
+                    }
+                });
+            } else if (parent.name || parent.phone) {
+                const newParent = await prisma.parent.create({
+                    data: {
+                        name: parent.name ? String(parent.name).trim() : `${student.name} Parent`,
+                        phone: parent.phone ? String(parent.phone).trim() : '',
+                        email: parent.email ? String(parent.email).trim() : null,
+                    }
+                });
+                await prisma.student.update({
+                    where: { id: student.id },
+                    data: { parentId: newParent.id }
+                });
+            }
+        }
+
+        // Admin and Developer Direct Fee Updating Authority
+        const isPrivileged = req.user?.role === 'ADMIN' || req.user?.role === 'DEVELOPER' || (req.user as any)?.role === 'SUPERADMIN';
+        if (isPrivileged && updateData.feeStructureId) {
+            const feeStructure = await prisma.feeStructure.findUnique({ where: { id: updateData.feeStructureId } });
+            if (feeStructure) {
+                const session = getStudentSession({ educationDetails: updateData.educationDetails || student.educationDetails, createdAt: student.createdAt });
+                const totalAmount = updateData.customTotalAmount !== undefined 
+                    ? Number(updateData.customTotalAmount) 
+                    : feeStructure.totalAmount;
+
+                const existingFee = await prisma.studentFee.findFirst({
+                    where: {
+                        studentId: student.id,
+                        OR: [
+                            { academicYear: session },
+                            { feeStructureId: updateData.feeStructureId }
+                        ]
+                    }
+                });
+
+                if (existingFee) {
+                    await prisma.studentFee.update({
+                        where: { id: existingFee.id },
+                        data: {
+                            feeStructureId: updateData.feeStructureId,
+                            academicYear: session,
+                            totalAmount,
+                            dueDate: updateData.dueDate ? new Date(updateData.dueDate) : existingFee.dueDate,
+                        }
+                    });
+                } else {
+                    await prisma.studentFee.create({
+                        data: {
+                            studentId: student.id,
+                            feeStructureId: updateData.feeStructureId,
+                            totalAmount,
+                            paidAmount: 0,
+                            academicYear: session,
+                            dueDate: updateData.dueDate ? new Date(updateData.dueDate) : null,
+                        }
+                    });
+                }
+            }
+        }
 
         if (updateData.educationDetails && updateData.educationDetails.academicSession) {
             const newSession = getStudentSession({ educationDetails: updateData.educationDetails });

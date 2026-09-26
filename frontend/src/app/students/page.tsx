@@ -47,11 +47,6 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [fetching, setFetching] = useState(false);
-    // Global filter state
-    const [filterTrade, setFilterTrade] = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
-    const [filterFeeStatus, setFilterFeeStatus] = useState('');
-    const [showFilterPanel, setShowFilterPanel] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [receiptModalData, setReceiptModalData] = useState<any | null>(null);
 
@@ -140,14 +135,24 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     // Edit Student Admission Profile Modal State
     const [showEditProfileModal, setShowEditProfileModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState<any | null>(null);
+    const [activeEditTab, setActiveEditTab] = useState<'identity' | 'contact' | 'education' | 'fees'>('identity');
     const [editProfileForm, setEditProfileForm] = useState({
         name: '', class: 'Electrician', section: '', rollNumber: '',
         academicSession: '', dateOfBirth: '', gender: 'Male', bloodGroup: '',
         category: 'OPEN', subcaste: '', isOtherSubcaste: false, otherSubcaste: '',
         parentName: '', parentPhone: '', parentEmail: '', address: '', landline: '',
         photo: '', signature: '',
-        educationDetails: { qualification: '10th (SSC)', board: 'MSBSHSE', schoolName: '', passingYear: '2024', percentage: '', rollNo: '' },
+        feeStructureId: '', customAmountRupees: '', dueDate: '',
+        tuitionFee: '', examFee: '', dressMaterialFee: '', otherFee: '', otherFeeLabel: 'Other Charges',
+        educationDetails: { 
+            qualification: '10th (SSC)', board: 'Maharashtra State Board', schoolName: '', 
+            passingYear: '2024', percentage: '', rollNo: '', medium: 'English', higherEducation: '', city: 'Bhadravati' 
+        },
         submittedDocuments: {
+            domicile: false, marksheet12th: false, baDegree: false, bcomDegree: false, btechDegree: false,
+            tc: false, marklist: false, caste: false, nonCreamy: false, photo4: false, income: false,
+            ewsCertificate: false, pwdCertificate: false, affidavit: false, gap: false, aadhar: false,
+            bankPassbook: false, otherDocs: false, otherDocsText: '',
             sscMarksheet: false, leavingCertificate: false, casteCertificate: false,
             nonCreamyLayer: false, incomeCertificate: false, aadharCard: false,
             domicileCertificate: false, passportPhotos: false
@@ -157,6 +162,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
     const openEditProfileModal = (student: any) => {
         setEditingStudent(student);
+        setActiveEditTab('identity');
         const edu = student.educationDetails || {};
         const docs = student.submittedDocuments || {};
         const cat = student.category || 'OPEN';
@@ -164,13 +170,38 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         const listSubs = INDIAN_SUBCASTES[cat] || INDIAN_SUBCASTES['OPEN'];
         const isOther = sub && !listSubs.includes(sub);
 
+        const currentFee = student.studentFees?.[0];
+        const initialFeeStructId = currentFee?.feeStructureId || (feeStructures.find(f => f.class === student.class)?.id || feeStructures[0]?.id || '');
+        const matchedStruct = feeStructures.find(f => f.id === initialFeeStructId);
+
+        let defaultTuition = edu.tuitionFee ? String(edu.tuitionFee) : '';
+        let defaultExam = edu.examFee ? String(edu.examFee) : '';
+        let defaultDress = edu.dressMaterialFee ? String(edu.dressMaterialFee) : '';
+        let defaultOther = edu.otherFee ? String(edu.otherFee) : '';
+        let defaultOtherLabel = edu.otherFeeLabel || 'Other Charges';
+
+        if (!defaultTuition && !defaultExam && !defaultDress && matchedStruct?.items) {
+            matchedStruct.items.forEach((item: any) => {
+                const catName = (item.feeCategory?.name || '').toLowerCase();
+                const val = (item.amount / 100).toString();
+                if (catName.includes('tuition')) defaultTuition = val;
+                else if (catName.includes('exam')) defaultExam = val;
+                else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) defaultDress = val;
+                else defaultOther = val;
+            });
+        }
+
+        const totalRupees = currentFee?.totalAmount 
+            ? (currentFee.totalAmount / 100).toString() 
+            : (matchedStruct?.totalAmount ? (matchedStruct.totalAmount / 100).toString() : '');
+
         setEditProfileForm({
             name: student.name || '',
             class: student.class || 'Electrician',
             section: student.section || '',
             rollNumber: student.rollNumber || '',
             academicSession: edu.academicSession ? String(edu.academicSession).replace(/\s+/g, '') : `${new Date(student.createdAt).getFullYear()}-${new Date(student.createdAt).getFullYear() + 2}`,
-            dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '',
+            dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : (edu.dateOfBirth ? new Date(edu.dateOfBirth).toISOString().split('T')[0] : ''),
             gender: student.gender || 'Male',
             bloodGroup: student.bloodGroup || '',
             category: cat,
@@ -180,30 +211,58 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             parentName: student.parent?.name || '',
             parentPhone: student.parent?.phone || '',
             parentEmail: student.parent?.email || '',
-            address: student.address || '',
+            address: student.address || edu.address || '',
             landline: student.landline || '',
             photo: student.photo || '',
             signature: student.signature || '',
+            feeStructureId: initialFeeStructId,
+            customAmountRupees: totalRupees,
+            dueDate: currentFee?.dueDate ? new Date(currentFee.dueDate).toISOString().split('T')[0] : '',
+            tuitionFee: defaultTuition,
+            examFee: defaultExam,
+            dressMaterialFee: defaultDress,
+            otherFee: defaultOther,
+            otherFeeLabel: defaultOtherLabel,
             educationDetails: {
                 qualification: edu.qualification || '10th (SSC)',
-                board: edu.board || 'MSBSHSE',
-                schoolName: edu.schoolName || '',
+                board: edu.board || 'Maharashtra State Board',
+                schoolName: edu.schoolName || edu.school || '',
                 passingYear: edu.passingYear || '2024',
                 percentage: edu.percentage || '',
-                rollNo: edu.rollNo || ''
+                rollNo: edu.rollNo || '',
+                medium: edu.medium || 'English',
+                higherEducation: edu.higherEducation || '',
+                city: edu.city || 'Bhadravati'
             },
             submittedDocuments: {
                 ...(docs || {}),
-                sscMarksheet: docs.sscMarksheet || false,
-                leavingCertificate: docs.leavingCertificate || false,
-                casteCertificate: docs.casteCertificate || false,
-                nonCreamyLayer: docs.nonCreamyLayer || false,
-                incomeCertificate: docs.incomeCertificate || false,
-                aadharCard: docs.aadharCard || false,
-                domicileCertificate: docs.domicileCertificate || false,
-                passportPhotos: docs.passportPhotos || false,
+                domicile: docs.domicile || docs.domicileCertificate || false,
+                marksheet12th: docs.marksheet12th || false,
+                baDegree: docs.baDegree || false,
+                bcomDegree: docs.bcomDegree || false,
+                btechDegree: docs.btechDegree || false,
+                tc: docs.tc || docs.leavingCertificate || false,
+                marklist: docs.marklist || docs.sscMarksheet || false,
+                caste: docs.caste || docs.casteCertificate || false,
+                nonCreamy: docs.nonCreamy || docs.nonCreamyLayer || false,
+                photo4: docs.photo4 || docs.passportPhotos || false,
+                income: docs.income || docs.incomeCertificate || false,
                 ewsCertificate: docs.ewsCertificate || docs.ews || false,
                 pwdCertificate: docs.pwdCertificate || docs.disability || false,
+                affidavit: docs.affidavit || false,
+                gap: docs.gap || false,
+                aadhar: docs.aadhar || docs.aadharCard || false,
+                bankPassbook: docs.bankPassbook || false,
+                otherDocs: docs.otherDocs || false,
+                otherDocsText: docs.otherDocsText || '',
+                sscMarksheet: docs.sscMarksheet || docs.marklist || false,
+                leavingCertificate: docs.leavingCertificate || docs.tc || false,
+                casteCertificate: docs.casteCertificate || docs.caste || false,
+                nonCreamyLayer: docs.nonCreamyLayer || docs.nonCreamy || false,
+                incomeCertificate: docs.incomeCertificate || docs.income || false,
+                aadharCard: docs.aadharCard || docs.aadhar || false,
+                domicileCertificate: docs.domicileCertificate || docs.domicile || false,
+                passportPhotos: docs.passportPhotos || docs.photo4 || false
             }
         });
         setShowEditProfileModal(true);
@@ -219,33 +278,86 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
         setUpdatingProfile(true);
         try {
-            await api.put(`/students/${editingStudent.id}`, {
-                name: editProfileForm.name,
+            const isFullAuthority = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN';
+            const effectiveSubcaste = editProfileForm.isOtherSubcaste ? editProfileForm.otherSubcaste : editProfileForm.subcaste;
+
+            const calcTotal = (
+                (parseFloat(editProfileForm.tuitionFee) || 0) +
+                (parseFloat(editProfileForm.examFee) || 0) +
+                (parseFloat(editProfileForm.dressMaterialFee) || 0) +
+                (parseFloat(editProfileForm.otherFee) || 0)
+            );
+            const rawAmount = calcTotal > 0 ? calcTotal.toString() : editProfileForm.customAmountRupees;
+            const amountInPaise = rawAmount ? Math.round(parseFloat(rawAmount) * 100) : undefined;
+            const studentSession = (editProfileForm.academicSession || defaultSession).replace(/\s+/g, '');
+
+            const payload: any = {
+                name: editProfileForm.name.trim(),
                 class: editProfileForm.class,
-                section: editProfileForm.section || null,
-                rollNumber: editProfileForm.rollNumber || null,
+                section: editProfileForm.section ? editProfileForm.section.trim() : null,
+                rollNumber: editProfileForm.rollNumber ? editProfileForm.rollNumber.trim() : null,
                 category: editProfileForm.category || 'OPEN',
                 bloodGroup: editProfileForm.bloodGroup || null,
                 gender: editProfileForm.gender || 'Male',
                 dateOfBirth: editProfileForm.dateOfBirth ? editProfileForm.dateOfBirth : null,
-                address: editProfileForm.address || null,
-                landline: editProfileForm.landline || null,
+                address: editProfileForm.address ? editProfileForm.address.trim() : null,
+                landline: editProfileForm.landline ? editProfileForm.landline.trim() : null,
                 photo: editProfileForm.photo || null,
                 signature: editProfileForm.signature || null,
                 educationDetails: {
                     ...editProfileForm.educationDetails,
-                    academicSession: (editProfileForm.academicSession || defaultSession).replace(/\s+/g, ''),
-                    subcaste: editProfileForm.subcaste || null
+                    academicSession: studentSession,
+                    subcaste: effectiveSubcaste,
+                    dateOfBirth: editProfileForm.dateOfBirth || null,
+                    address: editProfileForm.address || null,
+                    ...(isFullAuthority ? {
+                        tuitionFee: editProfileForm.tuitionFee || undefined,
+                        examFee: editProfileForm.examFee || undefined,
+                        dressMaterialFee: editProfileForm.dressMaterialFee || undefined,
+                        otherFee: editProfileForm.otherFee || undefined,
+                        otherFeeLabel: editProfileForm.otherFeeLabel || undefined,
+                        totalFee: rawAmount || undefined,
+                        customTotalFee: rawAmount || undefined
+                    } : {})
                 },
                 submittedDocuments: editProfileForm.submittedDocuments,
                 parent: {
-                    name: editProfileForm.parentName,
-                    phone: editProfileForm.parentPhone,
-                    email: editProfileForm.parentEmail
+                    name: editProfileForm.parentName ? editProfileForm.parentName.trim() : '',
+                    phone: editProfileForm.parentPhone ? editProfileForm.parentPhone.trim() : '',
+                    email: editProfileForm.parentEmail ? editProfileForm.parentEmail.trim() : null,
                 }
-            });
+            };
 
-            showToast('✅ Student admission profile updated successfully!');
+            // Full authority: Admin and Developer can edit and reassign fees directly in the student edit form
+            if (isFullAuthority && editProfileForm.feeStructureId) {
+                payload.feeStructureId = editProfileForm.feeStructureId;
+                payload.customTotalAmount = amountInPaise;
+                payload.dueDate = editProfileForm.dueDate || undefined;
+            }
+
+            await api.put(`/students/${editingStudent.id}`, payload);
+
+            // Also invoke fee structure assignment if fee details were modified by Admin/Dev
+            if (isFullAuthority && editProfileForm.feeStructureId) {
+                try {
+                    await api.post('/fee-structures/assign', {
+                        studentId: editingStudent.id,
+                        feeStructureId: editProfileForm.feeStructureId,
+                        customTotalAmount: amountInPaise,
+                        academicYear: studentSession,
+                        dueDate: editProfileForm.dueDate || undefined,
+                        tuitionFee: editProfileForm.tuitionFee || undefined,
+                        examFee: editProfileForm.examFee || undefined,
+                        dressMaterialFee: editProfileForm.dressMaterialFee || undefined,
+                        otherFee: editProfileForm.otherFee || undefined,
+                        otherFeeLabel: editProfileForm.otherFeeLabel || undefined,
+                    });
+                } catch (feeErr) {
+                    console.warn('Fee sync notice:', feeErr);
+                }
+            }
+
+            showToast('✅ Student profile and records updated successfully!');
             setShowEditProfileModal(false);
             fetchStudents();
         } catch (err: any) {
@@ -332,6 +444,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         setShowModal(true);
     };
 
+    // Filter and search state
+    const [globalFilter, setGlobalFilter] = useState('ALL');
+    const [filterTrade, setFilterTrade] = useState('ALL');
+    const [filterCategory, setFilterCategory] = useState('ALL');
+    const [filterFeeStatus, setFilterFeeStatus] = useState('ALL');
+
     useEffect(() => {
         if (!loading && !user) router.push('/login');
     }, [user, loading, router]);
@@ -339,11 +457,25 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const fetchStudents = async () => {
         setFetching(true);
         try {
-            let url = `/students?page=${page}&limit=25&search=${encodeURIComponent(debouncedSearch)}`;
-            if (filterTrade) url += `&class=${encodeURIComponent(filterTrade)}`;
-            if (filterCategory) url += `&category=${encodeURIComponent(filterCategory)}`;
-            if (filterFeeStatus) url += `&feeStatus=${encodeURIComponent(filterFeeStatus)}`;
-            const { data } = await api.get(url);
+            let tradeParam = filterTrade !== 'ALL' ? filterTrade : '';
+            let categoryParam = filterCategory !== 'ALL' ? filterCategory : '';
+            let feeStatusParam = filterFeeStatus !== 'ALL' ? filterFeeStatus : '';
+
+            if (globalFilter.startsWith('TRADE:')) tradeParam = globalFilter.replace('TRADE:', '');
+            else if (globalFilter.startsWith('CAT:')) categoryParam = globalFilter.replace('CAT:', '');
+            else if (globalFilter.startsWith('FEE:')) feeStatusParam = globalFilter.replace('FEE:', '').toLowerCase();
+
+            const queryParams = new URLSearchParams({
+                page: String(page),
+                limit: '25',
+                search: debouncedSearch.trim(),
+                sortBy: 'recent'
+            });
+            if (tradeParam) queryParams.set('trade', tradeParam);
+            if (categoryParam) queryParams.set('category', categoryParam);
+            if (feeStatusParam) queryParams.set('feeStatus', feeStatusParam);
+
+            const { data } = await api.get(`/students?${queryParams.toString()}`);
             setStudents(data.data || []);
             setTotal(data.pagination?.total || 0);
         } catch { } finally { setFetching(false); }
@@ -361,13 +493,49 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         fetchStudents();
         fetchFeeStructures();
         if (actionParam === 'new') setShowModal(true);
-    }, [user, page, debouncedSearch, actionParam, filterTrade, filterCategory, filterFeeStatus]);
+    }, [user, page, debouncedSearch, globalFilter, filterTrade, filterCategory, filterFeeStatus, actionParam]);
 
     useEffect(() => {
         if (user && activeTab === 'inquiries') {
             fetchInquiries();
         }
     }, [user, activeTab]);
+
+    const handleSearchSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setPage(1);
+        fetchStudents();
+    };
+
+    const handleClearSearch = () => {
+        setSearch('');
+        setPage(1);
+    };
+
+    const handleGlobalFilterChange = (val: string) => {
+        setGlobalFilter(val);
+        if (val === 'ALL') {
+            setFilterTrade('ALL');
+            setFilterCategory('ALL');
+            setFilterFeeStatus('ALL');
+        } else if (val.startsWith('TRADE:')) {
+            setFilterTrade(val.replace('TRADE:', ''));
+        } else if (val.startsWith('CAT:')) {
+            setFilterCategory(val.replace('CAT:', ''));
+        } else if (val.startsWith('FEE:')) {
+            setFilterFeeStatus(val.replace('FEE:', ''));
+        }
+        setPage(1);
+    };
+
+    const handleResetAllFilters = () => {
+        setSearch('');
+        setGlobalFilter('ALL');
+        setFilterTrade('ALL');
+        setFilterCategory('ALL');
+        setFilterFeeStatus('ALL');
+        setPage(1);
+    };
 
     const showToast = (msg: string) => {
         setToast(msg);
@@ -390,12 +558,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         e.preventDefault();
         if (!selectedStudent || !feeForm.feeStructureId) return;
 
-        // Accountants can ONLY assign fee for the first time; editing is Admin/Developer only
-        if (effectiveRole === 'ACCOUNTANT' && (
-            (selectedStudent.studentFees && selectedStudent.studentFees.length > 0) ||
-            Boolean(selectedStudent.feeAssignment)
-        )) {
-            showToast('❌ Assigned fees cannot be changed by Accountants. Admin or Developer approval required.');
+        if (effectiveRole === 'ACCOUNTANT' && selectedStudent.studentFees && selectedStudent.studentFees.length > 0) {
+            showToast('❌ Assigned fees cannot be changed by Accountants. Admin approval required.');
             return;
         }
 
@@ -532,13 +696,10 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const isAdminOrDev = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
     const isAccountant = effectiveRole === 'ACCOUNTANT';
     const canAdmitStudent = ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(effectiveRole || '');
-    // Only Admin & Developer can edit student profile
-    const canEditStudentProfile = isAdminOrDev;
 
     if (loading || !user) return null;
 
-    const totalPages = Math.ceil(total / 25);
-    const hasActiveFilters = !!(filterTrade || filterCategory || filterFeeStatus);
+    const totalPages = Math.max(1, Math.ceil(total / 25));
     const getBaseUrl = () => {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
             ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
@@ -650,84 +811,107 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                     ) : (
                         /* Enrolled Students Table */
                         <>
-                        <div className="card mb-4">
-                            <div className="card-body" style={{ padding: '12px 16px' }}>
-                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                        {/* Search & Global Filter Card */}
+                        <div className="students-filter-card">
+                            <form onSubmit={handleSearchSubmit} className="students-toolbar">
+                                {/* Search Input with Icon and Clear button */}
+                                <div className="students-search-wrapper">
+                                    <span className="students-search-icon">🔍</span>
                                     <input
-                                        type="text" className="form-control" placeholder="🔍 Search by student name, ID, roll no, trade, or subcaste..."
-                                        value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                                        style={{ flex: 1, minWidth: 220 }}
+                                        type="text"
+                                        className="students-search-input"
+                                        placeholder="Search by student name, ID, roll no, trade, category, or parent..."
+                                        value={search}
+                                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                                     />
-                                    <div style={{ position: 'relative' }}>
+                                    {search && (
                                         <button
-                                            className={`btn ${hasActiveFilters ? 'btn-primary' : 'btn-secondary'}`}
-                                            onClick={() => setShowFilterPanel(v => !v)}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}
+                                            type="button"
+                                            className="students-search-clear"
+                                            onClick={handleClearSearch}
+                                            title="Clear search input"
                                         >
-                                            🎛️ Filters {hasActiveFilters ? `(${[filterTrade, filterCategory, filterFeeStatus].filter(Boolean).length} active)` : ''}
+                                            ✕
                                         </button>
-                                        {showFilterPanel && (
-                                            <div style={{
-                                                position: 'absolute', top: '110%', right: 0, zIndex: 200,
-                                                background: 'var(--surface)', border: '1px solid var(--border)',
-                                                borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-                                                padding: 20, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 14
-                                            }}>
-                                                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>🎛️ Global Filters</div>
-                                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                                    <label className="form-label" style={{ fontSize: 12 }}>Trade / Class</label>
-                                                    <select className="form-control" value={filterTrade} onChange={e => { setFilterTrade(e.target.value); setPage(1); }}>
-                                                        <option value="">All Trades</option>
-                                                        <option value="Electrician">Electrician</option>
-                                                        <option value="Fitter">Fitter</option>
-                                                        <option value="Welder">Welder</option>
-                                                        <option value="Mechanic">Mechanic (Motor Vehicle)</option>
-                                                        <option value="COPA">COPA (Computer Operator)</option>
-                                                        <option value="Wireman">Wireman</option>
-                                                    </select>
-                                                </div>
-                                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                                    <label className="form-label" style={{ fontSize: 12 }}>Category</label>
-                                                    <select className="form-control" value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}>
-                                                        <option value="">All Categories</option>
-                                                        <option value="OPEN">OPEN / General</option>
-                                                        <option value="OBC">OBC</option>
-                                                        <option value="SC">SC</option>
-                                                        <option value="ST">ST</option>
-                                                        <option value="VJNT">VJ / NT</option>
-                                                        <option value="SBC">SBC</option>
-                                                        <option value="EWS">EWS</option>
-                                                    </select>
-                                                </div>
-                                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                                    <label className="form-label" style={{ fontSize: 12 }}>Fee Status</label>
-                                                    <select className="form-control" value={filterFeeStatus} onChange={e => { setFilterFeeStatus(e.target.value); setPage(1); }}>
-                                                        <option value="">All Fee Statuses</option>
-                                                        <option value="PAID">Fully Paid</option>
-                                                        <option value="PENDING">Has Pending Dues</option>
-                                                        <option value="NOT_ASSIGNED">Fee Not Assigned</option>
-                                                    </select>
-                                                </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
-                                                    <button className="btn btn-ghost btn-sm" onClick={() => { setFilterTrade(''); setFilterCategory(''); setFilterFeeStatus(''); setPage(1); }}>↺ Clear All</button>
-                                                    <button className="btn btn-primary btn-sm" onClick={() => setShowFilterPanel(false)}>✓ Apply</button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
-                                {hasActiveFilters && (
-                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                                        {filterTrade && <span className="badge badge-primary" style={{ cursor: 'pointer' }} onClick={() => { setFilterTrade(''); setPage(1); }}>Trade: {filterTrade} ✕</span>}
-                                        {filterCategory && <span className="badge badge-neutral" style={{ cursor: 'pointer' }} onClick={() => { setFilterCategory(''); setPage(1); }}>Category: {filterCategory} ✕</span>}
-                                        {filterFeeStatus && <span className="badge badge-warning" style={{ cursor: 'pointer' }} onClick={() => { setFilterFeeStatus(''); setPage(1); }}>Fee: {filterFeeStatus} ✕</span>}
-                                    </div>
+
+                                {/* Explicit Search Button */}
+                                <button type="submit" className="students-search-btn" title="Execute student search">
+                                    <span>🔍</span>
+                                    <span>Search</span>
+                                </button>
+
+                                {/* Global Filter Dropdown */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <select
+                                        className="students-global-filter-select"
+                                        value={globalFilter}
+                                        onChange={(e) => handleGlobalFilterChange(e.target.value)}
+                                        title="Global Filter Selector"
+                                    >
+                                        <option value="ALL">🌐 Global Filter: All Records</option>
+                                        <optgroup label="── Filter By Trade ──">
+                                            <option value="TRADE:Electrician">⚡ Electrician</option>
+                                            <option value="TRADE:Fitter">🔧 Fitter</option>
+                                            <option value="TRADE:Welder">🔥 Welder</option>
+                                            <option value="TRADE:Mechanic">🚗 Mechanic (Motor Vehicle)</option>
+                                            <option value="TRADE:COPA">💻 COPA</option>
+                                            <option value="TRADE:Wireman">🔌 Wireman</option>
+                                        </optgroup>
+                                        <optgroup label="── Filter By Fee Status ──">
+                                            <option value="FEE:paid">🟢 Fee Status: Fully Paid</option>
+                                            <option value="FEE:pending">🟡 Fee Status: Pending Due</option>
+                                            <option value="FEE:unassigned">⚪ Fee Status: Unassigned</option>
+                                        </optgroup>
+                                        <optgroup label="── Filter By Category ──">
+                                            <option value="CAT:OPEN">🏷️ Category: OPEN</option>
+                                            <option value="CAT:OBC">🏷️ Category: OBC</option>
+                                            <option value="CAT:SC">🏷️ Category: SC</option>
+                                            <option value="CAT:ST">🏷️ Category: ST</option>
+                                            <option value="CAT:VJNT">🏷️ Category: VJNT</option>
+                                            <option value="CAT:SBC">🏷️ Category: SBC</option>
+                                            <option value="CAT:EWS">🏷️ Category: EWS</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+
+                                {/* Reset All Filters Button */}
+                                {(search || globalFilter !== 'ALL' || filterTrade !== 'ALL' || filterCategory !== 'ALL' || filterFeeStatus !== 'ALL') && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary btn-sm"
+                                        onClick={handleResetAllFilters}
+                                        style={{ height: 40, padding: '0 14px', fontSize: 12.5, fontWeight: 700 }}
+                                        title="Reset search and filters"
+                                    >
+                                        🔄 Reset Filters
+                                    </button>
                                 )}
-                            </div>
+                            </form>
+
+                            {/* Active Filters Pill Indicator */}
+                            {(globalFilter !== 'ALL' || search) && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600 }}>Active Filters:</span>
+                                    {search && (
+                                        <span className="filter-badge-pill">
+                                            🔍 &ldquo;{search}&rdquo;
+                                            <button type="button" className="filter-badge-pill-remove" onClick={handleClearSearch}>×</button>
+                                        </span>
+                                    )}
+                                    {globalFilter !== 'ALL' && (
+                                        <span className="filter-badge-pill">
+                                            🎯 {globalFilter.replace('TRADE:', 'Trade: ').replace('CAT:', 'Category: ').replace('FEE:', 'Fee: ')}
+                                            <button type="button" className="filter-badge-pill-remove" onClick={() => handleGlobalFilterChange('ALL')}>×</button>
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="card">
-                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent' }}>
+                            <div className="table-wrap" style={{ border: 'none', borderRadius: 0, background: 'transparent', overflowX: 'auto' }}>
                                 <table className="table responsive-table">
                                     <thead>
                                         <tr>
@@ -744,11 +928,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                         {fetching ? (
                                             <tr><td colSpan={7} className="text-center" style={{ padding: 40 }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
                                         ) : students.length === 0 ? (
-                                            <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No students found</td></tr>
+                                            <tr><td colSpan={7} className="text-center text-muted" style={{ padding: 40 }}>No students found matching current criteria</td></tr>
                                         ) : students.map((s) => {
-                                            const pending = s.feeAssignment?.pendingAmount ?? 0;
-                                            const totalFee = s.feeAssignment?.totalAmount ?? 0;
-                                            const feeAlreadyAssigned = Boolean(s.feeAssignment);
+                                            const pending = s.feeAssignment?.pendingAmount ?? (s.studentFees?.[0] ? s.studentFees[0].totalAmount - s.studentFees[0].paidAmount : 0);
+                                            const totalFee = s.feeAssignment?.totalAmount ?? (s.studentFees?.[0]?.totalAmount ?? 0);
+                                            const feeAlreadyAssigned = Boolean(s.feeAssignment || (s.studentFees && s.studentFees.length > 0));
+                                            const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
                                             const startYr = s.createdAt ? new Date(s.createdAt).getFullYear() : currentYear;
                                             const sessionDisplay = s.educationDetails?.academicSession
                                                 ? String(s.educationDetails.academicSession).replace(/\s+/g, '')
@@ -834,42 +1019,27 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             </button>
 
                                                             {/* Row 2: Management & Financial Operations */}
-                                                            {/* Fee button: Admin/Dev always; Accountant only if fee NOT yet assigned */}
-                                                            {(isAdminOrDev || (isAccountant && !feeAlreadyAssigned)) ? (
+                                                            {canShowFeeBtn ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-fee"
                                                                     onClick={() => openAssignFeeModal(s)}
-                                                                    title={feeAlreadyAssigned ? (isAdminOrDev ? 'Edit Fee Structure (Admin/Dev only)' : 'Fee already assigned') : 'Assign Fee Structure'}
+                                                                    title={feeAlreadyAssigned ? 'Edit Fee Structure' : 'Assign Fee Structure'}
                                                                 >
                                                                     <span>💳</span>
                                                                     <span>{feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}</span>
                                                                 </button>
-                                                            ) : feeAlreadyAssigned && isAccountant ? (
-                                                                <button
-                                                                    type="button"
-                                                                    className="student-action-btn btn-fee"
-                                                                    style={{ opacity: 0.45, cursor: 'not-allowed' }}
-                                                                    title="Fee editing requires Admin or Developer approval"
-                                                                    disabled
-                                                                >
-                                                                    <span>🔒</span>
-                                                                    <span>Fee Locked</span>
-                                                                </button>
                                                             ) : <div />}
-                                                            {/* Edit student profile: Admin/Developer only */}
-                                                            {canEditStudentProfile ? (
-                                                                <button
-                                                                    type="button"
-                                                                    className="student-action-btn btn-edit"
-                                                                    onClick={() => openEditProfileModal(s)}
-                                                                    title="Edit Student Admission Profile (Admin / Developer only)"
-                                                                >
-                                                                    <span>✏️</span>
-                                                                    <span>Edit</span>
-                                                                </button>
-                                                            ) : <div />}
-                                                            {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') ? (
+                                                            <button
+                                                                type="button"
+                                                                className="student-action-btn btn-edit"
+                                                                onClick={() => openEditProfileModal(s)}
+                                                                title={isAdminOrDev ? 'Edit Student Profile & Fee Structure (Full Authority)' : 'Edit Student Profile'}
+                                                            >
+                                                                <span>✏️</span>
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            {isAdminOrDev ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-delete"
@@ -891,59 +1061,54 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     </tbody>
                                 </table>
                             </div>
-                            {/* Pagination - 25 per page */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 8 }}>
-                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                                    Showing {students.length === 0 ? 0 : (page - 1) * 25 + 1}–{Math.min(page * 25, total)} of <b>{total}</b> students
+
+                            {/* Pagination Toolbar: Recent 25 with Next/Previous 25 navigation */}
+                            <div className="pagination-container">
+                                <div className="pagination-info">
+                                    Showing <b>{total === 0 ? 0 : (page - 1) * 25 + 1}</b> to <b>{Math.min(page * 25, total)}</b> of <b>{total}</b> students
+                                    <span style={{ marginLeft: 6, fontSize: 11.5, color: 'var(--text-muted)' }}>(Recent 25 per page)</span>
                                 </div>
-                                {totalPages > 1 && (
-                                    <div className="pagination" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                        <button
-                                            className="pagination-btn"
-                                            onClick={() => setPage(1)}
-                                            disabled={page === 1}
-                                            title="First page"
-                                            style={{ fontWeight: 700, padding: '4px 10px' }}
-                                        >«</button>
-                                        <button
-                                            className="pagination-btn"
-                                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                                            disabled={page === 1}
-                                            title="Previous 25"
-                                        >‹ Prev</button>
-                                        {/* Smart page numbers */}
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                            .filter(p => p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2))
-                                            .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                                                if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...');
-                                                acc.push(p);
-                                                return acc;
-                                            }, [])
-                                            .map((p, idx) => p === '...' ? (
-                                                <span key={`ellipsis-${idx}`} style={{ padding: '4px 6px', color: 'var(--text-muted)' }}>…</span>
-                                            ) : (
-                                                <button
-                                                    key={p}
-                                                    className={`pagination-btn ${page === p ? 'active' : ''}`}
-                                                    onClick={() => setPage(p as number)}
-                                                >{p}</button>
-                                            ))
+                                
+                                <div className="pagination-nav">
+                                    <button
+                                        type="button"
+                                        className="pagination-arrow-btn"
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        title="Go to previous 25 students"
+                                    >
+                                        <span>‹</span>
+                                        <span>Previous 25</span>
+                                    </button>
+
+                                    {totalPages > 1 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pNum = i + 1;
+                                        if (totalPages > 5 && page > 3) {
+                                            pNum = Math.min(page - 2 + i, totalPages - 4 + i);
                                         }
-                                        <button
-                                            className="pagination-btn"
-                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                            disabled={page === totalPages}
-                                            title="Next 25"
-                                        >Next ›</button>
-                                        <button
-                                            className="pagination-btn"
-                                            onClick={() => setPage(totalPages)}
-                                            disabled={page === totalPages}
-                                            title="Last page"
-                                            style={{ fontWeight: 700, padding: '4px 10px' }}
-                                        >»</button>
-                                    </div>
-                                )}
+                                        return (
+                                            <button
+                                                key={pNum}
+                                                type="button"
+                                                className={`pagination-page-pill ${page === pNum ? 'active' : ''}`}
+                                                onClick={() => setPage(pNum)}
+                                            >
+                                                {pNum}
+                                            </button>
+                                        );
+                                    })}
+
+                                    <button
+                                        type="button"
+                                        className="pagination-arrow-btn"
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page >= totalPages || total === 0}
+                                        title="Go to next 25 students"
+                                    >
+                                        <span>Next 25</span>
+                                        <span>›</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         </>
@@ -1385,208 +1550,544 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             )}
 
             {/* Edit Student Admission Profile Modal */}
-            {showEditProfileModal && editingStudent && (
-                <div className="modal-overlay" onClick={() => setShowEditProfileModal(false)}>
-                    <div className="modal" style={{ maxWidth: 720 }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div className="modal-title">✏️ Edit Admission Profile: {editingStudent.name} ({editingStudent.studentId})</div>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowEditProfileModal(false)}>✕</button>
-                        </div>
-                        <form onSubmit={handleUpdateProfile}>
-                            <div className="modal-body">
-                                {/* Role Access Notice */}
-                                <div style={{ background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '10px 14px', borderRadius: 8, fontSize: 12, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <span>🛡️</span>
-                                    <span>
-                                        Editing admission profile as <b>{effectiveRole}</b>. Profile updates are logged in the audit trail.
-                                    </span>
+            {showEditProfileModal && editingStudent && (() => {
+                const isFullAuthority = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN';
+                const isAccountant = effectiveRole === 'ACCOUNTANT';
+                const calcTotal = (
+                    (parseFloat(editProfileForm.tuitionFee) || 0) +
+                    (parseFloat(editProfileForm.examFee) || 0) +
+                    (parseFloat(editProfileForm.dressMaterialFee) || 0) +
+                    (parseFloat(editProfileForm.otherFee) || 0)
+                );
+                const displayTotal = calcTotal > 0 ? calcTotal : (parseFloat(editProfileForm.customAmountRupees) || 0);
+
+                return (
+                    <div className="modal-overlay" onClick={() => setShowEditProfileModal(false)}>
+                        <div className="modal" style={{ maxWidth: 840, width: '95%' }} onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header" style={{ borderBottom: '1px solid var(--border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div className="modal-title">✏️ Edit Student Profile: {editingStudent.name}</div>
+                                    <span className="badge badge-info" style={{ fontFamily: 'monospace', fontSize: 11 }}>{editingStudent.studentId}</span>
                                 </div>
+                                <button className="btn btn-ghost btn-icon" onClick={() => setShowEditProfileModal(false)}>✕</button>
+                            </div>
 
-                                <div className="grid grid-2">
-                                    <div className="form-group">
-                                        <label className="form-label">Full Name <span className="required">*</span></label>
-                                        <input className="form-control" required value={editProfileForm.name} onChange={(e) => setEditProfileForm(f => ({ ...f, name: e.target.value }))} placeholder="Student full name" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Enrolled Trade <span className="required">*</span></label>
-                                        <select className="form-control" required value={editProfileForm.class} onChange={(e) => setEditProfileForm(f => ({ ...f, class: e.target.value }))}>
-                                            <option value="Electrician">Electrician (2-Year)</option>
-                                            <option value="Fitter">Fitter (2-Year)</option>
-                                            <option value="Welder">Welder</option>
-                                            <option value="Mechanic">Mechanic (Motor Vehicle)</option>
-                                            <option value="COPA">COPA (Computer Operator)</option>
-                                            <option value="Wireman">Wireman</option>
-                                        </select>
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Roll Number</label>
-                                        <input 
-                                            className="form-control" 
-                                            value={editProfileForm.rollNumber} 
-                                            onChange={(e) => setEditProfileForm(f => ({ ...f, rollNumber: e.target.value }))} 
-                                            placeholder="e.g. 01" 
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Date of Birth 📅</label>
-                                        <input 
-                                            className="form-control date-picker-custom" 
-                                            type="date" 
-                                            value={editProfileForm.dateOfBirth} 
-                                            onChange={(e) => setEditProfileForm(f => ({ ...f, dateOfBirth: e.target.value }))}
-                                            max={new Date().toISOString().split('T')[0]}
-                                        />
-                                    </div>
+                            {/* 4-Tab Navigation */}
+                            <div className="modal-tabs">
+                                <button
+                                    type="button"
+                                    className={`modal-tab-btn ${activeEditTab === 'identity' ? 'active' : ''}`}
+                                    onClick={() => setActiveEditTab('identity')}
+                                >
+                                    👤 Identity & Trade
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`modal-tab-btn ${activeEditTab === 'contact' ? 'active' : ''}`}
+                                    onClick={() => setActiveEditTab('contact')}
+                                >
+                                    📞 Contact & Guardian
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`modal-tab-btn ${activeEditTab === 'education' ? 'active' : ''}`}
+                                    onClick={() => setActiveEditTab('education')}
+                                >
+                                    🎓 Education & Docs
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`modal-tab-btn ${activeEditTab === 'fees' ? 'active' : ''}`}
+                                    onClick={() => setActiveEditTab('fees')}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                >
+                                    💳 Fee Package & Charges
+                                    {isFullAuthority ? (
+                                        <span style={{ fontSize: 10, background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>Full Edit</span>
+                                    ) : (
+                                        <span style={{ fontSize: 10, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>Locked</span>
+                                    )}
+                                </button>
+                            </div>
 
-                                    {/* Category & Subcaste */}
-                                    <div className="form-group">
-                                        <label className="form-label">Category</label>
-                                        <select 
-                                            className="form-control" 
-                                            value={editProfileForm.category} 
-                                            onChange={(e) => {
-                                                const cat = e.target.value;
-                                                setEditProfileForm(f => ({ ...f, category: cat, subcaste: '', isOtherSubcaste: false, otherSubcaste: '' }));
-                                            }}
-                                        >
-                                            <option value="OPEN">OPEN / General</option>
-                                            <option value="OBC">OBC (Other Backward Class)</option>
-                                            <option value="SC">SC (Scheduled Caste)</option>
-                                            <option value="ST">ST (Scheduled Tribe)</option>
-                                            <option value="VJNT">VJ / NT (Vimukta Jati / Nomadic Tribe)</option>
-                                            <option value="SBC">SBC (Special Backward Class)</option>
-                                            <option value="EWS">EWS (Economically Weaker Section)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label className="form-label">Subcaste</label>
-                                        {!editProfileForm.isOtherSubcaste ? (
-                                            <div style={{ display: 'flex', gap: 6 }}>
-                                                <select 
-                                                    className="form-control"
-                                                    value={editProfileForm.subcaste}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (val === 'Other (Write-in)') {
-                                                            setEditProfileForm(f => ({ ...f, isOtherSubcaste: true, subcaste: '' }));
-                                                        } else {
-                                                            setEditProfileForm(f => ({ ...f, subcaste: val }));
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="">-- Select Subcaste --</option>
-                                                    {(INDIAN_SUBCASTES[editProfileForm.category] || INDIAN_SUBCASTES['OPEN']).map((sub) => (
-                                                        <option key={sub} value={sub}>{sub}</option>
-                                                    ))}
-                                                </select>
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-secondary btn-sm"
-                                                    onClick={() => setEditProfileForm(f => ({ ...f, isOtherSubcaste: true }))}
-                                                >
-                                                    ✏️ Type
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div style={{ display: 'flex', gap: 6 }}>
+                            <form onSubmit={handleUpdateProfile}>
+                                <div className="modal-body" style={{ maxHeight: 'calc(80vh - 160px)', overflowY: 'auto', padding: '20px 24px' }}>
+                                    
+                                    {/* TAB 1: IDENTITY & TRADE */}
+                                    {activeEditTab === 'identity' && (
+                                        <div className="grid grid-2" style={{ gap: '16px 20px' }}>
+                                            <div className="form-group">
+                                                <label className="form-label">Student Full Name <span className="required">*</span></label>
                                                 <input
                                                     className="form-control"
-                                                    placeholder="Type subcaste name..."
-                                                    value={editProfileForm.otherSubcaste}
-                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, otherSubcaste: e.target.value, subcaste: e.target.value }))}
-                                                    autoFocus
+                                                    required
+                                                    value={editProfileForm.name}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, name: e.target.value }))}
+                                                    placeholder="e.g. Ramesh Suresh Sharma"
                                                 />
-                                                <button 
-                                                    type="button" 
-                                                    className="btn btn-ghost btn-sm"
-                                                    onClick={() => setEditProfileForm(f => ({ ...f, isOtherSubcaste: false, otherSubcaste: '' }))}
-                                                >
-                                                    📋 List
-                                                </button>
                                             </div>
-                                        )}
-                                    </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Enrolled Trade <span className="required">*</span></label>
+                                                <select
+                                                    className="form-control"
+                                                    required
+                                                    value={editProfileForm.class}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, class: e.target.value }))}
+                                                >
+                                                    <option value="Electrician">Electrician (2-Year CTS)</option>
+                                                    <option value="Fitter">Fitter (2-Year CTS)</option>
+                                                    <option value="Welder">Welder (1-Year CTS)</option>
+                                                    <option value="Mechanic">Mechanic Motor Vehicle (2-Year)</option>
+                                                    <option value="COPA">COPA Computer Operator (1-Year)</option>
+                                                    <option value="Wireman">Wireman (2-Year CTS)</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Roll Number</label>
+                                                <input
+                                                    className="form-control"
+                                                    value={editProfileForm.rollNumber}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, rollNumber: e.target.value }))}
+                                                    placeholder="e.g. 01 or ELE-24-01"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Section / Shift</label>
+                                                <input
+                                                    className="form-control"
+                                                    value={editProfileForm.section}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, section: e.target.value }))}
+                                                    placeholder="e.g. Shift-A or Batch-1"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Academic Session</label>
+                                                <input
+                                                    className="form-control"
+                                                    value={editProfileForm.academicSession}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, academicSession: e.target.value }))}
+                                                    placeholder="e.g. 2024-2026"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Date of Birth 📅</label>
+                                                <input
+                                                    className="form-control date-picker-custom"
+                                                    type="date"
+                                                    value={editProfileForm.dateOfBirth}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+                                                    max={new Date().toISOString().split('T')[0]}
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Gender</label>
+                                                <select
+                                                    className="form-control"
+                                                    value={editProfileForm.gender}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, gender: e.target.value }))}
+                                                >
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Blood Group 🩸</label>
+                                                <select
+                                                    className="form-control"
+                                                    value={editProfileForm.bloodGroup}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, bloodGroup: e.target.value }))}
+                                                >
+                                                    <option value="">-- Select Blood Group --</option>
+                                                    <option value="A+">A+</option>
+                                                    <option value="A-">A-</option>
+                                                    <option value="B+">B+</option>
+                                                    <option value="B-">B-</option>
+                                                    <option value="O+">O+</option>
+                                                    <option value="O-">O-</option>
+                                                    <option value="AB+">AB+</option>
+                                                    <option value="AB-">AB-</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Caste Category</label>
+                                                <select
+                                                    className="form-control"
+                                                    value={editProfileForm.category}
+                                                    onChange={(e) => {
+                                                        const cat = e.target.value;
+                                                        setEditProfileForm(f => ({ ...f, category: cat, subcaste: '', isOtherSubcaste: false, otherSubcaste: '' }));
+                                                    }}
+                                                >
+                                                    <option value="OPEN">OPEN / General</option>
+                                                    <option value="OBC">OBC (Other Backward Class)</option>
+                                                    <option value="SC">SC (Scheduled Caste)</option>
+                                                    <option value="ST">ST (Scheduled Tribe)</option>
+                                                    <option value="VJNT">VJ / NT (Vimukta Jati / Nomadic Tribe)</option>
+                                                    <option value="SBC">SBC (Special Backward Class)</option>
+                                                    <option value="EWS">EWS (Economically Weaker Section)</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Subcaste</label>
+                                                {!editProfileForm.isOtherSubcaste ? (
+                                                    <div style={{ display: 'flex', gap: 6 }}>
+                                                        <select
+                                                            className="form-control"
+                                                            value={editProfileForm.subcaste}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === 'Other (Write-in)') {
+                                                                    setEditProfileForm(f => ({ ...f, isOtherSubcaste: true, subcaste: '' }));
+                                                                } else {
+                                                                    setEditProfileForm(f => ({ ...f, subcaste: val }));
+                                                                }
+                                                            }}
+                                                        >
+                                                            <option value="">-- Select Subcaste --</option>
+                                                            {(INDIAN_SUBCASTES[editProfileForm.category] || INDIAN_SUBCASTES['OPEN']).map((sub) => (
+                                                                <option key={sub} value={sub}>{sub}</option>
+                                                            ))}
+                                                        </select>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-secondary btn-sm"
+                                                            onClick={() => setEditProfileForm(f => ({ ...f, isOtherSubcaste: true }))}
+                                                        >
+                                                            ✏️ Type
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', gap: 6 }}>
+                                                        <input
+                                                            className="form-control"
+                                                            placeholder="Type subcaste name..."
+                                                            value={editProfileForm.otherSubcaste}
+                                                            onChange={(e) => setEditProfileForm(f => ({ ...f, otherSubcaste: e.target.value, subcaste: e.target.value }))}
+                                                            autoFocus
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-ghost btn-sm"
+                                                            onClick={() => setEditProfileForm(f => ({ ...f, isOtherSubcaste: false, otherSubcaste: '' }))}
+                                                        >
+                                                            📋 List
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                    {/* Address */}
-                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <label className="form-label">Permanent / Residential Address</label>
-                                        <input 
-                                            className="form-control" 
-                                            value={editProfileForm.address} 
-                                            onChange={(e) => setEditProfileForm(f => ({ ...f, address: e.target.value }))} 
-                                            placeholder="House No, Street, Village/City, Taluka, District, Pincode" 
-                                        />
-                                    </div>
+                                    {/* TAB 2: CONTACT & GUARDIAN */}
+                                    {activeEditTab === 'contact' && (
+                                        <div className="grid grid-2" style={{ gap: '16px 20px' }}>
+                                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                                <label className="form-label">Permanent / Residential Address</label>
+                                                <input
+                                                    className="form-control"
+                                                    value={editProfileForm.address}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, address: e.target.value }))}
+                                                    placeholder="House No, Street, Ward, Village/City, Taluka, District, Pincode"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Parent / Guardian Full Name</label>
+                                                <input
+                                                    className="form-control"
+                                                    value={editProfileForm.parentName}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, parentName: e.target.value }))}
+                                                    placeholder="Father / Mother / Guardian full name"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Parent / Student Contact Phone</label>
+                                                <input
+                                                    className="form-control"
+                                                    type="tel"
+                                                    value={editProfileForm.parentPhone}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, parentPhone: e.target.value }))}
+                                                    placeholder="e.g. 9876543210"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Parent / Guardian Email (Optional)</label>
+                                                <input
+                                                    className="form-control"
+                                                    type="email"
+                                                    value={editProfileForm.parentEmail}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, parentEmail: e.target.value }))}
+                                                    placeholder="guardian@example.com"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Landline / Alternate Phone</label>
+                                                <input
+                                                    className="form-control"
+                                                    value={editProfileForm.landline}
+                                                    onChange={(e) => setEditProfileForm(f => ({ ...f, landline: e.target.value }))}
+                                                    placeholder="Optional alternate landline/mobile"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
-                                    {/* Gender, Blood Group, Landline */}
-                                    <div className="form-group">
-                                        <label className="form-label">Gender</label>
-                                        <select className="form-control" value={editProfileForm.gender} onChange={(e) => setEditProfileForm(f => ({ ...f, gender: e.target.value }))}>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Blood Group 🩸</label>
-                                        <select className="form-control" value={editProfileForm.bloodGroup} onChange={(e) => setEditProfileForm(f => ({ ...f, bloodGroup: e.target.value }))}>
-                                            <option value="">-- Select --</option>
-                                            <option value="A+">A+</option>
-                                            <option value="A-">A-</option>
-                                            <option value="B+">B+</option>
-                                            <option value="B-">B-</option>
-                                            <option value="O+">O+</option>
-                                            <option value="O-">O-</option>
-                                            <option value="AB+">AB+</option>
-                                            <option value="AB-">AB-</option>
-                                        </select>
-                                    </div>
+                                    {/* TAB 3: EDUCATION & DOCUMENTS */}
+                                    {activeEditTab === 'education' && (
+                                        <div>
+                                            <div className="form-label font-bold mb-3" style={{ fontSize: 13, color: 'var(--primary)' }}>PREVIOUS ACADEMIC DETAILS</div>
+                                            <div className="grid grid-2" style={{ gap: '14px 20px', marginBottom: 20 }}>
+                                                <div className="form-group">
+                                                    <label className="form-label">Qualifying Examination</label>
+                                                    <select
+                                                        className="form-control"
+                                                        value={editProfileForm.educationDetails.qualification}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, educationDetails: { ...f.educationDetails, qualification: e.target.value } }))}
+                                                    >
+                                                        <option value="10th (SSC)">10th (SSC)</option>
+                                                        <option value="12th (HSC)">12th (HSC)</option>
+                                                        <option value="ITI / Vocational">ITI / Vocational</option>
+                                                        <option value="Diploma">Diploma (Polytechnic)</option>
+                                                        <option value="Graduate">Graduate (BA/BCom/BSc/BTech)</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Board / University</label>
+                                                    <input
+                                                        className="form-control"
+                                                        value={editProfileForm.educationDetails.board}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, educationDetails: { ...f.educationDetails, board: e.target.value } }))}
+                                                        placeholder="e.g. Maharashtra State Board"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">School / Institute Name</label>
+                                                    <input
+                                                        className="form-control"
+                                                        value={editProfileForm.educationDetails.schoolName}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, educationDetails: { ...f.educationDetails, schoolName: e.target.value } }))}
+                                                        placeholder="School / College Name"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Passing Year</label>
+                                                    <input
+                                                        className="form-control"
+                                                        value={editProfileForm.educationDetails.passingYear}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, educationDetails: { ...f.educationDetails, passingYear: e.target.value } }))}
+                                                        placeholder="e.g. 2024"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Marks Percentage (%)</label>
+                                                    <input
+                                                        className="form-control"
+                                                        value={editProfileForm.educationDetails.percentage}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, educationDetails: { ...f.educationDetails, percentage: e.target.value } }))}
+                                                        placeholder="e.g. 78.50"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Previous Roll Number / Seat No</label>
+                                                    <input
+                                                        className="form-control"
+                                                        value={editProfileForm.educationDetails.rollNo}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, educationDetails: { ...f.educationDetails, rollNo: e.target.value } }))}
+                                                        placeholder="e.g. M012345"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    {/* Parent / Guardian Contact Details */}
-                                    <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 6 }}>
-                                        <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)' }}>👨‍👩‍👦 Parent / Guardian Details</label>
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Parent / Guardian Name</label>
-                                        <input className="form-control" value={editProfileForm.parentName} onChange={(e) => setEditProfileForm(f => ({ ...f, parentName: e.target.value }))} placeholder="Father / Mother / Guardian full name" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Contact Phone Number</label>
-                                        <input className="form-control" type="tel" value={editProfileForm.parentPhone} onChange={(e) => setEditProfileForm(f => ({ ...f, parentPhone: e.target.value }))} placeholder="e.g. 9876543210" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Parent Email (Optional)</label>
-                                        <input className="form-control" type="email" value={editProfileForm.parentEmail} onChange={(e) => setEditProfileForm(f => ({ ...f, parentEmail: e.target.value }))} placeholder="parent@email.com" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Landline / Alternate Phone</label>
-                                        <input className="form-control" value={editProfileForm.landline} onChange={(e) => setEditProfileForm(f => ({ ...f, landline: e.target.value }))} placeholder="Optional alternate number" />
+                                            <div className="form-label font-bold mb-3" style={{ fontSize: 13, color: 'var(--primary)', borderTop: '1px solid var(--border)', paddingTop: 16 }}>SUBMITTED ORIGINAL / VERIFIED DOCUMENTS</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px 14px', background: 'var(--bg-primary)', padding: 14, borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                {[
+                                                    { key: 'sscMarksheet', label: '📄 10th / SSC Marksheet' },
+                                                    { key: 'leavingCertificate', label: '📜 Leaving Certificate (TC)' },
+                                                    { key: 'casteCertificate', label: '🏛️ Caste Certificate' },
+                                                    { key: 'nonCreamyLayer', label: '🛡️ Non-Creamy Layer (NCL)' },
+                                                    { key: 'incomeCertificate', label: '💰 Income Certificate' },
+                                                    { key: 'aadharCard', label: '🆔 Aadhaar Card Copy' },
+                                                    { key: 'domicileCertificate', label: '🏠 Domicile Certificate' },
+                                                    { key: 'passportPhotos', label: '📷 Passport Photos (4 Nos)' },
+                                                    { key: 'marksheet12th', label: '📄 12th / HSC Marksheet' },
+                                                    { key: 'bankPassbook', label: '🏦 Bank Passbook Copy' },
+                                                    { key: 'gap', label: '⏳ Gap Affidavit' },
+                                                    { key: 'ewsCertificate', label: '📑 EWS Certificate' }
+                                                ].map(doc => (
+                                                    <label key={doc.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', userSelect: 'none' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!(editProfileForm.submittedDocuments as any)[doc.key]}
+                                                            onChange={(e) => setEditProfileForm(f => ({
+                                                                ...f,
+                                                                submittedDocuments: {
+                                                                    ...f.submittedDocuments,
+                                                                    [doc.key]: e.target.checked
+                                                                }
+                                                            }))}
+                                                        />
+                                                        <span>{doc.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* TAB 4: FEE PACKAGE & CHARGES */}
+                                    {activeEditTab === 'fees' && (
+                                        <div>
+                                            {isFullAuthority ? (
+                                                <div className="admin-authority-badge">
+                                                    <span>🛡️</span>
+                                                    <div>
+                                                        <b>Administrator / Developer Full Authority:</b> You have full authority to modify base fee structures, assign custom tuition & other fee components, apply discounts/concessions, and set payment due dates.
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="fee-lock-badge">
+                                                    <span>🔒</span>
+                                                    <div>
+                                                        <b>Fee Modification Restricted:</b> As an <b>Accountant</b>, fee editing and structural reassignment is restricted. Only <b>Admin</b> and <b>Developer</b> can modify fees. You may review current student fee details in read-only mode.
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-2" style={{ gap: '16px 20px', marginTop: 16 }}>
+                                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                                    <label className="form-label">Base Fee Structure Template</label>
+                                                    <select
+                                                        className="form-control"
+                                                        disabled={!isFullAuthority}
+                                                        value={editProfileForm.feeStructureId}
+                                                        onChange={(e) => {
+                                                            const structId = e.target.value;
+                                                            const matched = feeStructures.find(f => f.id === structId);
+                                                            let tFee = '', exFee = '', drFee = '', oFee = '';
+                                                            if (matched?.items) {
+                                                                matched.items.forEach((item: any) => {
+                                                                    const catName = (item.feeCategory?.name || '').toLowerCase();
+                                                                    const val = (item.amount / 100).toString();
+                                                                    if (catName.includes('tuition')) tFee = val;
+                                                                    else if (catName.includes('exam')) exFee = val;
+                                                                    else if (catName.includes('dress') || catName.includes('uniform') || catName.includes('material')) drFee = val;
+                                                                    else oFee = val;
+                                                                });
+                                                            }
+                                                            const tot = matched?.totalAmount ? (matched.totalAmount / 100).toString() : '';
+                                                            setEditProfileForm(f => ({
+                                                                ...f,
+                                                                feeStructureId: structId,
+                                                                tuitionFee: tFee || f.tuitionFee,
+                                                                examFee: exFee || f.examFee,
+                                                                dressMaterialFee: drFee || f.dressMaterialFee,
+                                                                otherFee: oFee || f.otherFee,
+                                                                customAmountRupees: tot || f.customAmountRupees
+                                                            }));
+                                                        }}
+                                                    >
+                                                        <option value="">-- Select Base Fee Structure --</option>
+                                                        {feeStructures.map(f => (
+                                                            <option key={f.id} value={f.id}>
+                                                                {f.name} - {f.class} ({f.academicYear}) — ₹{(f.totalAmount / 100).toLocaleString('en-IN')}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="form-group">
+                                                    <label className="form-label">Tuition Fee (₹)</label>
+                                                    <input
+                                                        className="form-control"
+                                                        type="number"
+                                                        disabled={!isFullAuthority}
+                                                        value={editProfileForm.tuitionFee}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, tuitionFee: e.target.value }))}
+                                                        placeholder="e.g. 25000"
+                                                    />
+                                                </div>
+
+                                                <div className="form-group">
+                                                    <label className="form-label">Exam / Assessment Fee (₹)</label>
+                                                    <input
+                                                        className="form-control"
+                                                        type="number"
+                                                        disabled={!isFullAuthority}
+                                                        value={editProfileForm.examFee}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, examFee: e.target.value }))}
+                                                        placeholder="e.g. 2000"
+                                                    />
+                                                </div>
+
+                                                <div className="form-group">
+                                                    <label className="form-label">Uniform & Material Fee (₹)</label>
+                                                    <input
+                                                        className="form-control"
+                                                        type="number"
+                                                        disabled={!isFullAuthority}
+                                                        value={editProfileForm.dressMaterialFee}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, dressMaterialFee: e.target.value }))}
+                                                        placeholder="e.g. 3000"
+                                                    />
+                                                </div>
+
+                                                <div className="form-group">
+                                                    <label className="form-label">{editProfileForm.otherFeeLabel || 'Other Charges'} (₹)</label>
+                                                    <input
+                                                        className="form-control"
+                                                        type="number"
+                                                        disabled={!isFullAuthority}
+                                                        value={editProfileForm.otherFee}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, otherFee: e.target.value }))}
+                                                        placeholder="e.g. 1000"
+                                                    />
+                                                </div>
+
+                                                <div className="form-group">
+                                                    <label className="form-label">Payment Due Date 📅</label>
+                                                    <input
+                                                        className="form-control date-picker-custom"
+                                                        type="date"
+                                                        disabled={!isFullAuthority}
+                                                        value={editProfileForm.dueDate}
+                                                        onChange={(e) => setEditProfileForm(f => ({ ...f, dueDate: e.target.value }))}
+                                                    />
+                                                </div>
+
+                                                <div className="form-group">
+                                                    <label className="form-label">Total Fee Package (₹)</label>
+                                                    <div style={{ padding: '10px 14px', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 16, fontWeight: 800, color: 'var(--primary)' }}>
+                                                        ₹{displayTotal.toLocaleString('en-IN')}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+
+                                <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, borderTop: '1px solid var(--border)' }}>
+                                    {isFullAuthority && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger btn-sm"
+                                            style={{ background: '#dc2626', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
+                                            onClick={() => setShowDeleteConfirmModal(true)}
+                                        >
+                                            🗑️ Delete Student Record
+                                        </button>
+                                    )}
+                                    <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                                        <button type="button" className="btn btn-secondary" onClick={() => setShowEditProfileModal(false)}>Cancel</button>
+                                        <button type="submit" className="btn btn-primary" disabled={updatingProfile}>
+                                            {updatingProfile ? 'Saving Changes...' : '💾 Save Profile Updates'}
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT'].includes(effectiveRole || '') && (
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-danger btn-sm" 
-                                        style={{ background: '#dc2626', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
-                                        onClick={() => setShowDeleteConfirmModal(true)}
-                                    >
-                                        🗑️ Delete Student Record
-                                    </button>
-                                )}
-                                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-                                    <button type="button" className="btn btn-secondary" onClick={() => setShowEditProfileModal(false)}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary" disabled={updatingProfile}>
-                                        {updatingProfile ? 'Saving Changes...' : '💾 Save Profile Updates'}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirmModal && editingStudent && (
