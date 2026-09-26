@@ -454,7 +454,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         if (!loading && !user) router.push('/login');
     }, [user, loading, router]);
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (overrideSearch?: string) => {
         setFetching(true);
         try {
             let tradeParam = filterTrade !== 'ALL' ? filterTrade : '';
@@ -465,10 +465,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
             else if (globalFilter.startsWith('CAT:')) categoryParam = globalFilter.replace('CAT:', '');
             else if (globalFilter.startsWith('FEE:')) feeStatusParam = globalFilter.replace('FEE:', '').toLowerCase();
 
+            const querySearch = (overrideSearch !== undefined ? overrideSearch : (search || debouncedSearch || '')).trim();
+
             const queryParams = new URLSearchParams({
                 page: String(page),
                 limit: '25',
-                search: debouncedSearch.trim(),
+                search: querySearch,
                 sortBy: 'recent'
             });
             if (tradeParam) queryParams.set('trade', tradeParam);
@@ -504,12 +506,13 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const handleSearchSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         setPage(1);
-        fetchStudents();
+        fetchStudents(search);
     };
 
     const handleClearSearch = () => {
         setSearch('');
         setPage(1);
+        fetchStudents('');
     };
 
     const handleGlobalFilterChange = (val: string) => {
@@ -987,9 +990,9 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                             </span>
                                                         ) : <span className="badge badge-neutral">Not Assigned</span>}
                                                     </td>
-                                                    <td data-label="Actions" className="cell-actions" style={{ width: 285, minWidth: 285, verticalAlign: 'middle' }}>
-                                                        <div className="student-actions-grid">
-                                                            {/* Row 1: Primary Documents & Records */}
+                                                    <td data-label="Actions" className="cell-actions" style={{ width: isAdminOrDev ? 285 : 220, minWidth: isAdminOrDev ? 285 : 220, verticalAlign: 'middle' }}>
+                                                        <div className={`student-actions-grid ${!isAdminOrDev ? 'accountant-grid' : ''}`}>
+                                                            {/* 1. Form PDF Button */}
                                                             <button
                                                                 type="button"
                                                                 className="student-action-btn btn-pdf"
@@ -999,6 +1002,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>📄</span>
                                                                 <span>Form PDF</span>
                                                             </button>
+
+                                                            {/* 2. ID Card Button */}
                                                             <button
                                                                 type="button"
                                                                 className="student-action-btn btn-idcard"
@@ -1008,6 +1013,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>🪪</span>
                                                                 <span>ID Card</span>
                                                             </button>
+
+                                                            {/* 3. History Button */}
                                                             <button
                                                                 type="button"
                                                                 className="student-action-btn btn-history"
@@ -1018,8 +1025,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>History</span>
                                                             </button>
 
-                                                            {/* Row 2: Management & Financial Operations */}
-                                                            {canShowFeeBtn ? (
+                                                            {/* 4. Fee Button (if applicable) */}
+                                                            {canShowFeeBtn && (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-fee"
@@ -1029,7 +1036,9 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                     <span>💳</span>
                                                                     <span>{feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}</span>
                                                                 </button>
-                                                            ) : <div />}
+                                                            )}
+
+                                                            {/* 5. Edit Button */}
                                                             <button
                                                                 type="button"
                                                                 className="student-action-btn btn-edit"
@@ -1039,7 +1048,9 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>✏️</span>
                                                                 <span>Edit</span>
                                                             </button>
-                                                            {isAdminOrDev ? (
+
+                                                            {/* 6. Delete Button (Admin & Dev only) */}
+                                                            {isAdminOrDev && (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-delete"
@@ -1052,7 +1063,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                     <span>🗑️</span>
                                                                     <span>Delete</span>
                                                                 </button>
-                                                            ) : <div />}
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>

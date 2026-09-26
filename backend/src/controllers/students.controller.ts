@@ -57,26 +57,49 @@ export const studentsController = {
         ];
 
         if (targetTrade && targetTrade !== 'ALL') {
-            andConditions.push({ class: { equals: targetTrade, mode: 'insensitive' } });
+            andConditions.push({ class: { contains: targetTrade, mode: 'insensitive' } });
         }
 
         if (categoryStr && categoryStr !== 'ALL') {
-            andConditions.push({ category: { equals: categoryStr, mode: 'insensitive' } });
+            andConditions.push({ category: { contains: categoryStr, mode: 'insensitive' } });
         }
 
         if (searchStr) {
-            andConditions.push({
-                OR: [
-                    { name: { contains: searchStr, mode: 'insensitive' } },
-                    { studentId: { contains: searchStr, mode: 'insensitive' } },
-                    { rollNumber: { contains: searchStr, mode: 'insensitive' } },
-                    { class: { contains: searchStr, mode: 'insensitive' } },
-                    { category: { contains: searchStr, mode: 'insensitive' } },
-                    { address: { contains: searchStr, mode: 'insensitive' } },
-                    { parent: { name: { contains: searchStr, mode: 'insensitive' } } },
-                    { parent: { phone: { contains: searchStr, mode: 'insensitive' } } },
-                ]
-            });
+            const terms = searchStr.split(/\s+/).filter(Boolean);
+            if (terms.length > 1) {
+                // Multi-term search (e.g., "Ramesh Sharma", "Electrician 01", "SSITI 2024")
+                terms.forEach((term) => {
+                    andConditions.push({
+                        OR: [
+                            { name: { contains: term, mode: 'insensitive' } },
+                            { studentId: { contains: term, mode: 'insensitive' } },
+                            { rollNumber: { contains: term, mode: 'insensitive' } },
+                            { class: { contains: term, mode: 'insensitive' } },
+                            { category: { contains: term, mode: 'insensitive' } },
+                            { address: { contains: term, mode: 'insensitive' } },
+                            { email: { contains: term, mode: 'insensitive' } },
+                            { parent: { name: { contains: term, mode: 'insensitive' } } },
+                            { parent: { phone: { contains: term, mode: 'insensitive' } } },
+                            { parent: { email: { contains: term, mode: 'insensitive' } } },
+                        ]
+                    });
+                });
+            } else {
+                andConditions.push({
+                    OR: [
+                        { name: { contains: searchStr, mode: 'insensitive' } },
+                        { studentId: { contains: searchStr, mode: 'insensitive' } },
+                        { rollNumber: { contains: searchStr, mode: 'insensitive' } },
+                        { class: { contains: searchStr, mode: 'insensitive' } },
+                        { category: { contains: searchStr, mode: 'insensitive' } },
+                        { address: { contains: searchStr, mode: 'insensitive' } },
+                        { email: { contains: searchStr, mode: 'insensitive' } },
+                        { parent: { name: { contains: searchStr, mode: 'insensitive' } } },
+                        { parent: { phone: { contains: searchStr, mode: 'insensitive' } } },
+                        { parent: { email: { contains: searchStr, mode: 'insensitive' } } },
+                    ]
+                });
+            }
         }
 
         if (session && session !== 'ALL') {
