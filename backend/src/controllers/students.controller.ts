@@ -5,7 +5,7 @@ import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { createAuditLog } from '../middleware/auditLogger';
 
-import { AuditAction } from '../types/enums';
+import { AuditAction, Role } from '../types/enums';
 import { generateStudentId } from '../utils/uuid';
 import bcrypt from 'bcryptjs';
 
@@ -27,12 +27,12 @@ export function getStudentSession(student: { educationDetails?: any; createdAt?:
 export const studentsController = {
     // GET /students - Returns paginated list of students filtered by branch, trade, or search string
     list: asyncHandler(async (req: Request, res: Response) => {
-        const { page = 1, limit = 20, search = '', class: cls = '' } = req.query;
+        const { page = 1, limit = 25, search = '', class: cls = '' } = req.query;
         let parsedPage = Number(page);
         let parsedLimit = Number(limit);
         
         if (isNaN(parsedPage) || parsedPage < 1) parsedPage = 1;
-        if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 20;
+        if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 25;
 
         const skip = (parsedPage - 1) * parsedLimit;
 
@@ -55,7 +55,10 @@ export const studentsController = {
                 where,
                 skip,
                 take: parsedLimit,
-                orderBy: { name: 'asc' },
+                orderBy: [
+                    { createdAt: 'desc' },
+                    { id: 'desc' }
+                ],
                 include: {
                     parent: { select: { name: true, phone: true, email: true } },
                     branch: { select: { name: true } },
@@ -354,28 +357,6 @@ export const studentsController = {
         }
         if (dateOfBirth !== undefined) {
             sanitizedUpdate.dateOfBirth = dateOfBirth;
-        }
-
-        // Enforce fee permission: Accountants cannot modify assigned fee components in educationDetails
-        if (req.user?.role === 'ACCOUNTANT' && sanitizedUpdate.educationDetails) {
-            const beforeEdu = (beforeStudent?.educationDetails as any) || {};
-            const feeFields = ['tuitionFee', 'examFee', 'dressMaterialFee', 'otherFee', 'otherFeeLabel', 'totalFee', 'customTotalFee'];
-            
-            // Check if existing student already has studentFees assigned
-            const hasAssignedFee = await prisma.studentFee.count({ where: { studentId: req.params.id } }) > 0;
-            
-            if (hasAssignedFee) {
-                // Restore existing fee breakdown fields so accountant edits to profile do not change assigned fees
-                const safeEdu = { ...sanitizedUpdate.educationDetails };
-                for (const f of feeFields) {
-                    if (beforeEdu[f] !== undefined) {
-                        safeEdu[f] = beforeEdu[f];
-                    } else {
-                        delete safeEdu[f];
-                    }
-                }
-                sanitizedUpdate.educationDetails = safeEdu;
-            }
         }
 
         const student = await prisma.student.update({

@@ -334,7 +334,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
     const fetchStudents = async () => {
         setFetching(true);
         try {
-            const { data } = await api.get(`/students?page=${page}&limit=15&search=${encodeURIComponent(debouncedSearch)}`);
+            const { data } = await api.get(`/students?page=${page}&limit=25&search=${encodeURIComponent(debouncedSearch)}`);
             setStudents(data.data || []);
             setTotal(data.pagination?.total || 0);
         } catch { } finally { setFetching(false); }
@@ -381,8 +381,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
         e.preventDefault();
         if (!selectedStudent || !feeForm.feeStructureId) return;
 
-        if (effectiveRole === 'ACCOUNTANT' && selectedStudent.studentFees && selectedStudent.studentFees.length > 0) {
-            showToast('❌ Assigned fees cannot be changed by Accountants. Admin approval required.');
+        if (effectiveRole !== 'ADMIN' && effectiveRole !== 'DEVELOPER') {
+            showToast('❌ Only Administrators and Developers can assign or modify student fees.');
             return;
         }
 
@@ -518,11 +518,14 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
 
     const isAdminOrDev = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER';
     const isAccountant = effectiveRole === 'ACCOUNTANT';
-    const canAdmitStudent = ['ADMIN', 'ACCOUNTANT', 'DEVELOPER'].includes(effectiveRole || '');
+    // Only Admin and Developer can admit students
+    const canAdmitStudent = ['ADMIN', 'DEVELOPER'].includes(effectiveRole || '');
+    // Only Admin and Developer can assign or edit fees
+    const canManageFees = isAdminOrDev;
 
     if (loading || !user) return null;
 
-    const totalPages = Math.ceil(total / 15);
+    const totalPages = Math.ceil(total / 25);
     const getBaseUrl = () => {
         return typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
             ? 'https://bss-ssiti-erp-and-fee-system.onrender.com'
@@ -666,7 +669,8 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                             const pending = s.feeAssignment?.pendingAmount ?? 0;
                                             const totalFee = s.feeAssignment?.totalAmount ?? 0;
                                             const feeAlreadyAssigned = Boolean(s.feeAssignment);
-                                            const canShowFeeBtn = feeAlreadyAssigned ? isAdminOrDev : (isAdminOrDev || isAccountant);
+                                            // Fee button: Admin/Developer only for both assign and edit
+                                            const canShowFeeBtn = canManageFees;
                                             const startYr = s.createdAt ? new Date(s.createdAt).getFullYear() : currentYear;
                                             const sessionDisplay = s.educationDetails?.academicSession
                                                 ? String(s.educationDetails.academicSession).replace(/\s+/g, '')
@@ -751,28 +755,30 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                 <span>History</span>
                                                             </button>
 
-                                                            {/* Row 2: Management & Financial Operations */}
+                                                            {/* Row 2: Management & Financial Operations (Admin/Developer only) */}
                                                             {canShowFeeBtn ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-fee"
                                                                     onClick={() => openAssignFeeModal(s)}
-                                                                    title={feeAlreadyAssigned ? 'Edit Fee Structure' : 'Assign Fee Structure'}
+                                                                    title={feeAlreadyAssigned ? 'Edit Fee Structure (Admin/Dev Only)' : 'Assign Fee Structure (Admin/Dev Only)'}
                                                                 >
                                                                     <span>💳</span>
                                                                     <span>{feeAlreadyAssigned ? 'Edit Fee' : 'Assign Fee'}</span>
                                                                 </button>
                                                             ) : <div />}
-                                                            <button
-                                                                type="button"
-                                                                className="student-action-btn btn-edit"
-                                                                onClick={() => openEditProfileModal(s)}
-                                                                title="Edit Student Admission Profile"
-                                                            >
-                                                                <span>✏️</span>
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') ? (
+                                                            {isAdminOrDev ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className="student-action-btn btn-edit"
+                                                                    onClick={() => openEditProfileModal(s)}
+                                                                    title="Edit Student Admission Profile (Admin/Dev Only)"
+                                                                >
+                                                                    <span>✏️</span>
+                                                                    <span>Edit</span>
+                                                                </button>
+                                                            ) : <div />}
+                                                            {isAdminOrDev ? (
                                                                 <button
                                                                     type="button"
                                                                     className="student-action-btn btn-delete"
@@ -780,7 +786,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                                         setEditingStudent(s);
                                                                         setShowDeleteConfirmModal(true);
                                                                     }}
-                                                                    title="Delete Student and Cascade Records"
+                                                                    title="Delete Student and Cascade Records (Admin/Dev Only)"
                                                                 >
                                                                     <span>🗑️</span>
                                                                     <span>Delete</span>
@@ -794,15 +800,24 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                     </tbody>
                                 </table>
                             </div>
-                            {/* Pagination */}
-                            {totalPages > 1 && (
-                                <div style={{ display: 'flex', justifyContent: 'center', padding: 16 }}>
+                            {/* Pagination – 25 per page with smart page range */}
+                            {totalPages >= 1 && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 8 }}>
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                        Showing students {((page - 1) * 25) + 1}–{Math.min(page * 25, total)} of <b>{total}</b>
+                                    </div>
                                     <div className="pagination">
-                                        <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
-                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((p) => (
-                                            <button key={p} className={`pagination-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
-                                        ))}
-                                        <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
+                                        <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1} title="First page">«</button>
+                                        <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} title="Previous 25">‹ Prev</button>
+                                        {(() => {
+                                            const startPage = Math.max(1, Math.min(page - 2, totalPages - 4));
+                                            const endPage = Math.min(totalPages, startPage + 4);
+                                            return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((p) => (
+                                                <button key={p} className={`pagination-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+                                            ));
+                                        })()}
+                                        <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} title="Next 25">Next ›</button>
+                                        <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages} title="Last page">»</button>
                                     </div>
                                 </div>
                             )}
@@ -1427,7 +1442,7 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                 </div>
                             </div>
                             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-                                {['ADMIN', 'SUPERADMIN', 'DEVELOPER', 'ACCOUNTANT'].includes(effectiveRole || '') && (
+                                {['ADMIN', 'DEVELOPER'].includes(effectiveRole || '') && (
                                     <button 
                                         type="button" 
                                         className="btn btn-danger btn-sm" 

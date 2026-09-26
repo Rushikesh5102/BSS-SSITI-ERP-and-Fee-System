@@ -17,10 +17,10 @@ router.get('/:id', studentsController.getById);
 // POST /students - Admin and Accountant only
 router.post('/', authorize(Role.ADMIN, Role.ACCOUNTANT), studentsController.create);
 
-// PUT /students/:id - Admin and Accountant only
-router.put('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT), studentsController.update);
+// PUT /students/:id - Admin and Developer only
+router.put('/:id', authorize(Role.ADMIN, Role.DEVELOPER), studentsController.update);
 
-// DELETE /students/:id - Admin, SuperAdmin, Developer, and Accountant
-router.delete('/:id', authorize(Role.ADMIN, Role.SUPERADMIN, Role.DEVELOPER, Role.ACCOUNTANT), studentsController.delete);
+// DELETE /students/:id - Admin, SuperAdmin, Developer only
+router.delete('/:id', authorize(Role.ADMIN, Role.SUPERADMIN, Role.DEVELOPER), studentsController.delete);
 
 export default router;
