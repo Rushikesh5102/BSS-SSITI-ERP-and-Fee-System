@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { createAuditLog } from '../middleware/auditLogger';
+import { AuditAction } from '../types/enums';
 import { generateReceiptPdf, generateBlankLetterheadPdf } from '../services/pdf.service';
 import { getNextReceiptNumber } from '../utils/uuid';
 
@@ -313,6 +315,166 @@ export const receiptsController = {
                 receiptNumber,
                 studentName,
                 reconciledPaidAmount: newPaidAmount
+            }
+        });
+    }),
+
+    /**
+     * PUT /receipts/:id - Edit an existing receipt/payment (amount, mode, transactionRef, date, remarks)
+     * Automatically recalculates and reconciles the student fee paidAmount and pending balance due.
+     */
+    update: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const {
+            amount, // in paise
+            mode,
+            transactionRef,
+            chequeDate,
+            bankName,
+            remarks,
+            paymentDate,
+            receiptDate
+        } = req.body;
+
+        const receipt = await prisma.receipt.findFirst({
+            where: {
+                OR: [
+                    { id },
+                    { receiptNumber: id }
+                ]
+            },
+            include: {
+                payment: {
+                    include: {
+                        studentFee: {
+                            include: { student: true, feeStructure: true }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!receipt) {
+            throw new AppError(404, 'Receipt not found');
+        }
+
+        const payment = receipt.payment;
+        if (!payment) {
+            throw new AppError(404, 'Associated payment not found');
+        }
+
+        const studentFee = payment.studentFee;
+        const previousAmount = payment.amount;
+
+        let updatedAmount = previousAmount;
+        if (amount !== undefined && amount !== null && amount !== '') {
+            const parsed = Number(amount);
+            if (!isNaN(parsed) && parsed >= 0) {
+                updatedAmount = parsed;
+            }
+        }
+
+        const validChequeDate = (chequeDate && typeof chequeDate === 'string' && chequeDate.trim() && !isNaN(Date.parse(chequeDate)))
+            ? new Date(chequeDate)
+            : (chequeDate === null || chequeDate === '' ? null : payment.chequeDate);
+
+        const rawCustomDate = receiptDate || paymentDate;
+        let effectivePaymentDate = payment.createdAt;
+        if (rawCustomDate && typeof rawCustomDate === 'string' && rawCustomDate.trim()) {
+            const parsed = new Date(rawCustomDate.trim());
+            if (!isNaN(parsed.getTime())) {
+                effectivePaymentDate = parsed;
+            }
+        }
+
+        // 1. Update payment record
+        const updatedPayment = await prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+                amount: updatedAmount,
+                mode: mode !== undefined ? mode : payment.mode,
+                transactionRef: transactionRef !== undefined ? (transactionRef || null) : payment.transactionRef,
+                bankName: bankName !== undefined ? (bankName || null) : payment.bankName,
+                chequeDate: validChequeDate,
+                remarks: remarks !== undefined ? remarks : payment.remarks,
+                createdAt: effectivePaymentDate,
+                approvedAt: effectivePaymentDate
+            }
+        });
+
+        // 2. Update receipt timestamp
+        await prisma.receipt.update({
+            where: { id: receipt.id },
+            data: {
+                createdAt: effectivePaymentDate
+            }
+        });
+
+        // 3. Reconcile studentFee paidAmount with sum of all verified payments
+        let reconciledPaidAmount = 0;
+        let totalFee = studentFee?.totalAmount || 0;
+        let balanceDue = 0;
+
+        if (payment.studentFeeId) {
+            const agg = await prisma.payment.aggregate({
+                where: {
+                    studentFeeId: payment.studentFeeId,
+                    status: 'VERIFIED'
+                },
+                _sum: { amount: true }
+            });
+            reconciledPaidAmount = agg._sum.amount || 0;
+
+            const updatedStudentFee = await prisma.studentFee.update({
+                where: { id: payment.studentFeeId },
+                data: { paidAmount: reconciledPaidAmount },
+                select: { totalAmount: true, paidAmount: true }
+            });
+
+            totalFee = updatedStudentFee.totalAmount;
+            balanceDue = Math.max(0, totalFee - updatedStudentFee.paidAmount);
+        }
+
+        // 4. Invalidate cached PDF receipt files
+        const pdfPath = path.join(RECEIPTS_DIR, `${receipt.receiptNumber}.pdf`);
+        const pdfPathNoHead = path.join(RECEIPTS_DIR, `${receipt.receiptNumber}_without_letterhead.pdf`);
+        [pdfPath, pdfPathNoHead].forEach(p => {
+            if (fs.existsSync(p)) {
+                try {
+                    fs.unlinkSync(p);
+                } catch { }
+            }
+        });
+
+        // 5. Create Audit Log
+        if (req.user) {
+            await createAuditLog(
+                req.user.id,
+                AuditAction.PAYMENT_UPDATED,
+                'Receipt',
+                receipt.id,
+                {
+                    receiptNumber: receipt.receiptNumber,
+                    studentName: studentFee?.student?.name,
+                    previousAmount,
+                    updatedAmount,
+                    mode: updatedPayment.mode,
+                    reconciledPaidAmount,
+                    balanceDue
+                },
+                req.ip
+            ).catch(() => {});
+        }
+
+        res.json({
+            success: true,
+            message: `Receipt #${receipt.receiptNumber} updated successfully. Student balance recalculated.`,
+            data: {
+                receiptNumber: receipt.receiptNumber,
+                payment: updatedPayment,
+                reconciledPaidAmount,
+                totalFee,
+                balanceDue
             }
         });
     }),

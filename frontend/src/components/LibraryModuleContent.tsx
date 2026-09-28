@@ -281,7 +281,7 @@ export default function LibraryModuleContent({ activeTab = 'books' }: Props) {
             localStorage.setItem('saiiti_library_movements', JSON.stringify(INITIAL_MOVEMENT_LOGS_SEED));
         }
 
-        api.get('/students').then(({ data }) => {
+        api.get('/students?all=true').then(({ data }) => {
             if (isMounted) setStudents(data.data || []);
         }).catch(() => {
             if (isMounted) setStudents([]);

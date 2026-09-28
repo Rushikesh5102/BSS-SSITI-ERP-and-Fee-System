@@ -242,6 +242,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     const [issueQuantity, setIssueQuantity] = useState('1');
     const [recipientType, setRecipientType] = useState<'STUDENT' | 'STAFF'>('STUDENT');
     const [selectedStudentId, setSelectedStudentId] = useState('');
+    const [issueStudentSearch, setIssueStudentSearch] = useState('');
     const [staffName, setStaffName] = useState('');
     const [expectedReturnDate, setExpectedReturnDate] = useState('');
     const [issueRemarks, setIssueRemarks] = useState('');
@@ -249,6 +250,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     // 24-Item Student Material Kit & Uniform Package Issuance Modal Form
     const [showKitIssueModal, setShowKitIssueModal] = useState(false);
     const [kitStudentId, setKitStudentId] = useState('');
+    const [kitStudentSearch, setKitStudentSearch] = useState('');
     const [kitSelectedItems, setKitSelectedItems] = useState<{ [key: number]: boolean }>(
         STANDARD_STUDENT_KIT_ITEMS.reduce((acc, item) => ({ ...acc, [item.id]: true }), {})
     );
@@ -304,7 +306,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                 api.get('/store/transactions?limit=200'),
                 api.get('/store/transactions?type=ISSUE&status=ISSUED'),
                 api.get('/store/transactions?type=RETURN'),
-                api.get('/students')
+                api.get('/students?all=true')
             ]);
 
             setStats(statsRes.data?.data || null);
@@ -1310,16 +1312,29 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
 
                                 {recipientType === 'STUDENT' ? (
                                     <div className="form-group">
-                                        <label className="form-label">Select Student *</label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                            <label className="form-label" style={{ margin: 0 }}>Select Student * ({students.length} available)</label>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="🔍 Filter student by name, ID, or trade..."
+                                            value={issueStudentSearch}
+                                            onChange={e => setIssueStudentSearch(e.target.value)}
+                                            style={{ marginBottom: 6, fontSize: 12, padding: '6px 10px' }}
+                                        />
                                         <select className="form-control" required value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
-                                            {students.map(s => {
-                                                const fee = getStudentFeeBadge(s);
-                                                return (
-                                                    <option key={s.id} value={s.id}>
-                                                        {s.name} ({s.studentId}) [{fee.tag}]
-                                                    </option>
-                                                );
-                                            })}
+                                            <option value="">-- Select Student --</option>
+                                            {students
+                                                .filter(s => !issueStudentSearch.trim() || s.name?.toLowerCase().includes(issueStudentSearch.toLowerCase()) || s.studentId?.toLowerCase().includes(issueStudentSearch.toLowerCase()) || s.class?.toLowerCase().includes(issueStudentSearch.toLowerCase()))
+                                                .map(s => {
+                                                    const fee = getStudentFeeBadge(s);
+                                                    return (
+                                                        <option key={s.id} value={s.id}>
+                                                            {s.name} ({s.studentId}) - {s.class} [{fee.tag}]
+                                                        </option>
+                                                    );
+                                                })}
                                         </select>
                                         {(() => {
                                             const sel = students.find(s => s.id === selectedStudentId);
@@ -1376,7 +1391,17 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
 
                                 {/* Student Selector */}
                                 <div className="form-group">
-                                    <label className="form-label" style={{ fontWeight: 700 }}>Select Student Recipient *</label>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                        <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>Select Student Recipient * ({students.length} available)</label>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="🔍 Filter student by name, ID, or trade..."
+                                        value={kitStudentSearch}
+                                        onChange={e => setKitStudentSearch(e.target.value)}
+                                        style={{ marginBottom: 6, fontSize: 12, padding: '6px 10px' }}
+                                    />
                                     <select
                                         className="form-control"
                                         required
@@ -1385,14 +1410,16 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                         style={{ fontSize: 13, fontWeight: 600 }}
                                     >
                                         <option value="">-- Select Student --</option>
-                                        {students.map(s => {
-                                            const fee = getStudentFeeBadge(s);
-                                            return (
-                                                <option key={s.id} value={s.id}>
-                                                    {s.name} ({s.studentId}) [{fee.tag}]
-                                                </option>
-                                            );
-                                        })}
+                                        {students
+                                            .filter(s => !kitStudentSearch.trim() || s.name?.toLowerCase().includes(kitStudentSearch.toLowerCase()) || s.studentId?.toLowerCase().includes(kitStudentSearch.toLowerCase()) || s.class?.toLowerCase().includes(kitStudentSearch.toLowerCase()))
+                                            .map(s => {
+                                                const fee = getStudentFeeBadge(s);
+                                                return (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name} ({s.studentId}) - {s.class} [{fee.tag}]
+                                                    </option>
+                                                );
+                                            })}
                                     </select>
                                 </div>
 

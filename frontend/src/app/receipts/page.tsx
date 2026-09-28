@@ -14,7 +14,7 @@ import { formatPaymentAllocation } from '../../utils/feeStructureHelper';
 const formatRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
 // Receipts dashboard: Handles searching, viewing, streaming on-demand PDF receipts,
-// and allowing authorized cashiers/admins to delete erroneous entries with automatic ledger reconciliation.
+// and allowing authorized cashiers/admins/developers to edit or delete entries with automatic ledger reconciliation.
 function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     const { user, loading } = useAuth();
     const router = useRouter();
@@ -26,6 +26,27 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     const [search, setSearch] = useState('');
     const [viewReceipt, setViewReceipt] = useState<any | null>(null);
     const [downloadModalReceipt, setDownloadModalReceipt] = useState<any | null>(null);
+
+    // Edit Receipt Modal State
+    const [editingReceipt, setEditingReceipt] = useState<any | null>(null);
+    const [editForm, setEditForm] = useState<{
+        amount: string;
+        mode: string;
+        transactionRef: string;
+        bankName: string;
+        chequeDate: string;
+        paymentDate: string;
+        remarks: string;
+    }>({
+        amount: '',
+        mode: 'CASH',
+        transactionRef: '',
+        bankName: '',
+        chequeDate: '',
+        paymentDate: '',
+        remarks: ''
+    });
+    const [savingEdit, setSavingEdit] = useState(false);
 
     useEffect(() => { if (!loading && !user) router.push('/login'); }, [user, loading, router]);
 
@@ -98,7 +119,59 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
 
     const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
     const canDeleteReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'ACCOUNTANT';
+    const canEditReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'ACCOUNTANT' || effectiveRole === 'BRANCH_ADMIN';
     const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    const handleOpenEditReceipt = (r: any) => {
+        setEditingReceipt(r);
+        const amountRupees = ((r.payment?.amount || 0) / 100).toString();
+        const payDate = r.payment?.createdAt ? new Date(r.payment.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        const chqDate = r.payment?.chequeDate ? new Date(r.payment.chequeDate).toISOString().split('T')[0] : '';
+        setEditForm({
+            amount: amountRupees,
+            mode: r.payment?.mode || 'CASH',
+            transactionRef: r.payment?.transactionRef || '',
+            bankName: r.payment?.bankName || '',
+            chequeDate: chqDate,
+            paymentDate: payDate,
+            remarks: r.payment?.remarks || ''
+        });
+    };
+
+    const handleSaveEditReceipt = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingReceipt) return;
+
+        const numericRupees = parseFloat(editForm.amount);
+        if (isNaN(numericRupees) || numericRupees < 0) {
+            alert('⚠️ Please enter a valid payment amount.');
+            return;
+        }
+
+        const amountPaise = Math.round(numericRupees * 100);
+        setSavingEdit(true);
+        try {
+            await api.put(`/receipts/${editingReceipt.id}`, {
+                amount: amountPaise,
+                mode: editForm.mode,
+                transactionRef: editForm.transactionRef || undefined,
+                bankName: editForm.bankName || undefined,
+                chequeDate: editForm.chequeDate || undefined,
+                paymentDate: editForm.paymentDate || undefined,
+                remarks: editForm.remarks || undefined
+            });
+            alert(`✅ Receipt #${editingReceipt.receiptNumber} updated successfully! Student balance recalculated.`);
+            setEditingReceipt(null);
+            if (viewReceipt && viewReceipt.id === editingReceipt.id) {
+                setViewReceipt(null);
+            }
+            fetchReceipts(search);
+        } catch (err: any) {
+            alert(`❌ ${err.response?.data?.message || 'Failed to update receipt'}`);
+        } finally {
+            setSavingEdit(false);
+        }
+    };
 
     const handleDeleteReceipt = async (receipt: any) => {
         const studentName = receipt.payment?.studentFee?.student?.name || 'the student';
@@ -129,7 +202,7 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                 <header className="header">
                     <div>
                         <div className="header-title">🧾 Fee Receipts & Invoices</div>
-                        <div className="header-subtitle">Official payment ledger with Remarks, Balances & Clerk Signatures</div>
+                        <div className="header-subtitle">Official payment ledger with Remarks, Balances, Clerk Signatures & Receipt Adjustments</div>
                     </div>
                 </header>
 
@@ -148,13 +221,13 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                             <table className="table responsive-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                                 <colgroup>
                                     <col style={{ width: '8%' }} />
-                                    <col style={{ width: '23%' }} />
+                                    <col style={{ width: '22%' }} />
                                     <col style={{ width: '12%' }} />
-                                    <col style={{ width: '10%' }} />
-                                    <col style={{ width: '15%' }} />
+                                    <col style={{ width: '11%' }} />
+                                    <col style={{ width: '14%' }} />
                                     <col style={{ width: '11%' }} />
                                     <col style={{ width: '10%' }} />
-                                    <col style={{ width: '11%' }} />
+                                    <col style={{ width: '12%' }} />
                                 </colgroup>
                                 <thead>
                                     <tr>
@@ -283,6 +356,29 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                                      >
                                                          📥 PDF
                                                      </button>
+                                                     {canEditReceipt && (
+                                                         <button
+                                                             onClick={() => handleOpenEditReceipt(r)}
+                                                             className="btn btn-sm"
+                                                             title="Edit Paid Fee / Receipt & Adjust Balance"
+                                                             style={{
+                                                                 justifyContent: 'center',
+                                                                 borderRadius: 5,
+                                                                 background: 'rgba(14, 165, 233, 0.15)',
+                                                                 color: '#0284c7',
+                                                                 border: '1px solid rgba(14, 165, 233, 0.3)',
+                                                                 fontWeight: 800,
+                                                                 padding: '4px 3px',
+                                                                 fontSize: 10.5,
+                                                                 display: 'inline-flex',
+                                                                 alignItems: 'center',
+                                                                 gap: 2,
+                                                                 whiteSpace: 'nowrap'
+                                                             }}
+                                                         >
+                                                             ✏️ Edit
+                                                         </button>
+                                                     )}
                                                      {canRefund && r.payment?.status !== 'REFUNDED' && (
                                                          <button
                                                              className="btn btn-ghost btn-sm"
@@ -522,6 +618,19 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
 
                         <div className="modal-footer" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
                             <button className="btn btn-secondary" onClick={() => setViewReceipt(null)}>Close</button>
+                            {canEditReceipt && (
+                                <button 
+                                    className="btn btn-sm" 
+                                    onClick={() => {
+                                        const r = viewReceipt;
+                                        setViewReceipt(null);
+                                        handleOpenEditReceipt(r);
+                                    }}
+                                    style={{ background: 'rgba(14, 165, 233, 0.15)', color: '#0284c7', border: '1px solid rgba(14, 165, 233, 0.3)', fontWeight: 700 }}
+                                >
+                                    ✏️ Edit Receipt
+                                </button>
+                            )}
                             <button className="btn btn-primary" onClick={handlePrintReceipt}>🖨️ Print Receipt Slip</button>
                             <button 
                                 className="btn btn-accent" 
@@ -531,6 +640,212 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
                                 📥 Download Receipt
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Receipt & Adjust Paid Fee Modal */}
+            {editingReceipt && (
+                <div className="modal-overlay" onClick={() => setEditingReceipt(null)}>
+                    <div className="modal" style={{ maxWidth: 640, width: '92vw' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span>✏️</span>
+                                    <span>Edit Fee Receipt & Adjust Balance</span>
+                                </div>
+                                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                                    Receipt #{editingReceipt.receiptNumber} • {editingReceipt.payment?.studentFee?.student?.name} ({editingReceipt.payment?.studentFee?.student?.studentId})
+                                </div>
+                            </div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setEditingReceipt(null)}>✕</button>
+                        </div>
+                        <form onSubmit={handleSaveEditReceipt}>
+                            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {/* Info Box */}
+                                <div style={{
+                                    background: 'rgba(14, 165, 233, 0.08)',
+                                    border: '1px solid rgba(14, 165, 233, 0.25)',
+                                    borderRadius: 8,
+                                    padding: '12px 14px',
+                                    fontSize: 12.5,
+                                    color: 'var(--text-secondary)'
+                                }}>
+                                    <div style={{ fontWeight: 800, color: 'var(--primary)', marginBottom: 4 }}>
+                                        ℹ️ Automatic Fee Balance Reconciliation:
+                                    </div>
+                                    <div>
+                                        Changing the paid amount will automatically update the receipt, recalculate the student's total paid fees, and adjust the remaining balance due in real-time.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-2" style={{ gap: 14 }}>
+                                    <div className="form-group">
+                                        <label className="form-label" style={{ fontWeight: 700 }}>Amount Paid (₹) *</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            className="form-control"
+                                            required
+                                            value={editForm.amount}
+                                            onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
+                                            placeholder="e.g. 4000"
+                                            style={{ fontWeight: 700, fontSize: 15, color: '#f59e0b' }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label" style={{ fontWeight: 700 }}>Payment Mode *</label>
+                                        <select
+                                            className="form-control"
+                                            required
+                                            value={editForm.mode}
+                                            onChange={e => setEditForm(f => ({ ...f, mode: e.target.value }))}
+                                        >
+                                            <option value="CASH">Cash</option>
+                                            <option value="UPI">UPI / Online / QR</option>
+                                            <option value="BANK_TRANSFER">Bank Transfer (NEFT / RTGS)</option>
+                                            <option value="CHEQUE">Cheque</option>
+                                            <option value="NET_BANKING">Net Banking</option>
+                                            <option value="CARD">Debit / Credit Card</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-2" style={{ gap: 14 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Payment / Receipt Date *</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            required
+                                            value={editForm.paymentDate}
+                                            onChange={e => setEditForm(f => ({ ...f, paymentDate: e.target.value }))}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">UTR / Trx Ref / Cheque No.</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={editForm.transactionRef}
+                                            onChange={e => setEditForm(f => ({ ...f, transactionRef: e.target.value }))}
+                                            placeholder="e.g. UPI Ref, Cheque No, UTR"
+                                        />
+                                    </div>
+                                </div>
+
+                                {(editForm.mode === 'CHEQUE' || editForm.mode === 'BANK_TRANSFER') && (
+                                    <div className="grid grid-2" style={{ gap: 14 }}>
+                                        <div className="form-group">
+                                            <label className="form-label">Bank Name</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={editForm.bankName}
+                                                onChange={e => setEditForm(f => ({ ...f, bankName: e.target.value }))}
+                                                placeholder="e.g. State Bank of India"
+                                            />
+                                        </div>
+                                        {editForm.mode === 'CHEQUE' && (
+                                            <div className="form-group">
+                                                <label className="form-label">Cheque Clearance Date</label>
+                                                <input
+                                                    type="date"
+                                                    className="form-control"
+                                                    value={editForm.chequeDate}
+                                                    onChange={e => setEditForm(f => ({ ...f, chequeDate: e.target.value }))}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="form-group">
+                                    <label className="form-label">Remarks / Fee Notes</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={editForm.remarks}
+                                        onChange={e => setEditForm(f => ({ ...f, remarks: e.target.value }))}
+                                        placeholder="e.g. Corrected cash receipt for Semester 1 Tuition"
+                                    />
+                                </div>
+
+                                {/* Live Ledger Reconciliation Impact Preview */}
+                                {(() => {
+                                    const sf = editingReceipt.payment?.studentFee || {};
+                                    const origPaymentPaise = editingReceipt.payment?.amount || 0;
+                                    const newPaymentRupees = parseFloat(editForm.amount) || 0;
+                                    const newPaymentPaise = Math.round(newPaymentRupees * 100);
+                                    const totalFeePaise = sf.totalAmount || origPaymentPaise;
+                                    const currentPaidPaise = sf.paidAmount || origPaymentPaise;
+                                    
+                                    // Calculate other verified payments for this fee record
+                                    const otherPaidPaise = Math.max(0, currentPaidPaise - origPaymentPaise);
+                                    const newTotalPaidPaise = otherPaidPaise + newPaymentPaise;
+                                    const newBalancePaise = Math.max(0, totalFeePaise - newTotalPaidPaise);
+                                    const diffPaise = newPaymentPaise - origPaymentPaise;
+
+                                    return (
+                                        <div style={{ background: 'var(--surface-2)', borderRadius: 8, padding: 14, border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: 11.5, fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 8 }}>
+                                                📊 Real-time Fee Reconciliation Preview
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 12 }}>
+                                                <div>
+                                                    <span className="text-muted">Total Course Fee:</span><br />
+                                                    <b>{formatRupees(totalFeePaise)}</b>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted">Original Receipt:</span><br />
+                                                    <b style={{ color: '#ef4444' }}>{formatRupees(origPaymentPaise)}</b>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted">New Total Paid:</span><br />
+                                                    <b style={{ color: '#10b981' }}>{formatRupees(newTotalPaidPaise)}</b>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted">New Remaining Balance:</span><br />
+                                                    <b style={{ color: newBalancePaise > 0 ? '#f59e0b' : '#10b981' }}>
+                                                        {newBalancePaise > 0 ? formatRupees(newBalancePaise) : '✅ Fully Paid (₹0)'}
+                                                    </b>
+                                                </div>
+                                            </div>
+                                            {diffPaise !== 0 && (
+                                                <div style={{
+                                                    marginTop: 10,
+                                                    padding: '8px 10px',
+                                                    borderRadius: 6,
+                                                    background: diffPaise < 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                                    border: `1px solid ${diffPaise < 0 ? '#10b981' : '#f59e0b'}44`,
+                                                    color: diffPaise < 0 ? '#047857' : '#b45309',
+                                                    fontSize: 12,
+                                                    fontWeight: 600
+                                                }}>
+                                                    {diffPaise < 0 ? (
+                                                        <span>
+                                                            💡 <b>Adjustment:</b> Receipt reduced by {formatRupees(Math.abs(diffPaise))}. The remaining due fee for the student will increase by {formatRupees(Math.abs(diffPaise))}.
+                                                        </span>
+                                                    ) : (
+                                                        <span>
+                                                            💡 <b>Adjustment:</b> Receipt increased by {formatRupees(diffPaise)}. The remaining due fee for the student will decrease by {formatRupees(diffPaise)}.
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-ghost" onClick={() => setEditingReceipt(null)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={savingEdit}>
+                                    {savingEdit ? 'Saving...' : '💾 Update Receipt & Recalculate Balance'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

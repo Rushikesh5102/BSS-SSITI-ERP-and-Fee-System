@@ -30,6 +30,7 @@ export const studentsController = {
         const { 
             page = 1, 
             limit = 25, 
+            all = false,
             search = '', 
             class: cls = '', 
             trade = '', 
@@ -39,13 +40,19 @@ export const studentsController = {
             sortBy = 'recent'
         } = req.query;
 
+        const isFetchAll = String(all) === 'true' || String(limit) === 'all' || String(limit) === '0';
         let parsedPage = Number(page);
         let parsedLimit = Number(limit);
         
         if (isNaN(parsedPage) || parsedPage < 1) parsedPage = 1;
-        if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) parsedLimit = 25;
+        if (isFetchAll) {
+            parsedLimit = 10000;
+        } else {
+            if (isNaN(parsedLimit) || parsedLimit < 1) parsedLimit = 25;
+            if (parsedLimit > 5000) parsedLimit = 5000;
+        }
 
-        const skip = (parsedPage - 1) * parsedLimit;
+        const skip = isFetchAll ? 0 : (parsedPage - 1) * parsedLimit;
         const targetTrade = String(trade || cls || '').trim();
         const searchStr = String(search || '').trim();
         const categoryStr = String(category || '').trim();

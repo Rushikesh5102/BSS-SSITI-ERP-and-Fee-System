@@ -4,7 +4,6 @@ import { authenticate, authorize } from '../middleware/auth';
 
 import { Role } from '../types/enums';
 
-
 const router = Router();
 
 router.use(authenticate);
@@ -14,6 +13,9 @@ router.get('/', authorize(Role.ADMIN, Role.ACCOUNTANT), paymentsController.list)
 
 // POST /payments - Record a manual fee payment
 router.post('/', authorize(Role.ADMIN, Role.ACCOUNTANT), paymentsController.recordPayment);
+
+// PUT /payments/:id - Edit fee payment and reconcile student balance
+router.put('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER, Role.SUPERADMIN), paymentsController.update);
 
 // Razorpay & Stripe integration
 router.post('/razorpay/order', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.STUDENT, Role.PARENT), paymentsController.createRazorpayOrder);

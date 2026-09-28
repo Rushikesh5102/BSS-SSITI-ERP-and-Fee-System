@@ -449,4 +449,143 @@ export const paymentsController = {
         const result = await stripeService.createPaymentIntent(amount, { studentFeeId });
         res.json({ success: true, data: result });
     }),
+
+    /**
+     * PUT /payments/:id
+     * Edit payment details & amount, automatically recalculating studentFee paid amount & balance
+     */
+    update: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const {
+            amount,
+            mode,
+            transactionRef,
+            chequeDate,
+            bankName,
+            remarks,
+            paymentDate,
+            receiptDate
+        } = req.body;
+
+        const payment = await prisma.payment.findUnique({
+            where: { id },
+            include: {
+                studentFee: {
+                    include: { student: true, feeStructure: true }
+                },
+                receipt: true
+            }
+        });
+
+        if (!payment) {
+            throw new AppError(404, 'Payment not found');
+        }
+
+        const studentFee = payment.studentFee;
+        const previousAmount = payment.amount;
+
+        let updatedAmount = previousAmount;
+        if (amount !== undefined && amount !== null && amount !== '') {
+            const parsed = Number(amount);
+            if (!isNaN(parsed) && parsed >= 0) {
+                updatedAmount = parsed;
+            }
+        }
+
+        const validChequeDate = (chequeDate && typeof chequeDate === 'string' && chequeDate.trim() && !isNaN(Date.parse(chequeDate)))
+            ? new Date(chequeDate)
+            : (chequeDate === null || chequeDate === '' ? null : payment.chequeDate);
+
+        const rawCustomDate = receiptDate || paymentDate;
+        let effectivePaymentDate = payment.createdAt;
+        if (rawCustomDate && typeof rawCustomDate === 'string' && rawCustomDate.trim()) {
+            const parsed = new Date(rawCustomDate.trim());
+            if (!isNaN(parsed.getTime())) {
+                effectivePaymentDate = parsed;
+            }
+        }
+
+        const updatedPayment = await prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+                amount: updatedAmount,
+                mode: mode !== undefined ? mode : payment.mode,
+                transactionRef: transactionRef !== undefined ? (transactionRef || null) : payment.transactionRef,
+                bankName: bankName !== undefined ? (bankName || null) : payment.bankName,
+                chequeDate: validChequeDate,
+                remarks: remarks !== undefined ? remarks : payment.remarks,
+                createdAt: effectivePaymentDate,
+                approvedAt: effectivePaymentDate
+            }
+        });
+
+        if (payment.receipt) {
+            await prisma.receipt.update({
+                where: { id: payment.receipt.id },
+                data: { createdAt: effectivePaymentDate }
+            });
+
+            const pdfPath = path.join(RECEIPTS_DIR, `${payment.receipt.receiptNumber}.pdf`);
+            const pdfPathNoHead = path.join(RECEIPTS_DIR, `${payment.receipt.receiptNumber}_without_letterhead.pdf`);
+            [pdfPath, pdfPathNoHead].forEach(p => {
+                if (fs.existsSync(p)) {
+                    try { fs.unlinkSync(p); } catch { }
+                }
+            });
+        }
+
+        let reconciledPaidAmount = 0;
+        let totalFee = studentFee?.totalAmount || 0;
+        let balanceDue = 0;
+
+        if (payment.studentFeeId) {
+            const agg = await prisma.payment.aggregate({
+                where: {
+                    studentFeeId: payment.studentFeeId,
+                    status: 'VERIFIED'
+                },
+                _sum: { amount: true }
+            });
+            reconciledPaidAmount = agg._sum.amount || 0;
+
+            const updatedStudentFee = await prisma.studentFee.update({
+                where: { id: payment.studentFeeId },
+                data: { paidAmount: reconciledPaidAmount },
+                select: { totalAmount: true, paidAmount: true }
+            });
+
+            totalFee = updatedStudentFee.totalAmount;
+            balanceDue = Math.max(0, totalFee - updatedStudentFee.paidAmount);
+        }
+
+        if (req.user) {
+            await createAuditLog(
+                req.user.id,
+                AuditAction.PAYMENT_UPDATED,
+                'Payment',
+                payment.id,
+                {
+                    paymentId: payment.id,
+                    studentName: studentFee?.student?.name,
+                    previousAmount,
+                    updatedAmount,
+                    mode: updatedPayment.mode,
+                    reconciledPaidAmount,
+                    balanceDue
+                },
+                req.ip
+            ).catch(() => {});
+        }
+
+        res.json({
+            success: true,
+            message: `Payment updated successfully. Student balance recalculated.`,
+            data: {
+                payment: updatedPayment,
+                reconciledPaidAmount,
+                totalFee,
+                balanceDue
+            }
+        });
+    }),
 };
