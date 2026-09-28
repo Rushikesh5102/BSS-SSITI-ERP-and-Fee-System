@@ -11,11 +11,11 @@ router.use(authenticate);
 // GET /payments - List payments (Accountant, Admin)
 router.get('/', authorize(Role.ADMIN, Role.ACCOUNTANT), paymentsController.list);
 
-// POST /payments - Record a manual fee payment
+// POST /payments - Record a manual fee payment (Accountant and Admin can record initial payments)
 router.post('/', authorize(Role.ADMIN, Role.ACCOUNTANT), paymentsController.recordPayment);
 
-// PUT /payments/:id - Edit fee payment and reconcile student balance
-router.put('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER, Role.SUPERADMIN), paymentsController.update);
+// PUT /payments/:id - Edit fee payment and reconcile student balance (Restricted to Admin & Developer only)
+router.put('/:id', authorize(Role.ADMIN, Role.DEVELOPER, Role.SUPERADMIN), paymentsController.update);
 
 // Razorpay & Stripe integration
 router.post('/razorpay/order', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.STUDENT, Role.PARENT), paymentsController.createRazorpayOrder);

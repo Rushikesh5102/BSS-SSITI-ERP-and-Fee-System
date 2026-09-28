@@ -118,8 +118,8 @@ function ReceiptsContent({ simulateParam }: { simulateParam: string | null }) {
     };
 
     const canRefund = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
-    const canDeleteReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'ACCOUNTANT';
-    const canEditReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'ACCOUNTANT' || effectiveRole === 'BRANCH_ADMIN';
+    const canDeleteReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
+    const canEditReceipt = effectiveRole === 'ADMIN' || effectiveRole === 'DEVELOPER' || effectiveRole === 'SUPERADMIN' || effectiveRole === 'BRANCH_ADMIN';
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const handleOpenEditReceipt = (r: any) => {

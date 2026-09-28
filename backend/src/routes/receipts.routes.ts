@@ -20,10 +20,10 @@ router.get('/', receiptsController.list);
 // GET /receipts/:id - Get receipt details
 router.get('/:id', receiptsController.getById);
 
-// PUT /receipts/:id - Edit receipt & payment, reconciling student balance
-router.put('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER, Role.SUPERADMIN), receiptsController.update);
+// PUT /receipts/:id - Edit receipt & payment, reconciling student balance (Restricted to Admin & Developer only)
+router.put('/:id', authorize(Role.ADMIN, Role.DEVELOPER, Role.SUPERADMIN), receiptsController.update);
 
 // DELETE /receipts/:id - Delete receipt and reconcile student payment balance
-router.delete('/:id', authorize(Role.ADMIN, Role.ACCOUNTANT, Role.DEVELOPER, Role.SUPERADMIN), receiptsController.delete);
+router.delete('/:id', authorize(Role.ADMIN, Role.DEVELOPER, Role.SUPERADMIN), receiptsController.delete);
 
 export default router;
