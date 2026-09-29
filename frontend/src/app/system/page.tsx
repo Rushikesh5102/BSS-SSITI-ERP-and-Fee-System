@@ -369,6 +369,13 @@ export default function SystemHealthPage() {
                     leakProofShield: 'ACTIVE (0 Plaintext Tokens Exposed)',
                     timestamp: new Date().toISOString()
                 });
+
+                try {
+                    const ledgerRes = await api.get('/system/incident-ledger');
+                    if (ledgerRes.data && Array.isArray(ledgerRes.data.incidents)) {
+                        setIncidents(ledgerRes.data.incidents);
+                    }
+                } catch {}
             } else {
                 const fb = generateFallbackHealth();
                 setHealth(fb);
@@ -1276,13 +1283,22 @@ export default function SystemHealthPage() {
                                                 </div>
 
                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                    <button
-                                                        onClick={handleMarkAllReviewed}
-                                                        className="btn btn-sm"
-                                                        style={{ background: '#4f46e5', color: '#ffffff', fontWeight: 700, fontSize: '12px', padding: '6px 12px' }}
-                                                    >
-                                                        ✓ Mark All Acknowledged
-                                                    </button>
+                                                    {incidents.filter(i => !i.reviewed).length === 0 ? (
+                                                        <span
+                                                            className="badge"
+                                                            style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 800, fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                                        >
+                                                            ✓ All Acknowledged
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={handleMarkAllReviewed}
+                                                            className="btn btn-sm"
+                                                            style={{ background: '#4f46e5', color: '#ffffff', fontWeight: 700, fontSize: '12px', padding: '6px 14px' }}
+                                                        >
+                                                            ✓ Mark All Acknowledged ({incidents.filter(i => !i.reviewed).length})
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -1351,10 +1367,16 @@ export default function SystemHealthPage() {
                                             </div>
                                         </div>
 
-                                        {/* Timeline Cards Stream */}
+                                        {/* Timeline Cards Stream - Unacknowledged at top, Acknowledged at bottom */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                             {incidents
                                                 .filter(i => incidentFilter === 'ALL' || i.timeline === incidentFilter)
+                                                .sort((a, b) => {
+                                                    if (a.reviewed !== b.reviewed) {
+                                                        return a.reviewed ? 1 : -1;
+                                                    }
+                                                    return 0;
+                                                })
                                                 .map(item => {
                                                     const isPast = item.timeline === 'PAST_RESOLVED';
                                                     const isPresent = item.timeline === 'PRESENT_ATTENTION';
@@ -1373,7 +1395,8 @@ export default function SystemHealthPage() {
                                                                 background: t.cardBg,
                                                                 border: `1px solid ${borderColor}`,
                                                                 borderRadius: '10px',
-                                                                opacity: item.reviewed ? 0.85 : 1
+                                                                opacity: item.reviewed ? 0.78 : 1,
+                                                                transition: 'all 0.3s ease'
                                                             }}
                                                         >
                                                             <div style={{ padding: '16px 20px', borderBottom: t.border, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
@@ -1399,14 +1422,14 @@ export default function SystemHealthPage() {
                                                                         {item.errorCode}
                                                                     </span>
                                                                     {item.reviewed ? (
-                                                                        <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                                                                            ✓ Reviewed
+                                                                        <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '4px 10px', borderRadius: '4px', fontWeight: 800 }}>
+                                                                            ✓ Acknowledged
                                                                         </span>
                                                                     ) : (
                                                                         <button
                                                                             onClick={() => handleMarkSingleReviewed(item.id)}
                                                                             className="btn btn-sm btn-ghost"
-                                                                            style={{ border: t.borderLight, fontSize: '11px', padding: '4px 8px', color: t.textSecondary }}
+                                                                            style={{ border: t.borderLight, fontSize: '11px', padding: '4px 10px', color: t.textSecondary, fontWeight: 700 }}
                                                                         >
                                                                             Acknowledge
                                                                         </button>

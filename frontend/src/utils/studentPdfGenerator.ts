@@ -190,16 +190,16 @@ export async function generateAdmissionFormPdf(student: any) {
     const instDetails = [
         ['Application / Roll No:', student.studentId || 'SSITI-2026-E01', 'Academic Session:', sessionText],
         ['Enrolled Trade / Class:', `${student.class || 'Electrician'} ${student.section ? `(${student.section})` : ''}`, 'Trade Duration:', '2 Years (NCVT Full-time)'],
-        ['I.T.I. Registration No:', 'I.T.I.- 2011/P.K.11/V.S.-03', 'Affiliation Authority:', 'NCVT / DGET New Delhi'],
-        ['G.R. No. & Date:', 'I.T.I.- 2011/P.K.11/V.S.-03', 'Location:', 'Bhadrawati, Dist. Chandrapur'],
+        ['NCVT MIS CODE:', 'PR27000753', 'Affiliation Authority:', 'NCVT / DGET New Delhi'],
+        ['DGET Affiliation No.:', '12/1/2013-TC Date - 01/07/2011', 'Location:', 'Bhadrawati, Dist. Chandrapur'],
     ];
 
     let rowY = section1Top + 6;
     instDetails.forEach(([l1, v1, l2, v2]) => {
         doc.setFont('helvetica', 'bold'); doc.text(l1, 12, rowY);
         doc.setFont('helvetica', 'normal'); doc.text(String(v1), 46, rowY);
-        doc.setFont('helvetica', 'bold'); doc.text(l2, 92, rowY);
-        doc.setFont('helvetica', 'normal'); doc.text(String(v2), 122, rowY);
+        doc.setFont('helvetica', 'bold'); doc.text(l2, 98, rowY);
+        doc.setFont('helvetica', 'normal'); doc.text(String(v2), 126, rowY);
         rowY += 8.5;
     });
 

@@ -13,17 +13,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import ReceiptDownloadModal from '../../components/ReceiptDownloadModal';
 import { calculateStudentFeeStructure, formatPaymentAllocation } from '../../utils/feeStructureHelper';
 
-// Lazy-load PDF generator utilities on demand so heavy PDF-Lib chunks
-// aren't included in the initial students page bundle load
-const generateAdmissionFormPdf = async (student: any) => {
-    const mod = await import('../../utils/studentPdfGenerator');
-    return mod.generateAdmissionFormPdf(student);
-};
-
-const generateStudentIdCardPdf = async (student: any) => {
-    const mod = await import('../../utils/studentPdfGenerator');
-    return mod.generateStudentIdCardPdf(student);
-};
+import { generateAdmissionFormPdf, generateStudentIdCardPdf } from '../../utils/studentPdfGenerator';
 
 // Sub-caste taxonomy according to DVET Maharashtra vocational admission standards
 const INDIAN_SUBCASTES: Record<string, string[]> = {
@@ -2647,6 +2637,12 @@ function StudentsContent({ actionParam, simulateParam, tabParam }: { actionParam
                                                         <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Course Fee at Entry</div>
                                                         <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>₹{feeStruct.totalAssigned.toLocaleString('en-IN')}</div>
                                                         <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginTop: 1 }}>Paid: ₹{feeStruct.totalPaid.toLocaleString('en-IN')} | Due: ₹{feeStruct.totalBalance.toLocaleString('en-IN')}</div>
+                                                    </div>
+
+                                                    <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>NCVT MIS Code & Affiliation</div>
+                                                        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>NCVT MIS: PR27000753</div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>DGET Affiliation: 12/1/2013-TC (01/07/2011)</div>
                                                     </div>
 
                                                     <div style={{ background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)' }}>

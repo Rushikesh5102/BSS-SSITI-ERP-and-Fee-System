@@ -389,11 +389,11 @@ export const generateBlankLetterheadPdf = async (options?: { orientation?: 'port
             size: 16.5,
             color: white,
         });
-        page.drawText('Approved by NCVT, DGT, Govt. of India & DVET, Maharashtra | DGET Code: PR27000151', {
+        page.drawText('Approved by NCVT, DGT, Govt. of India & DVET, Maharashtra | NCVT MIS CODE: PR27000753 | DGET Affiliation: 12/1/2013-TC (01/07/2011)', {
             x: textStartX,
             y: height - 54,
             font: boldFont,
-            size: 7.2,
+            size: 6.8,
             color: gold,
         });
         page.drawText(cleanAscii(config.school.address), {
@@ -427,11 +427,11 @@ export const generateBlankLetterheadPdf = async (options?: { orientation?: 'port
             size: 18,
             color: white,
         });
-        page.drawText('Approved by NCVT, DGT, Govt. of India & DVET, Maharashtra | DGET Code: PR27000151', {
+        page.drawText('Approved by NCVT, DGT, Govt. of India & DVET, Maharashtra | NCVT MIS CODE: PR27000753 | DGET Affiliation: 12/1/2013-TC (01/07/2011)', {
             x: textStartX,
             y: height - 52,
             font: boldFont,
-            size: 8,
+            size: 7.5,
             color: gold,
         });
         page.drawText(`${cleanAscii(config.school.address)}  |  Phone: ${config.school.phone}  |  Email: ${config.school.email}`, {
