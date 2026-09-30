@@ -549,7 +549,7 @@ export const stockTransactionsController = {
                     name: 'Standard Student Material Kit & Uniform Package (24 Items)',
                     category: 'Student Stationery & Uniform',
                     sku: 'KIT-STD-24',
-                    quantity: 999,
+                    quantity: 0,
                     unit: 'kit',
                     reorderLevel: 10,
                     pricePerUnit: 0,
@@ -561,27 +561,42 @@ export const stockTransactionsController = {
             });
         }
 
+        if (kitStoreItem.quantity <= 0) {
+            throw new AppError(400, `Insufficient stock for ${kitStoreItem.name}. Available stock is 0 ${kitStoreItem.unit}. Please replenish stock in the Workshop Asset Register before issuing.`);
+        }
+
         const itemsListStr = Array.isArray(items) ? items.map((i: any) => `${i.name} (x${i.qty || 1} ${i.unit || 'pc'})`).join(', ') : 'All 24 standard items';
         const kitRemarks = `🎒 Student Material Kit & Dress Package Issued: [${itemsListStr}]. ${remarks ? `Remarks: ${remarks}` : ''}`;
 
-        const transaction = await prisma.stockTransaction.create({
-            data: {
-                itemId: kitStoreItem.id,
-                type: 'ISSUE',
-                quantity: 1,
-                recipientType: 'STUDENT',
-                studentId: student.id,
-                status: 'COMPLETED',
-                branchId: student.branchId,
-                recordedById: req.user!.id,
-                remarks: kitRemarks,
-                createdAt: issuedDate ? new Date(issuedDate) : new Date()
-            },
-            include: {
-                item: true,
-                student: true,
-                recordedBy: true
-            }
+        const transaction = await prisma.$transaction(async (tx) => {
+            const newQty = kitStoreItem.quantity - 1;
+            await tx.storeItem.update({
+                where: { id: kitStoreItem.id },
+                data: {
+                    quantity: newQty,
+                    status: newQty === 0 ? 'ISSUED' : kitStoreItem.status
+                }
+            });
+
+            return tx.stockTransaction.create({
+                data: {
+                    itemId: kitStoreItem.id,
+                    type: 'ISSUE',
+                    quantity: 1,
+                    recipientType: 'STUDENT',
+                    studentId: student.id,
+                    status: 'COMPLETED',
+                    branchId: student.branchId,
+                    recordedById: req.user!.id,
+                    remarks: kitRemarks,
+                    createdAt: issuedDate ? new Date(issuedDate) : new Date()
+                },
+                include: {
+                    item: true,
+                    student: true,
+                    recordedBy: true
+                }
+            });
         });
 
         await createAuditLog(

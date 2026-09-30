@@ -1510,6 +1510,79 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                             <div className="modal-body" style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                                 {formError && <div style={{ color: 'var(--danger)', fontSize: 13, background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px' }}>⚠️ {formError}</div>}
 
+                                {/* Kit Inventory Stock Status Banner */}
+                                {(() => {
+                                    const kitStoreItem = items.find(i => i.name?.toLowerCase().includes('material kit') || i.sku === 'KIT-STD-24');
+                                    const kitStockBalance = kitStoreItem ? (kitStoreItem.quantity ?? 0) : 0;
+                                    const isKitOutOfStock = kitStoreItem !== undefined && kitStockBalance <= 0;
+
+                                    if (isKitOutOfStock) {
+                                        return (
+                                            <div style={{
+                                                background: 'rgba(239, 68, 68, 0.1)',
+                                                border: '1px solid rgba(239, 68, 68, 0.35)',
+                                                borderRadius: 10,
+                                                padding: '12px 16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                flexWrap: 'wrap',
+                                                gap: 10
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <span style={{ fontSize: 24 }}>🚫</span>
+                                                    <div>
+                                                        <div style={{ color: '#ef4444', fontWeight: 800, fontSize: 13 }}>
+                                                            Out of Stock: 0 Kit Packages Available!
+                                                        </div>
+                                                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                                                            You cannot issue kits to students because there is zero inventory stock remaining.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setShowKitIssueModal(false);
+                                                        router.push('/store/items');
+                                                    }}
+                                                    className="btn btn-primary"
+                                                    style={{ fontSize: 12, padding: '6px 14px' }}
+                                                >
+                                                    ➕ Add Stock in Asset Register
+                                                </button>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (kitStoreItem) {
+                                        return (
+                                            <div style={{
+                                                background: 'rgba(16, 185, 129, 0.08)',
+                                                border: '1px solid rgba(16, 185, 129, 0.25)',
+                                                borderRadius: 10,
+                                                padding: '10px 14px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                fontSize: 12
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <span style={{ fontSize: 16 }}>📦</span>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                        Available Inventory Stock: <b style={{ color: '#10b981', fontSize: 13 }}>{kitStockBalance} kits</b>
+                                                    </span>
+                                                </div>
+                                                <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+                                                    (1 kit will be deducted upon issuance)
+                                                </span>
+                                            </div>
+                                        );
+                                    }
+
+                                    return null;
+                                })()}
+
                                 {/* Student Selector */}
                                 <div className="form-group">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -1681,9 +1754,30 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-ghost" onClick={() => setShowKitIssueModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={formLoading} style={{ background: '#10b981', borderColor: '#10b981', color: '#fff', fontWeight: 700 }}>
-                                    {formLoading ? 'Issuing Kit Package...' : '🎒 Issue Complete 24-Item Kit to Student'}
-                                </button>
+                                {(() => {
+                                    const kitStoreItem = items.find(i => i.name?.toLowerCase().includes('material kit') || i.sku === 'KIT-STD-24');
+                                    const isKitOutOfStock = kitStoreItem !== undefined && (kitStoreItem.quantity ?? 0) <= 0;
+                                    return (
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary"
+                                            disabled={formLoading || isKitOutOfStock}
+                                            style={{
+                                                background: isKitOutOfStock ? '#6b7280' : '#10b981',
+                                                borderColor: isKitOutOfStock ? '#6b7280' : '#10b981',
+                                                color: '#fff',
+                                                fontWeight: 700,
+                                                cursor: isKitOutOfStock ? 'not-allowed' : 'pointer'
+                                            }}
+                                        >
+                                            {isKitOutOfStock
+                                                ? '🚫 Out of Stock (Cannot Issue)'
+                                                : formLoading
+                                                ? 'Issuing Kit Package...'
+                                                : '🎒 Issue Complete 24-Item Kit to Student'}
+                                        </button>
+                                    );
+                                })()}
                             </div>
                         </form>
                     </div>
