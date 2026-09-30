@@ -1407,38 +1407,167 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
 
                                 {recipientType === 'STUDENT' ? (
                                     <div className="form-group">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                            <label className="form-label" style={{ margin: 0 }}>Select Student * ({students.length} available)</label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                            <label className="form-label" style={{ fontWeight: 700, margin: 0, fontSize: 13 }}>
+                                                Select Student Recipient *
+                                            </label>
+                                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                                {students.filter(s => !issueStudentSearch.trim() || s.name?.toLowerCase().includes(issueStudentSearch.toLowerCase()) || s.studentId?.toLowerCase().includes(issueStudentSearch.toLowerCase()) || s.class?.toLowerCase().includes(issueStudentSearch.toLowerCase())).length} of {students.length} students
+                                            </span>
                                         </div>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="🔍 Filter student by name, ID, or trade..."
-                                            value={issueStudentSearch}
-                                            onChange={e => setIssueStudentSearch(e.target.value)}
-                                            style={{ marginBottom: 6, fontSize: 12, padding: '6px 10px' }}
-                                        />
-                                        <select className="form-control" required value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
-                                            <option value="">-- Select Student --</option>
-                                            {students
-                                                .filter(s => !issueStudentSearch.trim() || s.name?.toLowerCase().includes(issueStudentSearch.toLowerCase()) || s.studentId?.toLowerCase().includes(issueStudentSearch.toLowerCase()) || s.class?.toLowerCase().includes(issueStudentSearch.toLowerCase()))
-                                                .map(s => {
-                                                    const fee = getStudentFeeBadge(s);
-                                                    return (
-                                                        <option key={s.id} value={s.id}>
-                                                            {s.name} ({s.studentId}) - {s.class} [{fee.tag}]
-                                                        </option>
-                                                    );
-                                                })}
-                                        </select>
+
+                                        {/* Search Filter Input */}
+                                        <div style={{ position: 'relative', marginBottom: 8 }}>
+                                            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, pointerEvents: 'none', opacity: 0.6 }}>
+                                                🔍
+                                            </span>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Search student by name, ID (e.g. E59), or trade..."
+                                                value={issueStudentSearch}
+                                                onChange={e => setIssueStudentSearch(e.target.value)}
+                                                style={{ paddingLeft: 32, paddingRight: issueStudentSearch ? 30 : 10, fontSize: 12.5, borderRadius: 8 }}
+                                            />
+                                            {issueStudentSearch && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIssueStudentSearch('')}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        right: 8,
+                                                        top: '50%',
+                                                        transform: 'translateY(-50%)',
+                                                        border: 'none',
+                                                        background: 'transparent',
+                                                        color: 'var(--text-muted)',
+                                                        cursor: 'pointer',
+                                                        fontSize: 12,
+                                                        padding: 4
+                                                    }}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Scrollable Student Cards List */}
+                                        {(() => {
+                                            const filtered = students.filter(s =>
+                                                !issueStudentSearch.trim() ||
+                                                s.name?.toLowerCase().includes(issueStudentSearch.toLowerCase()) ||
+                                                s.studentId?.toLowerCase().includes(issueStudentSearch.toLowerCase()) ||
+                                                s.class?.toLowerCase().includes(issueStudentSearch.toLowerCase())
+                                            );
+
+                                            return (
+                                                <div style={{
+                                                    maxHeight: 200,
+                                                    overflowY: 'auto',
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: 8,
+                                                    background: 'var(--surface-2, rgba(0,0,0,0.02))',
+                                                    padding: 6,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: 6
+                                                }}>
+                                                    {filtered.length === 0 ? (
+                                                        <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+                                                            🔍 No students found matching &quot;{issueStudentSearch}&quot;
+                                                        </div>
+                                                    ) : (
+                                                        filtered.map(s => {
+                                                            const isSelected = selectedStudentId === s.id;
+                                                            const fee = getStudentFeeBadge(s);
+                                                            return (
+                                                                <div
+                                                                    key={s.id}
+                                                                    onClick={() => setSelectedStudentId(s.id)}
+                                                                    style={{
+                                                                        padding: '8px 12px',
+                                                                        borderRadius: 8,
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between',
+                                                                        gap: 10,
+                                                                        background: isSelected ? 'rgba(2, 132, 199, 0.1)' : 'var(--surface-card, #fff)',
+                                                                        border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                                                                        boxShadow: isSelected ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
+                                                                        transition: 'all 0.15s ease'
+                                                                    }}
+                                                                >
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                                                        <div style={{
+                                                                            width: 32,
+                                                                            height: 32,
+                                                                            borderRadius: '50%',
+                                                                            background: isSelected ? 'var(--primary)' : 'rgba(100, 116, 139, 0.12)',
+                                                                            color: isSelected ? '#fff' : 'var(--text-primary)',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            fontSize: 11,
+                                                                            fontWeight: 800,
+                                                                            flexShrink: 0
+                                                                        }}>
+                                                                            {s.name ? s.name.substring(0, 2).toUpperCase() : 'ST'}
+                                                                        </div>
+                                                                        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                                                                            <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                                {s.name}
+                                                                            </div>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-muted)', marginTop: 2, flexWrap: 'wrap' }}>
+                                                                                <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--primary)' }}>{s.studentId}</span>
+                                                                                <span>•</span>
+                                                                                <span>{s.class || 'ITI Trainee'}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                                                        <span style={{
+                                                                            fontSize: 10,
+                                                                            fontWeight: 700,
+                                                                            padding: '3px 8px',
+                                                                            borderRadius: 6,
+                                                                            background: fee.bg,
+                                                                            color: fee.color,
+                                                                            border: `1px solid ${fee.color}33`,
+                                                                            whiteSpace: 'nowrap'
+                                                                        }}>
+                                                                            {fee.tag}
+                                                                        </span>
+                                                                        <div style={{
+                                                                            width: 16,
+                                                                            height: 16,
+                                                                            borderRadius: '50%',
+                                                                            border: isSelected ? '5px solid var(--primary)' : '2px solid var(--border)',
+                                                                            background: '#fff',
+                                                                            flexShrink: 0
+                                                                        }} />
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* Selected Student Confirmation Pill */}
                                         {(() => {
                                             const sel = students.find(s => s.id === selectedStudentId);
                                             if (!sel) return null;
                                             const fee = getStudentFeeBadge(sel);
                                             return (
-                                                <div style={{ marginTop: 6, padding: '6px 10px', borderRadius: 6, background: fee.bg, color: fee.color, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    <span>💳</span>
-                                                    <span>{fee.label}</span>
+                                                <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: fee.bg, border: `1px solid ${fee.color}44`, color: fee.color, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <span>🎓</span>
+                                                        <span>Selected: <b>{sel.name}</b> ({sel.studentId})</span>
+                                                    </div>
+                                                    <span style={{ fontSize: 11, fontWeight: 700 }}>{fee.label}</span>
                                                 </div>
                                             );
                                         })()}
@@ -1585,36 +1714,154 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
 
                                 {/* Student Selector */}
                                 <div className="form-group">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                        <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>Select Student Recipient * ({students.length} available)</label>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                        <label className="form-label" style={{ fontWeight: 700, margin: 0, fontSize: 13 }}>
+                                            Select Student Recipient *
+                                        </label>
+                                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                            {students.filter(s => !kitStudentSearch.trim() || s.name?.toLowerCase().includes(kitStudentSearch.toLowerCase()) || s.studentId?.toLowerCase().includes(kitStudentSearch.toLowerCase()) || s.class?.toLowerCase().includes(kitStudentSearch.toLowerCase())).length} of {students.length} students
+                                        </span>
                                     </div>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="🔍 Filter student by name, ID, or trade..."
-                                        value={kitStudentSearch}
-                                        onChange={e => setKitStudentSearch(e.target.value)}
-                                        style={{ marginBottom: 6, fontSize: 12, padding: '6px 10px' }}
-                                    />
-                                    <select
-                                        className="form-control"
-                                        required
-                                        value={kitStudentId}
-                                        onChange={e => setKitStudentId(e.target.value)}
-                                        style={{ fontSize: 13, fontWeight: 600 }}
-                                    >
-                                        <option value="">-- Select Student --</option>
-                                        {students
-                                            .filter(s => !kitStudentSearch.trim() || s.name?.toLowerCase().includes(kitStudentSearch.toLowerCase()) || s.studentId?.toLowerCase().includes(kitStudentSearch.toLowerCase()) || s.class?.toLowerCase().includes(kitStudentSearch.toLowerCase()))
-                                            .map(s => {
-                                                const fee = getStudentFeeBadge(s);
-                                                return (
-                                                    <option key={s.id} value={s.id}>
-                                                        {s.name} ({s.studentId}) - {s.class} [{fee.tag}]
-                                                    </option>
-                                                );
-                                            })}
-                                    </select>
+
+                                    {/* Search Filter Input */}
+                                    <div style={{ position: 'relative', marginBottom: 8 }}>
+                                        <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, pointerEvents: 'none', opacity: 0.6 }}>
+                                            🔍
+                                        </span>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="Search student by name, ID (e.g. E59), or trade..."
+                                            value={kitStudentSearch}
+                                            onChange={e => setKitStudentSearch(e.target.value)}
+                                            style={{ paddingLeft: 32, paddingRight: kitStudentSearch ? 30 : 10, fontSize: 12.5, borderRadius: 8 }}
+                                        />
+                                        {kitStudentSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setKitStudentSearch('')}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: 8,
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    color: 'var(--text-muted)',
+                                                    cursor: 'pointer',
+                                                    fontSize: 12,
+                                                    padding: 4
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Scrollable Student Cards List */}
+                                    {(() => {
+                                        const filtered = students.filter(s =>
+                                            !kitStudentSearch.trim() ||
+                                            s.name?.toLowerCase().includes(kitStudentSearch.toLowerCase()) ||
+                                            s.studentId?.toLowerCase().includes(kitStudentSearch.toLowerCase()) ||
+                                            s.class?.toLowerCase().includes(kitStudentSearch.toLowerCase())
+                                        );
+
+                                        return (
+                                            <div style={{
+                                                maxHeight: 200,
+                                                overflowY: 'auto',
+                                                border: '1px solid var(--border)',
+                                                borderRadius: 8,
+                                                background: 'var(--surface-2, rgba(0,0,0,0.02))',
+                                                padding: 6,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 6
+                                            }}>
+                                                {filtered.length === 0 ? (
+                                                    <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+                                                        🔍 No students found matching &quot;{kitStudentSearch}&quot;
+                                                    </div>
+                                                ) : (
+                                                    filtered.map(s => {
+                                                        const isSelected = kitStudentId === s.id;
+                                                        const fee = getStudentFeeBadge(s);
+                                                        return (
+                                                            <div
+                                                                key={s.id}
+                                                                onClick={() => setKitStudentId(s.id)}
+                                                                style={{
+                                                                    padding: '8px 12px',
+                                                                    borderRadius: 8,
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'space-between',
+                                                                    gap: 10,
+                                                                    background: isSelected ? 'rgba(2, 132, 199, 0.1)' : 'var(--surface-card, #fff)',
+                                                                    border: isSelected ? '1.5px solid var(--primary)' : '1px solid var(--border)',
+                                                                    boxShadow: isSelected ? '0 2px 6px rgba(2, 132, 199, 0.12)' : 'none',
+                                                                    transition: 'all 0.15s ease'
+                                                                }}
+                                                            >
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                                                    <div style={{
+                                                                        width: 32,
+                                                                        height: 32,
+                                                                        borderRadius: '50%',
+                                                                        background: isSelected ? 'var(--primary)' : 'rgba(100, 116, 139, 0.12)',
+                                                                        color: isSelected ? '#fff' : 'var(--text-primary)',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        fontSize: 11,
+                                                                        fontWeight: 800,
+                                                                        flexShrink: 0
+                                                                    }}>
+                                                                        {s.name ? s.name.substring(0, 2).toUpperCase() : 'ST'}
+                                                                    </div>
+                                                                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                                                                        <div style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                            {s.name}
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-muted)', marginTop: 2, flexWrap: 'wrap' }}>
+                                                                            <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--primary)' }}>{s.studentId}</span>
+                                                                            <span>•</span>
+                                                                            <span>{s.class || 'ITI Trainee'}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                                                    <span style={{
+                                                                        fontSize: 10,
+                                                                        fontWeight: 700,
+                                                                        padding: '3px 8px',
+                                                                        borderRadius: 6,
+                                                                        background: fee.bg,
+                                                                        color: fee.color,
+                                                                        border: `1px solid ${fee.color}33`,
+                                                                        whiteSpace: 'nowrap'
+                                                                    }}>
+                                                                        {fee.tag}
+                                                                    </span>
+                                                                    <div style={{
+                                                                        width: 16,
+                                                                        height: 16,
+                                                                        borderRadius: '50%',
+                                                                        border: isSelected ? '5px solid var(--primary)' : '2px solid var(--border)',
+                                                                        background: '#fff',
+                                                                        flexShrink: 0
+                                                                    }} />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Student Fee Status & Eligibility Card */}
