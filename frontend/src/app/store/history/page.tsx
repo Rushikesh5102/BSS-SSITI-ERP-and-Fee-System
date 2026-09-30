@@ -118,7 +118,7 @@ function MovementHistoryContent() {
                         <button onClick={downloadCSV} className="btn btn-secondary" style={{ fontSize: 13 }}>
                             📊 Export CSV Log
                         </button>
-                        <button onClick={() => router.push('/store')} className="btn btn-primary" style={{ fontSize: 13 }}>
+                        <button onClick={() => router.push(simulateParam ? `/store/issue?simulate=${simulateParam}` : '/store/issue')} className="btn btn-primary" style={{ fontSize: 13 }}>
                             🛠️ Tool Issue & Movement →
                         </button>
                     </div>

@@ -275,7 +275,7 @@ function AssetRegisterContent() {
                         <button onClick={openAddModal} className="btn btn-primary" style={{ fontSize: 13 }}>
                             ➕ Add New Workshop Asset
                         </button>
-                        <button onClick={() => router.push('/store')} className="btn btn-secondary" style={{ fontSize: 13 }}>
+                        <button onClick={() => router.push(simulateParam ? `/store/issue?simulate=${simulateParam}` : '/store/issue')} className="btn btn-secondary" style={{ fontSize: 13 }}>
                             🛠️ Tool Issue & Movement →
                         </button>
                     </div>

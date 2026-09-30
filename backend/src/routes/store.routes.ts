@@ -31,6 +31,8 @@ router.post('/transactions/damage', authorize(Role.STORE_MANAGER, Role.ADMIN, Ro
 router.post('/transactions/inward', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordInward);
 router.post('/transactions/outward', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordOutward);
 router.post('/transactions/adjustment', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.recordAdjustment);
+router.patch('/transactions/:id/expected-return-date', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.updateExpectedReturnDate);
+router.patch('/transactions/:id', authorize(Role.STORE_MANAGER, Role.ADMIN, Role.TEACHER), stockTransactionsController.updateExpectedReturnDate);
 
 // ─── Legacy Suppliers Routes ──────────────────────────────────────────────────
 router.get('/suppliers', storeSuppliersController.list);

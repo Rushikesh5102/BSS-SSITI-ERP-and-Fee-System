@@ -247,6 +247,14 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
     const [expectedReturnDate, setExpectedReturnDate] = useState('');
     const [issueRemarks, setIssueRemarks] = useState('');
 
+    // Edit Expected Return Date Modal State
+    const [showEditDueDateModal, setShowEditDueDateModal] = useState(false);
+    const [editingDueDateIssue, setEditingDueDateIssue] = useState<any | null>(null);
+    const [editDueDateValue, setEditDueDateValue] = useState('');
+    const [editDueDateRemarks, setEditDueDateRemarks] = useState('');
+    const [editDueDateLoading, setEditDueDateLoading] = useState(false);
+    const [editDueDateError, setEditDueDateError] = useState('');
+
     // 24-Item Student Material Kit & Uniform Package Issuance Modal Form
     const [showKitIssueModal, setShowKitIssueModal] = useState(false);
     const [kitStudentId, setKitStudentId] = useState('');
@@ -492,6 +500,35 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
         }
     };
 
+    const openEditDueDateModal = (issue: any) => {
+        setEditingDueDateIssue(issue);
+        const existingDate = issue.expectedReturnDate ? new Date(issue.expectedReturnDate).toISOString().split('T')[0] : '';
+        setEditDueDateValue(existingDate);
+        setEditDueDateRemarks(issue.remarks || '');
+        setEditDueDateError('');
+        setShowEditDueDateModal(true);
+    };
+
+    const handleUpdateDueDate = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!editingDueDateIssue) return;
+        setEditDueDateLoading(true);
+        setEditDueDateError('');
+        try {
+            await api.patch(`/store/transactions/${editingDueDateIssue.id}/expected-return-date`, {
+                expectedReturnDate: editDueDateValue && editDueDateValue.trim() !== '' ? editDueDateValue : null,
+                remarks: editDueDateRemarks
+            });
+            setShowEditDueDateModal(false);
+            setEditingDueDateIssue(null);
+            fetchAllData();
+        } catch (err: any) {
+            setEditDueDateError(err.response?.data?.message || 'Failed to update expected return date');
+        } finally {
+            setEditDueDateLoading(false);
+        }
+    };
+
     const handleIssueSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormError('');
@@ -503,7 +540,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                 recipientType,
                 studentId: recipientType === 'STUDENT' ? selectedStudentId : undefined,
                 staffName: recipientType === 'STAFF' ? staffName : undefined,
-                expectedReturnDate,
+                expectedReturnDate: expectedReturnDate && expectedReturnDate.trim() !== '' ? expectedReturnDate : null,
                 remarks: issueRemarks
             });
             setShowIssueModal(false);
@@ -956,6 +993,7 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                 <th style={{ textAlign: 'left', padding: '14px' }}>Issue Date</th>
                                                 <th style={{ textAlign: 'left', padding: '14px' }}>Expected Return</th>
                                                 <th style={{ textAlign: 'left', padding: '14px' }}>Status</th>
+                                                <th style={{ textAlign: 'right', padding: '14px' }}>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -971,7 +1009,24 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                         <td data-label="Quantity" style={{ padding: '14px', textAlign: 'center', fontWeight: 800 }}>{rec.quantity} {rec.item?.unit || 'pcs'}</td>
                                                         <td data-label="Issued To" style={{ padding: '14px', fontSize: 13 }}>{rec.recipientType === 'STUDENT' ? '🎓 ' : '👔 '}{recipientName}</td>
                                                         <td data-label="Issue Date" style={{ padding: '14px', fontSize: 12 }}>{new Date(rec.issuedDate || rec.createdAt).toLocaleDateString()}</td>
-                                                        <td data-label="Expected Return" style={{ padding: '14px', fontSize: 12 }}>{rec.expectedReturnDate ? new Date(rec.expectedReturnDate).toLocaleDateString() : 'N/A'}</td>
+                                                        <td data-label="Expected Return" style={{ padding: '14px', fontSize: 12 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                                <span style={{ fontWeight: overdue ? 700 : 500, color: overdue ? '#ef4444' : (!rec.expectedReturnDate ? 'var(--text-muted)' : 'var(--text-primary)') }}>
+                                                                    {rec.expectedReturnDate ? new Date(rec.expectedReturnDate).toLocaleDateString() : 'N/A'}
+                                                                </span>
+                                                                {rec.status !== 'RETURNED' && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openEditDueDateModal(rec)}
+                                                                        className="btn btn-ghost"
+                                                                        title="Edit Expected Return Date / Make N/A"
+                                                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid var(--border)', borderRadius: 4 }}
+                                                                    >
+                                                                        ✏️
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
                                                         <td data-label="Status" style={{ padding: '14px' }}>
                                                             {rec.status === 'RETURNED' ? (
                                                                 <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>✓ Returned</span>
@@ -979,6 +1034,30 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                                 <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>🚨 OVERDUE</span>
                                                             ) : (
                                                                 <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 10, background: 'rgba(2, 132, 199, 0.1)', color: '#0284c7' }}>● Active Issue</span>
+                                                            )}
+                                                        </td>
+                                                        <td data-label="Actions" style={{ padding: '14px', textAlign: 'right' }}>
+                                                            {rec.status !== 'RETURNED' ? (
+                                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openEditDueDateModal(rec)}
+                                                                        className="btn btn-secondary"
+                                                                        style={{ padding: '4px 8px', fontSize: 11 }}
+                                                                    >
+                                                                        ✏️ Edit Due Date
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openReturnModal(rec.id)}
+                                                                        className="btn btn-primary"
+                                                                        style={{ padding: '4px 8px', fontSize: 11 }}
+                                                                    >
+                                                                        📥 Return
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
                                                             )}
                                                         </td>
                                                     </tr>
@@ -1026,13 +1105,29 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                                             <td data-label="Tool Name" style={{ padding: '12px', fontWeight: 700 }}>{issue.item?.name}</td>
                                                             <td data-label="Qty" style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>{issue.quantity}</td>
                                                             <td data-label="Issued To" style={{ padding: '12px', fontSize: 13 }}>{issue.recipientType === 'STUDENT' ? `🎓 ${issue.student?.name}` : `👔 Staff: ${issue.staffName}`}</td>
-                                                            <td data-label="Expected Return" style={{ padding: '12px', fontSize: 12, color: overdue ? 'var(--danger)' : 'var(--text-primary)', fontWeight: overdue ? 700 : 400 }}>
-                                                                {issue.expectedReturnDate ? new Date(issue.expectedReturnDate).toLocaleDateString() : 'N/A'} {overdue ? '(OVERDUE)' : ''}
+                                                            <td data-label="Expected Return" style={{ padding: '12px', fontSize: 12, color: overdue ? 'var(--danger)' : (!issue.expectedReturnDate ? 'var(--text-muted)' : 'var(--text-primary)'), fontWeight: overdue ? 700 : 400 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                                    <span>{issue.expectedReturnDate ? new Date(issue.expectedReturnDate).toLocaleDateString() : 'N/A (No Due Date)'} {overdue ? '(OVERDUE)' : ''}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openEditDueDateModal(issue)}
+                                                                        className="btn btn-ghost"
+                                                                        title="Edit Due Date / Make N/A"
+                                                                        style={{ padding: '2px 6px', fontSize: 11, border: '1px solid var(--border)', borderRadius: 4 }}
+                                                                    >
+                                                                        ✏️
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                             <td data-label="Action" className="cell-actions" style={{ padding: '12px', textAlign: 'right' }}>
-                                                                <button onClick={() => openReturnModal(issue.id)} className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}>
-                                                                    📥 Return Tool
-                                                                </button>
+                                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                                                                    <button onClick={() => openEditDueDateModal(issue)} className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: 12, border: '1px solid var(--border)' }}>
+                                                                        ✏️ Edit Due Date / N/A
+                                                                    </button>
+                                                                    <button onClick={() => openReturnModal(issue.id)} className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 12 }}>
+                                                                        📥 Return Tool
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     );
@@ -1356,8 +1451,34 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                                 )}
 
                                 <div className="form-group">
-                                    <label className="form-label">Expected Return Date *</label>
-                                    <input type="date" className="form-control" required value={expectedReturnDate} onChange={e => setExpectedReturnDate(e.target.value)} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                        <label className="form-label" style={{ margin: 0, fontWeight: 700 }}>Expected Return Date (Optional)</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setExpectedReturnDate('')}
+                                            style={{
+                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                background: expectedReturnDate === '' ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                                                color: '#ef4444',
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                borderRadius: 6,
+                                                padding: '2px 8px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {expectedReturnDate ? '❌ Clear to N/A' : '✓ N/A (No Due Date)'}
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="date"
+                                        className="form-control"
+                                        value={expectedReturnDate}
+                                        onChange={e => setExpectedReturnDate(e.target.value)}
+                                    />
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                                        Leave empty or click &quot;Clear to N/A&quot; if this tool does not have a return deadline.
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
@@ -1696,6 +1817,185 @@ export default function StoreModuleContent({ initialTab }: { initialTab?: string
                     </div>
                 </div>
             )}
+
+            {/* Edit Expected Return Date / Due Date Modal */}
+            {showEditDueDateModal && editingDueDateIssue && (
+                <div className="modal-overlay" onClick={() => setShowEditDueDateModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480, width: '90vw' }}>
+                        <div className="modal-header">
+                            <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span>🗓️</span>
+                                <span>Edit Expected Return Date / Make N/A</span>
+                            </h3>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowEditDueDateModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleUpdateDueDate}>
+                            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {editDueDateError && (
+                                    <div style={{ color: 'var(--danger)', fontSize: 13, background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px' }}>
+                                        ⚠️ {editDueDateError}
+                                    </div>
+                                )}
+
+                                <div style={{ background: 'var(--surface)', padding: '12px 14px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 13 }}>
+                                    <div style={{ fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+                                        🔧 {editingDueDateIssue.item?.name}
+                                    </div>
+                                    <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                                        Issued To: <b>{editingDueDateIssue.recipientType === 'STUDENT' ? `🎓 ${editingDueDateIssue.student?.name || 'Student'}` : `👔 Staff: ${editingDueDateIssue.staffName || 'Staff'}`}</b>
+                                        {' '}(Quantity: {editingDueDateIssue.quantity} {editingDueDateIssue.item?.unit || 'pcs'})
+                                    </div>
+                                    <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                                        Current Expected Return: <span style={{ fontWeight: 700, color: isOverdue(editingDueDateIssue) ? '#ef4444' : 'var(--text-primary)' }}>
+                                            {editingDueDateIssue.expectedReturnDate ? new Date(editingDueDateIssue.expectedReturnDate).toLocaleDateString() : 'N/A (No Due Date)'}
+                                        </span>
+                                        {isOverdue(editingDueDateIssue) && (
+                                            <span style={{ marginLeft: 6, fontSize: 10, padding: '2px 6px', borderRadius: 6, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontWeight: 800, border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                                                🚨 OVERDUE
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                        <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>New Return Date</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditDueDateValue('')}
+                                            style={{
+                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                background: editDueDateValue === '' ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                                                color: '#ef4444',
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                borderRadius: 6,
+                                                padding: '3px 8px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {editDueDateValue === '' ? '✓ Set to N/A' : '❌ Clear to N/A'}
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="date"
+                                        className="form-control"
+                                        value={editDueDateValue}
+                                        onChange={e => setEditDueDateValue(e.target.value)}
+                                        style={{ fontSize: 14, fontWeight: 600 }}
+                                    />
+                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                                        <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>Presets:</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const d = new Date();
+                                                d.setDate(d.getDate() + 7);
+                                                setEditDueDateValue(d.toISOString().split('T')[0]);
+                                            }}
+                                            className="btn btn-secondary"
+                                            style={{ padding: '3px 8px', fontSize: 11 }}
+                                        >
+                                            +7 Days
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const d = new Date();
+                                                d.setDate(d.getDate() + 14);
+                                                setEditDueDateValue(d.toISOString().split('T')[0]);
+                                            }}
+                                            className="btn btn-secondary"
+                                            style={{ padding: '3px 8px', fontSize: 11 }}
+                                        >
+                                            +14 Days
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const d = new Date();
+                                                d.setDate(d.getDate() + 30);
+                                                setEditDueDateValue(d.toISOString().split('T')[0]);
+                                            }}
+                                            className="btn btn-secondary"
+                                            style={{ padding: '3px 8px', fontSize: 11 }}
+                                        >
+                                            +30 Days
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditDueDateValue('')}
+                                            className="btn btn-secondary"
+                                            style={{ padding: '3px 8px', fontSize: 11, color: '#ef4444' }}
+                                        >
+                                            No Due Date (N/A)
+                                        </button>
+                                    </div>
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
+                                        Setting to N/A will remove this tool from overdue alerts.
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Reason / Notes (Optional)</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="e.g. Extended for project / No return required"
+                                        value={editDueDateRemarks}
+                                        onChange={e => setEditDueDateRemarks(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <button
+                                    type="button"
+                                    className="btn btn-ghost"
+                                    onClick={() => setShowEditDueDateModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    {editDueDateValue !== '' && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary"
+                                            style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                                            disabled={editDueDateLoading}
+                                            onClick={async () => {
+                                                setEditDueDateValue('');
+                                                setEditDueDateLoading(true);
+                                                try {
+                                                    await api.patch(`/store/transactions/${editingDueDateIssue.id}/expected-return-date`, {
+                                                        expectedReturnDate: null,
+                                                        remarks: editDueDateRemarks
+                                                    });
+                                                    setShowEditDueDateModal(false);
+                                                    fetchAllData();
+                                                } catch (err: any) {
+                                                    setEditDueDateError(err.response?.data?.message || 'Failed to update');
+                                                } finally {
+                                                    setEditDueDateLoading(false);
+                                                }
+                                            }}
+                                        >
+                                            Make N/A & Save
+                                        </button>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={editDueDateLoading}
+                                    >
+                                        {editDueDateLoading ? 'Saving...' : '💾 Save Return Date'}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

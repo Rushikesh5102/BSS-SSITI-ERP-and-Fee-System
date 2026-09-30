@@ -598,5 +598,56 @@ export const stockTransactionsController = {
             message: `24-Item Student Kit successfully issued to ${student.name}`,
             data: transaction
         });
+    }),
+
+    /**
+     * PATCH /api/store/transactions/:id/expected-return-date
+     * Update or clear (N/A) the expected return date for an issued tool/asset
+     */
+    updateExpectedReturnDate: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const { expectedReturnDate, remarks } = req.body;
+
+        const transaction = await prisma.stockTransaction.findUnique({
+            where: { id },
+            include: { item: { select: { name: true } }, student: { select: { name: true } } }
+        });
+
+        if (!transaction) {
+            throw new AppError(404, 'Stock transaction record not found');
+        }
+
+        const isNA = !expectedReturnDate || expectedReturnDate === 'N/A' || (typeof expectedReturnDate === 'string' && expectedReturnDate.trim() === '');
+        const newDate = isNA ? null : new Date(expectedReturnDate);
+
+        const updated = await prisma.stockTransaction.update({
+            where: { id },
+            data: {
+                expectedReturnDate: newDate,
+                ...(remarks !== undefined ? { remarks } : {})
+            },
+            include: {
+                item: { select: { id: true, name: true, sku: true, unit: true, category: true, location: true, image: true } },
+                student: { select: { id: true, name: true, studentId: true, class: true } },
+                recordedBy: { select: { id: true, name: true, email: true } },
+                receivedBy: { select: { id: true, name: true, email: true } }
+            }
+        });
+
+        await createAuditLog(
+            req.user!.id,
+            AuditAction.STOCK_OUTWARD,
+            'StockTransaction',
+            id,
+            { action: 'UPDATE_EXPECTED_RETURN_DATE', previousDate: transaction.expectedReturnDate, newDate },
+            req.ip
+        );
+
+        res.json({
+            success: true,
+            message: newDate ? `Expected return date updated to ${newDate.toLocaleDateString()}` : 'Expected return date set to N/A',
+            data: updated
+        });
     })
 };
+
